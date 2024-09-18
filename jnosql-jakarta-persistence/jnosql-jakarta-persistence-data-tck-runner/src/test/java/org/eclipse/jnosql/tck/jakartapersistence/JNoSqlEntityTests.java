@@ -15,7 +15,7 @@
 package org.eclipse.jnosql.tck.jakartapersistence;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
+
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 import org.eclipse.jnosql.mapping.document.DocumentTemplateProducer;
@@ -28,6 +28,7 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 //@Disabled
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages(value = {Converters.class, EntityConverter.class, DocumentTemplate.class})
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
-@AddExtensions({EntityMetadataExtension.class, DocumentExtension.class})
+@AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
 @AddPackages({PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class})
 @AddPackages({JNoSqlEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)

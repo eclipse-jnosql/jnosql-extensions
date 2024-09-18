@@ -38,7 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages(value = {Converters.class, EntityConverter.class, DocumentTemplate.class})
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
-@AddExtensions({EntityMetadataExtension.class, DocumentExtension.class, JakartaPersistenceExtension.class})
+@AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class, JakartaPersistenceExtension.class})
 @AddPackages({PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class})
 @AddPackages({JNoSqlPersistenceEntityTests.class, PersistenceEntityTests.class})
 @ExtendWith(TransactionExtension.class)
