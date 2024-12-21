@@ -44,18 +44,12 @@
 
     <modules>
         <module>jnosql-lite</module>
-        <module>jnosql-graph-connections</module>
         <module>jnosql-mapping-validation</module>
         <module>jnosql-static-metamodel</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.eclipse.jnosql.mapping</groupId>
-                <artifactId>jnosql-mapping-graph</artifactId>
-                <version>${jnosql-mapping.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.eclipse.jnosql.mapping</groupId>
                 <artifactId>jnosql-mapping-document</artifactId>
