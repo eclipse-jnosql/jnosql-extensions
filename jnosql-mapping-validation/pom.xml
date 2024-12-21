@@ -30,11 +30,6 @@
     <properties>
         <hibernate.validator.version>8.0.0.Final</hibernate.validator.version>
         <el.impl.version>5.0.0-M1</el.impl.version>
-        <tinkerpop.version>3.6.4</tinkerpop.version>
-        <neo4j.connector.version>0.9-3.4.0</neo4j.connector.version>
-        <!-- it's required by the 'org.neo4j' libraries  -->
-        <argLine> --add-opens java.base/java.lang=ALL-UNNAMED --add-exports java.base/sun.nio.ch=ALL-UNNAMED </argLine>
-
     </properties>
 
     <dependencies>
@@ -68,12 +63,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>jnosql-mapping-graph</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-validator</artifactId>
             <version>${hibernate.validator.version}</version>
@@ -83,30 +72,6 @@
             <groupId>org.glassfish</groupId>
             <artifactId>jakarta.el</artifactId>
             <version>${el.impl.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
-            <artifactId>gremlin-core</artifactId>
-            <version>${tinkerpop.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
-            <artifactId>gremlin-groovy</artifactId>
-            <version>${tinkerpop.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tinkerpop</groupId>
-            <artifactId>neo4j-gremlin</artifactId>
-            <version>${tinkerpop.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-tinkerpop-api-impl</artifactId>
-            <version>${neo4j.connector.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
