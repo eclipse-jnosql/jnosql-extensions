@@ -53,11 +53,6 @@
         <dependencies>
             <dependency>
                 <groupId>org.eclipse.jnosql.mapping</groupId>
-                <artifactId>jnosql-mapping-graph</artifactId>
-                <version>${jnosql-mapping.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jnosql.mapping</groupId>
                 <artifactId>jnosql-mapping-document</artifactId>
                 <version>${jnosql-mapping.version}</version>
             </dependency>

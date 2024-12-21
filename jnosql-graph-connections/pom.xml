@@ -24,8 +24,8 @@
         <version>1.1.4-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jnosql-graph-connections</artifactId>
-    <description>Eclipse JNoSQL connections to Graph</description>
+    <artifactId>jnosql-tinkerpop-connections</artifactId>
+    <description>Eclipse JNoSQL connections to Apache Tinkerpop</description>
 
     <properties>
         <tinkerpop.version>3.6.4</tinkerpop.version>
