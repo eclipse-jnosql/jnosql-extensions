@@ -24,14 +24,39 @@ import org.eclipse.jnosql.databases.tinkerpop.communication.GraphConfiguration;
 import java.util.Objects;
 
 /**
- * Creates the connection to {@link Graph} using Titan.
+ * An implementation of {@link GraphConfiguration} for creating and managing a connection
+ * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using Titan.
+ * <p>
+ * This class leverages Titan's {@link com.thinkaurelius.titan.core.TitanFactory} to create
+ * a {@link Graph} instance based on the provided {@link Settings}.
+ * </p>
+ * <p>
+ * Example usage:
+ * </p>
+ * <pre>
+ * {@code
+ * TitanGraphConfiguration configuration = new TitanGraphConfiguration();
+ * Settings settings = new Settings();
+ * settings.put("storage.backend", "cassandra");
+ * settings.put("storage.hostname", "127.0.0.1");
+ * Graph graph = configuration.apply(settings);
+ * }
+ * </pre>
+ * <p>
+ * Ensure the {@link Settings} object contains all required configuration
+ * properties for the Titan storage backend and related settings.
+ * </p>
+ *
+ * @see Graph
+ * @see GraphConfiguration
+ * @see com.thinkaurelius.titan.core.TitanFactory
  */
 public class TitanGraphConfiguration implements GraphConfiguration {
 
     @Override
     public Graph apply(Settings settings) {
         Objects.requireNonNull(settings, "settings is required");
-        Configuration configuration = new BaseConfiguration();
+        var configuration = new BaseConfiguration();
         for (String key : settings.keySet()) {
             settings.get(key, String.class).ifPresent(v -> configuration.addProperty(key, v));
         }
