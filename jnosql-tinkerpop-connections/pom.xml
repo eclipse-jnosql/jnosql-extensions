@@ -28,7 +28,7 @@
     <description>Eclipse JNoSQL connections to Apache Tinkerpop</description>
 
     <properties>
-        <tinkerpop.version>3.6.4</tinkerpop.version>
+        <tinkerpop.version>3.7.3</tinkerpop.version>
         <neo4j.connector.version>0.9-3.4.0</neo4j.connector.version>
     </properties>
 
