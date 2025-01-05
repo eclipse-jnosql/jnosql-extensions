@@ -237,6 +237,134 @@ The Criteria API can be used via CriteriaDocumentTemplate.
   </dependency>
 ----
 
+== Apache Tinkerpop Connections
+
+Apache Tinkerpop Connections is a project that provides multiple `GraphConfiguration` implementations for working with various graph databases, including ArangoDB, JanusGraph, Titan, and Neo4J. It simplifies the configuration and connection process, leveraging MicroProfile Config or Jakarta Config APIs for externalized configuration.
+
+[source,xml]
+----
+<dependency>
+  <groupId>org.eclipse.jnosql.mapping</groupId>
+  <artifactId>jnosql-tinkerpop-connections</artifactId>
+  <version>1.1.4</version>
+</dependency>
+----
+
+=== Supported Databases and Configurations
+
+==== ArangoDB
+
+[cols="2,6"]
+|===
+|Configuration Property |Description
+
+|`jnosql.arangodb.graph.edge`
+|The edge collection. It acts as a prefix. Example: `jnosql.arangodb.graph.edge.1=edge`.
+
+|`jnosql.arangodb.graph.relationship`
+|Specifies the edge collection, source vertex collection, and target vertex collection, separated by a pipe (`|`). Example: `jnosql.arangodb.graph.relationship.1=Person|knows|Person`.
+
+|`jnosql.arangodb.graph.vertex`
+|The vertex collection. It acts as a prefix. Example: `jnosql.arangodb.graph.vertex.1=vertex`.
+
+|`jnosql.arangodb.graph.graph`
+|The name of the graph to use.
+
+|`jnosql.arangodb.graph.host`
+|The database host.
+
+|`jnosql.arangodb.graph.user`
+|The username for the database.
+
+|`jnosql.arangodb.graph.password`
+|The password for the database.
+|===
+
+Here is an example configuration using ArangoDB's Graph API with MicroProfile Config:
+
+[source,properties]
+----
+jnosql.graph.provider=org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfiguration
+jnosql.arangodb.graph.graph=marketing
+jnosql.arangodb.graph.vertex.1=Person
+jnosql.arangodb.graph.edge.1=knows
+jnosql.arangodb.graph.relationship.1=Person|knows|Person
+----
+
+==== JanusGraph
+
+JanusGraph is a scalable graph database supporting various storage backends like Cassandra, HBase, and BerkeleyDB.
+
+WARNING: The configuration API passes and uses the properties from `org.janusgraph.graphdb.configuration.GraphDatabaseConfiguration`.
+
+Example configuration with MicroProfile Config:
+
+[source,properties]
+----
+jnosql.graph.provider=org.eclipse.jnosql.mapping.tinkerpop.connections.JanusGraphConfiguration
+graphname=name
+allow-upgrade=false
+----
+
+==== Titan
+
+Titan is a distributed graph database designed for processing large-scale graphs.
+
+WARNING: The configuration API passes and uses the properties from `com.thinkaurelius.titan.graphdb.configuration.GraphDatabaseConfiguration`.
+
+Example configuration with MicroProfile Config:
+
+[source,properties]
+----
+jnosql.graph.provider=org.eclipse.jnosql.mapping.tinkerpop.connections.TitanGraphConfiguration
+----
+
+==== Neo4J
+
+[cols="2,6"]
+|===
+|Configuration Property |Description
+
+|`jnosql.neo4j.host`
+|The database host. Default: `bolt://localhost:7687`.
+
+|`jnosql.neo4j.user`
+|The username for the database. Default: `neo4j`.
+
+|`jnosql.neo4j.password`
+|The password for the database. Default: `neo4j`.
+|===
+
+Example configuration using Neo4J's Graph API with MicroProfile Config:
+
+[source,properties]
+----
+jnosql.graph.provider=org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfiguration
+jnosql.neo4j.user=neo4j
+jnosql.neo4j.password=neo4j
+jnosql.neo4j.host=bolt://localhost:7687
+----
+
+==== Neo4J Embedded
+
+Neo4J Embedded mode is used for running Neo4J locally without a remote server. It is ideal for testing and prototyping.
+
+[cols="2,6"]
+|===
+|Configuration Property |Description
+
+|`jnosql.neo4j.host`
+|The file path to the Neo4J database directory.
+|===
+
+Example configuration using Neo4J Embedded Graph API with MicroProfile Config:
+
+[source,properties]
+----
+jnosql.graph.provider=org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JEmbeddedGraphConfiguration
+jnosql.neo4j.host=/home/otaviojava/data/
+----
+
 == Driver for Jakarta Persistence entities
 
 Provides a driver for Eclipse JNoSQL that supports Jakarta Persistence entities over a Jakarta Persistence provider. This project also contains a runner for the Jakarta Data TCK.
