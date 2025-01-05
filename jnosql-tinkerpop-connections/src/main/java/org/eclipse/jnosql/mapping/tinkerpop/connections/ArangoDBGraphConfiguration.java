@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.mapping.graph.connections;
+package org.eclipse.jnosql.mapping.tinkerpop.connections;
 
 import com.arangodb.tinkerpop.gremlin.utils.ArangoDBConfigurationBuilder;
 import org.apache.commons.configuration.BaseConfiguration;
@@ -23,13 +23,13 @@ import org.eclipse.jnosql.communication.graph.GraphConfiguration;
 
 import java.util.Objects;
 
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.EDGE;
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.EDGE_RELATIONSHIP;
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.GRAPH;
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.HOST;
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.PASSWORD;
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.USER;
-import static org.eclipse.jnosql.mapping.graph.connections.ArangoDBGraphConfigurations.VERTEX;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.EDGE;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.EDGE_RELATIONSHIP;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.GRAPH;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.HOST;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.PASSWORD;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.USER;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations.VERTEX;
 
 /**
  * Creates the connection to {@link Graph} using ArangoDB.

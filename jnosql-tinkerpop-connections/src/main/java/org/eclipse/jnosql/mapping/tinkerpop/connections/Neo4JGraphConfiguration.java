@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.mapping.graph.connections;
+package org.eclipse.jnosql.mapping.tinkerpop.connections;
 
 import com.steelbridgelabs.oss.neo4j.structure.Neo4JElementIdProvider;
 import com.steelbridgelabs.oss.neo4j.structure.Neo4JGraph;
@@ -27,9 +27,9 @@ import org.neo4j.driver.GraphDatabase;
 
 import java.util.Objects;
 
-import static org.eclipse.jnosql.mapping.graph.connections.Neo4JGraphConfigurations.HOST;
-import static org.eclipse.jnosql.mapping.graph.connections.Neo4JGraphConfigurations.PASSWORD;
-import static org.eclipse.jnosql.mapping.graph.connections.Neo4JGraphConfigurations.USER;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.HOST;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.PASSWORD;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.USER;
 
 /**
  * Creates the connection to {@link Graph} using Neo4J remote.

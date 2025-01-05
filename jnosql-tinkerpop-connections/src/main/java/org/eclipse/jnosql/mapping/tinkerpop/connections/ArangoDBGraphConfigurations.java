@@ -7,7 +7,7 @@
  *    You may elect to redistribute this code under either of these licenses.
  */
 
-package org.eclipse.jnosql.mapping.graph.connections;
+package org.eclipse.jnosql.mapping.tinkerpop.connections;
 
 import java.util.function.Supplier;
 

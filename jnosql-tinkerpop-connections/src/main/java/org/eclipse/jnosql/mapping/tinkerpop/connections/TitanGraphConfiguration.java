@@ -12,21 +12,21 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.mapping.graph.connections;
+package org.eclipse.jnosql.mapping.tinkerpop.connections;
 
+import com.thinkaurelius.titan.core.TitanFactory;
 import org.eclipse.jnosql.communication.Settings;
-import org.apache.commons.configuration2.BaseConfiguration;
-import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration.BaseConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.eclipse.jnosql.communication.graph.GraphConfiguration;
-import org.janusgraph.core.JanusGraphFactory;
 
 import java.util.Objects;
 
 /**
- * Creates the connection to {@link Graph} using JanusGraph.
+ * Creates the connection to {@link Graph} using Titan.
  */
-public class JanusGraphConfiguration implements GraphConfiguration {
+public class TitanGraphConfiguration implements GraphConfiguration {
 
     @Override
     public Graph apply(Settings settings) {
@@ -35,6 +35,6 @@ public class JanusGraphConfiguration implements GraphConfiguration {
         for (String key : settings.keySet()) {
             settings.get(key, String.class).ifPresent(v -> configuration.addProperty(key, v));
         }
-        return JanusGraphFactory.open(configuration);
+        return TitanFactory.open(configuration);
     }
 }

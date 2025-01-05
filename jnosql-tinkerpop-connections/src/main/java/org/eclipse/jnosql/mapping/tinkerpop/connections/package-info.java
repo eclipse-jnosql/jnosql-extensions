@@ -23,4 +23,4 @@
  * winner throughout our experiments. Cassandra achieves the highest throughput for the maximum number
  * of nodes in all experiments" although "this comes at the price of high write and read latencies.
  */
-package org.eclipse.jnosql.mapping.graph.connections;
+package org.eclipse.jnosql.mapping.tinkerpop.connections;

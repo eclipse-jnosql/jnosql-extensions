@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.mapping.graph.connections;
+package org.eclipse.jnosql.mapping.tinkerpop.connections;
 
 import org.eclipse.jnosql.communication.Settings;
 import org.apache.commons.configuration2.BaseConfiguration;
@@ -23,7 +23,7 @@ import org.eclipse.jnosql.communication.graph.GraphConfiguration;
 
 import java.util.Objects;
 
-import static org.eclipse.jnosql.mapping.graph.connections.Neo4JGraphConfigurations.HOST;
+import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.HOST;
 
 /**
  * Creates the connection to {@link Graph} using Neo4J Embedded.
