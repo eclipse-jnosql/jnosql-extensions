@@ -12,9 +12,15 @@ package org.eclipse.jnosql.mapping.tinkerpop.connections;
 import java.util.function.Supplier;
 
 /**
- * An enumeration to show the available options to connect to the Neo4J database.
- * It implements {@link Supplier}, where its it returns the property name that might be
- * overwritten by the system environment using Eclipse Microprofile or Jakarta Config API.
+ * An enumeration to represent the available configuration options for connecting
+ * to a Neo4J database. Each enum constant represents a property key that can be
+ * used to configure the connection.
+ * <p>
+ * This enumeration implements {@link Supplier}, enabling the retrieval of the
+ * property key as a string. These keys can be overridden by the system environment
+ * or a configuration source compliant with the Eclipse MicroProfile Config or Jakarta Config API.
+ * </p>
+ * <p>
  *
  * @see org.eclipse.jnosql.communication.Settings
  */
