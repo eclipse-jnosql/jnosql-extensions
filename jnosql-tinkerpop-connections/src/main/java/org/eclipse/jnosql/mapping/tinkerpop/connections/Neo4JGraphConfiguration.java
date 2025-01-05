@@ -31,8 +31,41 @@ import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigu
 import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.PASSWORD;
 import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.USER;
 
+
 /**
- * Creates the connection to {@link Graph} using Neo4J remote.
+ * An implementation of {@link GraphConfiguration} for creating and managing a connection
+ * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using a Neo4J remote database.
+ * <p>
+ * This class utilizes Neo4J's {@link org.neo4j.driver.GraphDatabase} and associated components
+ * to establish a connection and configure the graph instance.
+ * </p>
+ * <p>
+ * Example usage:
+ * </p>
+ * <pre>
+ * {@code
+ * Neo4JGraphConfiguration configuration = new Neo4JGraphConfiguration();
+ * Settings settings = new Settings();
+ * settings.put(Neo4JGraphConfigurations.HOST.get(), "bolt://localhost:7687");
+ * settings.put(Neo4JGraphConfigurations.USER.get(), "neo4j");
+ * settings.put(Neo4JGraphConfigurations.PASSWORD.get(), "password");
+ * Graph graph = configuration.apply(settings);
+ * }
+ * </pre>
+ * <p>
+ * The {@link Settings} object should provide valid connection details, including
+ * the host URL, user credentials, and password. Default values are:
+ * <ul>
+ *   <li>Host: "bolt://localhost:7687"</li>
+ *   <li>User: "neo4j"</li>
+ *   <li>Password: "neo4j"</li>
+ * </ul>
+ * </p>
+ *
+ * @see Graph
+ * @see GraphConfiguration
+ * @see org.neo4j.driver.GraphDatabase
+ * @see org.neo4j.driver.AuthTokens
  */
 public class Neo4JGraphConfiguration implements GraphConfiguration {
 
