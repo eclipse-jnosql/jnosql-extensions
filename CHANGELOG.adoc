@@ -8,6 +8,10 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 == [Unreleased]
 
+=== Added
+
+- Include Apache Tinkerpop Connections
+
 == [1.1.4] - 2024-12-21
 
 === Removed
