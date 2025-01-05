@@ -121,31 +121,19 @@ public class ArangoDBGraphConfiguration implements GraphConfiguration {
     }
 
 
-    private static class EdgeConfiguration {
-
-        private final String edge;
-
-        private final String source;
-
-        private final String target;
-
-        private EdgeConfiguration(String source, String edge, String target) {
-            this.edge = edge;
-            this.source = source;
-            this.target = target;
-        }
+    private record EdgeConfiguration(String source, String edge, String target) {
 
         static EdgeConfiguration parse(Object value) {
-            final String[] values = value.toString().split("\\|");
-            if (values.length != 3) {
-                throw new IllegalArgumentException("The element is valid it must have" +
-                        " three element split by pipe: " + value);
+                final String[] values = value.toString().split("\\|");
+                if (values.length != 3) {
+                    throw new IllegalArgumentException("The element is valid it must have" +
+                            " three element split by pipe: " + value);
+                }
+                return new EdgeConfiguration(values[0], values[1], values[2]);
             }
-            return new EdgeConfiguration(values[0], values[1], values[2]);
-        }
 
-        private void add(ArangoDBConfigurationBuilder builder) {
-            builder.configureEdge(edge, source, target);
+            private void add(ArangoDBConfigurationBuilder builder) {
+                builder.configureEdge(edge, source, target);
+            }
         }
-    }
 }
