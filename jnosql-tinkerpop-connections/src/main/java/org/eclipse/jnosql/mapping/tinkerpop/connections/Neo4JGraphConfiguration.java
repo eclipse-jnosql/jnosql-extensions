@@ -19,7 +19,7 @@ import com.steelbridgelabs.oss.neo4j.structure.Neo4JGraph;
 import com.steelbridgelabs.oss.neo4j.structure.providers.Neo4JNativeElementIdProvider;
 import org.eclipse.jnosql.communication.Settings;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.eclipse.jnosql.communication.graph.GraphConfiguration;
+import org.eclipse.jnosql.databases.tinkerpop.communication.GraphConfiguration;
 import org.neo4j.driver.AuthToken;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;

@@ -19,7 +19,7 @@ import org.eclipse.jnosql.communication.Settings;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.eclipse.jnosql.communication.graph.GraphConfiguration;
+import org.eclipse.jnosql.databases.tinkerpop.communication.GraphConfiguration;
 
 import java.util.Objects;
 

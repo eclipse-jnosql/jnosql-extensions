@@ -18,7 +18,7 @@ import org.eclipse.jnosql.communication.Settings;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.eclipse.jnosql.communication.graph.GraphConfiguration;
+import org.eclipse.jnosql.databases.tinkerpop.communication.GraphConfiguration;
 import org.janusgraph.core.JanusGraphFactory;
 
 import java.util.Objects;
