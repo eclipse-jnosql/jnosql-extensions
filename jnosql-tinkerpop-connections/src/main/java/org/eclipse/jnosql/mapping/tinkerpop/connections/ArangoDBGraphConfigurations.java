@@ -15,14 +15,10 @@ import java.util.function.Supplier;
  * An enumeration to represent the available configuration options for connecting to an ArangoDB database
  * when using it as a graph database. Each enum constant corresponds to a specific property key that can
  * be used to configure the connection and graph settings.
- * <p>
  * This enumeration implements {@link Supplier}, allowing each constant to provide its property key
  * as a string value. These keys can be overridden by the system environment or a configuration source
  * compliant with the Eclipse MicroProfile Config or Jakarta Config API.
- * </p>
- * <p>
  * Example usage:
- * </p>
  * <pre>
  * {@code
  * String edgeCollectionKey = ArangoDBGraphConfigurations.EDGE.get();
@@ -30,7 +26,6 @@ import java.util.function.Supplier;
  * String host = ArangoDBGraphConfigurations.HOST.get();
  * }
  * </pre>
- * <p>
  * Default property keys and their descriptions:
  * <ul>
  *   <li><b>EDGE</b>: Specifies the edge collection prefix. Example: {@code jnosql.arangodb.graph.edge.1=edge}</li>
@@ -42,7 +37,6 @@ import java.util.function.Supplier;
  *   <li><b>USER</b>: Specifies the username credential for the database connection.</li>
  *   <li><b>PASSWORD</b>: Specifies the password credential for the database connection.</li>
  * </ul>
- * </p>
  *
  * @see org.eclipse.jnosql.communication.Settings
  */

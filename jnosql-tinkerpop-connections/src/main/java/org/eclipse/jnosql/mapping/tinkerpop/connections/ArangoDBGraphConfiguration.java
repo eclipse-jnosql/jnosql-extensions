@@ -34,14 +34,10 @@ import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConf
 /**
  * An implementation of {@link GraphConfiguration} for creating and managing a connection
  * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using ArangoDB.
- * <p>
  * This class utilizes an {@link ArangoDBConfigurationBuilder} to configure the ArangoDB graph settings
  * based on the provided {@link org.eclipse.jnosql.communication.Settings}. It supports setting hosts,
  * user credentials, graph name, vertex collections, edge collections, and edge relationships.
- * </p>
- * <p>
  * Example usage:
- * </p>
  * <pre>
  * {@code
  * ArangoDBGraphConfiguration configuration = new ArangoDBGraphConfiguration();
@@ -53,7 +49,6 @@ import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConf
  * Graph graph = configuration.apply(settings);
  * }
  * </pre>
- * <p>
  * The {@link Settings} object should include the required configuration properties to successfully
  * establish the connection, including:
  * <ul>
@@ -65,7 +60,6 @@ import static org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConf
  *   <li><b>EDGE</b>: Specifies the edge collections.</li>
  *   <li><b>EDGE_RELATIONSHIP</b>: Specifies the edge relationships in the format: source|edge|target.</li>
  * </ul>
- * </p>
  *
  * @see Graph
  * @see GraphConfiguration
