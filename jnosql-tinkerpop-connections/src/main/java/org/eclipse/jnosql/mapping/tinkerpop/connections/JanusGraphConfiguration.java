@@ -24,8 +24,42 @@ import org.janusgraph.core.JanusGraphFactory;
 import java.util.Objects;
 
 /**
- * Creates the connection to {@link Graph} using JanusGraph.
+ * An implementation of {@link GraphConfiguration} for creating and managing a connection
+ * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using JanusGraph.
+ * <p>
+ * This class leverages JanusGraph's {@link org.janusgraph.core.JanusGraphFactory} to create
+ * a {@link Graph} instance based on the configuration provided through {@link org.eclipse.jnosql.communication.Settings}.
+ * </p>
+ * <p>
+ * Example usage:
+ * </p>
+ * <pre>
+ * {@code
+ * JanusGraphConfiguration configuration = new JanusGraphConfiguration();
+ * Settings settings = new Settings();
+ * settings.put("storage.backend", "cassandra");
+ * settings.put("storage.hostname", "127.0.0.1");
+ * Graph graph = configuration.apply(settings);
+ * }
+ * </pre>
+ * <p>
+ * The {@link Settings} object should contain the necessary configuration properties required
+ * by JanusGraph, such as:
+ * <ul>
+ *   <li><b>storage.backend</b>: Specifies the storage backend (e.g., cassandra, hbase, inmemory).</li>
+ *   <li><b>storage.hostname</b>: Specifies the hostname of the storage backend.</li>
+ *   <li>Additional properties as required by the JanusGraph configuration.</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Ensure that all required properties are included to successfully connect to the desired storage backend.
+ * </p>
+ *
+ * @see Graph
+ * @see GraphConfiguration
+ * @see org.janusgraph.core.JanusGraphFactory
  */
+
 public class JanusGraphConfiguration implements GraphConfiguration {
 
     @Override
