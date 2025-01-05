@@ -155,8 +155,7 @@ public class OrderTest {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(value).isNotNull();
             soft.assertThat(value).isInstanceOf(String[].class);
-            var usersValue = (String[]) value;
-            soft.assertThat(usersValue).containsExactly("Ada", "Lucas");
+            soft.assertThat(value).containsExactly("Ada", "Lucas");
         });
     }
 

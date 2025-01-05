@@ -72,7 +72,7 @@ public class AnimalTest {
     void shouldCreateNewInstance() {
         Animal animal = entityMetadata.newInstance();
         Assertions.assertNotNull(animal);
-        Assertions.assertTrue(animal instanceof Animal);
+        Assertions.assertInstanceOf(Animal.class, animal);
     }
 
     @Test
