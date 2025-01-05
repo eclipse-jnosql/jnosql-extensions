@@ -26,7 +26,6 @@ import java.util.Objects;
 /**
  * An implementation of {@link GraphConfiguration} for creating and managing a connection
  * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using JanusGraph.
- *
  * This class leverages JanusGraph's {@link org.janusgraph.core.JanusGraphFactory} to create
  * a {@link Graph} instance based on the configuration provided through {@link org.eclipse.jnosql.communication.Settings}.
  * Example usage:

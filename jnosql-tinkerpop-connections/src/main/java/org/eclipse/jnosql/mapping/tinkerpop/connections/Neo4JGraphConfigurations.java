@@ -15,7 +15,6 @@ import java.util.function.Supplier;
  * An enumeration to represent the available configuration options for connecting
  * to a Neo4J database. Each enum constant represents a property key that can be
  * used to configure the connection.
- *
  * This enumeration implements {@link Supplier}, enabling the retrieval of the
  * property key as a string. These keys can be overridden by the system environment
  * or a configuration source compliant with the Eclipse MicroProfile Config or Jakarta Config API.
