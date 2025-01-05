@@ -15,7 +15,6 @@
 package org.eclipse.jnosql.lite.mapping.entities.record;
 
 import org.assertj.core.api.SoftAssertions;
-import org.eclipse.jnosql.lite.mapping.entities.Actor;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.ConstructorBuilder;
 import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
@@ -31,8 +30,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class GuestTest {
 

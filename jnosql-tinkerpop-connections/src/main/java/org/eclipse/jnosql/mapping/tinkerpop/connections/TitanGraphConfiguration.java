@@ -17,7 +17,6 @@ package org.eclipse.jnosql.mapping.tinkerpop.connections;
 import com.thinkaurelius.titan.core.TitanFactory;
 import org.eclipse.jnosql.communication.Settings;
 import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.eclipse.jnosql.databases.tinkerpop.communication.GraphConfiguration;
 
