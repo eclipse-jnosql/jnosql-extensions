@@ -71,7 +71,7 @@ public class SMSNotificationTest {
     void shouldCreateNewInstance() {
         SmsNotification notification = entityMetadata.newInstance();
         Assertions.assertNotNull(notification);
-        Assertions.assertTrue(notification instanceof SmsNotification);
+        Assertions.assertInstanceOf(SmsNotification.class, notification);
     }
 
     @Test

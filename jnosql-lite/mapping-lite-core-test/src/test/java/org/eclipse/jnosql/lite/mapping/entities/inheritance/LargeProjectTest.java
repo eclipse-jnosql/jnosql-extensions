@@ -69,7 +69,7 @@ public class LargeProjectTest {
     void shouldCreateNewInstance() {
         LargeProject project = entityMetadata.newInstance();
         Assertions.assertNotNull(project);
-        Assertions.assertTrue(project instanceof LargeProject);
+        Assertions.assertInstanceOf(LargeProject.class, project);
     }
 
     @Test

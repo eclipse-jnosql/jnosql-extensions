@@ -70,7 +70,7 @@ class WineTest {
     void shouldCreateNewInstance() {
         Wine wine = entityMetadata.newInstance();
         Assertions.assertNotNull(wine);
-        Assertions.assertTrue(wine instanceof Wine);
+        Assertions.assertInstanceOf(Wine.class, wine);
     }
 
     @Test

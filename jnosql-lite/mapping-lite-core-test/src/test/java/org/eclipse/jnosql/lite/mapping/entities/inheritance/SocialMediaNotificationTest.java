@@ -71,7 +71,7 @@ public class SocialMediaNotificationTest {
     void shouldCreateNewInstance() {
         SocialMediaNotification notification = entityMetadata.newInstance();
         Assertions.assertNotNull(notification);
-        Assertions.assertTrue(notification instanceof SocialMediaNotification);
+        Assertions.assertInstanceOf(SocialMediaNotification.class, notification);
     }
 
     @Test

@@ -72,7 +72,7 @@ public class WorkerTest {
     void shouldCreateNewInstance() {
         Person person = entityMetadata.newInstance();
         Assertions.assertNotNull(person);
-        Assertions.assertTrue(person instanceof Person);
+        Assertions.assertInstanceOf(Person.class, person);
     }
 
     @Test
