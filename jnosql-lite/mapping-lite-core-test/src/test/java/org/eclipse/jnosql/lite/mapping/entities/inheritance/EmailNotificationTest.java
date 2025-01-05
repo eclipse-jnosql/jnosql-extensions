@@ -69,9 +69,9 @@ public class EmailNotificationTest {
 
     @Test
     void shouldCreateNewInstance() {
-        EmailNotification notification = entityMetadata.newInstance();
+        var notification = entityMetadata.newInstance();
         Assertions.assertNotNull(notification);
-        Assertions.assertTrue(notification instanceof EmailNotification);
+        Assertions.assertInstanceOf(EmailNotification.class, notification);
     }
 
     @Test

@@ -70,7 +70,7 @@ public class SmallProjectTest {
     void shouldCreateNewInstance() {
         SmallProject project = entityMetadata.newInstance();
         Assertions.assertNotNull(project);
-        Assertions.assertTrue(project instanceof SmallProject);
+        Assertions.assertInstanceOf(SmallProject.class, project);
     }
 
     @Test

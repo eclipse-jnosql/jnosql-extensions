@@ -15,10 +15,8 @@
 package org.eclipse.jnosql.lite.mapping.entities;
 
 import jakarta.data.Order;
-import jakarta.data.Sort;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
-import jakarta.data.repository.OrderBy;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
@@ -39,7 +37,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;

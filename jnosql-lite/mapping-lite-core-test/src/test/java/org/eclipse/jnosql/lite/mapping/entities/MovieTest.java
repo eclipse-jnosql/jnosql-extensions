@@ -69,7 +69,7 @@ public class MovieTest {
     void shouldCreateNewInstance() {
         Movie movie = entityMetadata.newInstance();
         Assertions.assertNotNull(movie);
-        Assertions.assertTrue(movie instanceof Movie);
+        Assertions.assertInstanceOf(Movie.class, movie);
     }
 
     @Test

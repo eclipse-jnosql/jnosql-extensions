@@ -74,7 +74,7 @@ public class OrdersTest {
     void shouldCreateNewInstance() {
         Orders orders = entityMetadata.newInstance();
         Assertions.assertNotNull(orders);
-        Assertions.assertTrue(orders instanceof Orders);
+        Assertions.assertInstanceOf(Orders.class, orders);
     }
 
     @Test
