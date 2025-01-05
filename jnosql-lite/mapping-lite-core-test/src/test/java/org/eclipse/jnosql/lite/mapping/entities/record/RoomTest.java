@@ -90,9 +90,7 @@ class RoomTest {
         var room = new Room(123, guest);
         Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
         FieldMetadata id = groupByName.get("_id");
-        SoftAssertions.assertSoftly(s -> {
-            s.assertThat(id.read(room)).isEqualTo(123);
-        });
+        SoftAssertions.assertSoftly(s -> s.assertThat(id.read(room)).isEqualTo(123));
     }
 
     @Test
