@@ -26,7 +26,35 @@ import java.util.Objects;
 import static org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations.HOST;
 
 /**
- * Creates the connection to {@link Graph} using Neo4J Embedded.
+ * An implementation of {@link GraphConfiguration} for creating and managing a connection
+ * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using Neo4J in embedded mode.
+ * <p>
+ * This class configures an embedded Neo4J instance by utilizing settings provided via
+ * {@link org.eclipse.jnosql.communication.Settings} and maps them to the required properties
+ * for Neo4J embedded configuration.
+ * </p>
+ * <p>
+ * Example usage:
+ * </p>
+ * <pre>
+ * {@code
+ * Neo4JEmbeddedGraphConfiguration configuration = new Neo4JEmbeddedGraphConfiguration();
+ * Settings settings = new Settings();
+ * settings.put("gremlin.neo4j.directory", "/path/to/neo4j/data");
+ * Graph graph = configuration.apply(settings);
+ * }
+ * </pre>
+ * <p>
+ * The {@link Settings} object must include the required configuration property:
+ * <ul>
+ *   <li>gremlin.neo4j.directory: Specifies the directory where the Neo4J database files are stored.</li>
+ * </ul>
+ * Additional properties can be included and will be passed to the Neo4J configuration.
+ * </p>
+ *
+ * @see Graph
+ * @see GraphConfiguration
+ * @see org.apache.tinkerpop.gremlin.neo4j.structure.Neo4jGraph
  */
 public class Neo4JEmbeddedGraphConfiguration implements GraphConfiguration {
 
