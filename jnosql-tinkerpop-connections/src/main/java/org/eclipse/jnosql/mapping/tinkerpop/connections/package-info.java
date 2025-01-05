@@ -17,11 +17,8 @@
  * This package contains classes and configurations for integrating with graph databases
  * using the Apache TinkerPop framework, with support for various database backends such as Neo4J,
  * JanusGraph, ArangoDB, and Titan.
- * <p>
  * The primary purpose of this package is to provide implementations of the {@link org.apache.tinkerpop.gremlin.structure.Graph}
  * interface through database-specific configurations, enabling seamless connection and interaction with graph databases.
- * </p>
- * <p>
  * Key components in this package include:
  * <ul>
  *   <li>{@link org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfiguration}:
@@ -35,8 +32,6 @@
  *   <li>{@link org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfiguration}:
  *       Configures and connects to an ArangoDB graph database.</li>
  * </ul>
- * </p>
- * <p>
  * The package also includes enumeration classes, such as:
  * <ul>
  *   <li>{@link org.eclipse.jnosql.mapping.tinkerpop.connections.ArangoDBGraphConfigurations}:
@@ -44,10 +39,7 @@
  *   <li>{@link org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JGraphConfigurations}:
  *       Provides configuration keys for Neo4J-specific settings.</li>
  * </ul>
- * </p>
- * <p>
  * Example usage of a graph configuration:
- * </p>
  * <pre>
  * {@code
  * Settings settings = new Settings();
@@ -60,10 +52,8 @@
  * Graph graph = configuration.apply(settings);
  * }
  * </pre>
- * <p>
  * All configurations implement {@link org.eclipse.jnosql.communication.Settings} for dynamic
  * property management and leverage Eclipse MicroProfile Config or Jakarta Config APIs for
  * externalized configuration.
- * </p>
  */
 package org.eclipse.jnosql.mapping.tinkerpop.connections;

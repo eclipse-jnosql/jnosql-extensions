@@ -25,13 +25,9 @@ import java.util.Objects;
 /**
  * An implementation of {@link GraphConfiguration} for creating and managing a connection
  * to a {@link org.apache.tinkerpop.gremlin.structure.Graph} using Titan.
- * <p>
  * This class leverages Titan's {@link com.thinkaurelius.titan.core.TitanFactory} to create
  * a {@link Graph} instance based on the provided {@link Settings}.
- * </p>
- * <p>
  * Example usage:
- * </p>
  * <pre>
  * {@code
  * TitanGraphConfiguration configuration = new TitanGraphConfiguration();
@@ -41,10 +37,8 @@ import java.util.Objects;
  * Graph graph = configuration.apply(settings);
  * }
  * </pre>
- * <p>
  * Ensure the {@link Settings} object contains all required configuration
  * properties for the Titan storage backend and related settings.
- * </p>
  *
  * @see Graph
  * @see GraphConfiguration
