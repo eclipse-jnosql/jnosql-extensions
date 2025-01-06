@@ -39,7 +39,14 @@ class PersistencePreparedStatement implements PreparedStatement {
     }
 
     private void applyParameters(Query query) {
-        parameters.forEach((name, value) -> query.setParameter(name, value));
+        parameters.forEach((name, value) -> {
+            if (name.startsWith("?")) {
+                var position = Integer.parseInt(name, 1, name.length(), 10);
+                query.setParameter(position, value);
+            } else {
+                query.setParameter(name, value);
+            }
+        });
     }
 
     @Override
