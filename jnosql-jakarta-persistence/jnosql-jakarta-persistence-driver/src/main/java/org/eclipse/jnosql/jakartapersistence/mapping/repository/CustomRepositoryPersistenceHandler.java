@@ -46,7 +46,8 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
         return new CustomRepositoryPersistenceHandlerBuilder();
     }
 
-    protected SemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(SemiStructuredTemplate notUsedTemplate, EntityMetadata entityMetadata,  Class<?> entityType, Converters converters) {
+    protected SemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(
+            SemiStructuredTemplate notUsedTemplate, EntityMetadata entityMetadata,  Class<?> entityType, Converters converters) {
         return new JakartaPersistenceRepositoryProxy<>(template, entityMetadata, entityType, converters);
     }
 

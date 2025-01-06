@@ -65,7 +65,8 @@ public class JakartaPersistenceExtension implements Extension {
         repository handler, because CustomRepositoryHandler for documents is not compatible
         with PersistencePreparedStatement.
 
-        We might need to remove the service file for DocumentExtension, or create our custom repositories as lternatives so that they supporess repositories created by the DocumentExtension.
+        We might need to remove the service file for DocumentExtension, or create our custom repositories as
+        lternatives so that they supporess repositories created by the DocumentExtension.
          */
     }
 }

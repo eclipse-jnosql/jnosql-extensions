@@ -15,12 +15,20 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import java.util.function.Function;
+
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+
 
 class DeleteQueryParser extends BaseQueryParser {
 
@@ -45,5 +53,50 @@ class DeleteQueryParser extends BaseQueryParser {
         return entityIdName;
     }
 
+    <T> void deleteAll(Class<T> type) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    void delete(DeleteQuery deleteQuery) {
+                final String entityName = deleteQuery.name();
+        final EntityType<?> entityType = findEntityType(entityName);
+        if (deleteQuery.condition().isEmpty()) {
+            deleteAll(entityType.getJavaType());
+//        } else {
+//            final CriteriaCondition criteria = deleteQuery.condition().get();
+//            TypedQuery<?> query = buildQuery(entityType.getJavaType(), Void.class, ctx -> {
+//                CriteriaQuery<?> q = ctx.query().select(ctx.root());
+//                q = q.where(parseCriteria(criteria, ctx));
+//                return q;
+//            });
+//            return query.executeUpdate();
+        }
+    }
+
+    private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType,
+            Function<DeleteQueryContext<FROM>, CriteriaQuery<FROM>> queryModifier) {
+        EntityManager em = entityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaDelete<FROM> criteriaQuery = criteriaBuilder.createCriteriaDelete(fromType);
+        Root<FROM> from = criteriaQuery.from(fromType);
+//        criteriaQuery = queryModifier.apply(
+//                new DeleteQueryContext(criteriaQuery,
+//                        new QueryContext(from, criteriaBuilder)));
+//        return em.createQuery(criteriaQuery);
+        return null;
+    }
+
+    record DeleteQueryContext<FROM>(CriteriaDelete<FROM> query, QueryContext<FROM> queryContext) {
+
+        public Root<FROM> root() {
+            return queryContext.root();
+        }
+
+        public CriteriaBuilder builder() {
+            return queryContext.builder();
+        }
+
+    }
 
 }
+

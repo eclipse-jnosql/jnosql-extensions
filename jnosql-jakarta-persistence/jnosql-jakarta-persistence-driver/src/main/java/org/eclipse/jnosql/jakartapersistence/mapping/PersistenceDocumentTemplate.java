@@ -131,7 +131,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public void delete(DeleteQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        deleteParser.delete(query);
     }
 
     @Override
@@ -156,7 +156,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> void deleteAll(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        deleteParser.deleteAll(type);
     }
 
     @Override
