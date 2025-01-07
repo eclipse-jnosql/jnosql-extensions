@@ -22,6 +22,7 @@ import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import java.util.Objects;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
 
 
 /**
@@ -29,7 +30,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
  * This builder facilitates the configuration of various components required
  * to instantiate a custom repository handler.
  */
-public class CustomRepositoryPersistenceHandlerBuilder {
+public class CustomRepositoryPersistenceHandlerBuilder extends CustomRepositoryHandlerBuilder {
 
     private EntitiesMetadata entitiesMetadata;
 

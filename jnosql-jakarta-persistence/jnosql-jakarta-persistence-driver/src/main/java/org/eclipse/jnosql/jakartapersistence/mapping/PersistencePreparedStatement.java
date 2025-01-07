@@ -27,7 +27,7 @@ import org.eclipse.jnosql.mapping.PreparedStatement;
  *
  * @author Ondro Mihalyi
  */
-class PersistencePreparedStatement implements PreparedStatement {
+public class PersistencePreparedStatement implements PreparedStatement {
 
     private final String queryString;
     private final SelectQueryParser selectParser;

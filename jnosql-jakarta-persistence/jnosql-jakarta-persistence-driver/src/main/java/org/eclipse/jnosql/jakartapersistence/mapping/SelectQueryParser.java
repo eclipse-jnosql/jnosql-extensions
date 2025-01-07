@@ -163,6 +163,9 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public Query buildQuery(String query) {
+        if (query.startsWith("WHERE")) {
+            query = "SELECT this FROM Coordinate " + query;
+        }
         EntityManager em = entityManager();
         return em.createQuery(query);
     }
