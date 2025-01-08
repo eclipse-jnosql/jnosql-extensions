@@ -48,16 +48,16 @@
         <targetDirectory>${project.basedir}/target</targetDirectory>
 
         <!-- Dependency versions -->
-        <jakarta.data.version>1.0.0</jakarta.data.version>
+        <jakarta.data.version>1.0.1</jakarta.data.version>
         <jakarta.data.tck.version>1.0.1</jakarta.data.tck.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
         <jakarta.enterprise.cdi.version>4.1.0</jakarta.enterprise.cdi.version>
-        <eclipselink.version>5.0.0-B03</eclipselink.version>
+        <eclipselink.version>5.0.0-B05</eclipselink.version>
 
-        <arquillian.version>1.8.0.Final</arquillian.version>
-        <junit.version>5.10.2</junit.version>
+        <arquillian.version>1.9.2.Final</arquillian.version>
+        <junit.version>5.11.4</junit.version>
         <shrinkwrap.version>1.2.6</shrinkwrap.version>
-        <sigtest.version>2.3</sigtest.version>
+        <sigtest.version>2.4</sigtest.version>
         <weld.junit5.version>4.0.3.Final</weld.junit5.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <!-- Pointer to logging.properties file that has the java.util.logging
@@ -66,7 +66,7 @@
         <org.jboss.logging.provider>jdk</org.jboss.logging.provider>
 
         <!-- TCK settings -->
-        <included.groups><![CDATA[standalone & persistence]]></included.groups>
+        <included.groups><![CDATA[((standalone & persistence) | signature) & !development]]></included.groups>
     </properties>
 
     <dependencyManagement>
