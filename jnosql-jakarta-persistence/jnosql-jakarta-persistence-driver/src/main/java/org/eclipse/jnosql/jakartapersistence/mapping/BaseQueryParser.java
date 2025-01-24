@@ -101,14 +101,18 @@ class BaseQueryParser {
                     valueContext.fieldValues().forEach(v -> inExpr.value(v));
                     yield inExpr;
                 }
+                case LIKE -> {
+                    throw new UnsupportedOperationException("LIKE is not supported yet.");
+                }
 
                 default ->
-                    throw new UnsupportedOperationException("Not supported yet.");
+                    throw new UnsupportedOperationException("JNoSQL criteria condition "
+                            + criteria.condition() + " is not supported yet.");
             };
         } else if (value instanceof Element element) {
             return parseCriteria(element.value().get(), ctx);
         }
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Parsing value " + value + " is not supported yet.");
     }
 
     protected static String getName(Element element) {

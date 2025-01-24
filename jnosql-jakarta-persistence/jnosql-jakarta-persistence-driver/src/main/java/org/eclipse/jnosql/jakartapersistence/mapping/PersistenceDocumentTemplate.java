@@ -151,7 +151,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public boolean exists(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'exists' not supported yet.");
     }
 
     @Override
@@ -161,27 +161,27 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'selectCursor' not supported yet.");
     }
 
     @Override
     public <T> T insert(T t, Duration drtn) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'insert(T t, Duration drtn)' not supported yet.");
     }
 
     @Override
     public <T> Iterable<T> insert(Iterable<T> itrbl) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'insert(Iterable<T> itrbl)' not supported yet.");
     }
 
     @Override
     public <T> Iterable<T> insert(Iterable<T> itrbl, Duration drtn) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'insert(Iterable<T> itrbl, Duration drtn)' not supported yet.");
     }
 
     @Override
     public <T> Iterable<T> update(Iterable<T> itrbl) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'update' not supported yet.");
     }
 
     @Override
@@ -191,17 +191,17 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> QueryMapper.MapperFrom select(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'select(Class<T> type)' not supported yet.");
     }
 
     @Override
     public <T> QueryMapper.MapperDeleteFrom delete(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'delete(Class<T> type)' not supported yet.");
     }
 
     @Override
     public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported yet.");
     }
 
 }
