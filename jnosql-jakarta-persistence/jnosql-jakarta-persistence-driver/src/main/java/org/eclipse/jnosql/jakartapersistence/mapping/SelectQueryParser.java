@@ -16,6 +16,7 @@
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -94,7 +95,7 @@ class SelectQueryParser extends BaseQueryParser {
         final Class<T> type = entityType.getJavaType();
         if (selectQuery.condition().isEmpty()) {
             TypedQuery<T> query = buildQuery(type, type, ctx -> ctx.query().select((Root<T>) ctx.root()));
-            return Optional.ofNullable(query.getSingleResultOrNull());
+            return Optional.ofNullable(toDataExceptions(query));
         } else {
             final CriteriaCondition criteria = selectQuery.condition().get();
             TypedQuery<T> query = buildQuery(type, type, ctx -> {
@@ -102,7 +103,15 @@ class SelectQueryParser extends BaseQueryParser {
                 q = q.where(parseCriteria(criteria, ctx.queryContext()));
                 return q;
             });
-            return Optional.ofNullable(query.getSingleResultOrNull());
+            return Optional.ofNullable(toDataExceptions(query));
+        }
+    }
+
+    private static <T> T toDataExceptions(TypedQuery<T> query) {
+        try {
+            return query.getSingleResultOrNull();
+        } catch (NonUniqueResultException e) {
+            throw new jakarta.data.exceptions.NonUniqueResultException(e);
         }
     }
 
