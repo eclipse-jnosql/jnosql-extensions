@@ -131,7 +131,11 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public void delete(DeleteQuery query) {
-        deleteParser.delete(query);
+        deleteWithCount(query);
+    }
+
+    public long deleteWithCount(DeleteQuery query) {
+        return deleteParser.delete(query);
     }
 
     @Override

@@ -102,7 +102,8 @@ class BaseQueryParser {
                     yield inExpr;
                 }
                 case LIKE -> {
-                    throw new UnsupportedOperationException("LIKE is not supported yet.");
+                    StringContext stringContext = StringContext.from(ctx.root(), criteria);
+                    yield ctx.builder().like(stringContext.field(), stringContext.fieldValue());
                 }
 
                 default ->
@@ -138,6 +139,16 @@ record ComparableContext(Path<Comparable> field, Comparable fieldValue) {
         Path<Comparable> field = root.get(getName(element));
         Comparable fieldValue = element.value().get(Comparable.class);
         return new ComparableContext(field, fieldValue);
+    }
+}
+
+record StringContext(Path<String> field, String fieldValue) {
+
+    public static <FROM> StringContext from(Root<FROM> root, CriteriaCondition criteria) {
+        Element element = (Element) criteria.element();
+        Path<String> field = root.get(getName(element));
+        String fieldValue = element.value().get(String.class);
+        return new StringContext(field, fieldValue);
     }
 }
 
