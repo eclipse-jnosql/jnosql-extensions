@@ -31,11 +31,17 @@ public class PersistencePreparedStatement implements PreparedStatement {
 
     private final String queryString;
     private final SelectQueryParser selectParser;
-    private Map<String, Object> parameters = new HashMap<>();
+    private final Map<String, Object> parameters = new HashMap<>();
+    private String entity = null;
 
-    public PersistencePreparedStatement(String queryString, final SelectQueryParser selectParser) {
+    PersistencePreparedStatement(String queryString, final SelectQueryParser selectParser) {
         this.selectParser = selectParser;
         this.queryString = queryString;
+    }
+
+    PersistencePreparedStatement(String queryString, final SelectQueryParser selectParser, String entity) {
+        this(queryString, selectParser);
+        this.entity = entity;
     }
 
     private void applyParameters(Query query) {
@@ -73,7 +79,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
     }
 
     private Query createQuery() {
-        Query query = selectParser.buildQuery(queryString);
+        Query query = selectParser.buildQuery(queryString, entity);
         applyParameters(query);
         return query;
     }

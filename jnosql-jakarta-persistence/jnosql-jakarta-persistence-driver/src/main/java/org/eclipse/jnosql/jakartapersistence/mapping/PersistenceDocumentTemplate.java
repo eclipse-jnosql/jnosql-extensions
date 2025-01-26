@@ -64,7 +64,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         deleteParser = null;
     }
 
-    private EntityManager entityManager() {
+    public EntityManager entityManager() {
         return manager.getEntityManager();
     }
 
@@ -120,8 +120,8 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     }
 
     @Override
-    public PreparedStatement prepare(String query, String entity) {
-        return prepare(query);
+    public PreparedStatement prepare(String queryString, String entity) {
+        return new PersistencePreparedStatement(queryString, selectParser, entity);
     }
 
     @Override

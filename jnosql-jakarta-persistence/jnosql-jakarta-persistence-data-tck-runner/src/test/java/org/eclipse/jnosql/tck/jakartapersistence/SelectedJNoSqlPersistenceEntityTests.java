@@ -33,6 +33,12 @@ public class SelectedJNoSqlPersistenceEntityTests extends JNoSqlPersistenceEntit
 
     @Override
     @Test
+    public void testQueryWithPositionalParameters() {
+        super.testQueryWithPositionalParameters();
+    }
+
+    @Override
+    @Test
     public void testLike() {
         super.testLike();
     }
