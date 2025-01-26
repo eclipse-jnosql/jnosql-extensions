@@ -14,10 +14,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
-
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 import jakarta.annotation.Priority;
+import jakarta.data.exceptions.EntityExistsException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -28,6 +28,7 @@ import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -64,7 +65,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         deleteParser = null;
     }
 
-    public EntityManager entityManager() {
+    private EntityManager entityManager() {
         return manager.getEntityManager();
     }
 
@@ -109,14 +110,19 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     }
 
     @Override
-    public <T> T insert(T t) {
-        entityManager().persist(t);
-        return t;
+    public <T> T insert(T entity) {
+        final Object identifier = getPersistenceUnitUtil().getIdentifier(entity);
+        final Object entityWithSameId = entityManager().find(entity.getClass(), identifier);
+        if (entityWithSameId != null) {
+            throw new EntityExistsException("Entity of type " + entity.getClass() + " with id=" + identifier + " already exists");
+        }
+        entityManager().persist(entity);
+        return entity;
     }
 
     @Override
-    public <T> T update(T t) {
-        return entityManager().merge(t);
+    public <T> T update(T entity) {
+        return entityManager().merge(entity);
     }
 
     @Override
@@ -206,6 +212,10 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     @Override
     public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr) {
         throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported yet.");
+    }
+
+    public PersistenceUnitUtil getPersistenceUnitUtil() {
+        return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
     }
 
 }

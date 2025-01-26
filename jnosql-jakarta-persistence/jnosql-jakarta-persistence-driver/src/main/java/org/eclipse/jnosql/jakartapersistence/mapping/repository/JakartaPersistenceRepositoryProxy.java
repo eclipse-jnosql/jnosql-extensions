@@ -16,7 +16,6 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.repository.Query;
-import jakarta.persistence.PersistenceUnitUtil;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -182,16 +181,24 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         public <S extends T> S save(S entity) {
             requireNonNull(entity, "Entity is required");
 
-            Object id = getPersistenceUnitUtil().getIdentifier(entity);
-            if (nonNull(id) && existsById((K) id)) {
+            K id = getEntityId(entity);
+            if (nonNull(id) && existsById(id)) {
                 return template().update(entity);
             } else {
                 return template().insert(entity);
             }
         }
 
-        private PersistenceUnitUtil getPersistenceUnitUtil() {
-            return template.entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+        @Override
+        public void delete(T entity) {
+            requireNonNull(entity, "Entity is required");
+
+            K id = getEntityId(entity);
+            template().delete(entityMetadata.type(), id);
+        }
+
+        private K getEntityId(T entity) {
+            return (K)template.getPersistenceUnitUtil().getIdentifier(entity);
         }
 
     }

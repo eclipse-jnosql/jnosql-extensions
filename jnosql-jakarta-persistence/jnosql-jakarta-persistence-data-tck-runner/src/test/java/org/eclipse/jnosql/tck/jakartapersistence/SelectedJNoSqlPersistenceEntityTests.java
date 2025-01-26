@@ -19,7 +19,6 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  *
@@ -28,8 +27,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Tag("development")
 @DisplayName(value = "Selected PersistenceEntity tests")
 @EnableAutoWeld
-@ExtendWith(value = TransactionExtension.class)
 public class SelectedJNoSqlPersistenceEntityTests extends JNoSqlPersistenceEntityTests {
+
+    @Override
+    @Test
+    public void testInsertEntityThatAlreadyExists() {
+        super.testInsertEntityThatAlreadyExists();
+    }
 
     @Override
     @Test
