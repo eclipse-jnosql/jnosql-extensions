@@ -75,8 +75,9 @@ class BaseQueryParser {
                     }
                 }
                 case AND -> {
-                    Iterator<?> iterator = elementCollection(criteria).iterator();
-                    yield ctx.builder().and(parseCriteria(iterator.next(), ctx), parseCriteria(iterator.next(), ctx));
+                    yield elementCollection(criteria).stream()
+                            .map(elem -> parseCriteria(elem, ctx))
+                            .reduce(ctx.builder()::and).get();
                 }
                 case LESSER_THAN -> {
                     ComparableContext comparableContext = ComparableContext.from(ctx.root(), criteria);
