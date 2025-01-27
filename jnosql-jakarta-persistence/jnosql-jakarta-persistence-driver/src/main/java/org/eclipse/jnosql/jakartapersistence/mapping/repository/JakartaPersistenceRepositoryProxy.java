@@ -15,11 +15,14 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Query;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
@@ -94,6 +97,21 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         return methodReturn.execute();
     }
 
+    @SuppressWarnings("unchecked")
+    protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, org.eclipse.jnosql.communication.semistructured.SelectQuery query) {
+        DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
+                .classSource(typeClass)
+                .methodSource(method)
+                .result(() -> template().select(query))
+                .singleResult(() -> template().singleResult(query))
+                .pagination(DynamicReturn.findPageRequest(args))
+                .streamPagination(streamPagination(query))
+                .singleResultPagination(getSingleResult(query))
+                .page(getPage(query))
+                .build();
+        return dynamicReturn.execute();
+    }
+
     @Override
     protected Object executeDeleteByAll(Object instance, Method method, Object[] params) {
         DeleteQuery deleteQuery = deleteQuery(method, params);
@@ -105,6 +123,11 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         // We need to override this because SemiStructuredRepositoryProxy
         // expects the semistructured.PreparedStatement template
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected Function<PageRequest, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query) {
+        return p -> template().selectOffSet(query, p);
     }
 
     @Override

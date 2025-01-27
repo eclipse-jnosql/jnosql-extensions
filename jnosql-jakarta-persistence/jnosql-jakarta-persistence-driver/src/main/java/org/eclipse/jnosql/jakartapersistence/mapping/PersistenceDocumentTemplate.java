@@ -211,7 +211,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr) {
-        throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported yet.");
+        return selectParser.selectOffset(sq, pr);
     }
 
     public PersistenceUnitUtil getPersistenceUnitUtil() {

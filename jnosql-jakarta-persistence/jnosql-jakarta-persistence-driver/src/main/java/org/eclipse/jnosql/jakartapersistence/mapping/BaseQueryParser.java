@@ -50,9 +50,12 @@ class BaseQueryParser {
         this.manager = manager;
     }
 
-    protected <T> EntityType<T> findEntityType(String entityName) {
-        return manager.findEntityType(entityName);
+    protected <T> Class<T> entityTypeFromEntityName(String entityName) {
+        final EntityType<T> entityType = manager.findEntityType(entityName);
+        return entityType.getJavaType();
     }
+
+
 
     protected EntityManager entityManager() {
         return manager.getEntityManager();
@@ -118,6 +121,10 @@ class BaseQueryParser {
 
     protected static String getName(Element element) {
         String name = element.name();
+        return getFieldName(name);
+    }
+
+    protected static String getFieldName(String name) {
         // NoSQL DBs translate id field into "_id" but we don't want it
         return name.equals("_id") ? "id" : name;
     }

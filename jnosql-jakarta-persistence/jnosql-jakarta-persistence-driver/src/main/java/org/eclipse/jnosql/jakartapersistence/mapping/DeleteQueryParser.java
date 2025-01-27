@@ -58,13 +58,12 @@ class DeleteQueryParser extends BaseQueryParser {
     }
 
     long delete(DeleteQuery deleteQuery) {
-                final String entityName = deleteQuery.name();
-        final EntityType<?> entityType = findEntityType(entityName);
+        final Class<?> type = entityTypeFromEntityName(deleteQuery.name());
         if (deleteQuery.condition().isEmpty()) {
-            return deleteAll(entityType.getJavaType());
+            return deleteAll(type);
         } else {
             final CriteriaCondition criteria = deleteQuery.condition().get();
-            Query query = buildQuery(entityType.getJavaType(), ctx -> {
+            Query query = buildQuery(type, ctx -> {
                 return ctx.query().where(parseCriteria(criteria, ctx.queryContext()));
             });
             return query.executeUpdate();

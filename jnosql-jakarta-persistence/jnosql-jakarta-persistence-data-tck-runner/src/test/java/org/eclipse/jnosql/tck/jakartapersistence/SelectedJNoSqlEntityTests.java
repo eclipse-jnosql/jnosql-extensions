@@ -19,9 +19,7 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-import ee.jakarta.tck.data.standalone.entity.EntityTests;
 
 /**
  *
@@ -30,8 +28,13 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 @Tag("development")
 @DisplayName(value = "Selected EntityTests tests")
 @EnableAutoWeld
-@ExtendWith(value = TransactionExtension.class)
-class SelectedJNoSqlEntityTests extends EntityTests {
+class SelectedJNoSqlEntityTests extends JNoSqlEntityTests {
+
+    @Override
+    @Test
+    public void testFindPage() {
+        super.testFindPage();
+    }
 
     @Override
     public void testVarargsSort() {
@@ -54,6 +57,8 @@ class SelectedJNoSqlEntityTests extends EntityTests {
     }
 
     @Override
+    @Test
+    // paging
     public void testThirdAndFourthSlicesOf5() {
         super.testThirdAndFourthSlicesOf5();
     }
@@ -288,11 +293,6 @@ class SelectedJNoSqlEntityTests extends EntityTests {
     @Test
     public void testFirstCursoredPageOf8AndNextPages() {
         super.testFirstCursoredPageOf8AndNextPages();
-    }
-
-    @Override
-    public void testFindPage() {
-        super.testFindPage();
     }
 
     @Override
