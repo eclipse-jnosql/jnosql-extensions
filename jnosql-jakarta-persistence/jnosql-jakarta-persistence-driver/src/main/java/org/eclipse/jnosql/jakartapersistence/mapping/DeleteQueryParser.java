@@ -54,7 +54,10 @@ class DeleteQueryParser extends BaseUpdateQueryParser {
     }
 
     <T> long deleteAll(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        CriteriaBuilder criteriaBuilder = entityManager().getCriteriaBuilder();
+        CriteriaDelete<T> deleteCriteria = criteriaBuilder.createCriteriaDelete(type);
+        long entries = entityManager().createQuery(deleteCriteria).executeUpdate();
+        return entries;
     }
 
     long delete(DeleteQuery deleteQuery) {
