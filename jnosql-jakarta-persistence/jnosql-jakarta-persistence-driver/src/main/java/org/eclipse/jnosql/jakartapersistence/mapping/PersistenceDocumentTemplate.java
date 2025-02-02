@@ -41,6 +41,9 @@ import org.eclipse.jnosql.mapping.DatabaseType;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
+import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
+import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
+
 @Alternative
 @Priority(Interceptor.Priority.APPLICATION)
 @Default
@@ -51,18 +54,21 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final PersistenceDatabaseManager manager;
     private final SelectQueryParser selectParser;
     private final DeleteQueryParser deleteParser;
+    private final UpdateQueryParser updateParser;
 
     @Inject
     PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
         this.manager = manager;
         this.selectParser = new SelectQueryParser(manager);
         this.deleteParser = new DeleteQueryParser(manager);
+        this.updateParser = new UpdateQueryParser(manager);
     }
 
     PersistenceDocumentTemplate() {
         manager = null;
         selectParser = null;
         deleteParser = null;
+        updateParser = null;
     }
 
     private EntityManager entityManager() {
@@ -86,12 +92,14 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> Stream<T> query(String query) {
-        return selectParser.query(query);
+        final BaseQueryParser queryParser = getParserForQuery(query);
+        return queryParser.query(query);
     }
 
     @Override
     public <T> Stream<T> query(String query, String entity) {
-        return selectParser.query(query, entity);
+        final BaseQueryParser queryParser = getParserForQuery(query);
+        return queryParser.query(query, entity);
     }
 
     @Override
@@ -107,6 +115,10 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     @Override
     public <T, K> Optional<T> find(Class<T> type, K k) {
         return selectParser.find(type, k);
+    }
+
+    public <T, K> boolean existsById(Class<T> type, K k) {
+        return selectParser.existsById(type, k);
     }
 
     @Override
@@ -127,12 +139,26 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public PreparedStatement prepare(String queryString, String entity) {
-        return new PersistencePreparedStatement(queryString, selectParser, entity);
+        BaseQueryParser queryParser = getParserForQuery(queryString);
+        return new PersistencePreparedStatement(queryString, queryParser, entity);
     }
 
     @Override
     public PreparedStatement prepare(String queryString) {
-        return new PersistencePreparedStatement(queryString, selectParser);
+        BaseQueryParser queryParser = getParserForQuery(queryString);
+        return new PersistencePreparedStatement(queryString, queryParser);
+    }
+
+    private BaseQueryParser getParserForQuery(String entity) {
+        BaseQueryParser queryParser;
+        if (isUpdateQuery(entity)) {
+            queryParser = updateParser;
+        } else if (isDeleteQuery(entity)) {
+            queryParser = deleteParser;
+        } else {
+            queryParser = selectParser;
+        }
+        return queryParser;
     }
 
     @Override

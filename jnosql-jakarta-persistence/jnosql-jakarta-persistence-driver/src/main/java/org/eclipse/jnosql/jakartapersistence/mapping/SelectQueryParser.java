@@ -31,6 +31,7 @@ import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -127,24 +128,36 @@ class SelectQueryParser extends BaseQueryParser {
                 .getResultStream();
     }
 
-    public <T> Stream<T> query(String query) {
-        return buildQuery(query).getResultStream();
+    public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
+        final Query query = buildQuery(queryString, entity);
+        if (queryModifier != null) {
+            queryModifier.accept(query);
+        }
+        return query.getResultStream();
     }
 
-    public <T> Stream<T> query(String query, String entity) {
-        return query(query);
+    public <T> Optional<T> singleResult(String queryString) {
+        return singleResult(queryString, null);
     }
 
-    public <T> Optional<T> singleResult(String query) {
-        return Optional.ofNullable((T) buildQuery(query).getSingleResultOrNull());
-    }
-
-    public <T> Optional<T> singleResult(String query, String entity) {
-        return singleResult(query);
+    public <T> Optional<T> singleResult(String queryString, String entity) {
+        queryString = preProcessQuery(queryString, entity);
+        return Optional.ofNullable((T) buildQuery(queryString).getSingleResultOrNull())
+                .map(this::refreshEntity);
     }
 
     public <T, K> Optional<T> find(Class<T> type, K k) {
-        return Optional.ofNullable(entityManager().find(type, k));
+        return Optional.ofNullable(entityManager().find(type, k))
+                .map(this::refreshEntity);
+    }
+
+    private <T> T refreshEntity(T entity) {
+        entityManager().refresh(entity);
+        return entity;
+    }
+
+    <T, K> boolean existsById(Class<T> type, K k) {
+        return null != entityManager().find(type, k);
     }
 
     public <T> Stream<T> select(SelectQuery selectQuery) {
@@ -186,14 +199,16 @@ class SelectQueryParser extends BaseQueryParser {
 
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
         final Class<T> type = entityTypeFromEntityName(selectQuery.name());
+        Optional<T> result;
         if (selectQuery.condition().isEmpty()) {
             TypedQuery<T> query = buildQuery(type, type, ctx -> ctx.query().select((Root<T>) ctx.root()));
-            return Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
+            result = Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
         } else {
             final CriteriaCondition criteria = selectQuery.condition().get();
             TypedQuery<T> query = buildQuery(type, type, QueryModifier.selectWhere(criteria));
-            return Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
+            result = Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
         }
+        return result.map(this::refreshEntity);
     }
 
     private static <T> T toDataExceptions(Supplier<T> supplier) {
@@ -216,16 +231,12 @@ class SelectQueryParser extends BaseQueryParser {
         }
     }
 
-    public Query buildQuery(String query) {
-        return buildQuery(query, null);
-    }
-
-    public Query buildQuery(String query, String entity) {
-        if (query.startsWith("WHERE") && entity != null) {
-            query = "SELECT this FROM " + entity + " " + query;
+    @Override
+    protected String preProcessQuery(String queryString, String entity) {
+        if (queryString.startsWith("WHERE") && entity != null) {
+            queryString = "SELECT this FROM " + entity + " " + queryString;
         }
-        EntityManager em = entityManager();
-        return em.createQuery(query);
+        return queryString;
     }
 
     private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType, Class<RESULT> resultType,

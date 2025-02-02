@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.tck.jakartapersistence;
 
 import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
+
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.EntityMetadataExtension;
@@ -27,7 +28,10 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
+
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import ee.jakarta.tck.data.standalone.entity.EntityTests;
 
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, EntityConverter.class, DocumentTemplate.class})

@@ -30,7 +30,7 @@ import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 
-class DeleteQueryParser extends BaseQueryParser {
+class DeleteQueryParser extends BaseUpdateQueryParser {
 
 
     public DeleteQueryParser(PersistenceDatabaseManager manager) {

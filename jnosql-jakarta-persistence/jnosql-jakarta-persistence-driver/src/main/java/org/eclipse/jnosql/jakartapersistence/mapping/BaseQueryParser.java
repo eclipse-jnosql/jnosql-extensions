@@ -16,6 +16,8 @@
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -24,6 +26,8 @@ import jakarta.persistence.metamodel.EntityType;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
@@ -42,7 +46,7 @@ import static org.eclipse.jnosql.communication.Condition.NOT;
 import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.elementCollection;
 import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.getName;
 
-class BaseQueryParser {
+abstract class BaseQueryParser {
 
     protected final PersistenceDatabaseManager manager;
 
@@ -55,10 +59,36 @@ class BaseQueryParser {
         return entityType.getJavaType();
     }
 
-
-
     protected EntityManager entityManager() {
         return manager.getEntityManager();
+    }
+
+    protected PersistenceUnitUtil getPersistenceUnitUtil() {
+        return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+    }
+
+    public <T> Stream<T> query(String queryString) {
+        return query(queryString, null, null);
+    }
+
+    public <T> Stream<T> query(String queryString, String entity) {
+        return query(queryString, entity, null);
+    }
+
+    public abstract <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier);
+
+    public Query buildQuery(String queryString) {
+        return buildQuery(queryString, null);
+    }
+
+    public Query buildQuery(String queryString, String entity) {
+        queryString = preProcessQuery(queryString, entity);
+        EntityManager em = entityManager();
+        return em.createQuery(queryString);
+    }
+
+    protected String preProcessQuery(String queryString, String entity) {
+        return queryString;
     }
 
     protected static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx) {
@@ -125,9 +155,9 @@ class BaseQueryParser {
         return getFieldName(name);
     }
 
-    protected static String getFieldName(String name) {
+    protected static String getFieldName(String fieldName) {
         // NoSQL DBs translate id field into "_id" but we don't want it
-        return name.equals("_id") ? "id" : name;
+        return fieldName.equals("_id") ? "id" : fieldName;
     }
 
     protected static Collection<?> elementCollection(CriteriaCondition criteria) {

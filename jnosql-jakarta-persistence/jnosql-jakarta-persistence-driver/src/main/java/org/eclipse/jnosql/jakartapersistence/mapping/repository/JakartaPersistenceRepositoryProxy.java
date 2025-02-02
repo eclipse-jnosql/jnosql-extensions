@@ -213,6 +213,11 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         }
 
         @Override
+        public boolean existsById(K id) {
+            return template().existsById(type(), id);
+        }
+
+        @Override
         public void delete(T entity) {
             requireNonNull(entity, "Entity is required");
 

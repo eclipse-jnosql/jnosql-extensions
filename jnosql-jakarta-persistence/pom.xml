@@ -25,6 +25,9 @@
     <artifactId>jnosql-jakarta-persistence-parent</artifactId>
     <name>Eclipse JNoSQL Jakarta Persistence Parent</name>
     <packaging>pom</packaging>
+    <properties>
+        <eclipselink.version>5.0.0-B06</eclipselink.version>
+    </properties>
     <modules>
         <module>jnosql-jakarta-persistence-driver</module>
         <module>jnosql-jakarta-persistence-data-tck-runner</module>
