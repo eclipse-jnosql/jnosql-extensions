@@ -42,6 +42,7 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
 
 import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.parseCriteria;
+import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
 
 class SelectQueryParser extends BaseQueryParser {
 
@@ -233,10 +234,7 @@ class SelectQueryParser extends BaseQueryParser {
 
     @Override
     protected String preProcessQuery(String queryString, String entity) {
-        if (queryString.startsWith("WHERE") && entity != null) {
-            queryString = "SELECT this FROM " + entity + " " + queryString;
-        }
-        return queryString;
+        return new OptionalPartsParser(queryString, entity).getCompleteSelect();
     }
 
     private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType, Class<RESULT> resultType,
