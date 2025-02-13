@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
+import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
 
 
 /**
