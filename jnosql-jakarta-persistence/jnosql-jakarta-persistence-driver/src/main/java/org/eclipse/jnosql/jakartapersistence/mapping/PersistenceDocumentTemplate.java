@@ -138,7 +138,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     }
 
     @Override
-    public PreparedStatement prepare(String queryString, String entity) {
+    public PersistencePreparedStatement prepare(String queryString, String entity) {
         BaseQueryParser queryParser = getParserForQuery(queryString);
         return new PersistencePreparedStatement(queryString, queryParser, entity);
     }

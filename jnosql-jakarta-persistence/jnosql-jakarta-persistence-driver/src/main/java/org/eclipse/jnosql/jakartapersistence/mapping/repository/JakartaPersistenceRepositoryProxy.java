@@ -91,7 +91,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .pageRequest(pageRequest)
                 .prepareConverter(textQuery -> {
                     var prepare = template().prepare(textQuery, entity);
-//                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query));
+                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query));
                     return prepare;
                 }).build();
         return methodReturn.execute();

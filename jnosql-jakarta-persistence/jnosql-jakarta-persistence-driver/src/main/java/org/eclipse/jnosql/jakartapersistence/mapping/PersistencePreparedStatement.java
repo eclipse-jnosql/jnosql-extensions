@@ -20,8 +20,10 @@ import jakarta.persistence.Query;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
 /**
@@ -34,6 +36,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
     private final BaseQueryParser queryParser;
     private final Map<String, Object> parameters = new HashMap<>();
     private String entity = null;
+    private UnaryOperator<SelectQuery> selectMapper;
 
     PersistencePreparedStatement(String queryString, final BaseQueryParser queryParser) {
         this.queryParser = queryParser;
@@ -64,7 +67,11 @@ public class PersistencePreparedStatement implements PreparedStatement {
 
     @Override
     public <T> Stream<T> result() {
-        return queryParser.query(queryString, entity, this::applyParameters);
+        if (queryParser instanceof SelectQueryParser selectParser) {
+            return selectParser.query(queryString, entity, this.selectMapper, this::applyParameters);
+        } else {
+            return queryParser.query(queryString, entity, this::applyParameters);
+        }
     }
 
     @Override
@@ -90,4 +97,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
         return false;
     }
 
+    public void setSelectMapper(UnaryOperator<SelectQuery> selectMapper) {
+        this.selectMapper = selectMapper;
+    }
 }

@@ -34,15 +34,24 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+import org.eclipse.jnosql.communication.Params;
+import org.eclipse.jnosql.communication.QueryException;
+import org.eclipse.jnosql.communication.query.data.SelectProvider;
+import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
+import org.eclipse.jnosql.communication.semistructured.Conditions;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
 
 import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.parseCriteria;
+
 import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
+
 
 class SelectQueryParser extends BaseQueryParser {
 
@@ -130,11 +139,43 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
-        final Query query = buildQuery(queryString, entity);
+        return query(queryString, entity, null, queryModifier);
+    }
+
+    public <T> Stream<T> query(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper, Consumer<Query> queryModifier) {
+        SelectQuery selectQuery = parseQuery(queryString, entity);
+        if (selectMapper != null) {
+            selectQuery = selectMapper.apply(selectQuery);
+        }
+        final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
         if (queryModifier != null) {
             queryModifier.accept(query);
         }
         return query.getResultStream();
+    }
+
+    private SelectQuery parseQuery(String query, String entity) {
+
+        CommunicationObserverParser noopObserver = new CommunicationObserverParser() {
+        };
+
+        var converter = new SelectProvider();
+        var selectQuery = converter.apply(query, entity);
+        var entityName = selectQuery.entity();
+        var limit = selectQuery.limit();
+        var skip = selectQuery.skip();
+        var columns = selectQuery.fields();
+        List<Sort<?>> sorts = selectQuery.orderBy();
+
+        var params = Params.newParams();
+        var condition = selectQuery.where()
+                .map(c -> Conditions.getCondition(c, params, noopObserver, entityName)).orElse(null);
+
+        if (params.isNotEmpty()) {
+            throw new QueryException("To run a query with a parameter use a PrepareStatement instead.");
+        }
+        boolean count = selectQuery.isCount();
+        return new DefaultSelectQuery(limit, skip, entityName, columns, sorts, condition, count);
     }
 
     public <T> Optional<T> singleResult(String queryString) {
