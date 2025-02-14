@@ -54,9 +54,17 @@ abstract class BaseQueryParser {
         this.manager = manager;
     }
 
-    protected <T> Class<T> entityTypeFromEntityName(String entityName) {
+    protected <T> Class<T> entityClassFromEntityName(String entityName) {
         final EntityType<T> entityType = manager.findEntityType(entityName);
         return entityType.getJavaType();
+    }
+
+    protected <T> EntityType<T> entityTypeFromEntityName(String entityName) {
+        return manager.findEntityType(entityName);
+    }
+
+    protected Class<?> entityAttributeClass(EntityType<?> entityType, String attributeName) {
+        return entityType.getAttribute(attributeName).getJavaType();
     }
 
     protected EntityManager entityManager() {
