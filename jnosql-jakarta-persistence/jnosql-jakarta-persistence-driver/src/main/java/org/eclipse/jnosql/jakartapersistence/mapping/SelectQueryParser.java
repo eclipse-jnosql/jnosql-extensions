@@ -35,7 +35,6 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import org.eclipse.jnosql.communication.Params;
-import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.SelectProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.Conditions;
@@ -96,13 +95,9 @@ class SelectQueryParser extends BaseQueryParser {
         var columns = selectQuery.fields();
         List<Sort<?>> sorts = selectQuery.orderBy();
 
-        var params = Params.newParams();
         var condition = selectQuery.where()
-                .map(c -> Conditions.getCondition(c, params, noopObserver, entityName)).orElse(null);
+                .map(c -> Conditions.getCondition(c, Params.newParams(), noopObserver, entityName)).orElse(null);
 
-        if (params.isNotEmpty()) {
-            throw new QueryException("To run a query with a parameter use a PrepareStatement instead.");
-        }
         boolean count = selectQuery.isCount();
         return new DefaultSelectQuery(limit, skip, entityName, columns, sorts, condition, count);
     }
@@ -147,12 +142,12 @@ class SelectQueryParser extends BaseQueryParser {
             ));
             query = (TypedQuery<RESULT>)queryEntity;
         } else {
-            TypedQuery<RESULT> queryTuple = buildQuery(fromType, null, QueryModifier.combine(
+            TypedQuery<RESULT> queryColumns = buildQuery(fromType, null, QueryModifier.combine(
                     QueryModifier.selectColumns(selectQuery.columns()),
                     QueryModifier.where(selectQuery.condition()),
                     QueryModifier.applySorts(selectQuery.sorts())
             ));
-            query = (TypedQuery<RESULT>)queryTuple;
+            query = (TypedQuery<RESULT>)queryColumns;
         }
         if (selectQuery.limit() > 0) {
             try {
