@@ -71,6 +71,14 @@ class SelectQueryParser extends BaseQueryParser {
         return query(queryString, entity, null, Map.of(),queryModifier);
     }
 
+    public <T> Stream<T> queryJpqlParser(String queryString, String entity, Consumer<Query> queryModifier) {
+        final Query query = buildQuery(queryString, entity);
+        if (queryModifier != null) {
+            queryModifier.accept(query);
+        }
+        return query.getResultStream();
+    }
+
     public <T> Stream<T> query(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper, Map<String, Object> parameters, Consumer<Query> queryModifier) {
         SelectQuery selectQuery = parseQuery(queryString, entity, parameters);
         if (selectMapper != null) {

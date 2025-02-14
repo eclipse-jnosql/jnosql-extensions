@@ -49,17 +49,8 @@ public class PersistencePreparedStatement implements PreparedStatement {
     }
 
     private void applyParameters(Query query) {
-        applyParameters(query, true);
-    }
-
-    /* Set params to the query.
-       If usePositionalParameters=true, params with name like ?1 will be set via the numeric position.
-       Otherwise they will be set via the name of "?1". Should be set to false when building Criteria queries,
-       which don't support positional parameters.
-    */
-    private void applyParameters(Query query, boolean usePositionalParameters) {
         parameters.forEach((name, value) -> {
-            if (usePositionalParameters && name.startsWith("?")) {
+            if (name.startsWith("?")) {
                 var position = Integer.parseInt(name, 1, name.length(), 10);
                 query.setParameter(position, value);
             } else {
@@ -77,7 +68,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
     @Override
     public <T> Stream<T> result() {
         if (queryParser instanceof SelectQueryParser selectParser) {
-            return selectParser.query(queryString, entity, this.selectMapper, parameters, query -> applyParameters(query, false));
+            return selectParser.query(queryString, entity, this.selectMapper, parameters, null);
         } else {
             return queryParser.query(queryString, entity, this::applyParameters);
         }
