@@ -161,7 +161,7 @@ abstract class BaseQueryParser {
     }
 
     protected static Collection<?> elementCollection(CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
+        Element element = criteria.element();
         return (Collection<?>) element.value().get();
     }
 
@@ -193,12 +193,20 @@ record StringContext(Path<String> field, String fieldValue) {
 record BiComparableContext(Path<Comparable> field, Comparable fieldValue1, Comparable fieldValue2) {
 
     public static <FROM> BiComparableContext from(Root<FROM> root, CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
+        Element element = criteria.element();
         final Path<Comparable> field = root.get(getName(element));
         Iterator<?> iterator = elementCollection(criteria).iterator();
-        final Comparable fieldValue1 = ((Value) iterator.next()).get(Comparable.class);
-        final Comparable fieldValue2 = ((Value) iterator.next()).get(Comparable.class);
+        final Comparable fieldValue1 = getComparableValue(iterator.next());
+        final Comparable fieldValue2 = getComparableValue(iterator.next());
         return new BiComparableContext(field, fieldValue1, fieldValue2);
+    }
+
+    private static Comparable getComparableValue(Object value) {
+        if (value instanceof Comparable result) {
+            return result;
+        } else {
+            return ((Value) value).get(Comparable.class);
+        }
     }
 
 }
