@@ -67,8 +67,9 @@ class SelectQueryParser extends BaseQueryParser {
                 .getResultStream();
     }
 
+    @Override
     public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
-        return query(queryString, entity, null, Map.of(),queryModifier);
+        return queryJpqlParser(queryString, entity, queryModifier);
     }
 
     public <T> Stream<T> queryJpqlParser(String queryString, String entity, Consumer<Query> queryModifier) {
@@ -79,7 +80,11 @@ class SelectQueryParser extends BaseQueryParser {
         return query.getResultStream();
     }
 
-    public <T> Stream<T> query(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper, Map<String, Object> parameters, Consumer<Query> queryModifier) {
+    /* Alternative way to parse JDQL query using the JNoSQL parser. Supports annotations like @OrderBy,
+     * doesn't support full JPQL
+     */
+    <T> Stream<T> queryJNoSQLParser(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper,
+            Map<String, Object> parameters, Consumer<Query> queryModifier) {
         SelectQuery selectQuery = parseQuery(queryString, entity, parameters);
         if (selectMapper != null) {
             selectQuery = selectMapper.apply(selectQuery);

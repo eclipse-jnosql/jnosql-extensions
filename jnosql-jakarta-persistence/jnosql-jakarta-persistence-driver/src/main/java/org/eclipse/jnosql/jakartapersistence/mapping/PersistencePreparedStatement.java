@@ -68,7 +68,8 @@ public class PersistencePreparedStatement implements PreparedStatement {
     @Override
     public <T> Stream<T> result() {
         if (queryParser instanceof SelectQueryParser selectParser) {
-            return selectParser.query(queryString, entity, this.selectMapper, parameters, null);
+//            return selectParser.query(queryString, entity, this.selectMapper, parameters, null);
+            return selectParser.queryJpqlParser(queryString, entity, this::applyParameters);
         } else {
             return queryParser.query(queryString, entity, this::applyParameters);
         }
