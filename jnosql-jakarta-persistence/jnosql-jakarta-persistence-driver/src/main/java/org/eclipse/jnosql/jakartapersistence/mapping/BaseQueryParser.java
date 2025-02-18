@@ -90,13 +90,8 @@ abstract class BaseQueryParser {
     }
 
     public Query buildQuery(String queryString, String entity) {
-        queryString = preProcessQuery(queryString, entity);
         EntityManager em = entityManager();
         return em.createQuery(queryString);
-    }
-
-    protected String preProcessQuery(String queryString, String entity) {
-        return queryString;
     }
 
     protected static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx) {

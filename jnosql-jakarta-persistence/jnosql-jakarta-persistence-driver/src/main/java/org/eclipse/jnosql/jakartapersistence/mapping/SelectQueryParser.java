@@ -72,7 +72,13 @@ class SelectQueryParser extends BaseQueryParser {
         return queryJpqlParser(queryString, entity, queryModifier);
     }
 
-    public <T> Stream<T> queryJpqlParser(String queryString, String entity, Consumer<Query> queryModifier) {
+    @Override
+    public Query buildQuery(String queryString, String entity) {
+        queryString = preProcessQuery(queryString, entity);
+        return super.buildQuery(queryString, entity);
+    }
+
+    private <T> Stream<T> queryJpqlParser(String queryString, String entity, Consumer<Query> queryModifier) {
         final Query query = buildQuery(queryString, entity);
         if (queryModifier != null) {
             queryModifier.accept(query);
@@ -217,7 +223,6 @@ class SelectQueryParser extends BaseQueryParser {
         }
     }
 
-    @Override
     protected String preProcessQuery(String queryString, String entity) {
         return new OptionalPartsParser(queryString, entity).getCompleteSelect();
     }
