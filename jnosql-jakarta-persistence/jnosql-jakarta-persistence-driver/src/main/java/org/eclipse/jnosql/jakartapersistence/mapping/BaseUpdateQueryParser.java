@@ -15,8 +15,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.Sort;
 import jakarta.persistence.Query;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -32,7 +34,7 @@ class BaseUpdateQueryParser extends BaseQueryParser {
     }
 
     @Override
-    public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
+    public <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
         final Query query = buildQuery(queryString);
         if (queryModifier != null) {
             queryModifier.accept(query);

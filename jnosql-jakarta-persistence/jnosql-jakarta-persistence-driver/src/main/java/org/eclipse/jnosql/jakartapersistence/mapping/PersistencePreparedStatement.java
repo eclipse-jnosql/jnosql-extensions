@@ -15,8 +15,11 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.Limit;
+import jakarta.data.Sort;
 import jakarta.persistence.Query;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +40,8 @@ public class PersistencePreparedStatement implements PreparedStatement {
     private final Map<String, Object> parameters = new HashMap<>();
     private String entity = null;
     private UnaryOperator<SelectQuery> selectMapper;
+    private Limit limit;
+    private Collection<Sort<?>> sorts;
 
     PersistencePreparedStatement(String queryString, final BaseQueryParser queryParser) {
         this.queryParser = queryParser;
@@ -46,17 +51,6 @@ public class PersistencePreparedStatement implements PreparedStatement {
     PersistencePreparedStatement(String queryString, final BaseQueryParser selectParser, String entity) {
         this(queryString, selectParser);
         this.entity = entity;
-    }
-
-    private void applyParameters(Query query) {
-        parameters.forEach((name, value) -> {
-            if (name.startsWith("?")) {
-                var position = Integer.parseInt(name, 1, name.length(), 10);
-                query.setParameter(position, value);
-            } else {
-                query.setParameter(name, value);
-            }
-        });
     }
 
     @Override
@@ -69,9 +63,12 @@ public class PersistencePreparedStatement implements PreparedStatement {
     public <T> Stream<T> result() {
         if (queryParser instanceof SelectQueryParser selectParser) {
 //            return selectParser.queryJNoSQLParser(queryString, entity, this.selectMapper, parameters, null);
-            return selectParser.query(queryString, entity, this::applyParameters);
+            return selectParser.query(queryString, entity, sorts, query -> {
+                applyParameters(query);
+                applyProjections(query);
+            });
         } else {
-            return queryParser.query(queryString, entity, this::applyParameters);
+            return queryParser.query(queryString, entity, sorts, this::applyParameters);
         }
     }
 
@@ -79,6 +76,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
     public <T> Optional<T> singleResult() {
         Query query = queryParser.buildQuery(queryString, entity);
         applyParameters(query);
+        applyProjections(query);
         return Optional.ofNullable((T) query.getSingleResultOrNull())
                 .map(this::refreshEntity);
     }
@@ -101,4 +99,32 @@ public class PersistencePreparedStatement implements PreparedStatement {
     public void setSelectMapper(UnaryOperator<SelectQuery> selectMapper) {
         this.selectMapper = selectMapper;
     }
+
+    public void setLimit(Limit limit) {
+        this.limit = limit;
+    }
+
+    // TODO Apply sorts to the text query
+    public void setSorts(Collection<Sort<?>> sorts) {
+        this.sorts = sorts;
+    }
+
+    private void applyParameters(Query query) {
+        parameters.forEach((name, value) -> {
+            if (name.startsWith("?")) {
+                var position = Integer.parseInt(name, 1, name.length(), 10);
+                query.setParameter(position, value);
+            } else {
+                query.setParameter(name, value);
+            }
+        });
+    }
+
+    private void applyProjections(Query query) {
+        if (limit != null) {
+            query.setFirstResult(Math.toIntExact(limit.startAt()) - 1);
+            query.setMaxResults(limit.maxResults());
+        }
+    }
+
 }

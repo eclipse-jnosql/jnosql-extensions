@@ -15,6 +15,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.parser;
 
+import jakarta.data.Sort;
+
+import java.util.Collection;
+
 /**
  * Parse the beginning of the SELECT command, fill the optional parts and return
  * complete query.
@@ -33,12 +37,18 @@ public class OptionalPartsParser {
 
     private String queryString;
     private String entity;
+    Collection<Sort<?>> sorts;
     private int position = 0;
     private StringBuilder updatedQueryString = new StringBuilder();
 
     public OptionalPartsParser(String queryString, String entity) {
+        this(queryString, entity, null);
+    }
+
+    public OptionalPartsParser(String queryString, String entity, Collection<Sort<?>> sorts) {
         this.queryString = queryString;
         this.entity = entity;
+        this.sorts = sorts;
         selectStatement();
     }
 
@@ -66,6 +76,7 @@ public class OptionalPartsParser {
         skipSpace();
         // do not care about the rest
         copyRest();
+        appendSorts();
     }
 
     /**
@@ -90,6 +101,35 @@ public class OptionalPartsParser {
      */
     private void copyRest() {
         updatedQueryString.append(queryString.substring(position));
+    }
+
+    /**
+     * Add ORDER BY with sorts. The original query shouldn't have ORDER BY if there are sorts,
+     * otherwise we'll get a corrupted query, with 2 ORDER BY clauses
+     */
+    private void appendSorts() {
+        if (sorts != null && !sorts.isEmpty()) {
+            updatedQueryString.append("ORDER BY ");
+            boolean firstItem = true;
+            for (Sort<?> sort : sorts) {
+                if (!firstItem) {
+                    updatedQueryString.append(",");
+                }
+                if (sort.ignoreCase()) {
+                    updatedQueryString.append("UPPER(");
+                }
+                updatedQueryString.append(sort.property());
+                if (sort.ignoreCase()) {
+                    updatedQueryString.append(")");
+                }
+                if (sort.isAscending()) {
+                    updatedQueryString.append(" ASC");
+                }
+                if (sort.isDescending()) {
+                    updatedQueryString.append(" DESC");
+                }
+            }
+        }
     }
 
     /**
@@ -145,12 +185,12 @@ public class OptionalPartsParser {
             position++;
         }
 
-        updatedQueryString.append(queryString.substring(start, position));
+        updatedQueryString.append(queryString, start, position);
     }
 
     private boolean startsWith(String terminal) {
         return position + terminal.length() <= queryString.length()
-                && queryString.substring(position, position + terminal.length()).equalsIgnoreCase(terminal);
+                && queryString.regionMatches(true, position, terminal, 0, terminal.length());
     }
 
     private void skip(String terminal) {

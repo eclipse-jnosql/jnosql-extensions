@@ -26,6 +26,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,28 +69,25 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     @Override
-    public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
-        return queryJpqlParser(queryString, entity, queryModifier);
-    }
-
-    @Override
-    public Query buildQuery(String queryString, String entity) {
-        queryString = preProcessQuery(queryString, entity);
-        return super.buildQuery(queryString, entity);
-    }
-
-    private <T> Stream<T> queryJpqlParser(String queryString, String entity, Consumer<Query> queryModifier) {
-        final Query query = buildQuery(queryString, entity);
+    public <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
+        final Query query = buildQuery(queryString, entity, sorts);
         if (queryModifier != null) {
             queryModifier.accept(query);
         }
         return query.getResultStream();
     }
 
+    @Override
+    public Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+        queryString = preProcessQuery(queryString, entity, sorts);
+        return super.buildQuery(queryString, entity, sorts);
+    }
+
     /* Alternative way to parse JDQL query using the JNoSQL parser. Supports annotations like @OrderBy,
-     * doesn't support full JPQL
+     * doesn't support full JPQL. If not useful, remove this and related methods,
+     * including setSelectMapper on prepared statement.
      */
-    <T> Stream<T> queryJNoSQLParser(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper,
+    private <T> Stream<T> queryJNoSQLParser(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper,
             Map<String, Object> parameters, Consumer<Query> queryModifier) {
         SelectQuery selectQuery = parseQuery(queryString, entity, parameters);
         if (selectMapper != null) {
@@ -131,7 +129,7 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Optional<T> singleResult(String queryString, String entity) {
-        queryString = preProcessQuery(queryString, entity);
+        queryString = preProcessQuery(queryString, entity, null);
         return Optional.ofNullable((T) buildQuery(queryString).getSingleResultOrNull())
                 .map(this::refreshEntity);
     }
@@ -223,8 +221,8 @@ class SelectQueryParser extends BaseQueryParser {
         }
     }
 
-    protected String preProcessQuery(String queryString, String entity) {
-        return new OptionalPartsParser(queryString, entity).getCompleteSelect();
+    protected String preProcessQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+        return new OptionalPartsParser(queryString, entity, sorts).getCompleteSelect();
     }
 
     private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType,

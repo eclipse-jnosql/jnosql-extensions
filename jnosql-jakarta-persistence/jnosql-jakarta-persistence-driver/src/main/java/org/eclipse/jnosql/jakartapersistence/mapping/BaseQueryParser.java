@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.Sort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
@@ -76,20 +77,24 @@ abstract class BaseQueryParser {
     }
 
     public <T> Stream<T> query(String queryString) {
-        return query(queryString, null, null);
+        return query(queryString, null, null, null);
     }
 
     public <T> Stream<T> query(String queryString, String entity) {
-        return query(queryString, entity, null);
+        return query(queryString, entity, null, null);
     }
 
-    public abstract <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier);
+    public abstract <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier);
 
     public Query buildQuery(String queryString) {
-        return buildQuery(queryString, null);
+        return buildQuery(queryString, null, null);
     }
 
     public Query buildQuery(String queryString, String entity) {
+        return buildQuery(queryString, entity, null);
+    }
+
+    public Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
         EntityManager em = entityManager();
         return em.createQuery(queryString);
     }
