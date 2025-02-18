@@ -82,6 +82,11 @@ public class PersistencePreparedStatement implements PreparedStatement {
     }
 
     private <T> T refreshEntity(T entity) {
+        try {
+            queryParser.entityManager().getMetamodel().entity(entity.getClass());
+        } catch (IllegalArgumentException e) {
+            return entity;
+        }
         queryParser.entityManager().refresh(entity);
         return entity;
     }
