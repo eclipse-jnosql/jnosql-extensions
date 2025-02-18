@@ -165,7 +165,7 @@ abstract class BaseQueryParser {
 
     protected static String getFieldName(String fieldName) {
         // NoSQL DBs translate id field into "_id" but we don't want it
-        return fieldName.equals("_id") ? "id" : fieldName;
+        return fieldName.equalsIgnoreCase("_id") ? "id" : fieldName;
     }
 
     protected static Collection<?> elementCollection(CriteriaCondition criteria) {

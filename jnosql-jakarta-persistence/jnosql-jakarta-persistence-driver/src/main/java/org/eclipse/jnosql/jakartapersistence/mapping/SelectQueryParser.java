@@ -153,7 +153,7 @@ class SelectQueryParser extends BaseQueryParser {
         return query.getResultStream();
     }
 
-    private <FROM,RESULT> TypedQuery<RESULT> getSelectTypedQuery(SelectQuery selectQuery) {
+    private <FROM, RESULT> TypedQuery<RESULT> getSelectTypedQuery(SelectQuery selectQuery) {
         Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
         TypedQuery<RESULT> query;
         if (selectQuery.columns().isEmpty()) {
@@ -162,14 +162,14 @@ class SelectQueryParser extends BaseQueryParser {
                     QueryModifier.where(selectQuery.condition()),
                     QueryModifier.applySorts(selectQuery.sorts())
             ));
-            query = (TypedQuery<RESULT>)queryEntity;
+            query = (TypedQuery<RESULT>) queryEntity;
         } else {
             TypedQuery<RESULT> queryColumns = buildQuery(fromType, null, QueryModifier.combine(
                     QueryModifier.selectColumns(selectQuery.columns()),
                     QueryModifier.where(selectQuery.condition()),
                     QueryModifier.applySorts(selectQuery.sorts())
             ));
-            query = (TypedQuery<RESULT>)queryColumns;
+            query = (TypedQuery<RESULT>) queryColumns;
         }
         if (selectQuery.limit() > 0) {
             try {
@@ -186,6 +186,20 @@ class SelectQueryParser extends BaseQueryParser {
             }
         }
         return query;
+    }
+
+    /*
+     * To be used if we want to retrieve paginate lazily and retrieve the number of elements
+     * without loading all the results.
+     */
+    private <FROM> TypedQuery<Long> getCountQuery(SelectQuery selectQuery) {
+        Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
+        TypedQuery<Long> queryEntity = buildQuery(fromType, Long.class, QueryModifier.combine(
+                QueryModifier.selectCount(),
+                QueryModifier.where(selectQuery.condition()),
+                QueryModifier.applySorts(selectQuery.sorts())
+        ));
+        return queryEntity;
     }
 
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
@@ -221,8 +235,27 @@ class SelectQueryParser extends BaseQueryParser {
         }
     }
 
-    protected String preProcessQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
-        return new OptionalPartsParser(queryString, entity, sorts).getCompleteSelect();
+    private String preProcessQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+        if (sorts != null) {
+            sorts = sorts.stream()
+                    .map(this::correctSortPropertyName)
+                    .toList();
+        }
+        return new OptionalPartsParser(queryString, entity, sorts)
+                .getCompleteSelect();
+    }
+
+    private Sort<?> correctSortPropertyName(Sort<?> sort) {
+        final String property = sort.property();
+        final int lastDotIndex = property.lastIndexOf(".");
+        final String idField = "_id";
+        final int idFieldLength = idField.length();
+        if (property.length() == lastDotIndex + 1 + idFieldLength
+                && property.regionMatches(true, lastDotIndex + 1, idField, 0, idFieldLength)) {
+            String newPropertyName = property.substring(0, lastDotIndex + 1) + getFieldName(idField);
+            return new Sort(newPropertyName, sort.isAscending(), sort.ignoreCase());
+        }
+        return sort;
     }
 
     private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType,
@@ -236,7 +269,7 @@ class SelectQueryParser extends BaseQueryParser {
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<RESULT> criteriaQuery = resultType != null
                 ? criteriaBuilder.createQuery(resultType)
-                : (CriteriaQuery<RESULT>)criteriaBuilder.createQuery();
+                : (CriteriaQuery<RESULT>) criteriaBuilder.createQuery();
         Root<FROM> from = criteriaQuery.from(fromType);
         criteriaQuery = queryModifier.apply(
                 new SelectQueryContext(criteriaQuery,
