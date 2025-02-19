@@ -196,8 +196,7 @@ class SelectQueryParser extends BaseQueryParser {
         Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
         TypedQuery<Long> queryEntity = buildQuery(fromType, Long.class, QueryModifier.combine(
                 QueryModifier.selectCount(),
-                QueryModifier.where(selectQuery.condition()),
-                QueryModifier.applySorts(selectQuery.sorts())
+                QueryModifier.where(selectQuery.condition())
         ));
         return queryEntity;
     }
@@ -278,15 +277,16 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Page<T> selectOffset(SelectQuery selectQuery, PageRequest pageRequest) {
-        final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
         if (PageRequest.Mode.OFFSET.equals(pageRequest.mode())) {
+            final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
             try {
                 query.setFirstResult(Math.toIntExact(pageRequest.page() - 1) * pageRequest.size());
             } catch (ArithmeticException e) {
                 throw new IllegalArgumentException("The offset of the first element is too big, page request: " + pageRequest, e);
             }
             query.setMaxResults(Math.min(query.getMaxResults(), pageRequest.size()));
-            return PersistencePage.of(query.getResultList(), pageRequest);
+            TypedQuery<Long> countQuery = pageRequest.requestTotal() ? getCountQuery(selectQuery) : null;
+            return new PersistencePage(query, countQuery, pageRequest);
         } else {
             throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported on CURSOR modes");
         }

@@ -18,8 +18,8 @@ package org.eclipse.jnosql.jakartapersistence.mapping.core;
 
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.persistence.TypedQuery;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,32 +28,50 @@ import java.util.Objects;
 /**
  * A Jakarta Persistence implementation of {@link  Page}
  *
- * TODO: Support lazy loading of entities, e.g. via stream. Needs to know total
- * elements upfront, e.g. retrieved with another count(*) query, if
- * totalElements requested in paging
+ * TODO: Load eagerly if not in a global transaction - lazy loading is not possible after a transaction is committed.
+ * TODO: Investigate whether lazy loading can be implemented using cursors, e.g. via Stream instead of List
  *
  * @param <T> the entity type
  */
 public class PersistencePage<T> implements Page<T> {
 
-    private final List<T> entities;
+    private final TypedQuery<T> query;
+
+    private final TypedQuery<Long> countQuery;
 
     private final PageRequest pageRequest;
 
-    private final Long totalElements;
+    private List<T> entities;
 
-    private PersistencePage(List<T> entities, Long totalElements, PageRequest pageRequest) {
-        this.entities = entities;
-        this.totalElements = totalElements;
+    private Long totalElements;
+
+    public PersistencePage(TypedQuery<T> query, TypedQuery<Long> countQuery, PageRequest pageRequest) {
+        Objects.requireNonNull(query, "query is required");
+        Objects.requireNonNull(pageRequest, "pageRequest is required");
+        if (pageRequest.requestTotal()) {
+            Objects.requireNonNull(countQuery, "countQuery is required if totals are requested");
+        }
+        this.query = query;
+        this.countQuery = countQuery;
         this.pageRequest = pageRequest;
     }
 
     @Override
     public long totalElements() {
-        if (totalElements == null) {
+        if (countQuery == null) {
             throw new IllegalStateException("Page request did not request to retrieve total number elements");
         }
+        if (totalElements == null) {
+            totalElements = countQuery.getResultList().get(0);
+        }
         return totalElements;
+    }
+
+    private List<T> entities() {
+        if (entities == null) {
+            entities = query.getResultList();
+        }
+        return entities;
     }
 
     @Override
@@ -64,17 +82,17 @@ public class PersistencePage<T> implements Page<T> {
 
     @Override
     public List<T> content() {
-        return Collections.unmodifiableList(entities);
+        return entities();
     }
 
     @Override
     public boolean hasContent() {
-        return !this.entities.isEmpty();
+        return !this.entities().isEmpty();
     }
 
     @Override
     public int numberOfElements() {
-        return entities.size();
+        return entities().size();
     }
 
     @Override
@@ -119,7 +137,7 @@ public class PersistencePage<T> implements Page<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return this.entities.iterator();
+        return this.entities().iterator();
     }
 
     @Override
@@ -131,36 +149,41 @@ public class PersistencePage<T> implements Page<T> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        PersistencePage<?> persistencePage = (PersistencePage<?>) o;
-        return Objects.equals(entities, persistencePage.entities) && Objects.equals(pageRequest, persistencePage.pageRequest);
+        PersistencePage<?> otherPage = (PersistencePage<?>) o;
+        countQueriesBothNull(otherPage);
+        countQueriesBothNotNull(otherPage);
+        totalElementsEqual(otherPage);
+        return Objects.equals(entities(), otherPage.entities())
+                && Objects.equals(query, otherPage.query)
+                && Objects.equals(pageRequest, otherPage.pageRequest)
+                && (countQueriesBothNull(otherPage)
+                    || (countQueriesBothNotNull(otherPage) && totalElementsEqual(otherPage))
+                );
+    }
+
+    private boolean totalElementsEqual(PersistencePage<?> otherPage) {
+        return totalElements() == otherPage.totalElements();
+    }
+
+    private boolean countQueriesBothNotNull(PersistencePage<?> otherPage) {
+        return countQuery != null && otherPage.countQuery != null;
+    }
+
+    private boolean countQueriesBothNull(PersistencePage<?> otherPage) {
+        return countQuery == null && otherPage.countQuery == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(entities, pageRequest);
+        return Objects.hash(query, pageRequest);
     }
 
     @Override
     public String toString() {
         return "PersistencePage{"
-                + "entities=" + entities
-                + ", totalElements=" + totalElements
+                + "query=" + query
                 + ", pageRequest=" + pageRequest
                 + '}';
-    }
-
-    /**
-     * Creates a {@link  Page} implementation from entities and a PageRequest
-     *
-     * @param entities the entities
-     * @param pageRequest the PageRequest
-     * @return a {@link Page} instance
-     * @param <T> the entity type
-     */
-    public static <T> Page<T> of(List<T> entities, PageRequest pageRequest) {
-        Objects.requireNonNull(entities, "entities is required");
-        Objects.requireNonNull(pageRequest, "pageRequest is required");
-        return new PersistencePage<>(entities, null, pageRequest);
     }
 
     /**
