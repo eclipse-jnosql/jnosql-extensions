@@ -25,5 +25,6 @@ public interface PersonRepository extends CrudRepository<Person, String> {
     long countByNameNotNull();
     List<Person> findByNameAndAgeLessThanEqual(String name, long age);
     List<Person> findByNameIn(Set<String> names);
+    List<Person> findByNameIgnoreCaseNot(String name);
 }
 

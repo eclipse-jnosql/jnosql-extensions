@@ -39,12 +39,15 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 
 import static org.eclipse.jnosql.communication.Condition.AND;
 import static org.eclipse.jnosql.communication.Condition.BETWEEN;
+import static org.eclipse.jnosql.communication.Condition.CONTAINS;
+import static org.eclipse.jnosql.communication.Condition.ENDS_WITH;
 import static org.eclipse.jnosql.communication.Condition.EQUALS;
 import static org.eclipse.jnosql.communication.Condition.GREATER_EQUALS_THAN;
 import static org.eclipse.jnosql.communication.Condition.GREATER_THAN;
 import static org.eclipse.jnosql.communication.Condition.IN;
 import static org.eclipse.jnosql.communication.Condition.LESSER_EQUALS_THAN;
 import static org.eclipse.jnosql.communication.Condition.LESSER_THAN;
+import static org.eclipse.jnosql.communication.Condition.LIKE;
 import static org.eclipse.jnosql.communication.Condition.NOT;
 
 abstract class BaseQueryParser {
@@ -100,54 +103,46 @@ abstract class BaseQueryParser {
     }
 
     protected static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx) {
+        return parseCriteria(value, ctx, false);
+    }
+
+    private static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx, boolean ignoreCase) {
         if (value instanceof CriteriaCondition criteria) {
             return switch (criteria.condition()) {
                 case NOT ->
                     ctx.builder().not(parseCriteria(criteria.element(), ctx));
-                case EQUALS -> {
-                    Element element = (Element) criteria.element();
-                    if (element.value().isNull()) {
-                        yield ctx.builder().isNull(ctx.root().get(getName(element)));
-                    } else {
-                        yield ctx.builder().equal(ctx.root().get(getName(element)), element.value().get());
-                    }
-                }
-                case AND -> {
-                    yield elementCollection(criteria).stream()
-                    .map(elem -> parseCriteria(elem, ctx))
-                    .reduce(ctx.builder()::and).get();
-                }
-                case LESSER_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
-                    yield ctx.builder().lessThan(comparableContext.field(), comparableContext.expression());
-                }
-                case LESSER_EQUALS_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
-                    yield ctx.builder().lessThanOrEqualTo(comparableContext.field(), comparableContext.expression());
-                }
-                case GREATER_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
-                    yield ctx.builder().greaterThan(comparableContext.field(), comparableContext.expression());
-                }
-                case GREATER_EQUALS_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
-                    yield ctx.builder().greaterThanOrEqualTo(comparableContext.field(), comparableContext.expression());
-                }
-                case BETWEEN -> {
-                    BiComparableContext comparableContext = BiComparableContext.from(ctx, criteria);
-                    yield ctx.builder().between(comparableContext.field(), comparableContext.expression1(), comparableContext.expression2());
-                }
-                case IN -> {
-                    MultiValueContext valueContext = MultiValueContext.from(ctx, criteria);
-                    CriteriaBuilder.In<Object> inExpr = ctx.builder().in(valueContext.field());
-                    valueContext.fieldValues().forEach(v -> inExpr.value(v));
-                    yield inExpr;
-                }
-                case LIKE -> {
-                    StringContext stringContext = StringContext.from(ctx, criteria);
-                    yield ctx.builder().like(stringContext.field(), stringContext.fieldValue());
-                }
-
+                case EQUALS ->
+                    parseEquals(criteria, ctx, ignoreCase);
+                case AND ->
+                    parseAnd(criteria, ctx);
+                case OR ->
+                    throw new UnsupportedOperationException("JNoSQL criteria condition "
+                            + criteria.condition() + " is not supported yet.");
+                case LESSER_THAN ->
+                    parseLesserThan(criteria, ctx, ignoreCase);
+                case LESSER_EQUALS_THAN ->
+                    parseLesserThanEquals(criteria, ctx, ignoreCase);
+                case GREATER_THAN ->
+                    parseGreaterThan(criteria, ctx, ignoreCase);
+                case GREATER_EQUALS_THAN ->
+                    parseGreaterEqualsThan(criteria, ctx, ignoreCase);
+                case BETWEEN ->
+                    parseBetween(criteria, ctx, ignoreCase);
+                case IN ->
+                    parseIn(criteria, ctx, ignoreCase);
+                case LIKE ->
+                    parseLike(criteria, ctx, ignoreCase);
+                case CONTAINS ->
+                    parseContains(criteria, ctx, ignoreCase);
+                case ENDS_WITH ->
+                    parseEndsWith(criteria, ctx, ignoreCase);
+                case IGNORE_CASE ->
+                    parseCriteria(criteria.element().value().get(), ctx, true);
+                /*
+EQUALS, LESSER_THAN, LESSER_EQUALS_THAN, GREATER_THAN, GREATER_EQUALS_THAN, BETWEEN,
+LIKE (on the left), Contains, EndsWith, StartsWith
+Maybe: In,
+                 */
                 default ->
                     throw new UnsupportedOperationException("JNoSQL criteria condition "
                             + criteria.condition() + " is not supported yet.");
@@ -156,6 +151,114 @@ abstract class BaseQueryParser {
             return parseCriteria(element.value().get(), ctx);
         }
         throw new UnsupportedOperationException("Parsing value " + value + " is not supported yet.");
+    }
+
+    private static <FROM> Predicate parseAnd(CriteriaCondition criteria, QueryContext<FROM> ctx) {
+        return elementCollection(criteria).stream()
+                .map(elem -> parseCriteria(elem, ctx))
+                .reduce(ctx.builder()::and).get();
+    }
+
+    private static <FROM> Predicate parseEquals(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        Element element = (Element) criteria.element();
+        if (element.value().isNull()) {
+            return ctx.builder().isNull(ctx.root().get(getName(element)));
+        } else {
+            Expression<?> leftSide = ctx.root().get(getName(element));
+            Object rightSide = element.value().get();
+            if (ignoreCase) {
+                if (leftSide.getJavaType().isAssignableFrom(String.class) && rightSide instanceof String) {
+                    leftSide = ctx.builder().upper((Expression<String>) leftSide);
+                    rightSide = rightSide.toString().toUpperCase();
+                } else {
+                    throw new UnsupportedOperationException("JNoSQL IgnoreCase supported only for String values. Criteria: " + criteria);
+                }
+            }
+            return ctx.builder().equal(leftSide, rightSide);
+        }
+    }
+
+    private static <FROM> Predicate parseLesserThan(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+        return ctx.builder().lessThan(comparableContext.field(), comparableContext.expression());
+    }
+
+    private static <FROM> Predicate parseLesserThanEquals(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+        return ctx.builder().lessThanOrEqualTo(comparableContext.field(), comparableContext.expression());
+    }
+
+    private static <FROM> Predicate parseGreaterThan(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+        return ctx.builder().greaterThan(comparableContext.field(), comparableContext.expression());
+    }
+
+    private static <FROM> Predicate parseGreaterEqualsThan(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+        return ctx.builder().greaterThanOrEqualTo(comparableContext.field(), comparableContext.expression());
+    }
+
+    private static <FROM> Predicate parseBetween(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        BiComparableContext comparableContext = BiComparableContext.from(ctx, criteria);
+        return ctx.builder().between(comparableContext.field(), comparableContext.expression1(), comparableContext.expression2());
+    }
+
+    private static <FROM> Predicate parseIn(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        MultiValueContext valueContext = MultiValueContext.from(ctx, criteria);
+        CriteriaBuilder.In<Object> inExpr = ctx.builder().in(valueContext.field());
+        valueContext.fieldValues().forEach(v -> inExpr.value(v));
+        return inExpr;
+    }
+
+    private static <FROM> Predicate parseLike(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        StringContext stringContext = StringContext.from(ctx, criteria);
+        return ctx.builder().like(stringContext.field(), stringContext.fieldValue());
+    }
+
+    private static <FROM> Predicate parseContains(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        StringContext stringContext = StringContext.from(ctx, criteria);
+        return ctx.builder().like(stringContext.field(), "%" + stringContext.fieldValue() + "%");
+    }
+
+    private static <FROM> Predicate parseEndsWith(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        if (ignoreCase) {
+            throw new UnsupportedOperationException("JNoSQL IgnoreCase for condition "
+                    + criteria.condition() + " is not supported yet.");
+        }
+        StringContext stringContext = StringContext.from(ctx, criteria);
+        return ctx.builder().like(stringContext.field(), "%" + stringContext.fieldValue());
     }
 
     protected static String getName(Element element) {
