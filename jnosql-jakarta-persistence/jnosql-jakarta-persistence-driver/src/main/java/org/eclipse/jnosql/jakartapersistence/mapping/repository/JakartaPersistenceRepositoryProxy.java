@@ -16,6 +16,7 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.Limit;
+import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Query;
@@ -113,7 +114,12 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .singleResultPagination(getSingleResult(query))
                 .page(getPage(query))
                 .build();
-        return dynamicReturn.execute();
+        Object result = dynamicReturn.execute();
+        if (result != null) {
+            return result;
+        } else {
+            throw new EmptyResultException("Call to method " + method + " found no matching results.");
+        }
     }
 
     @Override
