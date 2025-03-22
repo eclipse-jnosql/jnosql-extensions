@@ -15,7 +15,7 @@
 package org.eclipse.jnosql.tck.jakartapersistence;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
-import org.eclipse.jnosql.mapping.core.spi.EntityMetadataExtension;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 import org.eclipse.jnosql.mapping.document.DocumentTemplateProducer;
