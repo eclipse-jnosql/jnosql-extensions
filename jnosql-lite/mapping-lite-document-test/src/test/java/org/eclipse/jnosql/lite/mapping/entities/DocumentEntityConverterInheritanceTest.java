@@ -32,7 +32,6 @@ import org.eclipse.jnosql.lite.mapping.entities.inheritance.SocialMediaNotificat
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 import org.eclipse.jnosql.mapping.document.spi.DocumentExtension;
-import org.eclipse.jnosql.mapping.core.spi.EntityMetadataExtension;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
@@ -52,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, EntityConverter.class, DocumentTemplate.class})
-@AddExtensions({EntityMetadataExtension.class, DocumentExtension.class})
+@AddExtensions({DocumentExtension.class})
 @AddPackages(LiteEntitiesMetadata.class)
 class DocumentEntityConverterInheritanceTest {
 
