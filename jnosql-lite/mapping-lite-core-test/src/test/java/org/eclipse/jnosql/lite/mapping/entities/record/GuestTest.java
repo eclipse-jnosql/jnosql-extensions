@@ -16,11 +16,13 @@ package org.eclipse.jnosql.lite.mapping.entities.record;
 
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.CollectionParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.ConstructorBuilder;
 import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+import org.eclipse.jnosql.mapping.metadata.MapParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
 import org.junit.jupiter.api.Assertions;
@@ -109,7 +111,7 @@ class GuestTest {
 
         var name = parameters.get(0);
         var document = parameters.get(1);
-        var phones = parameters.get(2);
+        var phones = (CollectionParameterMetaData)parameters.get(2);
 
         SoftAssertions.assertSoftly(soft ->{
             soft.assertThat(name.name()).isEqualTo("name");
@@ -119,11 +121,12 @@ class GuestTest {
 
             soft.assertThat(document.name()).isEqualTo("document");
             soft.assertThat(document.type()).isEqualTo(String.class);
-            soft.assertThat(name.mappingType()).isEqualTo(MappingType.DEFAULT);
+            soft.assertThat(document.mappingType()).isEqualTo(MappingType.DEFAULT);
 
             soft.assertThat(phones.name()).isEqualTo("phones");
             soft.assertThat(phones.type()).isEqualTo(List.class);
-            soft.assertThat(name.mappingType()).isEqualTo(MappingType.DEFAULT);
+            soft.assertThat(phones.mappingType()).isEqualTo(MappingType.COLLECTION);
+            soft.assertThat(phones.isEmbeddable()).isFalse();
         });
 
     }
