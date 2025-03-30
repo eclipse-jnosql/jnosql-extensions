@@ -58,23 +58,27 @@ class FieldAnalyzer implements Supplier<String> {
     private static final Function<Element, String> ELEMENT_TO_STRING = el -> el.getSimpleName().toString();
     private static final String NULL = "null";
     private final Element field;
-    private final Mustache template;
-
-    private final Mustache collectionTemplate;
-    private final Mustache mapTemplate;
-    private final Mustache arrayTemplate;
     private final ProcessingEnvironment processingEnv;
     private final TypeElement entity;
+
+    private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
+    private static  final Mustache MUSTACHE_COLLECTION_TEMPLATE;
+    private static  final Mustache MUSTACHE_MAP_TEMPLATE;
+    private static  final Mustache MUSTACHE_ARRAY_TEMPLATE;
+
+    static {
+        MUSTACHE_DEFAULT_TEMPLATE = createTemplate(DEFAULT_TEMPLATE);
+        MUSTACHE_COLLECTION_TEMPLATE = createTemplate(COLLECTION_TEMPLATE);
+        MUSTACHE_MAP_TEMPLATE = createTemplate(MAP_TEMPLATE);
+        MUSTACHE_ARRAY_TEMPLATE = createTemplate(ARRAY_TEMPLATE);
+    }
 
     FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
                   TypeElement entity) {
         this.field = field;
         this.processingEnv = processingEnv;
         this.entity = entity;
-        this.template = createTemplate(DEFAULT_TEMPLATE);
-        this.collectionTemplate = createTemplate(COLLECTION_TEMPLATE);
-        this.mapTemplate = createTemplate(MAP_TEMPLATE);
-        this.arrayTemplate = createTemplate(ARRAY_TEMPLATE);
+
     }
 
     @Override
@@ -84,13 +88,13 @@ class FieldAnalyzer implements Supplier<String> {
         JavaFileObject fileObject = getFileObject(metadata, filer);
         try (Writer writer = fileObject.openWriter()) {
             if (NULL.equals(metadata.getElementType())) {
-                template.execute(writer, metadata);
+                MUSTACHE_DEFAULT_TEMPLATE.execute(writer, metadata);
             } else if (metadata.getType().contains("Map")) {
-                mapTemplate.execute(writer, metadata);
+                MUSTACHE_MAP_TEMPLATE.execute(writer, metadata);
             } else if(metadata.getType().contains("[]")) {
-                arrayTemplate.execute(writer, metadata);
+                MUSTACHE_ARRAY_TEMPLATE.execute(writer, metadata);
             } else {
-                collectionTemplate.execute(writer, metadata);
+                MUSTACHE_COLLECTION_TEMPLATE.execute(writer, metadata);
             }
         } catch (IOException exception) {
             throw new ValidationException("An error to compile the class: " +
@@ -253,7 +257,7 @@ class FieldAnalyzer implements Supplier<String> {
         return () -> new ValidationException(s + fieldName + " in the class: " + packageName + "." + entity);
     }
 
-    private Mustache createTemplate(String template) {
+    private static Mustache createTemplate(String template) {
         MustacheFactory factory = new DefaultMustacheFactory();
         return factory.compile(template);
     }
