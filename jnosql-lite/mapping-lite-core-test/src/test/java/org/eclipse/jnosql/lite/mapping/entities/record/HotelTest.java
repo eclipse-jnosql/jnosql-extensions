@@ -68,7 +68,7 @@ class HotelTest {
     @Test
     void shouldGetId() {
         Optional<FieldMetadata> id = this.entityMetadata.id();
-        Assertions.assertFalse(id.isPresent());
+        Assertions.assertTrue(id.isPresent());
     }
 
 
