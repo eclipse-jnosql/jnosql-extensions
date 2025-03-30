@@ -66,9 +66,9 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
     private final ProcessingEnvironment processingEnv;
     private final TypeElement entity;
     private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
-    private static  final Mustache MUSTACHE_COLLECTION_TEMPLATE;
-    private static  final Mustache MUSTACHE_MAP_TEMPLATE;
-    private static  final Mustache MUSTACHE_ARRAY_TEMPLATE;
+    private static final Mustache MUSTACHE_COLLECTION_TEMPLATE;
+    private static final Mustache MUSTACHE_MAP_TEMPLATE;
+    private static final Mustache MUSTACHE_ARRAY_TEMPLATE;
 
     static {
         MUSTACHE_DEFAULT_TEMPLATE = createTemplate(DEFAULT_TEMPLATE);
@@ -94,7 +94,7 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
                 MUSTACHE_DEFAULT_TEMPLATE.execute(writer, metadata);
             } else if (metadata.getType().contains("Map")) {
                 MUSTACHE_MAP_TEMPLATE.execute(writer, metadata);
-            } else if(metadata.getType().contains("[]")) {
+            } else if (metadata.getType().contains("[]")) {
                 MUSTACHE_ARRAY_TEMPLATE.execute(writer, metadata);
             } else {
                 MUSTACHE_COLLECTION_TEMPLATE.execute(writer, metadata);
