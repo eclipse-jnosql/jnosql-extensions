@@ -14,8 +14,92 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.record;
 
+import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.lite.mapping.entities.Money;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+import org.eclipse.jnosql.mapping.metadata.MapParameterMetaData;
+import org.eclipse.jnosql.mapping.metadata.MappingType;
+import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ApartmentTest {
 
+    private EntitiesMetadata mappings;
+
+    private EntityMetadata entityMetadata;
+
+    @BeforeEach
+    public void setUp() {
+        this.mappings = new LiteEntitiesMetadata();
+        this.entityMetadata = this.mappings.get(Apartment.class);
+    }
+
+    @Test
+    void shouldGetName() {
+        Assertions.assertEquals("Apartment", entityMetadata.name());
+    }
+
+    @Test
+    void shouldGetSimpleName() {
+        Assertions.assertEquals(Apartment.class.getSimpleName(), entityMetadata.simpleName());
+    }
+
+    @Test
+    void shouldGetClassName() {
+        Assertions.assertEquals(Apartment.class.getSimpleName(), entityMetadata.simpleName());
+    }
+
+    @Test
+    void shouldGetClassInstance() {
+        Assertions.assertEquals(Apartment.class, entityMetadata.type());
+    }
+
+    @Test
+    void shouldGetId() {
+        Optional<FieldMetadata> id = this.entityMetadata.id();
+        Assertions.assertTrue(id.isPresent());
+    }
+
+    @Test
+    void shouldCheckConstructor() {
+        ConstructorMetadata constructor = entityMetadata.constructor();
+        org.assertj.core.api.Assertions.assertThat(constructor.isDefault()).isFalse();
+        List<ParameterMetaData> parameters = constructor.parameters();
+        org.assertj.core.api.Assertions.assertThat(parameters).hasSize(3);
+
+        var id = parameters.get(0);
+        var guests = (MapParameterMetaData) parameters.get(1);
+        var array = parameters.get(2);
+        var map = parameters.get(3);
+
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(id.name()).isEqualTo("_id");
+            soft.assertThat(id.type()).isEqualTo(String.class);
+            soft.assertThat(id.converter()).isEmpty();
+            soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
+
+            soft.assertThat(guests.name()).isEqualTo("guests");
+            soft.assertThat(guests.type()).isEqualTo(Map.class);
+            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.MAP);
+            soft.assertThat(guests.isEmbeddable()).isFalse();
+
+            soft.assertThat(array.name()).isEqualTo("array");
+            soft.assertThat(array.type()).isEqualTo(Money.class);
+            soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
+            soft.assertThat(array.converter()).isNotEmpty();
+        });
+
+    }
 }
