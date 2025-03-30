@@ -18,9 +18,6 @@ import jakarta.nosql.Column;
 import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
 
-import java.util.List;
-import java.util.Map;
-
 @Entity
 public record House(@Id Long id, @Column Guest[] guest) {
 }
