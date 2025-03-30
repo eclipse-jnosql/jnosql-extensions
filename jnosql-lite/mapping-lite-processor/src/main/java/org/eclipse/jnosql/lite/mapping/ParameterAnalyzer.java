@@ -168,7 +168,7 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
 
         var column = parameter.getAnnotation(Column.class);
-        Id id = parameter.getAnnotation(Id.class);
+        var id = parameter.getAnnotation(Id.class);
         var convert = parameter.getAnnotation(Convert.class);
 
         for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
@@ -214,6 +214,9 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
 
     private String getName(String fieldName, Column column, Id id) {
         if (id == null) {
+            if (column == null) {
+                return fieldName;
+            }
             return column.value().isBlank() ? fieldName : column.value();
         } else {
             return id.value().isBlank() ? fieldName : id.value();
