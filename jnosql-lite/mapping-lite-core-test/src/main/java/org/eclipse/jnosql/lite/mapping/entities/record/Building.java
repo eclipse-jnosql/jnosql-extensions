@@ -19,5 +19,5 @@ import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
 
 @Entity
-public record Building(@Id Long id, @Column Guest[] guest) {
+public record Building(@Id Long id, @Column Guest[] guests) {
 }

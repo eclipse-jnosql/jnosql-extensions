@@ -16,6 +16,7 @@ package org.eclipse.jnosql.lite.mapping.entities.record;
 
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.ArrayParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.CollectionParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
@@ -30,8 +31,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Optional;
 
-class ApartmentTest {
+import static org.junit.jupiter.api.Assertions.*;
 
+class BuildingTest {
     private EntitiesMetadata mappings;
 
     private EntityMetadata entityMetadata;
@@ -39,27 +41,27 @@ class ApartmentTest {
     @BeforeEach
     public void setUp() {
         this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(Apartment.class);
+        this.entityMetadata = this.mappings.get(Building.class);
     }
 
     @Test
     void shouldGetName() {
-        Assertions.assertEquals("Apartment", entityMetadata.name());
+        Assertions.assertEquals("Building", entityMetadata.name());
     }
 
     @Test
     void shouldGetSimpleName() {
-        Assertions.assertEquals(Apartment.class.getSimpleName(), entityMetadata.simpleName());
+        Assertions.assertEquals(Building.class.getSimpleName(), entityMetadata.simpleName());
     }
 
     @Test
     void shouldGetClassName() {
-        Assertions.assertEquals(Apartment.class.getSimpleName(), entityMetadata.simpleName());
+        Assertions.assertEquals(Building.class.getSimpleName(), entityMetadata.simpleName());
     }
 
     @Test
     void shouldGetClassInstance() {
-        Assertions.assertEquals(Apartment.class, entityMetadata.type());
+        Assertions.assertEquals(Building.class, entityMetadata.type());
     }
 
     @Test
@@ -76,7 +78,7 @@ class ApartmentTest {
         org.assertj.core.api.Assertions.assertThat(parameters).hasSize(2);
 
         var id = parameters.get(0);
-        var guests = (CollectionParameterMetaData) parameters.get(1);
+        var guests = (ArrayParameterMetaData) parameters.get(1);
 
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(id.name()).isEqualTo("_id");
@@ -85,8 +87,8 @@ class ApartmentTest {
             soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
 
             soft.assertThat(guests.name()).isEqualTo("guests");
-            soft.assertThat(guests.type()).isEqualTo(List.class);
-            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.COLLECTION);
+            soft.assertThat(guests.type()).isEqualTo(Guest[].class);
+            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.ARRAY);
             soft.assertThat(guests.isEmbeddable()).isTrue();
 
         });
