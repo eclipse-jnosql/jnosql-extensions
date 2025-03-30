@@ -22,5 +22,5 @@ import java.util.List;
 import java.util.Map;
 
 @Entity
-public record Apartment(@Id Long id, @Column List<Guest> guests, Guest[] array, Map<String, Guest> map) {
+public record Apartment(@Id Long id, @Column List<Guest> guests, @Column Guest[] array, Map<String, Guest> map) {
 }
