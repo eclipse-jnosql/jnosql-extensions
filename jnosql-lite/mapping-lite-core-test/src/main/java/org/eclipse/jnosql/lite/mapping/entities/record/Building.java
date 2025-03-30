@@ -18,8 +18,6 @@ import jakarta.nosql.Column;
 import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
 
-import java.util.Map;
-
 @Entity
-public record Building(@Id Long id, @Column Map<String, Guest> guests) {
+public record Building(@Id Long id, @Column Guest[] guests) {
 }
