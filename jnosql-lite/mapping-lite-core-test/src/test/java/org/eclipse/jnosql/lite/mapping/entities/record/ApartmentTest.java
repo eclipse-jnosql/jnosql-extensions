@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping.entities.record;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.Money;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.CollectionParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -77,28 +78,22 @@ class ApartmentTest {
         ConstructorMetadata constructor = entityMetadata.constructor();
         org.assertj.core.api.Assertions.assertThat(constructor.isDefault()).isFalse();
         List<ParameterMetaData> parameters = constructor.parameters();
-        org.assertj.core.api.Assertions.assertThat(parameters).hasSize(3);
+        org.assertj.core.api.Assertions.assertThat(parameters).hasSize(2);
 
         var id = parameters.get(0);
-        var guests = (MapParameterMetaData) parameters.get(1);
-        var array = parameters.get(2);
-        var map = parameters.get(3);
+        var guests = (CollectionParameterMetaData) parameters.get(1);
 
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(id.name()).isEqualTo("_id");
-            soft.assertThat(id.type()).isEqualTo(String.class);
+            soft.assertThat(id.type()).isEqualTo(Long.class);
             soft.assertThat(id.converter()).isEmpty();
             soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
 
             soft.assertThat(guests.name()).isEqualTo("guests");
-            soft.assertThat(guests.type()).isEqualTo(Map.class);
-            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.MAP);
-            soft.assertThat(guests.isEmbeddable()).isFalse();
+            soft.assertThat(guests.type()).isEqualTo(List.class);
+            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.COLLECTION);
+            soft.assertThat(guests.isEmbeddable()).isTrue();
 
-            soft.assertThat(array.name()).isEqualTo("array");
-            soft.assertThat(array.type()).isEqualTo(Money.class);
-            soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
-            soft.assertThat(array.converter()).isNotEmpty();
         });
 
     }

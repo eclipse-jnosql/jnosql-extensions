@@ -19,7 +19,8 @@ import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
 
 import java.util.List;
+import java.util.Map;
 
 @Entity
-public record Apartment(@Id Long id, @Column List<Guest> guests) {
+public record House(@Id Long id, @Column Guest[] guest) {
 }
