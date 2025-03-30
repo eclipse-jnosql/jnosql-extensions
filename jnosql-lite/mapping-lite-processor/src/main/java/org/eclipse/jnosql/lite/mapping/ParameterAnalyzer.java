@@ -137,11 +137,11 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
             Element element = declaredType.asElement();
             className = element.toString();
             supplierElement = typeMirror.toString();
-            embeddable = isEmbeddable(declaredType);
             collectionInstance = CollectionUtil.INSTANCE.apply(className);
             elementType = elementType(declaredType);
-            valuetype = valuetype(declaredType);
+            valuetype = valueType(declaredType);
             mappingType = of(element, collectionInstance);
+            embeddable = isEmbeddable(declaredType, mappingType);
 
         } else if (typeMirror instanceof ArrayType arrayType) {
             TypeMirror componentType = arrayType.getComponentType();
@@ -255,7 +255,7 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
     }
 
-    private String valuetype(DeclaredType declaredType) {
+    private String valueType(DeclaredType declaredType) {
         Optional<? extends TypeMirror> genericMirrorOptional = declaredType.getTypeArguments().stream().skip(1L).findFirst();
         if (genericMirrorOptional.isPresent()) {
             TypeMirror genericMirror = genericMirrorOptional.get();
@@ -265,11 +265,34 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
     }
 
-    private boolean isEmbeddable(DeclaredType declaredType) {
-        return declaredType.getTypeArguments().stream()
-                .filter(DeclaredType.class::isInstance).map(DeclaredType.class::cast)
-                .map(DeclaredType::asElement).findFirst().map(e -> e.getAnnotation(Embeddable.class) != null ||
-                        e.getAnnotation(Entity.class) != null).orElse(false);
+    private boolean isEmbeddable(DeclaredType declaredType, MappingType mappingType) {
+        List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+
+        if (typeArguments.isEmpty()) {
+            return false;
+        }
+
+        if (MappingType.MAP.equals(mappingType)) {
+            return typeArguments.stream().skip(1).findFirst()
+                    .filter(DeclaredType.class::isInstance)
+                    .map(DeclaredType.class::cast)
+                    .map(DeclaredType::asElement)
+                    .map(this::isAnnotatedWithEmbeddableOrEntity)
+                    .orElse(false);
+        }
+
+        return typeArguments.stream()
+                .filter(DeclaredType.class::isInstance)
+                .map(DeclaredType.class::cast)
+                .map(DeclaredType::asElement)
+                .map(this::isAnnotatedWithEmbeddableOrEntity)
+                .findFirst()
+                .orElse(false);
+    }
+
+    private boolean isAnnotatedWithEmbeddableOrEntity(Element element) {
+        return element.getAnnotation(Embeddable.class) != null ||
+                element.getAnnotation(Entity.class) != null;
     }
 
 }
