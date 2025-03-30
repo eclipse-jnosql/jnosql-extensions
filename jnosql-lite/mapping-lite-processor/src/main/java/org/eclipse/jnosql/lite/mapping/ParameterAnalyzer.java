@@ -55,31 +55,33 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         return executableElement.getParameters().stream().anyMatch(ID_PARAMETER.or(COLUMN_PARAMETER));
     };
 
-
+    private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
+    private static final Mustache MUSTACHE_COLLECTION_TEMPLATE;
+    private static final Mustache MUSTACHE_MAP_TEMPLATE;
+    private static final Mustache MUSTACHE_ARRAY_TEMPLATE;
     private static final Logger LOGGER = Logger.getLogger(ParameterAnalyzer.class.getName());
     private static final String DEFAULT_TEMPLATE = "parameter_metadata.mustache";
     private static final String COLLECTION_TEMPLATE = "parameter_collection_metadata.mustache";
     private static final String MAP_TEMPLATE = "parameter_map_metadata.mustache";
     private static final String ARRAY_TEMPLATE = "parameter_array_metadata.mustache";
     private static final String NULL = "null";
-    private final VariableElement parameter;
-    private final Mustache template;
 
-    private final Mustache collectionTemplate;
-    private final Mustache mapTemplate;
-    private final Mustache arrayTemplate;
+    private final VariableElement parameter;
     private final ProcessingEnvironment processingEnv;
     private final TypeElement entity;
+
+    static {
+        MUSTACHE_DEFAULT_TEMPLATE = createTemplate(DEFAULT_TEMPLATE);
+        MUSTACHE_COLLECTION_TEMPLATE = createTemplate(COLLECTION_TEMPLATE);
+        MUSTACHE_MAP_TEMPLATE = createTemplate(MAP_TEMPLATE);
+        MUSTACHE_ARRAY_TEMPLATE = createTemplate(ARRAY_TEMPLATE);
+    }
 
     ParameterAnalyzer(VariableElement parameter, ProcessingEnvironment processingEnv,
                       TypeElement entity) {
         this.parameter = parameter;
         this.processingEnv = processingEnv;
         this.entity = entity;
-        this.template = createTemplate(DEFAULT_TEMPLATE);
-        this.collectionTemplate = createTemplate(COLLECTION_TEMPLATE);
-        this.mapTemplate = createTemplate(MAP_TEMPLATE);
-        this.arrayTemplate = createTemplate(ARRAY_TEMPLATE);
     }
 
     @Override
@@ -89,13 +91,13 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         JavaFileObject fileObject = getFileObject(metadata, filer);
         try (Writer writer = fileObject.openWriter()) {
             if (NULL.equals(metadata.getElementType())) {
-                template.execute(writer, metadata);
+                MUSTACHE_DEFAULT_TEMPLATE.execute(writer, metadata);
             } else if (metadata.getType().contains("Map")) {
-                mapTemplate.execute(writer, metadata);
-            } else if(metadata.getType().contains("[]")) {
-                arrayTemplate.execute(writer, metadata);
+                MUSTACHE_MAP_TEMPLATE.execute(writer, metadata);
+            } else if (metadata.getType().contains("[]")) {
+                MUSTACHE_ARRAY_TEMPLATE.execute(writer, metadata);
             } else {
-                collectionTemplate.execute(writer, metadata);
+                MUSTACHE_COLLECTION_TEMPLATE.execute(writer, metadata);
             }
         } catch (IOException exception) {
             throw new ValidationException("An error to compile the class: " +
@@ -135,11 +137,11 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
             Element element = declaredType.asElement();
             className = element.toString();
             supplierElement = typeMirror.toString();
-            embeddable = isEmbeddable(declaredType);
             collectionInstance = CollectionUtil.INSTANCE.apply(className);
             elementType = elementType(declaredType);
-            valuetype = valuetype(declaredType);
+            valuetype = valueType(declaredType);
             mappingType = of(element, collectionInstance);
+            embeddable = isEmbeddable(declaredType, mappingType);
 
         } else if (typeMirror instanceof ArrayType arrayType) {
             TypeMirror componentType = arrayType.getComponentType();
@@ -166,7 +168,7 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
 
         var column = parameter.getAnnotation(Column.class);
-        Id id = parameter.getAnnotation(Id.class);
+        var id = parameter.getAnnotation(Id.class);
         var convert = parameter.getAnnotation(Convert.class);
 
         for (AnnotationMirror annotationMirror : parameter.getAnnotationMirrors()) {
@@ -212,13 +214,16 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
 
     private String getName(String fieldName, Column column, Id id) {
         if (id == null) {
+            if (column == null) {
+                return fieldName;
+            }
             return column.value().isBlank() ? fieldName : column.value();
         } else {
             return id.value().isBlank() ? fieldName : id.value();
         }
     }
 
-    private Mustache createTemplate(String template) {
+    private static Mustache createTemplate(String template) {
         MustacheFactory factory = new DefaultMustacheFactory();
         return factory.compile(template);
     }
@@ -250,7 +255,7 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
     }
 
-    private String valuetype(DeclaredType declaredType) {
+    private String valueType(DeclaredType declaredType) {
         Optional<? extends TypeMirror> genericMirrorOptional = declaredType.getTypeArguments().stream().skip(1L).findFirst();
         if (genericMirrorOptional.isPresent()) {
             TypeMirror genericMirror = genericMirrorOptional.get();
@@ -260,11 +265,34 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
     }
 
-    private boolean isEmbeddable(DeclaredType declaredType) {
-        return declaredType.getTypeArguments().stream()
-                .filter(DeclaredType.class::isInstance).map(DeclaredType.class::cast)
-                .map(DeclaredType::asElement).findFirst().map(e -> e.getAnnotation(Embeddable.class) != null ||
-                        e.getAnnotation(Entity.class) != null).orElse(false);
+    private boolean isEmbeddable(DeclaredType declaredType, MappingType mappingType) {
+        List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+
+        if (typeArguments.isEmpty()) {
+            return false;
+        }
+
+        if (MappingType.MAP.equals(mappingType)) {
+            return typeArguments.stream().skip(1).findFirst()
+                    .filter(DeclaredType.class::isInstance)
+                    .map(DeclaredType.class::cast)
+                    .map(DeclaredType::asElement)
+                    .map(this::isAnnotatedWithEmbeddableOrEntity)
+                    .orElse(false);
+        }
+
+        return typeArguments.stream()
+                .filter(DeclaredType.class::isInstance)
+                .map(DeclaredType.class::cast)
+                .map(DeclaredType::asElement)
+                .map(this::isAnnotatedWithEmbeddableOrEntity)
+                .findFirst()
+                .orElse(false);
+    }
+
+    private boolean isAnnotatedWithEmbeddableOrEntity(Element element) {
+        return element.getAnnotation(Embeddable.class) != null ||
+                element.getAnnotation(Entity.class) != null;
     }
 
 }

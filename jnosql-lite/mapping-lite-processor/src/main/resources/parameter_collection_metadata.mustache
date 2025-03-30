@@ -87,6 +87,11 @@ public final class {{className}} implements CollectionParameterMetaData {
         return {{elementType}};
     }
 
+   @Override
+   public boolean isEmbeddable() {
+       return {{isEmbeddable}};
+   }
+
     @Override
     public java.util.Collection<?> collectionInstance() {
         return {{{collectionInstance}}};

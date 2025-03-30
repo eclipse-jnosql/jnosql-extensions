@@ -22,6 +22,7 @@ import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+import org.eclipse.jnosql.mapping.metadata.MapParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
 import org.junit.jupiter.api.Assertions;
@@ -110,7 +111,7 @@ class DocumentRecordTest {
         org.assertj.core.api.Assertions.assertThat(parameters).hasSize(3);
 
         var id = parameters.get(0);
-        var data = parameters.get(1);
+        var data =(MapParameterMetaData)parameters.get(1);
         var money = parameters.get(2);
 
         SoftAssertions.assertSoftly(soft ->{
@@ -121,13 +122,15 @@ class DocumentRecordTest {
 
             soft.assertThat(data.name()).isEqualTo("data");
             soft.assertThat(data.type()).isEqualTo(Map.class);
-            soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
+            soft.assertThat(data.mappingType()).isEqualTo(MappingType.MAP);
+            soft.assertThat(data.isEmbeddable()).isFalse();
 
             soft.assertThat(money.name()).isEqualTo("money");
             soft.assertThat(money.type()).isEqualTo(Money.class);
             soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
             soft.assertThat(money.converter()).isNotEmpty();
         });
-
     }
+
+
 }

@@ -99,4 +99,9 @@ public final class {{className}} implements ArrayParameterMetaData {
         return array;
     }
 
+   @Override
+   public boolean isEmbeddable() {
+       return {{isEmbeddable}};
+   }
+
 }
