@@ -16,12 +16,11 @@ package org.eclipse.jnosql.lite.mapping.entities.record;
 
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
-import org.eclipse.jnosql.mapping.metadata.ArrayParameterMetaData;
-import org.eclipse.jnosql.mapping.metadata.CollectionParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+import org.eclipse.jnosql.mapping.metadata.MapParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
 import org.junit.jupiter.api.Assertions;
@@ -29,9 +28,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class BuildingTest {
     private EntitiesMetadata mappings;
@@ -78,7 +76,7 @@ class BuildingTest {
         org.assertj.core.api.Assertions.assertThat(parameters).hasSize(2);
 
         var id = parameters.get(0);
-        var guests = (ArrayParameterMetaData) parameters.get(1);
+        var guests = (MapParameterMetaData) parameters.get(1);
 
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(id.name()).isEqualTo("_id");
@@ -87,8 +85,10 @@ class BuildingTest {
             soft.assertThat(id.mappingType()).isEqualTo(MappingType.DEFAULT);
 
             soft.assertThat(guests.name()).isEqualTo("guests");
-            soft.assertThat(guests.type()).isEqualTo(Guest[].class);
-            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.ARRAY);
+            soft.assertThat(guests.type()).isEqualTo(Map.class);
+            soft.assertThat(guests.keyType()).isEqualTo(String.class);
+            soft.assertThat(guests.valueType()).isEqualTo(Guest.class);
+            soft.assertThat(guests.mappingType()).isEqualTo(MappingType.MAP);
             soft.assertThat(guests.isEmbeddable()).isTrue();
 
         });
