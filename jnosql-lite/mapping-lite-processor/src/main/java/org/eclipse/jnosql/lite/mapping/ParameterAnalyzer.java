@@ -55,20 +55,20 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         return executableElement.getParameters().stream().anyMatch(ID_PARAMETER.or(COLUMN_PARAMETER));
     };
 
-
+    private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
+    private static final Mustache MUSTACHE_COLLECTION_TEMPLATE;
+    private static final Mustache MUSTACHE_MAP_TEMPLATE;
+    private static final Mustache MUSTACHE_ARRAY_TEMPLATE;
     private static final Logger LOGGER = Logger.getLogger(ParameterAnalyzer.class.getName());
     private static final String DEFAULT_TEMPLATE = "parameter_metadata.mustache";
     private static final String COLLECTION_TEMPLATE = "parameter_collection_metadata.mustache";
     private static final String MAP_TEMPLATE = "parameter_map_metadata.mustache";
     private static final String ARRAY_TEMPLATE = "parameter_array_metadata.mustache";
     private static final String NULL = "null";
+
     private final VariableElement parameter;
     private final ProcessingEnvironment processingEnv;
     private final TypeElement entity;
-    private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
-    private static final Mustache MUSTACHE_COLLECTION_TEMPLATE;
-    private static final Mustache MUSTACHE_MAP_TEMPLATE;
-    private static final Mustache MUSTACHE_ARRAY_TEMPLATE;
 
     static {
         MUSTACHE_DEFAULT_TEMPLATE = createTemplate(DEFAULT_TEMPLATE);

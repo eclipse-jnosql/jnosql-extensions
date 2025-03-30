@@ -57,14 +57,15 @@ class FieldAnalyzer implements Supplier<String> {
     private static final Predicate<Element> IS_METHOD = el -> el.getKind() == ElementKind.METHOD;
     private static final Function<Element, String> ELEMENT_TO_STRING = el -> el.getSimpleName().toString();
     private static final String NULL = "null";
-    private final Element field;
-    private final ProcessingEnvironment processingEnv;
-    private final TypeElement entity;
-
     private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
     private static  final Mustache MUSTACHE_COLLECTION_TEMPLATE;
     private static  final Mustache MUSTACHE_MAP_TEMPLATE;
     private static  final Mustache MUSTACHE_ARRAY_TEMPLATE;
+
+    private final Element field;
+    private final ProcessingEnvironment processingEnv;
+    private final TypeElement entity;
+
 
     static {
         MUSTACHE_DEFAULT_TEMPLATE = createTemplate(DEFAULT_TEMPLATE);
