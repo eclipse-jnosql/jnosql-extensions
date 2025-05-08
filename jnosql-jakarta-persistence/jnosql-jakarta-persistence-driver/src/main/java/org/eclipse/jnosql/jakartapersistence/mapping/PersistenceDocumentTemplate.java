@@ -187,7 +187,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public boolean exists(SelectQuery query) {
-        throw new UnsupportedOperationException("'exists' not supported yet.");
+        return selectParser.exists(query);
     }
 
     @Override

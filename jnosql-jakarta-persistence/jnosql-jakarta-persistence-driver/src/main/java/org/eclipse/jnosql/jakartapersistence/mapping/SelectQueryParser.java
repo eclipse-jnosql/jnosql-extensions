@@ -169,7 +169,7 @@ class SelectQueryParser extends BaseQueryParser {
                     QueryModifier.where(selectQuery.condition()),
                     QueryModifier.applySorts(selectQuery.sorts())
             ));
-            query = (TypedQuery<RESULT>) queryColumns;
+            query = queryColumns;
         }
         if (selectQuery.limit() > 0) {
             try {
@@ -220,7 +220,7 @@ class SelectQueryParser extends BaseQueryParser {
         }
     }
 
-    public <T> long count(SelectQuery selectQuery) {
+    public long count(SelectQuery selectQuery) {
         final String entityName = selectQuery.name();
         if (selectQuery.condition().isEmpty()) {
             return count(entityName);
@@ -232,6 +232,28 @@ class SelectQueryParser extends BaseQueryParser {
             ));
             return query.getSingleResult();
         }
+    }
+
+    /**
+     * Return true if there is an entity exists described by the provided query.
+     *
+     * As JPA query builder doesn't allow a select without entity class, the solution is to select 1 instead of entity
+     * (so it doesn't load all data from the database) and limit to 1 record, so it succeeds with any data.
+     *
+     * @param selectQuery query to find an entity
+     * @return true if there exists an entity returned by the query
+     */
+    public boolean exists(SelectQuery selectQuery) {
+        final String entityName = selectQuery.name();
+        Class<?> type = entityClassFromEntityName(entityName);
+        TypedQuery<Integer> query = buildQuery(type, Integer.class, QueryModifier.combine(
+                QueryModifier.selectLiteral(1),
+                QueryModifier.where(selectQuery.condition())
+        ));
+        Integer resultOrNull = query
+                .setMaxResults(1) // succeed if there is at least 1 entity, no need to find all
+                .getSingleResultOrNull(); // the result is either 1 (found) or null (not found)
+        return resultOrNull != null;
     }
 
     private String preProcessQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
