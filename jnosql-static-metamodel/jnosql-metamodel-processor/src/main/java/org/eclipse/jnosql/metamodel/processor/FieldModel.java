@@ -26,6 +26,9 @@ final class FieldModel extends BaseMappingModel {
 
     private String constantName;
 
+    private String implementation;
+
+
     private FieldModel() {
     }
 
@@ -55,6 +58,10 @@ final class FieldModel extends BaseMappingModel {
 
     public boolean isCriteriaAttribute() {
         return CRITERIA_ATTRIBUTE.equals(className);
+    }
+
+    public String getImplementation() {
+        return implementation;
     }
 
     @Override
