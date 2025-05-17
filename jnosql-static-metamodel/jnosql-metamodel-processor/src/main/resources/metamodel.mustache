@@ -35,7 +35,7 @@ public interface {{className}} {
         {{/fields}}
    
         {{#fields}}
-        {{className}}<{{entity}}> {{fieldName}} = new NoSQLAttribute<>({{constantName}});
+        {{className}}<{{entity}}> {{fieldName}} = new {{implementation}}<>({{constantName}});
         {{/fields}}
 
 }
