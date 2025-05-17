@@ -16,15 +16,14 @@ package {{packageName}};
 
 import jakarta.data.metamodel.StaticMetamodel;
 import javax.annotation.processing.Generated;
-import org.eclipse.jnosql.mapping.semistructured.metamodel.attributes.NoSQLAttribute;
 {{#containsStringAttribute}}
-import org.eclipse.jnosql.mapping.semistructured.metamodel.attributes.StringAttribute;
+import jakarta.data.metamodel.TextAttribute;
+import jakarta.data.metamodel.impl.SortableAttributeRecord;
+import jakarta.data.metamodel.impl.TextAttributeRecord;
 {{/containsStringAttribute}}
-{{#containsBooleanAttribute}}
-import org.eclipse.jnosql.mapping.semistructured.metamodel.attributes.BooleanAttribute;
-{{/containsBooleanAttribute}}
 {{#containsCriteriaAttribute}}
-import org.eclipse.jnosql.mapping.semistructured.metamodel.attributes.CriteriaAttribute;
+import jakarta.data.metamodel.SortableAttribute;
+import jakarta.data.metamodel.impl.SortableAttributeRecord;
 {{/containsCriteriaAttribute}}
 //CHECKSTYLE:OFF
 @StaticMetamodel({{entity}}.class)
