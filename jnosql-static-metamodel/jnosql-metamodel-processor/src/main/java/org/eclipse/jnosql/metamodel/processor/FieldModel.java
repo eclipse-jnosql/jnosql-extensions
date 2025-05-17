@@ -107,6 +107,11 @@ final class FieldModel extends BaseMappingModel {
             return this;
         }
 
+        public FieldMetaDataBuilder implementation(String implementation) {
+            this.fieldModel.implementation = implementation;
+            return this;
+        }
+
         FieldModel build() {
            return fieldModel;
         }
