@@ -155,6 +155,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .fieldName(fieldName)
                 .constantName(name.toUpperCase(Locale.US))
                 .className("jakarta.data.metamodel.Attribute")
+                .implementation("jakarta.data.metamodel.impl.EmbeddableAttributeRecord")
                 .build());
 
         processingEnv.getElementUtils()
