@@ -39,6 +39,9 @@ public class RepositoryProcessor extends AbstractProcessor {
     private static final String COLUMN_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.column.ColumnTemplate";
     private static final String KEY_VALUE_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.keyvalue.KeyValueTemplate";
 
+    private static final String GRAPH_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.graph.GraphTemplate";
+
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations,
                            RoundEnvironment roundEnv) {
@@ -77,6 +80,8 @@ public class RepositoryProcessor extends AbstractProcessor {
             types.add(DatabaseType.COLUMN);
         } else if (checkLibrary(KEY_VALUE_TEMPLATE_CLASS)) {
             types.add(DatabaseType.KEY_VALUE);
+        }else if (checkLibrary(GRAPH_TEMPLATE_CLASS)) {
+            types.add(DatabaseType.GRAPH);
         }
         return types;
     }
