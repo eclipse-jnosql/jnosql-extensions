@@ -115,6 +115,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .fieldName(fieldName)
                 .constantName(constantName)
                 .className(className(className))
+                .implementation(implementation(className))
                 .build());
     }
 
@@ -188,17 +189,17 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     }
 
     private String className(String className) {
-        return switch (className) {
-            case "java.lang.String" -> FieldModel.STRING_ATTRIBUTE;
-            default -> FieldModel.SORTABLE_ATTRIBUTE;
-        };
+        if("java.lang.String".equals(className)) {
+            return FieldModel.STRING_ATTRIBUTE;
+        }
+        return FieldModel.SORTABLE_ATTRIBUTE;
     }
 
     private String implementation(String implementation) {
-        return switch (implementation) {
-            case "java.lang.String" -> FieldModel.STRING_ATTRIBUTE;
-            default -> FieldModel.SORTABLE_ATTRIBUTE;
-        };
+        if("java.lang.String".equals(implementation)) {
+            return FieldModel.STRING_IMPLEMENTATION;
+        }
+        return FieldModel.SORTABLE_IMPLEMENTATION;
     }
 
     private String getName(String fieldName, Column column, Id id) {
