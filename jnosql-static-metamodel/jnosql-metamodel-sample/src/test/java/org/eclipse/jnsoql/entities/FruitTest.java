@@ -15,11 +15,12 @@
 package org.eclipse.jnsoql.entities;
 
 import jakarta.data.Sort;
+import jakarta.data.metamodel.SortableAttribute;
 import org.assertj.core.api.SoftAssertions;
 
-import org.eclipse.jnosql.mapping.semistructured.metamodel.attributes.BooleanAttribute;
-import org.eclipse.jnosql.mapping.semistructured.metamodel.attributes.StringAttribute;
 import org.junit.jupiter.api.Test;
+
+import java.awt.font.TextAttribute;
 
 class FruitTest {
 
@@ -32,10 +33,10 @@ class FruitTest {
             soft.assertThat(id.name()).isEqualTo("_id");
             soft.assertThat(id.desc()).isEqualTo(Sort.desc("_id"));
             soft.assertThat(_Fruit.ID).isEqualTo("_id");
-            soft.assertThat(id).isInstanceOf(StringAttribute.class);
-            soft.assertThat(_Fruit.name).isInstanceOf(StringAttribute.class);
-            soft.assertThat(_Fruit.isTasty).isInstanceOf(BooleanAttribute.class);
-            soft.assertThat(_Fruit.isHealthy).isInstanceOf(BooleanAttribute.class);
+            soft.assertThat(id).isInstanceOf(TextAttribute.class);
+            soft.assertThat(_Fruit.name).isInstanceOf(TextAttribute.class);
+            soft.assertThat(_Fruit.isTasty).isInstanceOf(SortableAttribute.class);
+            soft.assertThat(_Fruit.isHealthy).isInstanceOf(SortableAttribute.class);
         });
     }
 }
