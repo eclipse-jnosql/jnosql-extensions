@@ -61,7 +61,7 @@ class PersonRepositoryTest {
     private GraphTemplate template;
 
     @InjectMocks
-    private PersonRepositoryLiteDocument personRepository;
+    private PersonRepositoryLiteGraph personRepository;
 
 
     @Test
