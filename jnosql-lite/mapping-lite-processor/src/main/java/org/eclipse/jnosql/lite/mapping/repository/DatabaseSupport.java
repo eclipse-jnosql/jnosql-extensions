@@ -49,7 +49,7 @@ enum DatabaseSupport {
         return databaseType;
     }
 
-    static Set<DatabaseType> detectSupportedTypes() {
+    static Set<DatabaseType> types() {
         return Arrays.stream(values())
                 .filter(DatabaseSupport::isSupported)
                 .map(DatabaseSupport::getDatabaseType)
