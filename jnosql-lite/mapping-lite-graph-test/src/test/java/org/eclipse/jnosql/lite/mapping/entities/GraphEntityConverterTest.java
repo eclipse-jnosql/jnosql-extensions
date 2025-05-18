@@ -22,7 +22,7 @@ import org.eclipse.jnosql.communication.semistructured.CommunicationEntity;
 import org.eclipse.jnosql.communication.semistructured.Element;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.document.spi.DocumentExtension;
+import org.eclipse.jnosql.mapping.graph.spi.GraphExtension;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
@@ -54,8 +54,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, EntityConverter.class})
 @AddPackages(LiteEntitiesMetadata.class)
-@AddExtensions({DocumentExtension.class})
-public class DocumentEntityConverterTest {
+@AddExtensions({GraphExtension.class})
+public class GraphEntityConverterTest {
 
     @Inject
     private EntityConverter converter;
