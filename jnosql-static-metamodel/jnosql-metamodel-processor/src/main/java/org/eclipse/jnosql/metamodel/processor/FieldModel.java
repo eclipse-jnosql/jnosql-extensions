@@ -19,8 +19,8 @@ final class FieldModel extends BaseMappingModel {
     public static final String STRING_ATTRIBUTE = "TextAttribute";
     public static final String SORTABLE_ATTRIBUTE = "SortableAttribute";
 
-    public static final String STRING_IMPLEMENTATION = "TextAttribute";
-    public static final String SORTABLE_IMPLEMENTATION = "SortableAttribute";
+    public static final String STRING_IMPLEMENTATION = "TextAttributeRecord";
+    public static final String SORTABLE_IMPLEMENTATION = "SortableAttributeRecord";
 
     private String className;
     private String fieldName;
