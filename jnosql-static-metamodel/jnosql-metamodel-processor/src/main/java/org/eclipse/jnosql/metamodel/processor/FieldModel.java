@@ -54,7 +54,7 @@ final class FieldModel extends BaseMappingModel {
         return STRING_ATTRIBUTE.equals(className);
     }
 
-    public boolean isCriteriaAttribute() {
+    public boolean isSortableAttribute() {
         return SORTABLE_ATTRIBUTE.equals(className);
     }
 

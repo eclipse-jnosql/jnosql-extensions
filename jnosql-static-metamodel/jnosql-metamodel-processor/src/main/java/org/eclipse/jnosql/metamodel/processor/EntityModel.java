@@ -73,8 +73,8 @@ final class EntityModel extends BaseMappingModel {
         return this.fields.stream().anyMatch(FieldModel::isStringAttribute);
     }
 
-    public boolean containsCriteriaAttribute() {
-        return this.fields.stream().anyMatch(FieldModel::isCriteriaAttribute);
+    public boolean containsSortableAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isSortableAttribute);
     }
 
     @Override

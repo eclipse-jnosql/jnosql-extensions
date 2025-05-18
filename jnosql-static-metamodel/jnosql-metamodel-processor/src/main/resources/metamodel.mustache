@@ -21,10 +21,10 @@ import jakarta.data.metamodel.TextAttribute;
 import jakarta.data.metamodel.impl.SortableAttributeRecord;
 import jakarta.data.metamodel.impl.TextAttributeRecord;
 {{/containsStringAttribute}}
-{{#containsCriteriaAttribute}}
+{{#containsSortableAttribute}}
 import jakarta.data.metamodel.SortableAttribute;
 import jakarta.data.metamodel.impl.SortableAttributeRecord;
-{{/containsCriteriaAttribute}}
+{{/containsSortableAttribute}}
 //CHECKSTYLE:OFF
 @StaticMetamodel({{entity}}.class)
 @Generated(value = "The StaticMetamodel of the class {{entity}} provider by Eclipse JNoSQL", date = "{{now}}")
