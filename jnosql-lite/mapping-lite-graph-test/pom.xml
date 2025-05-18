@@ -23,13 +23,13 @@
         <version>1.1.8-SNAPSHOT</version>
     </parent>
 
-    <artifactId>mapping-lite-document-test</artifactId>
+    <artifactId>mapping-lite-graph-test</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
-            <artifactId>jnosql-mapping-document</artifactId>
+            <artifactId>jnosql-mapping-graph</artifactId>
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
