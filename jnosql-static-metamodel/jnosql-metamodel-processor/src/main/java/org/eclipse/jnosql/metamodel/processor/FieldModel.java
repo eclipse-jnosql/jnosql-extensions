@@ -17,7 +17,10 @@ package org.eclipse.jnosql.metamodel.processor;
 
 final class FieldModel extends BaseMappingModel {
     public static final String STRING_ATTRIBUTE = "TextAttribute";
-    public static final String CRITERIA_ATTRIBUTE = "SortableAttribute";
+    public static final String SORTABLE_ATTRIBUTE = "SortableAttribute";
+
+    public static final String STRING_IMPLEMENTATION = "TextAttribute";
+    public static final String SORTABLE_IMPLEMENTATION = "SortableAttribute";
 
     private String className;
     private String fieldName;
@@ -52,7 +55,7 @@ final class FieldModel extends BaseMappingModel {
     }
 
     public boolean isCriteriaAttribute() {
-        return CRITERIA_ATTRIBUTE.equals(className);
+        return SORTABLE_ATTRIBUTE.equals(className);
     }
 
     public String getImplementation() {
