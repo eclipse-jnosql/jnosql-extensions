@@ -35,11 +35,6 @@ import java.util.logging.Logger;
 public class RepositoryProcessor extends AbstractProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(RepositoryProcessor.class.getName());
-    private static final String DOCUMENT_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.document.DocumentTemplate";
-    private static final String COLUMN_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.column.ColumnTemplate";
-    private static final String KEY_VALUE_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.keyvalue.KeyValueTemplate";
-
-    private static final String GRAPH_TEMPLATE_CLASS = "org.eclipse.jnosql.mapping.graph.GraphTemplate";
 
 
     @Override
@@ -48,7 +43,7 @@ public class RepositoryProcessor extends AbstractProcessor {
 
         final List<String> repositories = new ArrayList<>();
         try {
-            Set<DatabaseType> types = types();
+            Set<DatabaseType> types = DatabaseSupport.types();
             for (TypeElement annotation : annotations) {
                 for (DatabaseType type : types) {
                     roundEnv.getElementsAnnotatedWith(annotation)
@@ -71,27 +66,4 @@ public class RepositoryProcessor extends AbstractProcessor {
                 + exception.getMessage());
     }
 
-
-    private static Set<DatabaseType> types() {
-        Set<DatabaseType> types = EnumSet.noneOf(DatabaseType.class);
-        if (checkLibrary(DOCUMENT_TEMPLATE_CLASS)) {
-            types.add(DatabaseType.DOCUMENT);
-        } else if (checkLibrary(COLUMN_TEMPLATE_CLASS)) {
-            types.add(DatabaseType.COLUMN);
-        } else if (checkLibrary(KEY_VALUE_TEMPLATE_CLASS)) {
-            types.add(DatabaseType.KEY_VALUE);
-        }else if (checkLibrary(GRAPH_TEMPLATE_CLASS)) {
-            types.add(DatabaseType.GRAPH);
-        }
-        return types;
-    }
-
-    private static boolean checkLibrary(String type) {
-        try {
-            Class.forName(type);
-            return true;
-        } catch(ClassNotFoundException e) {
-            return false;
-        }
-    }
 }
