@@ -12,6 +12,10 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 - Update Jakarta Data metamodel to use properly the @Generated annotation by spec
 
+=== Added
+
+- Include support to Graph on JNoSQL Lite
+
 == [1.1.7] - 2024-05-08
 
 == [1.1.6] - 2024-03-24
