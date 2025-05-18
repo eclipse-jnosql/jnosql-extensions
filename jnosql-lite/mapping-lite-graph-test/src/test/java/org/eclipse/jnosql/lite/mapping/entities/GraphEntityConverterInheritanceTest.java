@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @AddPackages(value = {Converters.class, EntityConverter.class, GraphTemplate.class})
 @AddExtensions({GraphExtension.class})
 @AddPackages(LiteEntitiesMetadata.class)
-class DocumentEntityConverterInheritanceTest {
+class GraphEntityConverterInheritanceTest {
 
     @Inject
     private EntityConverter converter;
