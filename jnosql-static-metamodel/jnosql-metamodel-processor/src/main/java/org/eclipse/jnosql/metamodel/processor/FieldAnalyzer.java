@@ -190,7 +190,14 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private String className(String className) {
         return switch (className) {
             case "java.lang.String" -> FieldModel.STRING_ATTRIBUTE;
-            default -> FieldModel.CRITERIA_ATTRIBUTE;
+            default -> FieldModel.SORTABLE_ATTRIBUTE;
+        };
+    }
+
+    private String implementation(String implementation) {
+        return switch (implementation) {
+            case "java.lang.String" -> FieldModel.STRING_ATTRIBUTE;
+            default -> FieldModel.SORTABLE_ATTRIBUTE;
         };
     }
 
