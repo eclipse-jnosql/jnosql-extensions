@@ -16,11 +16,11 @@ package org.eclipse.jnsoql.entities;
 
 import jakarta.data.Sort;
 import jakarta.data.metamodel.SortableAttribute;
+import jakarta.data.metamodel.TextAttribute;
 import org.assertj.core.api.SoftAssertions;
 
 import org.junit.jupiter.api.Test;
 
-import java.awt.font.TextAttribute;
 
 class FruitTest {
 
