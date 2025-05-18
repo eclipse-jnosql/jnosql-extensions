@@ -190,7 +190,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private String className(String className) {
         return switch (className) {
             case "java.lang.String" -> FieldModel.STRING_ATTRIBUTE;
-            case "java.lang.Boolean", "boolean" -> FieldModel.BOOLEAN_ATTRIBUTE;
             default -> FieldModel.CRITERIA_ATTRIBUTE;
         };
     }
