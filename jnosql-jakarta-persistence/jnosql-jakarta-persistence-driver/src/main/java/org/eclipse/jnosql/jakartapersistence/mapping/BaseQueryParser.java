@@ -21,7 +21,6 @@ import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
@@ -116,8 +115,7 @@ abstract class BaseQueryParser {
                 case AND ->
                     parseAnd(criteria, ctx);
                 case OR ->
-                    throw new UnsupportedOperationException("JNoSQL criteria condition "
-                            + criteria.condition() + " is not supported yet.");
+                    parseOr(criteria, ctx);
                 case LESSER_THAN ->
                     parseLesserThan(criteria, ctx, ignoreCase);
                 case LESSER_EQUALS_THAN ->
@@ -138,11 +136,7 @@ abstract class BaseQueryParser {
                     parseEndsWith(criteria, ctx, ignoreCase);
                 case IGNORE_CASE ->
                     parseCriteria(criteria.element().value().get(), ctx, true);
-                /*
-EQUALS, LESSER_THAN, LESSER_EQUALS_THAN, GREATER_THAN, GREATER_EQUALS_THAN, BETWEEN,
-LIKE (on the left), Contains, EndsWith, StartsWith
-Maybe: In,
-                 */
+                /* StartsWith ? */
                 default ->
                     throw new UnsupportedOperationException("JNoSQL criteria condition "
                             + criteria.condition() + " is not supported yet.");
@@ -157,6 +151,12 @@ Maybe: In,
         return elementCollection(criteria).stream()
                 .map(elem -> parseCriteria(elem, ctx))
                 .reduce(ctx.builder()::and).get();
+    }
+
+    private static <FROM> Predicate parseOr(CriteriaCondition criteria, QueryContext<FROM> ctx) {
+        return elementCollection(criteria).stream()
+                .map(elem -> parseCriteria(elem, ctx))
+                .reduce(ctx.builder()::or).get();
     }
 
     private static <FROM> Predicate parseEquals(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
@@ -202,29 +202,17 @@ Maybe: In,
     }
 
     private static <FROM> Predicate parseLike(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
-        if (ignoreCase) {
-            throw new UnsupportedOperationException("IgnoreCase for condition "
-                    + criteria.condition() + " is not supported yet.");
-        }
-        StringContext stringContext = StringContext.from(ctx, criteria);
+        StringContext stringContext = StringContext.from(ctx, criteria, ignoreCase);
         return ctx.builder().like(stringContext.field(), stringContext.fieldValue());
     }
 
     private static <FROM> Predicate parseContains(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
-        if (ignoreCase) {
-            throw new UnsupportedOperationException("IgnoreCase for condition "
-                    + criteria.condition() + " is not supported yet.");
-        }
-        StringContext stringContext = StringContext.from(ctx, criteria);
+        StringContext stringContext = StringContext.from(ctx, criteria, ignoreCase);
         return ctx.builder().like(stringContext.field(), "%" + stringContext.fieldValue() + "%");
     }
 
     private static <FROM> Predicate parseEndsWith(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
-        if (ignoreCase) {
-            throw new UnsupportedOperationException("IgnoreCase for condition "
-                    + criteria.condition() + " is not supported yet.");
-        }
-        StringContext stringContext = StringContext.from(ctx, criteria);
+        StringContext stringContext = StringContext.from(ctx, criteria, ignoreCase);
         return ctx.builder().like(stringContext.field(), "%" + stringContext.fieldValue());
     }
 
@@ -255,8 +243,18 @@ Maybe: In,
         }
     }
 
-    static boolean comparisonSupportsIgnoreCase(Expression<? extends Comparable>... operands) {
-        return Stream.of(operands).allMatch(BaseQueryParser::isStringExpression);
+    static void requireComparisonSupportsIgnoreCase(CriteriaCondition criteria, Expression<? extends Comparable>... operands) {
+            if (!Stream.of(operands).allMatch(BaseQueryParser::isStringExpression)) {
+                throw new UnsupportedOperationException("IgnoreCase supported only for String values. Criteria: " + criteria);
+            }
+    }
+
+    static <T> String toValueInUpperCase(CriteriaCondition criteria, T value) {
+            if (value instanceof String stringValue) {
+                return stringValue.toUpperCase();
+            } else {
+                throw new UnsupportedOperationException("IgnoreCase supported only for String values. Criteria: " + criteria);
+            }
     }
 
     private static boolean isStringExpression(Expression<? extends Comparable> expression) {
@@ -273,23 +271,25 @@ Maybe: In,
             Expression<? extends Comparable> field = ctx.root().get(getName(element));
             Expression<? extends Comparable> expression = getComparableExpression(ctx.builder(), element.value());
             if (ignoreCase) {
-                if (BaseQueryParser.comparisonSupportsIgnoreCase(field, expression)) {
-                    field = ctx.builder().upper((Expression<String>) field);
-                    expression = ctx.builder().upper((Expression<String>) expression);
-                } else {
-                    throw new UnsupportedOperationException("IgnoreCase supported only for String values. Criteria: " + criteria);
-                }
+                BaseQueryParser.requireComparisonSupportsIgnoreCase(criteria, field, expression);
+                field = ctx.builder().upper((Expression<String>) field);
+                expression = ctx.builder().upper((Expression<String>) expression);
             }
             return new ComparableContext(field, expression);
         }
     }
 
-    static record StringContext(Path<String> field, String fieldValue) {
+    static record StringContext(Expression<String> field, String fieldValue) {
 
-        public static <FROM> StringContext from(QueryContext ctx, CriteriaCondition criteria) {
+        public static <FROM> StringContext from(QueryContext ctx, CriteriaCondition criteria, boolean ignoreCase) {
             Element element = (Element) criteria.element();
-            Path<String> field = ctx.root().get(getName(element));
+            Expression<String> field = ctx.root().get(getName(element));
             String fieldValue = element.value().get(String.class);
+            if (ignoreCase) {
+                BaseQueryParser.requireComparisonSupportsIgnoreCase(criteria, field);
+                fieldValue = toValueInUpperCase(criteria, fieldValue);
+                field = ctx.builder().upper((Expression<String>) field);
+            }
             return new StringContext(field, fieldValue);
         }
     }
@@ -303,33 +303,34 @@ Maybe: In,
             Expression<? extends Comparable> expression1 = getComparableExpression(ctx.builder(), iterator.next());
             Expression<? extends Comparable> expression2 = getComparableExpression(ctx.builder(), iterator.next());
             if (ignoreCase) {
-                if (BaseQueryParser.comparisonSupportsIgnoreCase(field, expression1, expression2)) {
-                    field = ctx.builder().upper((Expression<String>) field);
-                    expression1 = ctx.builder().upper((Expression<String>) expression1);
-                    expression2 = ctx.builder().upper((Expression<String>) expression2);
-                } else {
-                    throw new UnsupportedOperationException("IgnoreCase supported only for String values. Criteria: " + criteria);
-                }
+                BaseQueryParser.requireComparisonSupportsIgnoreCase(criteria, field, expression1, expression2);
+                field = ctx.builder().upper((Expression<String>) field);
+                expression1 = ctx.builder().upper((Expression<String>) expression1);
+                expression2 = ctx.builder().upper((Expression<String>) expression2);
             }
             return new BiComparableContext(field, expression1, expression2);
         }
 
     }
 
-    static record MultiValueContext(Path<?> field, Collection<?> fieldValues) {
+    static record MultiValueContext(Expression<? extends Comparable> field, Collection<?> fieldValues) {
 
         public static <FROM> MultiValueContext from(QueryContext ctx, CriteriaCondition criteria, boolean ignoreCase) {
-            if (ignoreCase) {
-                throw new UnsupportedOperationException("IgnoreCase for condition "
-                        + criteria.condition() + " is not supported yet.");
-            }
             Element element = (Element) criteria.element();
-            Path<Comparable> field = ctx.root().get(getName(element));
+            Expression<? extends Comparable> field = ctx.root().get(getName(element));
+            if (ignoreCase) {
+                BaseQueryParser.requireComparisonSupportsIgnoreCase(criteria, field);
+                field = ctx.builder().upper((Expression<String>) field);
+            }
+
             final var expressions = elementCollection(criteria)
                     .stream()
-                    .map(elem -> {
+                    .map((Object elem) -> {
                         if (elem instanceof Value value) {
-                            return value.get();
+                            elem = value.get();
+                        }
+                        if (ignoreCase) {
+                            return toValueInUpperCase(criteria, elem);
                         } else {
                             return elem;
                         }
