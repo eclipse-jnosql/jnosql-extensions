@@ -35,7 +35,10 @@ import jakarta.persistence.PersistenceUnitUtil;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
@@ -54,6 +57,8 @@ import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery
 @Database(DatabaseType.DOCUMENT)
 @EnsureTransaction
 public class PersistenceDocumentTemplate implements DocumentTemplate {
+
+    private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
 
     private final PersistenceDatabaseManager manager;
     private final SelectQueryParser selectParser;
@@ -214,23 +219,29 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     }
 
     @Override
-    public <T> T insert(T t, Duration drtn) {
-        throw new UnsupportedOperationException("'insert(T t, Duration drtn)' not supported yet.");
+    public <T> T insert(T entity, Duration duration) {
+        LOGGER.warning(() -> "Trying to insert an entity with a TTL duration, which is not supported by SQL databases. The duration argument of " + duration + " will be ignored");
+        return insert(entity);
     }
 
     @Override
-    public <T> Iterable<T> insert(Iterable<T> itrbl) {
-        throw new UnsupportedOperationException("'insert(Iterable<T> itrbl)' not supported yet.");
+    public <T> Iterable<T> insert(Iterable<T> entities) {
+        return StreamSupport.stream(entities.spliterator(), false)
+                .map(this::insert)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public <T> Iterable<T> insert(Iterable<T> itrbl, Duration drtn) {
-        throw new UnsupportedOperationException("'insert(Iterable<T> itrbl, Duration drtn)' not supported yet.");
+    public <T> Iterable<T> insert(Iterable<T> entities, Duration duration) {
+        LOGGER.warning(() -> "Trying to insert an entity with a TTL duration, which is not supported by SQL databases. The duration argument of " + duration + " will be ignored");
+        return insert(entities);
     }
 
     @Override
-    public <T> Iterable<T> update(Iterable<T> itrbl) {
-        throw new UnsupportedOperationException("'update' not supported yet.");
+    public <T> Iterable<T> update(Iterable<T> entities) {
+        return StreamSupport.stream(entities.spliterator(), false)
+                .map(this::update)
+                .collect(Collectors.toList());
     }
 
     @Override
