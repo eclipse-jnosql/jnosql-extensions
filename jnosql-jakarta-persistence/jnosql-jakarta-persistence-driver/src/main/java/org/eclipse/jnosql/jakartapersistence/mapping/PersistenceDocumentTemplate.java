@@ -18,6 +18,7 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 
 import jakarta.annotation.Priority;
 import jakarta.data.exceptions.EntityExistsException;
+import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -28,6 +29,8 @@ import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitUtil;
 
 import java.time.Duration;
@@ -49,6 +52,7 @@ import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery
 @Default
 @ApplicationScoped
 @Database(DatabaseType.DOCUMENT)
+@EnsureTransaction
 public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     private final PersistenceDatabaseManager manager;
@@ -134,7 +138,16 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> T update(T entity) {
-        return entityManager().merge(entity);
+        T result = entity;
+        try {
+            result = entityManager().merge(entity);
+            entityManager().flush();
+        } catch (OptimisticLockException e) {
+            if (e.getEntity() == null || e.getEntity().equals(entity)) {
+                throw new OptimisticLockingFailureException(e.getMessage(), e);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -222,7 +235,25 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T, K> void delete(Class<T> type, K key) {
-        deleteParser.delete(type, key);
+        try {
+            T entityToDelete = entityManager().getReference(type, key);
+            entityManager().remove(entityToDelete);
+            entityManager().flush();
+        } catch (PersistenceException e) {
+            throw new OptimisticLockingFailureException(e.getMessage(), e);
+        }
+    }
+
+    public <T> void deleteEntity(T entityToDelete) {
+        try {
+            if (!entityManager().contains(entityToDelete)) {
+                entityToDelete = entityManager().merge(entityToDelete);
+            }
+            entityManager().remove(entityToDelete);
+            entityManager().flush();
+        } catch (PersistenceException e) {
+            throw new OptimisticLockingFailureException(e.getMessage(), e);
+        }
     }
 
     @Override

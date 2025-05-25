@@ -246,7 +246,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
             requireNonNull(entity, "Entity is required");
 
             K id = getEntityId(entity);
-            template().delete(entityMetadata.type(), id);
+            template().deleteEntity(entity);
         }
 
         private K getEntityId(T entity) {

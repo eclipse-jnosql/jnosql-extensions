@@ -36,6 +36,7 @@
       <property name="jakarta.persistence.jdbc.user" value="APP"/>
       <property name="jakarta.persistence.jdbc.password" value="APP"/>
       <!-- EclipseLink specific properties -->
+      <property name="eclipselink.orm.throw.exceptions" value="true"/>
       <property name="eclipselink.target-database" value="Derby"/>
       <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
       <property name="eclipselink.debug" value="ALL"/>

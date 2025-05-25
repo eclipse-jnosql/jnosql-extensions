@@ -28,6 +28,7 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
+import org.junit.jupiter.api.Disabled;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -41,5 +42,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({JNoSqlPersistenceEntityTests.class, PersistenceEntityTests.class})
 @ExtendWith(TransactionExtension.class)
 public class JNoSqlPersistenceEntityTests extends PersistenceEntityTests {
+
+    /**
+     * This test expects running outside of a global transaction. It should be executed
+     * in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
+     */
+    @Override
+    @Disabled
+    public void testVersionedInsertUpdateDelete() {
+        super.testVersionedInsertUpdateDelete();
+    }
 
 }
