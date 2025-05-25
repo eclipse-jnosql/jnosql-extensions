@@ -63,4 +63,11 @@ public class JNoSqlPersistenceEntityTestsNoGlobalTx extends PersistenceEntityTes
         super.testVersionedInsertUpdateDelete();
     }
 
+    @Override
+    @RunOnly
+    @Test
+    public void testMultipleInsertUpdateDelete() {
+        super.testMultipleInsertUpdateDelete();
+    }
+
 }

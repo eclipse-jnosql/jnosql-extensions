@@ -56,6 +56,7 @@ import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery
 @ApplicationScoped
 @Database(DatabaseType.DOCUMENT)
 @EnsureTransaction
+// TODO Interceptor to turn relevant PersistenceException into OptimisticLockingFailureException
 public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
@@ -249,7 +250,6 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         try {
             T entityToDelete = entityManager().getReference(type, key);
             entityManager().remove(entityToDelete);
-            entityManager().flush();
         } catch (PersistenceException e) {
             throw new OptimisticLockingFailureException(e.getMessage(), e);
         }
@@ -257,11 +257,19 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     public <T> void deleteEntity(T entityToDelete) {
         try {
+            T entityToBeRemoved = entityToDelete;
             if (!entityManager().contains(entityToDelete)) {
-                entityToDelete = entityManager().merge(entityToDelete);
+                /* Call getReference to make sure that the database contains the entity and
+                   the following call to merge will not create a new entity.
+                   If it doesn't exist, EntityNotFoundException is thrown
+                */
+                entityToBeRemoved = entityManager().getReference(entityToDelete);
+                /* Call merge to make sure that the version number matches the version in the persistence context.
+                   The merged entity then can be removed. Detached entities cannot be removed.
+                */
+                entityToBeRemoved = entityManager().merge(entityToDelete);
             }
-            entityManager().remove(entityToDelete);
-            entityManager().flush();
+            entityManager().remove(entityToBeRemoved);
         } catch (PersistenceException e) {
             throw new OptimisticLockingFailureException(e.getMessage(), e);
         }
