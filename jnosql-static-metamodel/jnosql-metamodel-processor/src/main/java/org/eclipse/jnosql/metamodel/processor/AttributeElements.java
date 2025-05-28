@@ -14,5 +14,5 @@
  */
 package org.eclipse.jnosql.metamodel.processor;
 
-enum AttributeRepresentation {
+enum AttributeElements {
 }
