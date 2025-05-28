@@ -82,6 +82,9 @@ final class FieldModel extends BaseMappingModel {
     public String getNewInstance(){
         return type.newInstance(this);
     }
+    public String getAttribute() {
+        return type.attribute(this);
+    }
 
     @Override
     public String toString() {
