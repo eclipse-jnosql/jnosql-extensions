@@ -27,7 +27,6 @@ final class FieldModel extends BaseMappingModel {
     private String name;
     private String constantName;
     private String implementation;
-
     private AttributeElementType type;
 
     private FieldModel() {
@@ -67,13 +66,14 @@ final class FieldModel extends BaseMappingModel {
                 ", fieldName='" + fieldName + '\'' +
                 ", name='" + name + '\'' +
                 ", constantName='" + constantName + '\'' +
+                ", implementation='" + implementation + '\'' +
+                ", type=" + type +
                 '}';
     }
 
     public static FieldMetaDataBuilder builder() {
         return new FieldMetaDataBuilder();
     }
-
 
     public static class FieldMetaDataBuilder {
 
@@ -105,6 +105,11 @@ final class FieldModel extends BaseMappingModel {
 
         public FieldMetaDataBuilder implementation(String implementation) {
             this.fieldModel.implementation = implementation;
+            return this;
+        }
+
+        public FieldMetaDataBuilder type(AttributeElementType type) {
+            this.fieldModel.type = type;
             return this;
         }
 
