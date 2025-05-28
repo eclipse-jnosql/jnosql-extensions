@@ -17,9 +17,9 @@ package org.eclipse.jnosql.metamodel.processor;
 enum AttributeElements {
 
     TEXT_ATTRIBUTE("TextAttribute", "TextAttributeRecord"),
-    NUMERIC_ATTRIBUTE("NumericAttribute", "NumericAttributeRecord"),
-    COMPARABLE_ATTRIBUTE("ComparableAttribute", "ComparableAttributeRecord"),
     SORTABLE_ATTRIBUTE("SortableAttribute", "SortableAttributeRecord"),
+    COMPARABLE_ATTRIBUTE("ComparableAttribute", "ComparableAttributeRecord"),
+    NUMERIC_ATTRIBUTE("NumericAttribute", "NumericAttributeRecord"),
     NAVIGABLE_ATTRIBUTE("NavigableAttribute", "NavigableAttributeRecord"),
     TEMPORAL_ATTRIBUTE("TemporalAttribute", "TemporalAttributeRecord"),
     BASIC_ATTRIBUTE("BasicAttribute", "BasicAttributeRecord");
