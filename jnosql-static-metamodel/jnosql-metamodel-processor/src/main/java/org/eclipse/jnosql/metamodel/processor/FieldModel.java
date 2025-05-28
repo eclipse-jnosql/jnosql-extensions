@@ -25,15 +25,13 @@ final class FieldModel extends BaseMappingModel {
     private String className;
     private String fieldName;
     private String name;
-
     private String constantName;
-
     private String implementation;
 
+    private AttributeElementType type;
 
     private FieldModel() {
     }
-
     public String getClassName() {
         return className;
     }

@@ -14,7 +14,7 @@
  */
 package org.eclipse.jnosql.metamodel.processor;
 
-enum AttributeElements {
+enum AttributeElementType {
 
     TEXT_ATTRIBUTE("TextAttribute", "TextAttributeRecord"),
     SORTABLE_ATTRIBUTE("SortableAttribute", "SortableAttributeRecord"),
@@ -27,7 +27,7 @@ enum AttributeElements {
     private final String type;
     private final String implementation;
 
-    AttributeElements(String type, String implementation) {
+    AttributeElementType(String type, String implementation) {
         this.type = type;
         this.implementation = implementation;
     }
