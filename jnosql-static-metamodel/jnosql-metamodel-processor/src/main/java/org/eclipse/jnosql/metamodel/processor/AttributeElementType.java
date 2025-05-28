@@ -45,23 +45,27 @@ enum AttributeElementType {
     COMPARABLE_ATTRIBUTE("ComparableAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "new ComparableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "ComparableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+                    + fieldModel.getConstantName()
+                    + "\", " + fieldModel.getType() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "new ComparableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "ComparableAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
         }
     },
     NUMERIC_ATTRIBUTE("NumericAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "new NumericAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "NumericAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+                    + fieldModel.getConstantName()
+                    + "\", " + fieldModel.getType() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "new NumericAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "NumericAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
         }
     },
     NAVIGABLE_ATTRIBUTE("NavigableAttribute") {
@@ -80,23 +84,27 @@ enum AttributeElementType {
     TEMPORAL_ATTRIBUTE("TemporalAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "new TemporalAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "TemporalAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+                    + fieldModel.getConstantName()
+                    + "\", " + fieldModel.getType() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "new TemporalAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "NavigableAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
         }
     },
     BASIC_ATTRIBUTE("BasicAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "new BasicAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "BasicAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+                    + fieldModel.getConstantName()
+                    + "\", " + fieldModel.getType() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "new BasicAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "BasicAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
         }
     };
 
