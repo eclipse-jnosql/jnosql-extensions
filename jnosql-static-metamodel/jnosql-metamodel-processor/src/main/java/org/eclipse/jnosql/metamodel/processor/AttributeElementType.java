@@ -16,27 +16,94 @@ package org.eclipse.jnosql.metamodel.processor;
 
 enum AttributeElementType {
 
-    TEXT_ATTRIBUTE("TextAttribute", "TextAttributeRecord"),
-    SORTABLE_ATTRIBUTE("SortableAttribute", "SortableAttributeRecord"),
-    COMPARABLE_ATTRIBUTE("ComparableAttribute", "ComparableAttributeRecord"),
-    NUMERIC_ATTRIBUTE("NumericAttribute", "NumericAttributeRecord"),
-    NAVIGABLE_ATTRIBUTE("NavigableAttribute", "NavigableAttributeRecord"),
-    TEMPORAL_ATTRIBUTE("TemporalAttribute", "TemporalAttributeRecord"),
-    BASIC_ATTRIBUTE("BasicAttribute", "BasicAttributeRecord");
+    TEXT_ATTRIBUTE("TextAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "TextAttribute.of(" + fieldModel.getEntityName() + ".class, \"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "TextAttribute.of(" + fieldModel.getEntityName() + ".class, \"" + fieldModel.getName() + "\")";
+        }
+    },
+    SORTABLE_ATTRIBUTE("SortableAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "new SortableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "new SortableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+    },
+    COMPARABLE_ATTRIBUTE("ComparableAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "new ComparableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "new ComparableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+    },
+    NUMERIC_ATTRIBUTE("NumericAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "new NumericAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "new NumericAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+    },
+    NAVIGABLE_ATTRIBUTE("NavigableAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "new NavigableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "new NavigableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+    },
+    TEMPORAL_ATTRIBUTE("TemporalAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "new TemporalAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "new TemporalAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+    },
+    BASIC_ATTRIBUTE("BasicAttribute"){
+        @Override
+        String newInstance(FieldModel fieldModel) {
+            return "new BasicAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+
+        @Override
+        String attribute(FieldModel fieldModel) {
+            return "new BasicAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+        }
+    };
 
     private final String type;
-    private final String implementation;
-
-    AttributeElementType(String type, String implementation) {
+    AttributeElementType(String type) {
         this.type = type;
-        this.implementation = implementation;
     }
 
     public String getType() {
         return type;
     }
 
-    public String getImplementation() {
-        return implementation;
-    }
+    abstract String newInstance(FieldModel fieldModel);
+
+    abstract String attribute(FieldModel fieldModel);
 }

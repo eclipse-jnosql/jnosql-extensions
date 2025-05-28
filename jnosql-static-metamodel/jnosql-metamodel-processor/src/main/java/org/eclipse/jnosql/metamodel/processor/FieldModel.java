@@ -79,6 +79,10 @@ final class FieldModel extends BaseMappingModel {
         return AttributeElementType.NAVIGABLE_ATTRIBUTE.equals(type);
     }
 
+    public String getNewInstance(){
+        return type.newInstance(this);
+    }
+
     @Override
     public String toString() {
         return "FieldModel{" +
