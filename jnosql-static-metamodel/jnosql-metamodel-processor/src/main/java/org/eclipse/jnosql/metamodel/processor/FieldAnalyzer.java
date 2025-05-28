@@ -111,7 +111,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
 
     private List<FieldModel> getBasicField(String entityName, String name, String fieldName, String constantName,
                                            String className) {
-        var type = type(className);
+        var type = AttributeElementType.of(className);
         return List.of(FieldModel.builder()
                 .name(name)
                 .fieldName(fieldName)
@@ -192,12 +192,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         return fieldEntity == null && embeddable == null;
     }
 
-    private AttributeElementType type(String className) {
-        if("java.lang.String".equals(className)) {
-            return AttributeElementType.TEXT_ATTRIBUTE;
-        }
-        return AttributeElementType.SORTABLE_ATTRIBUTE;
-    }
 
     private String getName(String fieldName, Column column, Id id) {
         if (id == null) {

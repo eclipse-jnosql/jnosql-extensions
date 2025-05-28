@@ -108,4 +108,10 @@ enum AttributeElementType {
     abstract String newInstance(FieldModel fieldModel);
 
     abstract String attribute(FieldModel fieldModel);
+
+    public static AttributeElementType of(String className) {
+        if("java.lang.String".equals(className)) {
+            return AttributeElementType.TEXT_ATTRIBUTE;
+        }
+    }
 }
