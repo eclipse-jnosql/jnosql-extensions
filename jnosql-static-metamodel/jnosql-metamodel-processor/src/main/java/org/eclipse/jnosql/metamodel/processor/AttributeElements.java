@@ -21,6 +21,7 @@ enum AttributeElements {
     COMPARABLE_ATTRIBUTE("ComparableAttribute", "ComparableAttributeRecord"),
     SORTABLE_ATTRIBUTE("SortableAttribute", "SortableAttributeRecord"),
     NAVIGABLE_ATTRIBUTE("NavigableAttribute", "NavigableAttributeRecord"),
+    TEMPOERAL_ATTRIBUTE("TemporalAttribute", "TemporalAttributeRecord"),
     BASIC_ATTRIBUTE("BasicAttribute", "BasicAttributeRecord");
 
     private final String type;
