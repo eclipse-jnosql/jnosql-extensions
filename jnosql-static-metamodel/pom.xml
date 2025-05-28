@@ -37,7 +37,8 @@
 
 
     <properties>
-   </properties>
+        <jakarta.data.api.version>1.1.0-SNAPSHOT</jakarta.data.api.version>
+    </properties>
 
     <modules>
         <module>jnosql-metamodel-processor</module>
