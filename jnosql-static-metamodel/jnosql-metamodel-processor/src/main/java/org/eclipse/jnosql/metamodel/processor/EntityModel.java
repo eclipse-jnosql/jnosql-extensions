@@ -69,12 +69,32 @@ final class EntityModel extends BaseMappingModel {
         return superClass;
     }
 
-    public boolean containsStringAttribute() {
-        return this.fields.stream().anyMatch(FieldModel::isStringAttribute);
+    public boolean containsTextAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isTextAttribute);
     }
 
     public boolean containsSortableAttribute() {
         return this.fields.stream().anyMatch(FieldModel::isSortableAttribute);
+    }
+
+    public boolean containsComparableAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isComparableAttribute);
+    }
+
+    public boolean containsNumericAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isNumericAttribute);
+    }
+
+    public boolean containsNavigableAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isNavigableAttribute);
+    }
+
+    public boolean containsTemporalAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isTemporalAttribute);
+    }
+
+    public boolean containsBasicAttribute() {
+        return this.fields.stream().anyMatch(FieldModel::isBasicAttribute);
     }
 
     @Override
