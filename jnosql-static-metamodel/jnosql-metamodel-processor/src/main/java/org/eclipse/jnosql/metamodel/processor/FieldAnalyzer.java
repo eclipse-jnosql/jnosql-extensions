@@ -71,7 +71,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         var name = getName(fieldName, column, id);
         var className = field.asType().toString();
         var constantName = fieldName.toUpperCase(Locale.US);
-
+        var entityName = entity.getSimpleName().toString();
         Entity fieldEntity = null;
         Embeddable embeddable = null;
 
@@ -100,7 +100,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         if (isCollectionElement(typeMirror)) {
             return getFieldEmbeddable(collectionElement(typeMirror), fieldName, name, true);
         } else if (isBasicField(fieldEntity, embeddable)) {
-            return getBasicField(name, fieldName, constantName, className);
+            return getBasicField(entityName, name, fieldName, constantName, className);
         } else if (isGroupEmbeddable(fieldEntity, embeddable)) {
             return getFieldEmbeddable((DeclaredType) typeMirror, fieldName, name, true);
         } else if (isFlatEmbeddable(embeddable)) {
@@ -109,7 +109,8 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         return Collections.emptyList();
     }
 
-    private List<FieldModel> getBasicField(String name, String fieldName, String constantName, String className) {
+    private List<FieldModel> getBasicField(String entityName, String name, String fieldName, String constantName,
+                                           String className) {
         var type = type(className);
         return List.of(FieldModel.builder()
                 .name(name)
@@ -117,7 +118,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .constantName(constantName)
                 .type(type)
                 .className(type.getType())
-                .implementation(type.getImplementation())
+                .entityName(entityName)
                 .build());
     }
 
@@ -158,7 +159,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .fieldName(fieldName)
                 .constantName(name.toUpperCase(Locale.US))
                 .className("jakarta.data.metamodel.Attribute")
-                .implementation("jakarta.data.metamodel.impl.AttributeRecord")
                 .build());
 
         processingEnv.getElementUtils()

@@ -55,7 +55,7 @@ public interface {{className}} {
         {{/fields}}
    
         {{#fields}}
-        {{className}}<{{entity}}> {{fieldName}} = new {{implementation}}<>({{constantName}});
+        {{className}} {{fieldName}} = {{newInstance}};
         {{/fields}}
 
 }

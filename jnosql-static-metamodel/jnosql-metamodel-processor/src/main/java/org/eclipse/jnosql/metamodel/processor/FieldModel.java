@@ -16,15 +16,25 @@ package org.eclipse.jnosql.metamodel.processor;
 
 
 final class FieldModel extends BaseMappingModel {
+
+    private String entityName;
     private String className;
     private String fieldName;
     private String name;
     private String constantName;
-    private String implementation;
     private AttributeElementType type;
 
     private FieldModel() {
     }
+
+    public String getEntityName() {
+        return entityName;
+    }
+
+    public AttributeElementType getType() {
+        return type;
+    }
+
     public String getClassName() {
         return className;
     }
@@ -69,10 +79,6 @@ final class FieldModel extends BaseMappingModel {
         return AttributeElementType.NAVIGABLE_ATTRIBUTE.equals(type);
     }
 
-    public String getImplementation() {
-        return implementation;
-    }
-
     @Override
     public String toString() {
         return "FieldModel{" +
@@ -80,7 +86,6 @@ final class FieldModel extends BaseMappingModel {
                 ", fieldName='" + fieldName + '\'' +
                 ", name='" + name + '\'' +
                 ", constantName='" + constantName + '\'' +
-                ", implementation='" + implementation + '\'' +
                 ", type=" + type +
                 '}';
     }
@@ -117,13 +122,13 @@ final class FieldModel extends BaseMappingModel {
             return this;
         }
 
-        public FieldMetaDataBuilder implementation(String implementation) {
-            this.fieldModel.implementation = implementation;
+        public FieldMetaDataBuilder type(AttributeElementType type) {
+            this.fieldModel.type = type;
             return this;
         }
 
-        public FieldMetaDataBuilder type(AttributeElementType type) {
-            this.fieldModel.type = type;
+        public FieldMetaDataBuilder entityName(String entityName) {
+            this.fieldModel.entityName = entityName;
             return this;
         }
 
