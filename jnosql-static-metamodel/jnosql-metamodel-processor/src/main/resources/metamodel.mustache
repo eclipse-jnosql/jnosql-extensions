@@ -32,6 +32,18 @@ import jakarta.data.metamodel.ComparableAttributeRecord;
 import jakarta.data.metamodel.NumericAttribute;
 import jakarta.data.metamodel.NumericAttributeRecord;
 {{/containsNumericAttribute}}
+{{#containsNavigableAttribute}}
+import jakarta.data.metamodel.NavigableAttribute;
+import jakarta.data.metamodel.NavigableAttributeRecord;
+{{/containsNavigableAttribute}}
+{{#containsTemporalAttribute}}
+import jakarta.data.metamodel.TemporalAttribute;
+import jakarta.data.metamodel.TemporalAttributeRecord;
+{{/containsTemporalAttribute}}
+{{#containsBasicAttribute}}
+import jakarta.data.metamodel.BasicAttribute;
+import jakarta.data.metamodel.BasicAttributeRecord;
+{{/containsBasicAttribute}}
 
 //CHECKSTYLE:OFF
 @StaticMetamodel({{entity}}.class)
