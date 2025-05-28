@@ -71,11 +71,11 @@ final class FieldModel extends BaseMappingModel {
                 '}';
     }
 
-    public static FieldMetaDataBuilder builder() {
+    static FieldMetaDataBuilder builder() {
         return new FieldMetaDataBuilder();
     }
 
-    public static class FieldMetaDataBuilder {
+    static class FieldMetaDataBuilder {
 
         private final FieldModel fieldModel;
 
