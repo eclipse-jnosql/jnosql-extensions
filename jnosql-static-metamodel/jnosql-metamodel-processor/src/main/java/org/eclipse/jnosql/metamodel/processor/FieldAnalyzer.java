@@ -71,7 +71,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         var name = getName(fieldName, column, id);
         var className = field.asType().toString();
         var constantName = fieldName.toUpperCase(Locale.US);
-        var entityName = entity.getSimpleName().toString();
+        var entitySimpleName = entity.getSimpleName().toString();
         Entity fieldEntity = null;
         Embeddable embeddable = null;
 
@@ -98,13 +98,13 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         }
 
         if (isCollectionElement(typeMirror)) {
-            return getFieldEmbeddable(collectionElement(typeMirror), fieldName, name, true);
+            return getFieldEmbeddable(entitySimpleName, collectionElement(typeMirror), fieldName, name, true);
         } else if (isBasicField(fieldEntity, embeddable)) {
-            return getBasicField(entityName, name, fieldName, constantName, className);
+            return getBasicField(entitySimpleName, name, fieldName, constantName, className);
         } else if (isGroupEmbeddable(fieldEntity, embeddable)) {
-            return getFieldEmbeddable((DeclaredType) typeMirror, fieldName, name, true);
+            return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, true);
         } else if (isFlatEmbeddable(embeddable)) {
-            return getFieldEmbeddable((DeclaredType) typeMirror, fieldName, name, false);
+            return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, false);
         }
         return Collections.emptyList();
     }
@@ -117,8 +117,8 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .fieldName(fieldName)
                 .constantName(constantName)
                 .type(type)
-                .className(type.getType())
-                .entityName(entityName)
+                .simpleName(type.getType())
+                .entitySimpleName(entityName)
                 .build());
     }
 
@@ -149,7 +149,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     }
 
 
-    private List<FieldModel>    getFieldEmbeddable(DeclaredType declaredType, String fieldName, String name, boolean flat) {
+    private List<FieldModel>    getFieldEmbeddable(String entitySampleName, DeclaredType declaredType, String fieldName, String name, boolean flat) {
         var element = declaredType.asElement();
         TypeElement typeElement = (TypeElement) element;
         List<FieldModel> elements = new ArrayList<>();
@@ -158,7 +158,8 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .name(name)
                 .fieldName(fieldName)
                 .constantName(name.toUpperCase(Locale.US))
-                .className("jakarta.data.metamodel.Attribute")
+                .entitySimpleName(entitySampleName)
+                .simpleName(typeElement.getSimpleName().toString())
                 .type(AttributeElementType.NAVIGABLE_ATTRIBUTE)
                 .build());
 

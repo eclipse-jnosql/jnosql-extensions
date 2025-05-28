@@ -19,12 +19,12 @@ enum AttributeElementType {
     TEXT_ATTRIBUTE("TextAttribute"){
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "TextAttribute.of(" + fieldModel.getEntityName() + ".class, \"" + fieldModel.getConstantName() + "\")";
+            return "TextAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \"" + fieldModel.getConstantName() + "\")";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "TextAttribute<" + fieldModel.getEntityName() + ">";
+            return "TextAttribute<" + fieldModel.getEntitySimpleName() + ">";
         }
     },
     SORTABLE_ATTRIBUTE("SortableAttribute"){
@@ -63,12 +63,14 @@ enum AttributeElementType {
     NAVIGABLE_ATTRIBUTE("NavigableAttribute"){
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "new NavigableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "NavigableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+                    + fieldModel.getConstantName()
+                    + "\", " + fieldModel.getType() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "new NavigableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "NavigableAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
         }
     },
     TEMPORAL_ATTRIBUTE("TemporalAttribute"){

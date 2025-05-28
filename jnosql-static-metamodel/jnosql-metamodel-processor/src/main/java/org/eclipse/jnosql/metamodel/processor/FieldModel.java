@@ -17,26 +17,23 @@ package org.eclipse.jnosql.metamodel.processor;
 
 final class FieldModel extends BaseMappingModel {
 
-    private String entityName;
-    private String className;
+    private String entitySimpleName;
     private String fieldName;
     private String name;
     private String constantName;
+
+    private String simpleName;
     private AttributeElementType type;
 
     private FieldModel() {
     }
 
-    public String getEntityName() {
-        return entityName;
+    public String getEntitySimpleName() {
+        return entitySimpleName;
     }
 
     public AttributeElementType getType() {
         return type;
-    }
-
-    public String getClassName() {
-        return className;
     }
 
     public String getFieldName() {
@@ -49,6 +46,10 @@ final class FieldModel extends BaseMappingModel {
 
     public String getConstantName() {
         return constantName;
+    }
+
+    public String getSimpleName() {
+        return simpleName;
     }
 
     public boolean isTextAttribute() {
@@ -86,16 +87,6 @@ final class FieldModel extends BaseMappingModel {
         return type.attribute(this);
     }
 
-    @Override
-    public String toString() {
-        return "FieldModel{" +
-                "className='" + className + '\'' +
-                ", fieldName='" + fieldName + '\'' +
-                ", name='" + name + '\'' +
-                ", constantName='" + constantName + '\'' +
-                ", type=" + type +
-                '}';
-    }
 
     static FieldMetaDataBuilder builder() {
         return new FieldMetaDataBuilder();
@@ -107,11 +98,6 @@ final class FieldModel extends BaseMappingModel {
 
         private FieldMetaDataBuilder() {
             this.fieldModel = new FieldModel();
-        }
-
-        public FieldMetaDataBuilder className(String className) {
-            this.fieldModel.className = className;
-            return this;
         }
 
         public FieldMetaDataBuilder name(String name) {
@@ -134,8 +120,13 @@ final class FieldModel extends BaseMappingModel {
             return this;
         }
 
-        public FieldMetaDataBuilder entityName(String entityName) {
-            this.fieldModel.entityName = entityName;
+        public FieldMetaDataBuilder entitySimpleName(String entitySimpleName) {
+            this.fieldModel.entitySimpleName = entitySimpleName;
+            return this;
+        }
+
+        public FieldMetaDataBuilder simpleName(String simpleName) {
+            this.fieldModel.simpleName = simpleName;
             return this;
         }
 
