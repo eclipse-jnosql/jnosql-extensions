@@ -19,12 +19,12 @@ enum AttributeElementType {
     TEXT_ATTRIBUTE("TextAttribute"){
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "TextAttribute.of(" + fieldModel.getEntityName() + ".class, \"" + fieldModel.getName() + "\")";
+            return "TextAttribute.of(" + fieldModel.getEntityName() + ".class, \"" + fieldModel.getConstantName() + "\")";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "TextAttribute.of(" + fieldModel.getEntityName() + ".class, \"" + fieldModel.getName() + "\")";
+            return "TextAttribute<" + fieldModel.getEntityName() + ">";
         }
     },
     SORTABLE_ATTRIBUTE("SortableAttribute"){
