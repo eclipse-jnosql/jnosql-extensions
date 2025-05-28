@@ -110,12 +110,14 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     }
 
     private List<FieldModel> getBasicField(String name, String fieldName, String constantName, String className) {
+        var type = type(className);
         return List.of(FieldModel.builder()
                 .name(name)
                 .fieldName(fieldName)
                 .constantName(constantName)
-                .className(className(className))
-                .implementation(implementation(className))
+                .type(type)
+                .className(type.getType())
+                .implementation(type.getImplementation())
                 .build());
     }
 
@@ -188,18 +190,11 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         return fieldEntity == null && embeddable == null;
     }
 
-    private String className(String className) {
+    private AttributeElementType type(String className) {
         if("java.lang.String".equals(className)) {
-            return FieldModel.STRING_ATTRIBUTE;
+            return AttributeElementType.TEXT_ATTRIBUTE;
         }
-        return FieldModel.SORTABLE_ATTRIBUTE;
-    }
-
-    private String implementation(String implementation) {
-        if("java.lang.String".equals(implementation)) {
-            return FieldModel.STRING_IMPLEMENTATION;
-        }
-        return FieldModel.SORTABLE_IMPLEMENTATION;
+        return AttributeElementType.SORTABLE_ATTRIBUTE;
     }
 
     private String getName(String fieldName, Column column, Id id) {
