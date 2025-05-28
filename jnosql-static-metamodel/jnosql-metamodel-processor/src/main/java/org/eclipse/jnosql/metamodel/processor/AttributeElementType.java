@@ -110,8 +110,16 @@ enum AttributeElementType {
     abstract String attribute(FieldModel fieldModel);
 
     public static AttributeElementType of(String className) {
-        if("java.lang.String".equals(className)) {
-            return AttributeElementType.TEXT_ATTRIBUTE;
-        }
+
+        return switch (className) {
+            case "java.lang.String", "java.lang.CharSequence" -> TEXT_ATTRIBUTE;
+            case "java.lang.Integer", "java.lang.Long", "java.lang.Double", "java.lang.Float", "java.lang.Short",
+                 "java.lang.Byte", "java.lang.Number", "java.math.BigDecimal", "java.math.BigInteger", "int", "long",
+                 "double", "float", "short", "byte" -> NUMERIC_ATTRIBUTE;
+            case "java.util.Date", "java.time.LocalDateTime", "java.time.LocalDate", "java.time.LocalTime" ->
+                    TEMPORAL_ATTRIBUTE;
+            case "java.lang.Boolean" -> SORTABLE_ATTRIBUTE;
+            default -> BASIC_ATTRIBUTE;
+        };
     }
 }
