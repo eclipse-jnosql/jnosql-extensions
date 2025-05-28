@@ -41,7 +41,7 @@ final class FieldModel extends BaseMappingModel {
         return constantName;
     }
 
-    public boolean isStringAttribute() {
+    public boolean isTextAttribute() {
         return AttributeElementType.TEXT_ATTRIBUTE.equals(type);
     }
 
@@ -63,6 +63,10 @@ final class FieldModel extends BaseMappingModel {
 
     public boolean isBasicAttribute() {
         return AttributeElementType.BASIC_ATTRIBUTE.equals(type);
+    }
+
+    public boolean isNavigableAttribute() {
+        return AttributeElementType.NAVIGABLE_ATTRIBUTE.equals(type);
     }
 
     public String getImplementation() {
