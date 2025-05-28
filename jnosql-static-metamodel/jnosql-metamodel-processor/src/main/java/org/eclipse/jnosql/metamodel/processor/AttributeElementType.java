@@ -122,7 +122,7 @@ enum AttributeElementType {
                  "double", "float", "short", "byte" -> NUMERIC_ATTRIBUTE;
             case "java.time.LocalDateTime", "java.time.LocalDate", "java.time.LocalTime",
                  "java.time.Instant", "java.time.Year", "java.time.YearMonth" -> TEMPORAL_ATTRIBUTE;
-            case "java.lang.Boolean" -> SORTABLE_ATTRIBUTE;
+            case "java.lang.Boolean", "boolean" -> SORTABLE_ATTRIBUTE;
             default -> BASIC_ATTRIBUTE;
         };
     }
