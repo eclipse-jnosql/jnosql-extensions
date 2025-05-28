@@ -15,4 +15,27 @@
 package org.eclipse.jnosql.metamodel.processor;
 
 enum AttributeElements {
+
+    TEXT_ATTRIBUTE("TextAttribute", "TextAttributeRecord"),
+    NUMERIC_ATTRIBUTE("NumericAttribute", "NumericAttributeRecord"),
+    COMPARABLE_ATTRIBUTE("ComparableAttribute", "ComparableAttributeRecord"),
+    SORTABLE_ATTRIBUTE("SortableAttribute", "SortableAttributeRecord"),
+    NAVIGABLE_ATTRIBUTE("NavigableAttribute", "NavigableAttributeRecord"),
+    BACIS_ATTRIBUTE("BasicAttribute", "BasicAttributeRecord");
+
+    private final String type;
+    private final String implementation;
+
+    AttributeElements(String type, String implementation) {
+        this.type = type;
+        this.implementation = implementation;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getImplementation() {
+        return implementation;
+    }
 }
