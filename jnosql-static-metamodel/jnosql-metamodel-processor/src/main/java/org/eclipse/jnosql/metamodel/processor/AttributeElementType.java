@@ -14,10 +14,6 @@
  */
 package org.eclipse.jnosql.metamodel.processor;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-
 enum AttributeElementType {
 
     TEXT_ATTRIBUTE("TextAttribute") {
