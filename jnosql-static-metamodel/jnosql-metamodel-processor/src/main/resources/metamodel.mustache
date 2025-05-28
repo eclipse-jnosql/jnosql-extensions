@@ -16,14 +16,18 @@ package {{packageName}};
 
 import jakarta.data.metamodel.StaticMetamodel;
 import javax.annotation.processing.Generated;
-{{#containsStringAttribute}}
+{{#containsTextAttribute}}
 import jakarta.data.metamodel.TextAttribute;
-import jakarta.data.metamodel.impl.TextAttributeRecord;
-{{/containsStringAttribute}}
+import jakarta.data.metamodel.TextAttributeRecord;
+{{/containsTextAttribute}}
 {{#containsSortableAttribute}}
 import jakarta.data.metamodel.SortableAttribute;
-import jakarta.data.metamodel.impl.SortableAttributeRecord;
+import jakarta.data.metamodel.SortableAttributeRecord;
 {{/containsSortableAttribute}}
+{{#containsNumericAttribute}}
+import jakarta.data.metamodel.NumericAttribute;
+import jakarta.data.metamodel.NumericAttributeRecord;
+{{/containsNumericAttribute}}
 //CHECKSTYLE:OFF
 @StaticMetamodel({{entity}}.class)
 @Generated(value = "The StaticMetamodel of the class {{entity}} provider by Eclipse JNoSQL", date = "{{now}}")
