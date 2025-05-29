@@ -19,7 +19,7 @@ enum AttributeElementType {
     TEXT_ATTRIBUTE("TextAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "TextAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \"" + fieldModel.getConstantName() + "\")";
+            return "TextAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, " + fieldModel.getConstantName() + ")";
         }
 
         @Override
