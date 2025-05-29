@@ -117,7 +117,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .fieldName(fieldName)
                 .constantName(constantName)
                 .type(type)
-                .simpleName(type.getType())
+                .simpleName(className)
                 .entitySimpleName(entityName)
                 .build());
     }
