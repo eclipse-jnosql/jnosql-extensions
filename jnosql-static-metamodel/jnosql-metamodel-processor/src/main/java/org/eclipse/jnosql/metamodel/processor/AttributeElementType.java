@@ -30,12 +30,14 @@ enum AttributeElementType {
     SORTABLE_ATTRIBUTE("SortableAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "new SortableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "SortableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+                    + fieldModel.getConstantName()
+                    + "\", " + fieldModel.getType() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "new SortableAttributeRecord<>(\"" + fieldModel.getName() + "\")";
+            return "SortableAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
         }
     },
     COMPARABLE_ATTRIBUTE("ComparableAttribute") {
