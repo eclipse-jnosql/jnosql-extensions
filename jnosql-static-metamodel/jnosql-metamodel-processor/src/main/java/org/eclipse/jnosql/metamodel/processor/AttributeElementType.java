@@ -32,7 +32,7 @@ enum AttributeElementType {
         String newInstance(FieldModel fieldModel) {
             return "SortableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getType() + ".class)";
+                    + "\", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
