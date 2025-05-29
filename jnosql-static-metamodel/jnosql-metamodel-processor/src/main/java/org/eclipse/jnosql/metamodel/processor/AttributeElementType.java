@@ -37,7 +37,7 @@ enum AttributeElementType {
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "SortableAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
+            return "SortableAttribute<" + fieldModel.getEntitySimpleName() + ">";
         }
     },
     COMPARABLE_ATTRIBUTE("ComparableAttribute") {
