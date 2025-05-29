@@ -56,7 +56,7 @@ enum AttributeElementType {
         String newInstance(FieldModel fieldModel) {
             return "NumericAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getType() + ".class)";
+                    + "\", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -69,7 +69,7 @@ enum AttributeElementType {
         String newInstance(FieldModel fieldModel) {
             return "NavigableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getType() + ".class)";
+                    + "\", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -82,7 +82,7 @@ enum AttributeElementType {
         String newInstance(FieldModel fieldModel) {
             return "TemporalAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getType() + ".class)";
+                    + "\", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -95,7 +95,7 @@ enum AttributeElementType {
         String newInstance(FieldModel fieldModel) {
             return "BasicAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getType() + ".class)";
+                    + "\", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
