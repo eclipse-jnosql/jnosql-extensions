@@ -30,9 +30,9 @@ enum AttributeElementType {
     SORTABLE_ATTRIBUTE("SortableAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "SortableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+            return "SortableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getSimpleName() + ".class)";
+                    + ", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -43,9 +43,9 @@ enum AttributeElementType {
     COMPARABLE_ATTRIBUTE("ComparableAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "ComparableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+            return "ComparableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getType() + ".class)";
+                    + ", " + fieldModel.getType() + ".class)";
         }
 
         @Override
@@ -56,9 +56,9 @@ enum AttributeElementType {
     NUMERIC_ATTRIBUTE("NumericAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "NumericAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+            return "NumericAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getSimpleName() + ".class)";
+                    + ", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -69,9 +69,9 @@ enum AttributeElementType {
     NAVIGABLE_ATTRIBUTE("NavigableAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "NavigableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+            return "NavigableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getSimpleName() + ".class)";
+                    + ", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -82,9 +82,9 @@ enum AttributeElementType {
     TEMPORAL_ATTRIBUTE("TemporalAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "TemporalAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+            return "TemporalAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getSimpleName() + ".class)";
+                    + ", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
@@ -95,9 +95,9 @@ enum AttributeElementType {
     BASIC_ATTRIBUTE("BasicAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
-            return "BasicAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, \""
+            return "BasicAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + "\", " + fieldModel.getSimpleName() + ".class)";
+                    + ", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
