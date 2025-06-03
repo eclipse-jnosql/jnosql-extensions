@@ -15,6 +15,8 @@
 package org.eclipse.jnosql.metamodel.processor;
 
 
+import javax.lang.model.type.TypeMirror;
+
 final class FieldModel extends BaseMappingModel {
 
     private String entitySimpleName;
@@ -24,6 +26,8 @@ final class FieldModel extends BaseMappingModel {
 
     private String simpleName;
     private AttributeElementType type;
+
+    private TypeMirror mirror;
 
     private FieldModel() {
     }
@@ -127,6 +131,11 @@ final class FieldModel extends BaseMappingModel {
 
         public FieldMetaDataBuilder simpleName(String simpleName) {
             this.fieldModel.simpleName = simpleName;
+            return this;
+        }
+
+        public FieldMetaDataBuilder mirror(TypeMirror mirror) {
+            this.fieldModel.mirror = mirror;
             return this;
         }
 

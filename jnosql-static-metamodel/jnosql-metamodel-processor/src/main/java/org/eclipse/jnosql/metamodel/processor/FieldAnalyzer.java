@@ -108,6 +108,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .type(type)
                 .simpleName(className)
                 .entitySimpleName(entityName)
+                .mirror(field.asType())
                 .build());
     }
 
@@ -150,6 +151,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .entitySimpleName(entitySampleName)
                 .simpleName(typeElement.getSimpleName().toString())
                 .type(AttributeElementType.NAVIGABLE_ATTRIBUTE)
+                .mirror(declaredType)
                 .build());
 
         processingEnv.getElementUtils()
