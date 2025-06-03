@@ -140,7 +140,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     }
 
 
-    private List<FieldModel>    getFieldEmbeddable(String entitySampleName, DeclaredType declaredType, String fieldName, String name, boolean flat) {
+    private List<FieldModel> getFieldEmbeddable(String entitySampleName, DeclaredType declaredType, String fieldName, String name, boolean flat) {
         var element = declaredType.asElement();
         TypeElement typeElement = (TypeElement) element;
         List<FieldModel> elements = new ArrayList<>();
