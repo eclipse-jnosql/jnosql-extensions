@@ -14,6 +14,10 @@
  */
 package org.eclipse.jnosql.metamodel.processor;
 
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+
 enum AttributeElementType {
 
     TEXT_ATTRIBUTE("TextAttribute") {
@@ -121,15 +125,38 @@ enum AttributeElementType {
 
     abstract String attribute(FieldModel fieldModel);
 
-    public static AttributeElementType of(String className) {
-        return switch (className) {
-            case "java.lang.String", "java.lang.CharSequence" -> TEXT_ATTRIBUTE;
-            case "java.lang.Integer", "java.lang.Long", "java.lang.Double", "java.lang.Float", "java.lang.Short",
-                 "java.lang.Byte", "java.lang.Number", "java.math.BigDecimal", "java.math.BigInteger", "int", "long",
-                 "double", "float", "short", "byte" -> NUMERIC_ATTRIBUTE;
+
+    public static AttributeElementType of(TypeMirror type, Types typeUtils, Elements elementUtils) {
+        if (type.getKind().isPrimitive()) {
+            switch (type.getKind()) {
+                case INT, LONG, DOUBLE, FLOAT, SHORT, BYTE -> {
+                    return NUMERIC_ATTRIBUTE;
+                }
+                case BOOLEAN -> {
+                    return COMPARABLE_ATTRIBUTE;
+                }
+            }
+        }
+
+        if (typeUtils.isAssignable(type, elementUtils.getTypeElement("java.lang.CharSequence").asType())) {
+            return TEXT_ATTRIBUTE;
+        }
+
+        if (typeUtils.isAssignable(type, elementUtils.getTypeElement("java.lang.Number").asType())) {
+            return NUMERIC_ATTRIBUTE;
+        }
+
+        if (typeUtils.isAssignable(type, elementUtils.getTypeElement("java.lang.Comparable").asType())) {
+            return COMPARABLE_ATTRIBUTE;
+        }
+
+        if (type.toString().equals("byte[]")) {
+            return SORTABLE_ATTRIBUTE;
+        }
+
+        return switch (type.toString()) {
             case "java.time.LocalDateTime", "java.time.LocalDate", "java.time.LocalTime",
                  "java.time.Instant", "java.time.Year", "java.time.YearMonth" -> TEMPORAL_ATTRIBUTE;
-            case "java.lang.Boolean", "boolean" -> SORTABLE_ATTRIBUTE;
             default -> BASIC_ATTRIBUTE;
         };
     }
