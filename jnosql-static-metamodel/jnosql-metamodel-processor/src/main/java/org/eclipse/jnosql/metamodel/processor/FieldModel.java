@@ -16,6 +16,9 @@ package org.eclipse.jnosql.metamodel.processor;
 
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
 final class FieldModel extends BaseMappingModel {
@@ -96,6 +99,34 @@ final class FieldModel extends BaseMappingModel {
     }
     public String getAttributeType() {
         return type.attribute(this);
+    }
+
+    public boolean isCollection() {
+        if (mirror instanceof DeclaredType declaredType) {
+            Element element = declaredType.asElement();
+            String qualifiedName = ((TypeElement) element).getQualifiedName().toString();
+            return qualifiedName.equals("java.util.Collection")
+                    || qualifiedName.equals("java.util.List")
+                    || qualifiedName.equals("java.util.Set")
+                    || processingEnv.getTypeUtils().isAssignable(
+                    processingEnv.getElementUtils().getTypeElement("java.util.Collection").asType(),
+                    declaredType
+            );
+        }
+        return false;
+    }
+
+    public boolean isMap() {
+        if (mirror instanceof DeclaredType declaredType) {
+            Element element = declaredType.asElement();
+            String qualifiedName = ((TypeElement) element).getQualifiedName().toString();
+            return qualifiedName.equals("java.util.Map")
+                    || processingEnv.getTypeUtils().isAssignable(
+                    processingEnv.getElementUtils().getTypeElement("java.util.Map").asType(),
+                    declaredType
+            );
+        }
+        return false;
     }
 
 

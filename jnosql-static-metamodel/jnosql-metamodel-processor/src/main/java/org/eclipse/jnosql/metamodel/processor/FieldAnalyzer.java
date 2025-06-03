@@ -90,27 +90,22 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
             return getFieldEmbeddable(entitySimpleName, collectionElement(typeMirror), fieldName, name, true);
         } else if (isBasicField(fieldEntity, embeddable)) {
             var type = AttributeElementType.of(typeMirror, processingEnv.getTypeUtils(), processingEnv.getElementUtils());
-            return getBasicField(entitySimpleName, name, fieldName, constantName, className, type);
+            return List.of(FieldModel.builder()
+                    .name(name)
+                    .fieldName(fieldName)
+                    .constantName(constantName)
+                    .type(type)
+                    .simpleName(className)
+                    .entitySimpleName(entitySimpleName)
+                    .mirror(field.asType())
+                    .processingEnv(processingEnv)
+                    .build());
         } else if (isGroupEmbeddable(fieldEntity, embeddable)) {
             return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, true);
         } else if (isFlatEmbeddable(embeddable)) {
             return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, false);
         }
         return Collections.emptyList();
-    }
-
-    private List<FieldModel> getBasicField(String entityName, String name, String fieldName, String constantName,
-                                           String className, AttributeElementType type) {
-        return List.of(FieldModel.builder()
-                .name(name)
-                .fieldName(fieldName)
-                .constantName(constantName)
-                .type(type)
-                .simpleName(className)
-                .entitySimpleName(entityName)
-                .mirror(field.asType())
-                .processingEnv(processingEnv)
-                .build());
     }
 
     private boolean isCollectionElement(TypeMirror field) {
