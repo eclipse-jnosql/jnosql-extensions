@@ -80,10 +80,10 @@ final class FieldModel extends BaseMappingModel {
         return AttributeElementType.NAVIGABLE_ATTRIBUTE.equals(type);
     }
 
-    public String getNewInstance(){
+    public String getAttributeInit(){
         return type.newInstance(this);
     }
-    public String getAttribute() {
+    public String getAttributeType() {
         return type.attribute(this);
     }
 

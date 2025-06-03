@@ -63,7 +63,8 @@ enum AttributeElementType {
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "NumericAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
+
+            return "NumericAttribute<" + fieldModel.getEntitySimpleName() + ", " + BasicPrimitiveNumber.INSTANCE.toWrapper(fieldModel.getSimpleName()) + ">";
         }
     },
     NAVIGABLE_ATTRIBUTE("NavigableAttribute") {
