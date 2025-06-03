@@ -17,4 +17,17 @@ package org.eclipse.jnosql.metamodel.processor;
 enum BasicPrimitiveNumber {
 
     INSTANCE;
+
+    public String toWrapper(String type){
+        return switch (type) {
+            case "int" -> "Integer";
+            case "long" -> "Long";
+            case "float" -> "Float";
+            case "double" -> "Double";
+            case "byte" -> "Byte";
+            case "short" -> "Short";
+            case "boolean" -> "Boolean";
+            default -> type;
+        };
+    }
 }
