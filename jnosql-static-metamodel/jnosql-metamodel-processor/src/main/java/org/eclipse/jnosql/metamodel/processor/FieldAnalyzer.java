@@ -24,6 +24,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +36,6 @@ import java.util.function.Supplier;
 
 class FieldAnalyzer implements Supplier<List<FieldModel>> {
 
-
     private final Element field;
     private final ProcessingEnvironment processingEnv;
     private final TypeElement entity;
@@ -42,24 +43,20 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private final String prefix;
 
     private final boolean group;
+    private final Types typeUtils;
+    private final Elements elementUtils;
 
     FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
-                  TypeElement entity) {
-        this.field = field;
-        this.processingEnv = processingEnv;
-        this.entity = entity;
-        this.prefix = null;
-        this.group = true;
-
-    }
-
-    FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
-                  TypeElement entity, String prefix, boolean group) {
+                  TypeElement entity, String prefix, boolean group,
+                  Types typeUtils,
+                  Elements elementUtils) {
         this.field = field;
         this.processingEnv = processingEnv;
         this.entity = entity;
         this.prefix = prefix;
         this.group = group;
+        this.typeUtils = typeUtils;
+        this.elementUtils = elementUtils;
     }
 
     @Override
@@ -100,7 +97,8 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         if (isCollectionElement(typeMirror)) {
             return getFieldEmbeddable(entitySimpleName, collectionElement(typeMirror), fieldName, name, true);
         } else if (isBasicField(fieldEntity, embeddable)) {
-            return getBasicField(entitySimpleName, name, fieldName, constantName, className);
+            var type = AttributeElementType.of(typeMirror, typeUtils, elementUtils);
+            return getBasicField(entitySimpleName, name, fieldName, constantName, className, type);
         } else if (isGroupEmbeddable(fieldEntity, embeddable)) {
             return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, true);
         } else if (isFlatEmbeddable(embeddable)) {
@@ -110,8 +108,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     }
 
     private List<FieldModel> getBasicField(String entityName, String name, String fieldName, String constantName,
-                                           String className) {
-        var type = AttributeElementType.of(className);
+                                           String className, AttributeElementType type) {
         return List.of(FieldModel.builder()
                 .name(name)
                 .fieldName(fieldName)
@@ -167,7 +164,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .getAllMembers(typeElement)
                 .stream()
                 .filter(EntityProcessor.IS_FIELD.and(EntityProcessor.HAS_ANNOTATION))
-                .map(f -> new FieldAnalyzer(f, processingEnv, typeElement, fieldName, flat))
+                .map(f -> new FieldAnalyzer(f, processingEnv, typeElement, fieldName, flat, typeUtils, elementUtils))
                 .map(FieldAnalyzer::get)
                 .flatMap(List::stream)
                 .forEach(elements::add);
