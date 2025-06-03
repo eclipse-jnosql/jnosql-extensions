@@ -129,6 +129,14 @@ final class FieldModel extends BaseMappingModel {
         return false;
     }
 
+    public String getCollectionSimpleName(){
+        if (mirror instanceof DeclaredType declaredType) {
+            var typeElement = (TypeElement) declaredType.asElement();
+            return typeElement.getQualifiedName().toString();
+        }
+        throw new IllegalStateException("The mirror is not a collection type");
+    }
+
 
     static FieldMetaDataBuilder builder() {
         return new FieldMetaDataBuilder();

@@ -100,6 +100,11 @@ enum AttributeElementType {
     BASIC_ATTRIBUTE("BasicAttribute") {
         @Override
         String newInstance(FieldModel fieldModel) {
+            if (fieldModel.isCollection() || fieldModel.isMap()) {
+                return "BasicAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
+                        + fieldModel.getConstantName()
+                        + ", (Class<" + fieldModel.getSimpleName() + ">) (Class<?>) " + fieldModel.getCollectionSimpleName() + ".class)";
+            }
             return "BasicAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
                     + ", " + fieldModel.getSimpleName() + ".class)";
