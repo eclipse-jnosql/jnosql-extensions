@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnsoql.entities;
 
+import jakarta.data.metamodel.TextAttribute;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,24 @@ class PersonTest {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(_Person.id).isNotNull();
             softly.assertThat(_Person.name).isNotNull();
+        });
+    }
+
+    @Test
+    void shouldCheckIdField() {
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(_Person.ID).isEqualTo("_id");
+            softly.assertThat(_Person.id.name()).isEqualTo(_Person.ID);
+            softly.assertThat(_Person.id).isInstanceOf(TextAttribute.class);
+        });
+    }
+
+    @Test
+    void shouldCheckNameField() {
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(_Person.NAME).isEqualTo("name");
+            softly.assertThat(_Person.name.name()).isEqualTo(_Person.NAME);
+            softly.assertThat(_Person.name).isInstanceOf(TextAttribute.class);
         });
     }
 }
