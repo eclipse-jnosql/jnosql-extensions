@@ -49,12 +49,12 @@ enum AttributeElementType {
         String newInstance(FieldModel fieldModel) {
             return "ComparableAttribute.of(" + fieldModel.getEntitySimpleName() + ".class, "
                     + fieldModel.getConstantName()
-                    + ", " + fieldModel.getType() + ".class)";
+                    + ", " + fieldModel.getSimpleName() + ".class)";
         }
 
         @Override
         String attribute(FieldModel fieldModel) {
-            return "ComparableAttribute<" + fieldModel.getEntitySimpleName() + ", " + fieldModel.getSimpleName() + ">";
+            return "ComparableAttribute<" + fieldModel.getEntitySimpleName() + ", " + BasicPrimitiveNumber.INSTANCE.toWrapper(fieldModel.getSimpleName()) + ">";
         }
     },
     NUMERIC_ATTRIBUTE("NumericAttribute") {
@@ -134,6 +134,9 @@ enum AttributeElementType {
                 }
                 case BOOLEAN -> {
                     return COMPARABLE_ATTRIBUTE;
+                }
+                default ->  {
+                    return BASIC_ATTRIBUTE;
                 }
             }
         }
