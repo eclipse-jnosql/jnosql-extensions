@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.metamodel.processor;
 
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.type.TypeMirror;
 
 final class FieldModel extends BaseMappingModel {
@@ -29,11 +30,17 @@ final class FieldModel extends BaseMappingModel {
 
     private TypeMirror mirror;
 
+    private ProcessingEnvironment processingEnv;
+
     private FieldModel() {
     }
 
     public String getEntitySimpleName() {
         return entitySimpleName;
+    }
+
+    public TypeMirror getMirror() {
+        return mirror;
     }
 
     public AttributeElementType getType() {
@@ -136,6 +143,11 @@ final class FieldModel extends BaseMappingModel {
 
         public FieldMetaDataBuilder mirror(TypeMirror mirror) {
             this.fieldModel.mirror = mirror;
+            return this;
+        }
+
+        public FieldMetaDataBuilder processingEnv(ProcessingEnvironment processingEnv) {
+            this.fieldModel.processingEnv = processingEnv;
             return this;
         }
 
