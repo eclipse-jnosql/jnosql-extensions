@@ -160,6 +160,7 @@ enum AttributeElementType {
         return switch (type.toString()) {
             case "java.time.LocalDateTime", "java.time.LocalDate", "java.time.LocalTime",
                  "java.time.Instant", "java.time.Year", "java.time.YearMonth" -> TEMPORAL_ATTRIBUTE;
+            case "java.lang.Boolean" -> COMPARABLE_ATTRIBUTE;
             default -> BASIC_ATTRIBUTE;
         };
     }
