@@ -43,20 +43,14 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private final String prefix;
 
     private final boolean group;
-    private final Types typeUtils;
-    private final Elements elementUtils;
 
     FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
-                  TypeElement entity, String prefix, boolean group,
-                  Types typeUtils,
-                  Elements elementUtils) {
+                  TypeElement entity, String prefix, boolean group) {
         this.field = field;
         this.processingEnv = processingEnv;
         this.entity = entity;
         this.prefix = prefix;
         this.group = group;
-        this.typeUtils = typeUtils;
-        this.elementUtils = elementUtils;
     }
 
     @Override
@@ -97,7 +91,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         if (isCollectionElement(typeMirror)) {
             return getFieldEmbeddable(entitySimpleName, collectionElement(typeMirror), fieldName, name, true);
         } else if (isBasicField(fieldEntity, embeddable)) {
-            var type = AttributeElementType.of(typeMirror, typeUtils, elementUtils);
+            var type = AttributeElementType.of(typeMirror, processingEnv.getTypeUtils(), processingEnv.getElementUtils());
             return getBasicField(entitySimpleName, name, fieldName, constantName, className, type);
         } else if (isGroupEmbeddable(fieldEntity, embeddable)) {
             return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, true);
@@ -164,7 +158,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .getAllMembers(typeElement)
                 .stream()
                 .filter(EntityProcessor.IS_FIELD.and(EntityProcessor.HAS_ANNOTATION))
-                .map(f -> new FieldAnalyzer(f, processingEnv, typeElement, fieldName, flat, typeUtils, elementUtils))
+                .map(f -> new FieldAnalyzer(f, processingEnv, typeElement, fieldName, flat))
                 .map(FieldAnalyzer::get)
                 .flatMap(List::stream)
                 .forEach(elements::add);
