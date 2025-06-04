@@ -25,5 +25,5 @@ public class Vehicle {
     private String id;
 
     @Column
-    private Person driver;
+    private Driver driver;
 }
