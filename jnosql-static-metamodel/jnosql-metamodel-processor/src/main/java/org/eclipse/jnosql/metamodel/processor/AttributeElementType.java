@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.metamodel.processor;
 
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -154,7 +155,8 @@ enum AttributeElementType {
             return NUMERIC_ATTRIBUTE;
         }
 
-        if (typeUtils.isAssignable(type, elementUtils.getTypeElement("java.lang.Comparable").asType())) {
+        if (typeUtils.isAssignable(type, elementUtils.getTypeElement("java.lang.Comparable").asType()) ||
+                isComparable(type, typeUtils, elementUtils)) {
             return COMPARABLE_ATTRIBUTE;
         }
 
@@ -168,5 +170,18 @@ enum AttributeElementType {
             case "java.lang.Boolean" -> COMPARABLE_ATTRIBUTE;
             default -> BASIC_ATTRIBUTE;
         };
+    }
+
+    private static boolean isComparable(TypeMirror type, Types typeUtils, Elements elementUtils) {
+        var comparableElement = elementUtils.getTypeElement("java.lang.Comparable");
+        for (TypeMirror directSuperType : typeUtils.directSupertypes(type)) {
+            if (directSuperType instanceof DeclaredType declaredSuperType) {
+                var superTypeElement = declaredSuperType.asElement();
+                if (typeUtils.isSameType(superTypeElement.asType(), comparableElement.asType())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
