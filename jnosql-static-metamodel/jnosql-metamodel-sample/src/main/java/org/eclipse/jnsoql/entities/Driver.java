@@ -18,5 +18,5 @@ import jakarta.nosql.Column;
 import jakarta.nosql.Embeddable;
 
 @Embeddable
-public record Driver(@Column String name, @Column String licenseNumber) {
+public record Driver(@Column("driver_name") String name, @Column("driver_license") String licenseNumber) {
 }
