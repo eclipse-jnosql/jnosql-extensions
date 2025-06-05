@@ -140,6 +140,12 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
             if (genericMirror instanceof DeclaredType genericDeclaredType) {
                 return genericDeclaredType;
             }
+        } else if (field.getKind() == TypeKind.ARRAY) {
+            ArrayType arrayType = (ArrayType) field;
+            TypeMirror componentType = arrayType.getComponentType();
+            if (componentType instanceof DeclaredType declaredType) {
+                return declaredType;
+            }
         }
         throw new IllegalStateException("The field is not a collection: " + field);
     }
