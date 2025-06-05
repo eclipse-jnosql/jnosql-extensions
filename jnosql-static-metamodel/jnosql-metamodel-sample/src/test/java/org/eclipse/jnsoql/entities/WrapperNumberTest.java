@@ -39,7 +39,7 @@ class WrapperNumberTest {
     }
 
     @Test
-    void shouldCreateLongnumberAttribute() {
+    void shouldCreateLongNumberAttribute() {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_WrapperNumber.longNumber.name()).isEqualTo("longNumber");
             soft.assertThat(_WrapperNumber.longNumber.declaringType()).isEqualTo(WrapperNumber.class);
@@ -48,7 +48,7 @@ class WrapperNumberTest {
     }
 
     @Test
-    void shouldCreateFloatnumberAttribute() {
+    void shouldCreateFloatNumberAttribute() {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_WrapperNumber.floatNumber.name()).isEqualTo("floatNumber");
             soft.assertThat(_WrapperNumber.floatNumber.declaringType()).isEqualTo(WrapperNumber.class);
@@ -57,7 +57,7 @@ class WrapperNumberTest {
     }
 
     @Test
-    void shouldCreateDoublenumberAttribute() {
+    void shouldCreateDoubleNumberAttribute() {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_WrapperNumber.doubleNumber.name()).isEqualTo("doubleNumber");
             soft.assertThat(_WrapperNumber.doubleNumber.declaringType()).isEqualTo(WrapperNumber.class);
@@ -66,7 +66,7 @@ class WrapperNumberTest {
     }
 
     @Test
-    void shouldCreateBytenumberAttribute() {
+    void shouldCreateByteNumberAttribute() {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_WrapperNumber.byteNumber.name()).isEqualTo("byteNumber");
             soft.assertThat(_WrapperNumber.byteNumber.declaringType()).isEqualTo(WrapperNumber.class);
@@ -75,7 +75,7 @@ class WrapperNumberTest {
     }
 
     @Test
-    void shouldCreateShortnumberAttribute() {
+    void shouldCreateShortNumberAttribute() {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_WrapperNumber.shortNumber.name()).isEqualTo("shortNumber");
             soft.assertThat(_WrapperNumber.shortNumber.declaringType()).isEqualTo(WrapperNumber.class);
@@ -84,7 +84,7 @@ class WrapperNumberTest {
     }
 
     @Test
-    void shouldCreateBooleansampleAttribute() {
+    void shouldCreateBooleanSampleAttribute() {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_WrapperNumber.booleanSample.name()).isEqualTo("booleanSample");
             soft.assertThat(_WrapperNumber.booleanSample.declaringType()).isEqualTo(WrapperNumber.class);
