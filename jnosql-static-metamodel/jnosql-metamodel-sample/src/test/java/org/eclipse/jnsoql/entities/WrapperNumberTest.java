@@ -14,8 +14,81 @@
  */
 package org.eclipse.jnsoql.entities;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.assertj.core.api.SoftAssertions;
 
 class WrapperNumberTest {
 
+
+    @Test
+    void shouldCreateUuidAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.uuid.name()).isEqualTo("_id");
+            soft.assertThat(_WrapperNumber.uuid.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.uuid.attributeType()).isEqualTo(java.util.UUID.class);
+        });
+    }
+
+    @Test
+    void shouldCreateIntegerAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.integer.name()).isEqualTo("integer");
+            soft.assertThat(_WrapperNumber.integer.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.integer.attributeType()).isEqualTo(java.lang.Integer.class);
+        });
+    }
+
+    @Test
+    void shouldCreateLongnumberAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.longNumber.name()).isEqualTo("longNumber");
+            soft.assertThat(_WrapperNumber.longNumber.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.longNumber.attributeType()).isEqualTo(java.lang.Long.class);
+        });
+    }
+
+    @Test
+    void shouldCreateFloatnumberAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.floatNumber.name()).isEqualTo("floatNumber");
+            soft.assertThat(_WrapperNumber.floatNumber.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.floatNumber.attributeType()).isEqualTo(java.lang.Float.class);
+        });
+    }
+
+    @Test
+    void shouldCreateDoublenumberAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.doubleNumber.name()).isEqualTo("doubleNumber");
+            soft.assertThat(_WrapperNumber.doubleNumber.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.doubleNumber.attributeType()).isEqualTo(java.lang.Double.class);
+        });
+    }
+
+    @Test
+    void shouldCreateBytenumberAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.byteNumber.name()).isEqualTo("byteNumber");
+            soft.assertThat(_WrapperNumber.byteNumber.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.byteNumber.attributeType()).isEqualTo(java.lang.Byte.class);
+        });
+    }
+
+    @Test
+    void shouldCreateShortnumberAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.shortNumber.name()).isEqualTo("shortNumber");
+            soft.assertThat(_WrapperNumber.shortNumber.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.shortNumber.attributeType()).isEqualTo(java.lang.Short.class);
+        });
+    }
+
+    @Test
+    void shouldCreateBooleansampleAttribute() {
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(_WrapperNumber.booleanSample.name()).isEqualTo("booleanSample");
+            soft.assertThat(_WrapperNumber.booleanSample.declaringType()).isEqualTo(WrapperNumber.class);
+            soft.assertThat(_WrapperNumber.booleanSample.attributeType()).isEqualTo(java.lang.Boolean.class);
+        });
+    }
 }
