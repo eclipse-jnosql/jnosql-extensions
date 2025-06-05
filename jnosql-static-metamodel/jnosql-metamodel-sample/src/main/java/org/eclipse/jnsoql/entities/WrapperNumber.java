@@ -26,20 +26,20 @@ public class WrapperNumber {
     @Id
     private UUID uuid;
     @Column
-    private int integer;
+    private Integer integer;
     @Column
-    private long longNumber;
+    private Long longNumber;
     @Column
-    private float floatNumber;
+    private Float floatNumber;
     @Column
-    private double doubleNumber;
+    private Double doubleNumber;
     @Column
-    private byte byteNumber;
+    private Byte byteNumber;
 
     @Column
-    private short shortNumber;
+    private Short shortNumber;
 
     @Column
-    private boolean booleanSample;
+    private Boolean booleanSample;
 
 }
