@@ -22,7 +22,9 @@ import jakarta.nosql.Id;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -119,6 +121,14 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 }
                 return false;
             }).orElse(false);
+        } else if (field.getKind() == TypeKind.ARRAY) {
+            ArrayType arrayType = (ArrayType) field;
+            TypeMirror componentType = arrayType.getComponentType();
+            if (componentType instanceof DeclaredType declaredType) {
+                Element element = declaredType.asElement();
+                return element.getAnnotation(Entity.class) != null
+                        || element.getAnnotation(Embeddable.class) != null;
+            }
         }
         return false;
     }
@@ -167,7 +177,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private boolean isGroupEmbeddable(Entity fieldEntity, Embeddable embeddable) {
         return fieldEntity != null || isGroup(embeddable);
     }
-
     private boolean isGroup(Embeddable embeddable) {
         return embeddable != null && Embeddable.EmbeddableType.GROUPING.equals(embeddable.value());
     }
