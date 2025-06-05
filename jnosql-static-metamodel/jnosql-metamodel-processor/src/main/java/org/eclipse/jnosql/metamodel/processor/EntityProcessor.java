@@ -71,23 +71,4 @@ public class EntityProcessor extends AbstractProcessor {
         LOGGER.info("Entities generated: " + entities);
         return false;
     }
-
-
-
-    private void createResource(String reference, String implementation) throws IOException {
-        Filer filer = processingEnv.getFiler();
-        FileObject file = filer.createResource(StandardLocation.CLASS_OUTPUT, "",
-                "META-INF/services/" + reference);
-        PrintWriter pw = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), StandardCharsets.UTF_8));
-        pw.println(implementation);
-        pw.close();
-    }
-
-
-    private void error(Exception exception) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
-                + exception.getMessage());
-    }
-
-
 }
