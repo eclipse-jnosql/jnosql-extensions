@@ -15,27 +15,39 @@
 package org.eclipse.jnosql.metamodel.processor;
 
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+
 final class FieldModel extends BaseMappingModel {
-    public static final String STRING_ATTRIBUTE = "TextAttribute";
-    public static final String SORTABLE_ATTRIBUTE = "SortableAttribute";
 
-    public static final String STRING_IMPLEMENTATION = "TextAttributeRecord";
-    public static final String SORTABLE_IMPLEMENTATION = "SortableAttributeRecord";
-
-    private String className;
+    private String entitySimpleName;
     private String fieldName;
     private String name;
-
     private String constantName;
 
-    private String implementation;
+    private String simpleName;
+    private AttributeElementType type;
 
+    private TypeMirror mirror;
+
+    private ProcessingEnvironment processingEnv;
 
     private FieldModel() {
     }
 
-    public String getClassName() {
-        return className;
+    public String getEntitySimpleName() {
+        return entitySimpleName;
+    }
+
+    public TypeMirror getMirror() {
+        return mirror;
+    }
+
+    public AttributeElementType getType() {
+        return type;
     }
 
     public String getFieldName() {
@@ -50,44 +62,92 @@ final class FieldModel extends BaseMappingModel {
         return constantName;
     }
 
-    public boolean isStringAttribute() {
-        return STRING_ATTRIBUTE.equals(className);
+    public String getSimpleName() {
+        return simpleName;
+    }
+
+    public boolean isTextAttribute() {
+        return AttributeElementType.TEXT_ATTRIBUTE.equals(type);
     }
 
     public boolean isSortableAttribute() {
-        return SORTABLE_ATTRIBUTE.equals(className);
+        return AttributeElementType.SORTABLE_ATTRIBUTE.equals(type);
     }
 
-    public String getImplementation() {
-        return implementation;
+    public boolean isComparableAttribute() {
+        return AttributeElementType.COMPARABLE_ATTRIBUTE.equals(type);
     }
 
-    @Override
-    public String toString() {
-        return "FieldModel{" +
-                "className='" + className + '\'' +
-                ", fieldName='" + fieldName + '\'' +
-                ", name='" + name + '\'' +
-                ", constantName='" + constantName + '\'' +
-                '}';
+    public boolean isNumericAttribute() {
+        return AttributeElementType.NUMERIC_ATTRIBUTE.equals(type);
     }
 
-    public static FieldMetaDataBuilder builder() {
+    public boolean isTemporalAttribute() {
+        return AttributeElementType.TEMPORAL_ATTRIBUTE.equals(type);
+    }
+
+    public boolean isBasicAttribute() {
+        return AttributeElementType.BASIC_ATTRIBUTE.equals(type);
+    }
+
+    public boolean isNavigableAttribute() {
+        return AttributeElementType.NAVIGABLE_ATTRIBUTE.equals(type);
+    }
+
+    public String getAttributeInit(){
+        return type.newInstance(this);
+    }
+    public String getAttributeType() {
+        return type.attribute(this);
+    }
+
+    public boolean isCollection() {
+        if (mirror instanceof DeclaredType declaredType) {
+            Element element = declaredType.asElement();
+            String qualifiedName = ((TypeElement) element).getQualifiedName().toString();
+            return qualifiedName.equals("java.util.Collection")
+                    || qualifiedName.equals("java.util.List")
+                    || qualifiedName.equals("java.util.Set")
+                    || processingEnv.getTypeUtils().isAssignable(
+                    processingEnv.getElementUtils().getTypeElement("java.util.Collection").asType(),
+                    declaredType
+            );
+        }
+        return false;
+    }
+
+    public boolean isMap() {
+        if (mirror instanceof DeclaredType declaredType) {
+            Element element = declaredType.asElement();
+            String qualifiedName = ((TypeElement) element).getQualifiedName().toString();
+            return qualifiedName.equals("java.util.Map")
+                    || processingEnv.getTypeUtils().isAssignable(
+                    processingEnv.getElementUtils().getTypeElement("java.util.Map").asType(),
+                    declaredType
+            );
+        }
+        return false;
+    }
+
+    public String getCollectionSimpleName(){
+        if (mirror instanceof DeclaredType declaredType) {
+            var typeElement = (TypeElement) declaredType.asElement();
+            return typeElement.getQualifiedName().toString();
+        }
+        throw new IllegalStateException("The mirror is not a collection type");
+    }
+
+
+    static FieldMetaDataBuilder builder() {
         return new FieldMetaDataBuilder();
     }
 
-
-    public static class FieldMetaDataBuilder {
+    static class FieldMetaDataBuilder {
 
         private final FieldModel fieldModel;
 
         private FieldMetaDataBuilder() {
             this.fieldModel = new FieldModel();
-        }
-
-        public FieldMetaDataBuilder className(String className) {
-            this.fieldModel.className = className;
-            return this;
         }
 
         public FieldMetaDataBuilder name(String name) {
@@ -105,8 +165,28 @@ final class FieldModel extends BaseMappingModel {
             return this;
         }
 
-        public FieldMetaDataBuilder implementation(String implementation) {
-            this.fieldModel.implementation = implementation;
+        public FieldMetaDataBuilder type(AttributeElementType type) {
+            this.fieldModel.type = type;
+            return this;
+        }
+
+        public FieldMetaDataBuilder entitySimpleName(String entitySimpleName) {
+            this.fieldModel.entitySimpleName = entitySimpleName;
+            return this;
+        }
+
+        public FieldMetaDataBuilder simpleName(String simpleName) {
+            this.fieldModel.simpleName = simpleName;
+            return this;
+        }
+
+        public FieldMetaDataBuilder mirror(TypeMirror mirror) {
+            this.fieldModel.mirror = mirror;
+            return this;
+        }
+
+        public FieldMetaDataBuilder processingEnv(ProcessingEnvironment processingEnv) {
+            this.fieldModel.processingEnv = processingEnv;
             return this;
         }
 

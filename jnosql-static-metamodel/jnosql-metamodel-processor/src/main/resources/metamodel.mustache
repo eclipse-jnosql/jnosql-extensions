@@ -16,14 +16,28 @@ package {{packageName}};
 
 import jakarta.data.metamodel.StaticMetamodel;
 import javax.annotation.processing.Generated;
-{{#containsStringAttribute}}
+{{#containsTextAttribute}}
 import jakarta.data.metamodel.TextAttribute;
-import jakarta.data.metamodel.impl.TextAttributeRecord;
-{{/containsStringAttribute}}
+{{/containsTextAttribute}}
 {{#containsSortableAttribute}}
 import jakarta.data.metamodel.SortableAttribute;
-import jakarta.data.metamodel.impl.SortableAttributeRecord;
 {{/containsSortableAttribute}}
+{{#containsComparableAttribute}}
+import jakarta.data.metamodel.ComparableAttribute;
+{{/containsComparableAttribute}}
+{{#containsNumericAttribute}}
+import jakarta.data.metamodel.NumericAttribute;
+{{/containsNumericAttribute}}
+{{#containsNavigableAttribute}}
+import jakarta.data.metamodel.NavigableAttribute;
+{{/containsNavigableAttribute}}
+{{#containsTemporalAttribute}}
+import jakarta.data.metamodel.TemporalAttribute;
+{{/containsTemporalAttribute}}
+{{#containsBasicAttribute}}
+import jakarta.data.metamodel.BasicAttribute;
+{{/containsBasicAttribute}}
+
 //CHECKSTYLE:OFF
 @StaticMetamodel({{entity}}.class)
 @Generated(value = "The StaticMetamodel of the class {{entity}} provider by Eclipse JNoSQL", date = "{{now}}")
@@ -34,7 +48,7 @@ public interface {{className}} {
         {{/fields}}
    
         {{#fields}}
-        {{className}}<{{entity}}> {{fieldName}} = new {{implementation}}<>({{constantName}});
+        {{{attributeType}}} {{fieldName}} = {{{attributeInit}}};
         {{/fields}}
 
 }

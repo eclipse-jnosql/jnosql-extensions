@@ -87,7 +87,7 @@ class ClassAnalyzer implements Supplier<String> {
 
         final List<FieldModel> fields = elements
                 .filter(EntityProcessor.IS_FIELD.and(EntityProcessor.HAS_ANNOTATION))
-                .map(f -> new FieldAnalyzer(f, processingEnv, typeElement))
+                .map(f -> new FieldAnalyzer(f, processingEnv, typeElement,null,false))
                 .map(FieldAnalyzer::get)
                 .flatMap(List::stream)
                 .toList();

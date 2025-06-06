@@ -22,7 +22,9 @@ import jakarta.nosql.Id;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +36,6 @@ import java.util.function.Supplier;
 
 class FieldAnalyzer implements Supplier<List<FieldModel>> {
 
-
     private final Element field;
     private final ProcessingEnvironment processingEnv;
     private final TypeElement entity;
@@ -42,16 +43,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private final String prefix;
 
     private final boolean group;
-
-    FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
-                  TypeElement entity) {
-        this.field = field;
-        this.processingEnv = processingEnv;
-        this.entity = entity;
-        this.prefix = null;
-        this.group = true;
-
-    }
 
     FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
                   TypeElement entity, String prefix, boolean group) {
@@ -71,7 +62,7 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         var name = getName(fieldName, column, id);
         var className = field.asType().toString();
         var constantName = fieldName.toUpperCase(Locale.US);
-
+        var entitySimpleName = entity.getSimpleName().toString();
         Entity fieldEntity = null;
         Embeddable embeddable = null;
 
@@ -98,25 +89,25 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         }
 
         if (isCollectionElement(typeMirror)) {
-            return getFieldEmbeddable(collectionElement(typeMirror), fieldName, name, true);
+            return getFieldEmbeddable(entitySimpleName, collectionElement(typeMirror), fieldName, name, true);
         } else if (isBasicField(fieldEntity, embeddable)) {
-            return getBasicField(name, fieldName, constantName, className);
+            var type = AttributeElementType.of(typeMirror, processingEnv.getTypeUtils(), processingEnv.getElementUtils());
+            return List.of(FieldModel.builder()
+                    .name(name)
+                    .fieldName(fieldName)
+                    .constantName(constantName)
+                    .type(type)
+                    .simpleName(className)
+                    .entitySimpleName(entitySimpleName)
+                    .mirror(field.asType())
+                    .processingEnv(processingEnv)
+                    .build());
         } else if (isGroupEmbeddable(fieldEntity, embeddable)) {
-            return getFieldEmbeddable((DeclaredType) typeMirror, fieldName, name, true);
+            return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, true);
         } else if (isFlatEmbeddable(embeddable)) {
-            return getFieldEmbeddable((DeclaredType) typeMirror, fieldName, name, false);
+            return getFieldEmbeddable(entitySimpleName, (DeclaredType) typeMirror, fieldName, name, false);
         }
         return Collections.emptyList();
-    }
-
-    private List<FieldModel> getBasicField(String name, String fieldName, String constantName, String className) {
-        return List.of(FieldModel.builder()
-                .name(name)
-                .fieldName(fieldName)
-                .constantName(constantName)
-                .className(className(className))
-                .implementation(implementation(className))
-                .build());
     }
 
     private boolean isCollectionElement(TypeMirror field) {
@@ -130,6 +121,14 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 }
                 return false;
             }).orElse(false);
+        } else if (field.getKind() == TypeKind.ARRAY) {
+            ArrayType arrayType = (ArrayType) field;
+            TypeMirror componentType = arrayType.getComponentType();
+            if (componentType instanceof DeclaredType declaredType) {
+                Element element = declaredType.asElement();
+                return element.getAnnotation(Entity.class) != null
+                        || element.getAnnotation(Embeddable.class) != null;
+            }
         }
         return false;
     }
@@ -141,12 +140,18 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
             if (genericMirror instanceof DeclaredType genericDeclaredType) {
                 return genericDeclaredType;
             }
+        } else if (field.getKind() == TypeKind.ARRAY) {
+            ArrayType arrayType = (ArrayType) field;
+            TypeMirror componentType = arrayType.getComponentType();
+            if (componentType instanceof DeclaredType declaredType) {
+                return declaredType;
+            }
         }
         throw new IllegalStateException("The field is not a collection: " + field);
     }
 
 
-    private List<FieldModel> getFieldEmbeddable(DeclaredType declaredType, String fieldName, String name, boolean flat) {
+    private List<FieldModel> getFieldEmbeddable(String entitySampleName, DeclaredType declaredType, String fieldName, String name, boolean flat) {
         var element = declaredType.asElement();
         TypeElement typeElement = (TypeElement) element;
         List<FieldModel> elements = new ArrayList<>();
@@ -155,8 +160,11 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
                 .name(name)
                 .fieldName(fieldName)
                 .constantName(name.toUpperCase(Locale.US))
-                .className("jakarta.data.metamodel.Attribute")
-                .implementation("jakarta.data.metamodel.impl.AttributeRecord")
+                .entitySimpleName(entitySampleName)
+                .simpleName(typeElement.getSimpleName().toString())
+                .type(AttributeElementType.NAVIGABLE_ATTRIBUTE)
+                .mirror(declaredType)
+                .processingEnv(processingEnv)
                 .build());
 
         processingEnv.getElementUtils()
@@ -175,7 +183,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
     private boolean isGroupEmbeddable(Entity fieldEntity, Embeddable embeddable) {
         return fieldEntity != null || isGroup(embeddable);
     }
-
     private boolean isGroup(Embeddable embeddable) {
         return embeddable != null && Embeddable.EmbeddableType.GROUPING.equals(embeddable.value());
     }
@@ -188,19 +195,6 @@ class FieldAnalyzer implements Supplier<List<FieldModel>> {
         return fieldEntity == null && embeddable == null;
     }
 
-    private String className(String className) {
-        if("java.lang.String".equals(className)) {
-            return FieldModel.STRING_ATTRIBUTE;
-        }
-        return FieldModel.SORTABLE_ATTRIBUTE;
-    }
-
-    private String implementation(String implementation) {
-        if("java.lang.String".equals(implementation)) {
-            return FieldModel.STRING_IMPLEMENTATION;
-        }
-        return FieldModel.SORTABLE_IMPLEMENTATION;
-    }
 
     private String getName(String fieldName, Column column, Id id) {
         if (id == null) {
