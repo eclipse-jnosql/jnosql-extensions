@@ -44,7 +44,7 @@ class SoccerTeamTest {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_SoccerTeam.players_score.name()).isEqualTo("players.score");
             soft.assertThat(_SoccerTeam.players_score.declaringType()).isEqualTo(SoccerPlayer.class);
-            soft.assertThat(_SoccerTeam.players_score.attributeType()).isEqualTo(String.class);
+            soft.assertThat(_SoccerTeam.players_score.attributeType()).isEqualTo(int.class);
         });
     }
 
