@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 
 class CheckoutTest {
 
-
     @Test
     void shouldGenerateStaticMetamodel() {
         SoftAssertions.assertSoftly(softly -> {
