@@ -22,7 +22,6 @@ class CheckoutTest {
 
     @Test
     void shouldGenerateStaticMetamodel() {
-
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(_Checkout.id).isNotNull();
             softly.assertThat(_Checkout.products).isNotNull();
