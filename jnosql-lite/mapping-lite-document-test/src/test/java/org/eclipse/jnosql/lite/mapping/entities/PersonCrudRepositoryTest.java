@@ -183,8 +183,18 @@ class PersonCrudRepositoryTest {
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(template).prepare(captor.capture());
         String value = captor.getValue();
-        assertThat(value).isEqualTo("select * from Person where name = @name");
+        assertThat(value).isEqualTo("from Person where name = :name");
     }
+    @Test
+    void shouldQuery2() {
+        when(template.prepare(anyString())).thenReturn(Mockito.mock(PreparedStatement.class));
+        this.personRepository.query2("Ada");
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(template).prepare(captor.capture());
+        String value = captor.getValue();
+        assertThat(value).isEqualTo("where name = :name");
+    }
+
 
     @Test
     void shouldExistByName() {
