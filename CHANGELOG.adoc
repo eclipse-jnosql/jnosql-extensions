@@ -12,6 +12,10 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 - Fixes the Jakarta Data Query to execute the query with the correct parameters at JNoSQL Lite.
 
+=== Changed
+
+- Update Meta processor to use Java to SourceVersion.RELEASE_21
+
 == [1.1.8] - 2024-05-21
 
 === Changed
