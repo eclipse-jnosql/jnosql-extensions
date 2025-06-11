@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 @SupportedAnnotationTypes("jakarta.data.repository.Repository")
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class RepositoryProcessor extends AbstractProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(RepositoryProcessor.class.getName());

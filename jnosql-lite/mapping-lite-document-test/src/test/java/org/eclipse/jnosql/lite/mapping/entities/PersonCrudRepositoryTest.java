@@ -178,13 +178,23 @@ class PersonCrudRepositoryTest {
 
     @Test
     void shouldQuery() {
-        when(template.prepare(anyString())).thenReturn(Mockito.mock(PreparedStatement.class));
+        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
         this.personRepository.query("Ada");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(template).prepare(captor.capture());
+        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
         String value = captor.getValue();
-        assertThat(value).isEqualTo("select * from Person where name = @name");
+        assertThat(value).isEqualTo("from Person where name = :name");
     }
+    @Test
+    void shouldQuery2() {
+        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
+        this.personRepository.query2("Ada");
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
+        String value = captor.getValue();
+        assertThat(value).isEqualTo("where name = :name");
+    }
+
 
     @Test
     void shouldExistByName() {
@@ -319,7 +329,7 @@ class PersonCrudRepositoryTest {
             this.personRepository.cursor("Ada", PageRequest.ofPage(1).size(2));
         } catch (NullPointerException ignored) {
         }
-        Mockito.verify(template, Mockito.times(1)).prepare("select * from Person where name = @name");
+        Mockito.verify(template, Mockito.times(1)).prepare("select * from Person where name = @name", "Person");
     }
 
     @Test
@@ -328,7 +338,7 @@ class PersonCrudRepositoryTest {
         var result = this.personRepository.offSet("Ada", PageRequest.ofPage(1).size(2));
         } catch (NullPointerException ignored) {
         }
-        Mockito.verify(template, Mockito.times(1)).prepare("select * from Person where name = @name");
+        Mockito.verify(template, Mockito.times(1)).prepare("select * from Person where name = @name", "Person");
     }
 
     @Test

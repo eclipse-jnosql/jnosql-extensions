@@ -35,8 +35,11 @@ public interface PersonCrudRepository extends NoSQLRepository<Person, Long> {
 
     List<Person> findByName(String name);
 
-    @Query("select * from Person where name = @name")
+    @Query("from Person where name = :name")
     List<Person> query(@Param("name") String name);
+
+    @Query("where name = :name")
+    List<Person> query2(@Param("name") String name);
 
     boolean existsByName(String name);
 

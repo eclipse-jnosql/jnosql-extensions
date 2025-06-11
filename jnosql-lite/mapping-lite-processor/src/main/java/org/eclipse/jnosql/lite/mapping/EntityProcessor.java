@@ -54,7 +54,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 @SupportedAnnotationTypes({"jakarta.nosql.Entity",
         "jakarta.nosql.Embeddable",
         "jakarta.nosql.MappedSuperclass"})
-@SupportedSourceVersion(SourceVersion.RELEASE_17)
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class EntityProcessor extends AbstractProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(EntityProcessor.class.getName());
