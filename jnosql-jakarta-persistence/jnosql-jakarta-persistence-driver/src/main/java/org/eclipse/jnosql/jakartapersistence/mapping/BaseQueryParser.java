@@ -132,6 +132,8 @@ abstract class BaseQueryParser {
                     parseLike(criteria, ctx, ignoreCase);
                 case CONTAINS ->
                     parseContains(criteria, ctx, ignoreCase);
+                case STARTS_WITH ->
+                    parseStartsWith(criteria, ctx, ignoreCase);
                 case ENDS_WITH ->
                     parseEndsWith(criteria, ctx, ignoreCase);
                 case IGNORE_CASE ->
@@ -209,6 +211,11 @@ abstract class BaseQueryParser {
     private static <FROM> Predicate parseContains(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
         StringContext stringContext = StringContext.from(ctx, criteria, ignoreCase);
         return ctx.builder().like(stringContext.field(), "%" + stringContext.fieldValue() + "%");
+    }
+
+    private static <FROM> Predicate parseStartsWith(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
+        StringContext stringContext = StringContext.from(ctx, criteria, ignoreCase);
+        return ctx.builder().like(stringContext.field(), stringContext.fieldValue() + "%");
     }
 
     private static <FROM> Predicate parseEndsWith(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {

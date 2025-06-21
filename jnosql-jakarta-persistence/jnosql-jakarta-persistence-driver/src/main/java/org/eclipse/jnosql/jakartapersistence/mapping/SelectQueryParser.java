@@ -202,14 +202,9 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
-        final Class<T> type = entityClassFromEntityName(selectQuery.name());
-        Optional<T> result;
-        TypedQuery<T> query = buildQuery(type, type, QueryModifier.combine(
-                QueryModifier.selectEntity(),
-                QueryModifier.where(selectQuery.condition())
-        ));
-        result = Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
-        return result.map(this::refreshEntity);
+        TypedQuery<T> query = getSelectTypedQuery(selectQuery);
+        return Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull))
+                .map(this::refreshEntity);
     }
 
     private static <T> T toDataExceptions(Supplier<T> supplier) {
