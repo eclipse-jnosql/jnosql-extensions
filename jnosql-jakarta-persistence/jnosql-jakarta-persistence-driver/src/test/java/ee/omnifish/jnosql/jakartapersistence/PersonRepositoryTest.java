@@ -130,7 +130,7 @@ public class PersonRepositoryTest {
 
     @Test
     void hermesParser() {
-        getEntityManager().createQuery("UPDATE Person SET length = age + 1");
+        getEntityManager().createQuery("UPDATE Person SET age = age + 1");
     }
 
     private class PersonBuilder {
