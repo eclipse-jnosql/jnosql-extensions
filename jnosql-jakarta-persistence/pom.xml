@@ -15,21 +15,24 @@
   ~   Ondro Mihalyi
   ~
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.eclipse.jnosql.mapping</groupId>
         <artifactId>jnosql-mapping-extensions</artifactId>
         <version>1.1.10-SNAPSHOT</version>
     </parent>
+
     <artifactId>jnosql-jakarta-persistence-parent</artifactId>
     <name>Eclipse JNoSQL Jakarta Persistence Parent</name>
     <packaging>pom</packaging>
-    <properties>
-        <eclipselink.version>5.0.0-B06</eclipselink.version>
-    </properties>
+
     <modules>
         <module>jnosql-jakarta-persistence-driver</module>
         <module>jnosql-jakarta-persistence-data-tck-runner</module>
     </modules>
+
+    <properties>
+        <eclipselink.version>5.0.0-B06</eclipselink.version>
+    </properties>
 </project>

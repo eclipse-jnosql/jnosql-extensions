@@ -15,10 +15,7 @@
 ~   Ondro Mihalyi
 ~
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -26,23 +23,9 @@
         <artifactId>jnosql-jakarta-persistence-parent</artifactId>
         <version>1.1.10-SNAPSHOT</version>
     </parent>
+
     <artifactId>jnosql-jakarta-persistence-data-tck-runner</artifactId>
     <name>Eclipse JNoSQL Jakarta Persistence Runner For Jakarta Data TCK</name>
-
-    <repositories>
-        <!-- For artifacts not yet in Maven Central -->
-        <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Sonatype Nexus Staging</name>
-            <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <properties>
         <targetDirectory>${project.basedir}/target</targetDirectory>
@@ -172,6 +155,21 @@
         </dependency>
 
     </dependencies>
+
+    <repositories>
+        <!-- For artifacts not yet in Maven Central -->
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Sonatype Nexus Staging</name>
+            <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <directory>${targetDirectory}</directory>
