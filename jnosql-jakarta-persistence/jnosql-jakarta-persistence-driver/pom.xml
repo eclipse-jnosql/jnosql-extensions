@@ -57,6 +57,10 @@
                     <groupId>org.eclipse.jnosql.communication</groupId>
                     <artifactId>jnosql-communication-query</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jnosql.mapping</groupId>
+                    <artifactId>jnosql-mapping-reflection</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -68,11 +72,6 @@
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-api-core</artifactId>
-            <version>${jnosql-mapping.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jnosql.mapping</groupId>
-            <artifactId>jnosql-mapping-reflection</artifactId>
             <version>${jnosql-mapping.version}</version>
         </dependency>
         <dependency>
@@ -106,6 +105,12 @@
         </dependency>
 
         <!-- Testing -->
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-reflection</artifactId>
+            <version>${jnosql-mapping.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>

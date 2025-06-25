@@ -125,6 +125,12 @@
 
         <!-- test frameworks -->
         <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-reflection</artifactId>
+            <version>${jnosql-mapping.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
