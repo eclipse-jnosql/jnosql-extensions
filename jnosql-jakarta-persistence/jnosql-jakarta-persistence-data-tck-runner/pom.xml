@@ -66,18 +66,32 @@
 
     <!-- Runtime Dependencies -->
     <dependencies>
+        <!--
+            Standalone annotation scanner implementation
+            Dependency jnosql-mapping-reflection must be after this in the classpath
+            to prioritize service files in this artifact
+        -->
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-jakarta-persistence-scanner</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
         <!-- tck - data - external TCK -->
         <dependency>
             <groupId>jakarta.data</groupId>
             <artifactId>jakarta.data-tck</artifactId>
             <version>${jakarta.data.tck.version}</version>
         </dependency>
+
         <!-- api - data -->
         <dependency>
             <groupId>jakarta.data</groupId>
             <artifactId>jakarta.data-api</artifactId>
             <version>${jakarta.data.version}</version>
         </dependency>
+
         <!-- impl - data -->
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
@@ -101,13 +115,14 @@
             <artifactId>derbyclient</artifactId>
             <version>10.17.1.0</version>
         </dependency>
+
+        <!-- Our actual implementation of Jakarta Data that we are testing  -->
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-jakarta-persistence</artifactId>
             <version>${project.version}</version>
-            <!-- dependency jnosql-mapping-reflection must be after this in the classpath 
-               to prioritize service files in this artifact -->
         </dependency>
+
         <!-- test frameworks -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -119,12 +134,14 @@
             <artifactId>sigtest-maven-plugin</artifactId>
             <version>${sigtest.version}</version>
         </dependency>
+
         <!-- CDI for resource injection - managed by Junit -->
         <dependency>
             <groupId>org.jboss.weld</groupId>
             <artifactId>weld-junit5</artifactId>
             <version>${weld.junit5.version}</version>
         </dependency>
+
         <!-- APIs referenced by TCK that do not require implementations for standalone tests -->
         <dependency>
             <groupId>org.jboss.shrinkwrap</groupId>
@@ -141,6 +158,7 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <version>${jakarta.servlet.version}</version>
         </dependency>
+
         <!-- APIs referenced by TCK that do require implementations for standalone tests -->
         <dependency>
             <groupId>jakarta.enterprise</groupId>

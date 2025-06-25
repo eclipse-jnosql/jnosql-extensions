@@ -28,6 +28,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>jnosql-jakarta-persistence-scanner</module>
         <module>jnosql-jakarta-persistence-driver</module>
         <module>jnosql-jakarta-persistence-data-tck-runner</module>
     </modules>

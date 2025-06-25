@@ -61,6 +61,12 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-jakarta-persistence-scanner</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-api-core</artifactId>
             <version>${jnosql-mapping.version}</version>
         </dependency>
@@ -84,11 +90,6 @@
             <groupId>org.eclipse.jnosql.communication</groupId>
             <artifactId>jnosql-communication-core</artifactId>
             <version>${jnosql-communication-driver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.classgraph</groupId>
-            <artifactId>classgraph</artifactId>
-            <version>4.8.179</version>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
