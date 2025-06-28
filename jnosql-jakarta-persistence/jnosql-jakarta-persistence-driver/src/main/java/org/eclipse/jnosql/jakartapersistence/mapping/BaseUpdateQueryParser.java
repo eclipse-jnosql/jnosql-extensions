@@ -34,7 +34,7 @@ class BaseUpdateQueryParser extends BaseQueryParser {
     }
 
     @Override
-    public <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
+    protected <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
         final Query query = buildQuery(queryString);
         if (queryModifier != null) {
             queryModifier.accept(query);
