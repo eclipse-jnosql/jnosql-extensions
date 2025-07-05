@@ -67,14 +67,14 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final UpdateQueryParser updateParser;
 
     @Inject
-    PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
+    public PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
         this.manager = manager;
         this.selectParser = new SelectQueryParser(manager);
         this.deleteParser = new DeleteQueryParser(manager);
         this.updateParser = new UpdateQueryParser(manager);
     }
 
-    PersistenceDocumentTemplate() {
+    public PersistenceDocumentTemplate() {
         manager = null;
         selectParser = null;
         deleteParser = null;
