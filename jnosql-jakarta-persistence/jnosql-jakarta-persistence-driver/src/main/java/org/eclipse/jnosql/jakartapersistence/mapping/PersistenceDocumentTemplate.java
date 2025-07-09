@@ -16,17 +16,13 @@ package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-import jakarta.annotation.Priority;
 import jakarta.data.exceptions.EntityExistsException;
 import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.Default;
 import jakarta.inject.Inject;
-import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
@@ -42,19 +38,13 @@ import java.util.stream.StreamSupport;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.mapping.Database;
-import org.eclipse.jnosql.mapping.DatabaseType;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
 
-@Alternative
-@Priority(Interceptor.Priority.APPLICATION)
-@Default
 @ApplicationScoped
-@Database(DatabaseType.DOCUMENT)
 @EnsureTransaction
 // TODO Interceptor to turn relevant PersistenceException into OptimisticLockingFailureException
 public class PersistenceDocumentTemplate implements DocumentTemplate {

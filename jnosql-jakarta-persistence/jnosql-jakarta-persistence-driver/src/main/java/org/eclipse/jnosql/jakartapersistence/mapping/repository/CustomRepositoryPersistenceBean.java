@@ -18,7 +18,6 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.spi.CreationalContext;
 
-import org.eclipse.jnosql.mapping.DatabaseQualifier;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
@@ -60,7 +59,6 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractBean<T> {
         this.type = (Class<T>) type;
         this.types = Collections.singleton(type);
         this.qualifiers = new HashSet<>();
-        qualifiers.add(DatabaseQualifier.ofDocument());
         qualifiers.add(AnnotationLiteralUtil.DEFAULT_ANNOTATION);
         qualifiers.add(AnnotationLiteralUtil.ANY_ANNOTATION);
     }
