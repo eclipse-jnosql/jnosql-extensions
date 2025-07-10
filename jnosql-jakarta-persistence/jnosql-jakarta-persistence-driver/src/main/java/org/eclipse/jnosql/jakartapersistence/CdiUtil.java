@@ -15,8 +15,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence;
 
+import jakarta.enterprise.event.Event;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.CDI;
+import jakarta.enterprise.util.TypeLiteral;
 
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
@@ -31,13 +33,16 @@ public class CdiUtil {
     private CdiUtil() {
     }
 
+    public static <T> Event<T> getEvent(Class<T> eventClass) {
+        return CDI.current().select(new TypeLiteral<Event<T>>() {}).get();
+    }
+
     /**
      * Find all qualifiers in the list of annotations, including qualifiers nested in stereotypes
      * @param annotations
      * @return
      */
-    public static Set<Annotation> getAllQualifiersRecursively(Annotation... annotations) {
-        BeanManager beanManager = CDI.current().getBeanManager();
+    public static Set<Annotation> getAllQualifiersRecursively(BeanManager beanManager, Annotation... annotations) {
         Set<Annotation> qualifiers = new HashSet<>();
         Set<Class<? extends Annotation>> visitedStereotypes = new HashSet<>();
 
@@ -54,7 +59,7 @@ public class CdiUtil {
         return qualifiers;
     }
 
-    private static void resolveStereotypeQualifiers(Class<? extends Annotation> stereotype,BeanManager beanManager,
+    private static void resolveStereotypeQualifiers(Class<? extends Annotation> stereotype, BeanManager beanManager,
             Set<Annotation> qualifiers, Set<Class<? extends Annotation>> visitedStereotypes) {
         if (!visitedStereotypes.add(stereotype)) {
             return; // avoid infinite loop

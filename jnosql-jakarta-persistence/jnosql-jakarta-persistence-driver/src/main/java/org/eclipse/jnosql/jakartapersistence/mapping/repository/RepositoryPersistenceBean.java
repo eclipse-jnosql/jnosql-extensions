@@ -19,6 +19,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
 
 import jakarta.data.repository.DataRepository;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
 
 import org.eclipse.jnosql.mapping.core.Converters;
@@ -46,14 +47,13 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
      * Constructor
      *
      * @param type The bean class
+     * @param beanManager
      */
-    @SuppressWarnings("unchecked")
-    public RepositoryPersistenceBean(Class<?> type) {
-        super(type);
+    public RepositoryPersistenceBean(Class<?> type, BeanManager beanManager) {
+        super(type, beanManager);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public T create(CreationalContext<T> context) {
         EntitiesMetadata entities = getInstance(EntitiesMetadata.class);
 

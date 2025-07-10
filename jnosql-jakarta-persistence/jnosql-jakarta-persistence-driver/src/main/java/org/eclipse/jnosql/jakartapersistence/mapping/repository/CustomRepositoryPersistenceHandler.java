@@ -19,8 +19,9 @@ import jakarta.persistence.EntityManager;
 
 import java.lang.reflect.Method;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.EnsureTransactionInterceptor;
+import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.StatementInterceptionEvent;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -59,7 +60,9 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
 
     @Override
     public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
-        return EnsureTransactionInterceptor.invokeInTransaction(entityManager, () -> super.invoke(instance, method, params));
+        StatementInterceptionEvent event = new StatementInterceptionEvent(entityManager, () -> super.invoke(instance, method, params));
+        CdiUtil.getEvent(StatementInterceptionEvent.class).fire(event);
+        return event.getAction().call();
     }
 
 

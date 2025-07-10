@@ -32,9 +32,10 @@ import java.util.logging.Logger;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.jakartapersistence.mapping.EnsureTransactionInterceptor;
+import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.StatementInterceptionEvent;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
@@ -84,12 +85,14 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
-        return EnsureTransactionInterceptor.invokeInTransaction(template.entityManager(), () -> {
+        StatementInterceptionEvent event = new StatementInterceptionEvent(template.entityManager(), () -> {
             if (ORDER_BY == type) {
                 return executeOrderByQuery(instance, method, params);
             }
             return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
         });
+        CdiUtil.getEvent(StatementInterceptionEvent.class).fire(event);
+        return event.getAction().call();
     }
 
     @Override

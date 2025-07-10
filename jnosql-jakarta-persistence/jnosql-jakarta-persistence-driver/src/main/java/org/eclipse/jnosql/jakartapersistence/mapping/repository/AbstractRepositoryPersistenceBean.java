@@ -17,6 +17,7 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.repository.Repository;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
 
 import java.lang.annotation.Annotation;
@@ -56,10 +57,10 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
      * @param type The bean class
      */
     @SuppressWarnings("unchecked")
-    public AbstractRepositoryPersistenceBean(Class<?> type) {
+    public AbstractRepositoryPersistenceBean(Class<?> type, BeanManager beanManager) {
         this.type = (Class<T>) type;
         this.types = Collections.singleton(type);
-        this.qualifiersOnRepository = initQualifiersOnRepository();
+        this.qualifiersOnRepository = initQualifiersOnRepository(beanManager);
         this.qualifiersForBean = new HashSet<>(qualifiersOnRepository);
         qualifiersForBean.add(AnnotationLiteralUtil.DEFAULT_ANNOTATION);
         qualifiersForBean.add(AnnotationLiteralUtil.ANY_ANNOTATION);
@@ -122,11 +123,11 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     }
 
     private Annotation[] getEntityManagerQualifiers() {
-        return initQualifiersOnRepository().toArray(Annotation[]::new);
+        return qualifiersOnRepository.toArray(Annotation[]::new);
     }
 
-    private Set<Annotation> initQualifiersOnRepository() {
-        return CdiUtil.getAllQualifiersRecursively(type.getDeclaredAnnotations());
+    private Set<Annotation> initQualifiersOnRepository(BeanManager beanManager) {
+        return CdiUtil.getAllQualifiersRecursively(beanManager, type.getDeclaredAnnotations());
     }
 
 }

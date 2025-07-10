@@ -17,6 +17,7 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
 
 import org.eclipse.jnosql.mapping.core.Converters;
@@ -43,10 +44,10 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersis
 
     /**
      * @param type the bean class
+     * @param beanManager
      */
-    @SuppressWarnings("unchecked")
-    public CustomRepositoryPersistenceBean(Class<?> type) {
-        super(type);
+    public CustomRepositoryPersistenceBean(Class<?> type, BeanManager beanManager) {
+        super(type, beanManager);
     }
 
     @SuppressWarnings("unchecked")
