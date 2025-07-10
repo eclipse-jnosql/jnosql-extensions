@@ -15,6 +15,11 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import jakarta.persistence.EntityManager;
+
+import java.lang.reflect.Method;
+
+import org.eclipse.jnosql.jakartapersistence.mapping.EnsureTransactionInterceptor;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
@@ -30,9 +35,12 @@ import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBu
  */
 public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler {
 
+    private EntityManager entityManager;
+
     public CustomRepositoryPersistenceHandler(EntitiesMetadata entitiesMetadata,
             PersistenceDocumentTemplate template, Class<?> customRepositoryType, Converters converters) {
         super(entitiesMetadata, template, customRepositoryType, converters);
+        this.entityManager = template.entityManager();
     }
 
     /**
@@ -48,5 +56,12 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
             SemiStructuredTemplate template, EntityMetadata entityMetadata,  Class<?> entityType, Converters converters) {
         return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate)template, entityMetadata, entityType, converters);
     }
+
+    @Override
+    public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+        return EnsureTransactionInterceptor.invokeInTransaction(entityManager, () -> super.invoke(instance, method, params));
+    }
+
+
 
 }

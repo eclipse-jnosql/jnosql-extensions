@@ -32,6 +32,7 @@ import java.util.logging.Logger;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.jakartapersistence.mapping.EnsureTransactionInterceptor;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.Converters;
@@ -83,10 +84,12 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
-        if (ORDER_BY == type) {
-            return executeOrderByQuery(instance, method, params);
-        }
-        return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
+        return EnsureTransactionInterceptor.invokeInTransaction(template.entityManager(), () -> {
+            if (ORDER_BY == type) {
+                return executeOrderByQuery(instance, method, params);
+            }
+            return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
+        });
     }
 
     @Override

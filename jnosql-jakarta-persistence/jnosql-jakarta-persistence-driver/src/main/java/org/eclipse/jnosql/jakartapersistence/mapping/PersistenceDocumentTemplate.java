@@ -21,8 +21,6 @@ import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
@@ -44,9 +42,6 @@ import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
 
-@ApplicationScoped
-@EnsureTransaction
-// TODO Interceptor to turn relevant PersistenceException into OptimisticLockingFailureException
 public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
@@ -56,7 +51,6 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final DeleteQueryParser deleteParser;
     private final UpdateQueryParser updateParser;
 
-    @Inject
     public PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
         this.manager = manager;
         this.selectParser = new SelectQueryParser(manager);
@@ -64,14 +58,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         this.updateParser = new UpdateQueryParser(manager);
     }
 
-    public PersistenceDocumentTemplate() {
-        manager = null;
-        selectParser = null;
-        deleteParser = null;
-        updateParser = null;
-    }
-
-    private EntityManager entityManager() {
+    public EntityManager entityManager() {
         return manager.getEntityManager();
     }
 

@@ -14,22 +14,18 @@
  */
 package org.eclipse.jnosql.jakartapersistence.communication;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@ApplicationScoped
 public class PersistenceDatabaseManager {
 
     private final EntityManager em;
 
     private final Map<String, EntityType<?>> entityTypesByName = new HashMap<>();
 
-    @Inject
     public PersistenceDatabaseManager(EntityManager em) {
         this.em = em;
         cacheEntityTypes();

@@ -37,7 +37,7 @@ public class OptionalPartsParser {
 
     private String queryString;
     private String entity;
-    Collection<Sort<?>> sorts;
+    private Collection<Sort<?>> sorts;
     private int position = 0;
     private StringBuilder updatedQueryString = new StringBuilder();
 

@@ -17,19 +17,15 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.persistence.EntityManager;
 
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
-import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 
 
@@ -43,36 +39,23 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
  * @param <T> the type of the repository
  * @see AbstractBean
  */
-public class CustomRepositoryPersistenceBean<T> extends AbstractBean<T> {
-
-    private final Class<T> type;
-
-    private final Set<Type> types;
-
-    private final Set<Annotation> qualifiers;
+public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersistenceBean<T> {
 
     /**
      * @param type the bean class
      */
     @SuppressWarnings("unchecked")
     public CustomRepositoryPersistenceBean(Class<?> type) {
-        this.type = (Class<T>) type;
-        this.types = Collections.singleton(type);
-        this.qualifiers = new HashSet<>();
-        qualifiers.add(AnnotationLiteralUtil.DEFAULT_ANNOTATION);
-        qualifiers.add(AnnotationLiteralUtil.ANY_ANNOTATION);
-    }
-
-    @Override
-    public Class<?> getBeanClass() {
-        return type;
+        super(type);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T create(CreationalContext<T> context) {
         var entities = getInstance(EntitiesMetadata.class);
-        var template = getInstance(PersistenceDocumentTemplate.class);
+
+        EntityManager entityManager = findEntityManager();
+        var template = new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
 
         var converters = getInstance(Converters.class);
 
@@ -86,22 +69,6 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractBean<T> {
         return (T) Proxy.newProxyInstance(type.getClassLoader(),
                 new Class[]{type},
                 handler);
-    }
-
-
-    @Override
-    public Set<Type> getTypes() {
-        return types;
-    }
-
-    @Override
-    public Set<Annotation> getQualifiers() {
-        return qualifiers;
-    }
-
-    @Override
-    public String getId() {
-        return type.getName() + "@JakartaPersistence";
     }
 
 }
