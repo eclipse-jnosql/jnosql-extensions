@@ -21,19 +21,26 @@ import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Query;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.persistence.EntityManager;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
@@ -47,6 +54,7 @@ import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRep
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.eclipse.jnosql.mapping.core.query.RepositoryType.ORDER_BY;
 
 public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
@@ -83,15 +91,24 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
-        RepositoryMethodInterceptorInvocationContext context = new RepositoryMethodInterceptorInvocationContext(params, instance, method, template.entityManager(),
-                (instanceArg, methodArg, paramsArg) -> {
-                    if (ORDER_BY == type) {
-                        return executeOrderByQuery(instanceArg, methodArg, paramsArg);
-                    }
-                    return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instanceArg, methodArg, paramsArg);
-                });
-        return context.execute();
+        Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), template.entityManager());
+        InterceptorInvocationContext context
+                = new InterceptorInvocationContext(params, instance, method, contextData) {
+            @Override
+            protected Instance<MethodInterceptor> selectInterceptor() {
+                return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
+            }
 
+            @Override
+            protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                if (ORDER_BY == type) {
+                    return executeOrderByQuery(instanceArg, methodArg, paramsArg);
+                }
+                return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instanceArg, methodArg, paramsArg);
+            }
+
+        };
+        return DataExceptions.handlePersistenceException(context::execute);
     }
 
     @Override
@@ -262,6 +279,46 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         @Override
         public <S extends T> S save(S entity) {
             requireNonNull(entity, "Entity is required");
+            final Object[] entityArray = new Object[]{entity};
+            List<S> resultWrapper = saveEntitiesWithInterception(entityArray);
+            return resultWrapper.getFirst();
+        }
+
+        @Override
+        public <S extends T> List<S> saveAll(List<S> entities) {
+            requireNonNull(entities, "entities is required");
+            final Object[] entitiesArray = entities.toArray(Object[]::new);
+            return saveEntitiesWithInterception(entitiesArray);
+        }
+
+        private <S extends T> List<S> saveEntitiesWithInterception(final Object[] entities) throws RuntimeException {
+            final var owningObject = this;
+            InterceptorInvocationContext context
+                    = new InterceptorInvocationContext(entities, this, null, null) {
+                @Override
+                protected Instance<MethodInterceptor> selectInterceptor() {
+                    return CDI.current().select(MethodInterceptor.class, MethodInterceptor.SaveEntity.INSTANCE);
+                }
+
+                @Override
+                protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                    return owningObject.invokeSaveAll(instance, method, params);
+                }
+            };
+            try {
+                return (List<S>) context.execute();
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private <S extends T> Object invokeSaveAll(Object instance, Method method, Object[] params) {
+            return Stream.of((S[]) params).map(this::saveSingle).collect(toList());
+        }
+
+        private <S extends T> S saveSingle(S entity) {
 
             K id = getEntityId(entity);
             if (nonNull(id) && existsById(id)) {

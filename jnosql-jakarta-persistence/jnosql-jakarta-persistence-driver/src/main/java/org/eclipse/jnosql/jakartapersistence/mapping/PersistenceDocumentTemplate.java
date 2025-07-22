@@ -16,8 +16,6 @@ package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-import jakarta.data.exceptions.EntityExistsException;
-import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -113,7 +111,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         final Object identifier = getPersistenceUnitUtil().getIdentifier(entity);
         final Object entityWithSameId = entityManager().find(entity.getClass(), identifier);
         if (entityWithSameId != null) {
-            throw new EntityExistsException("Entity of type " + entity.getClass() + " with id=" + identifier + " already exists");
+            throw DataExceptions.newEntityExistsException(entity, identifier);
         }
         entityManager().persist(entity);
         return entity;
@@ -126,9 +124,10 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
             result = entityManager().merge(entity);
             entityManager().flush();
         } catch (OptimisticLockException e) {
-            if (e.getEntity() == null || e.getEntity().equals(entity)) {
-                throw new OptimisticLockingFailureException(e.getMessage(), e);
-            }
+            DataExceptions.asOptimisticLockingFailureException(e, entity)
+                    .ifPresent(ex -> {
+                        throw ex;
+                    });
         }
         return result;
     }
@@ -228,7 +227,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
             T entityToDelete = entityManager().getReference(type, key);
             entityManager().remove(entityToDelete);
         } catch (PersistenceException e) {
-            throw new OptimisticLockingFailureException(e.getMessage(), e);
+            throw DataExceptions.asOptimisticLockingFailureException(e);
         }
     }
 
@@ -239,16 +238,16 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
                 /* Call getReference to make sure that the database contains the entity and
                    the following call to merge will not create a new entity.
                    If it doesn't exist, EntityNotFoundException is thrown
-                */
+                 */
                 entityToBeRemoved = entityManager().getReference(entityToDelete);
                 /* Call merge to make sure that the version number matches the version in the persistence context.
                    The merged entity then can be removed. Detached entities cannot be removed.
-                */
+                 */
                 entityToBeRemoved = entityManager().merge(entityToDelete);
             }
             entityManager().remove(entityToBeRemoved);
         } catch (PersistenceException e) {
-            throw new OptimisticLockingFailureException(e.getMessage(), e);
+            throw DataExceptions.asOptimisticLockingFailureException(e);
         }
     }
 

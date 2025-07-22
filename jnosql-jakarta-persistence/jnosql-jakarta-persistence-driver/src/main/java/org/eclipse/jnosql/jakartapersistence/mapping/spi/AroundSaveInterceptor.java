@@ -18,10 +18,24 @@ package org.eclipse.jnosql.jakartapersistence.mapping.spi;
 import jakarta.interceptor.InvocationContext;
 
 /**
+ * Extension point to intercept any a save action, which persists entities inside repository methods
+ * that persist entities. An interceptor should be an alternative CDI bean
+ * that implements this interface. It would replace any default interceptor.
+ *
+ * This interceptor is handy to validate entities in Jakarta EE container context or
+ * if integration with Jakarta Validation is desired.
  *
  * @author Ondro Mihalyi
  */
 @FunctionalInterface
-public interface RepositoryMethodInterceptor {
+public interface AroundSaveInterceptor {
+
+    /**
+     * Called to intercept saving action. A collection of entities can be retrieved from the context
+     * by calling {@code (Collection<? extends Object>)context.getContextData(().get(jakarta.persistence.Entity.class.getName())}.
+     * @param context Invocation context
+     * @return value returned by the context invocation
+     * @throws Exception
+     */
     Object intercept(InvocationContext context) throws Exception;
 }

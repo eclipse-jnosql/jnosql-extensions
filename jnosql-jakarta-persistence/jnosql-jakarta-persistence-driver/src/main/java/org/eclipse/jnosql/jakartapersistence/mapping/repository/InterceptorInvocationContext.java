@@ -15,42 +15,46 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.RepositoryMethodInterceptor;
 
 import jakarta.enterprise.inject.Instance;
-import jakarta.enterprise.inject.spi.CDI;
 import jakarta.interceptor.InvocationContext;
-import jakarta.persistence.EntityManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+
 /**
  *
  * @author Ondro Mihalyi
  */
-class RepositoryMethodInterceptorInvocationContext implements InvocationContext {
+abstract class InterceptorInvocationContext implements InvocationContext {
 
     private final Object instance;
     private final Method method;
-    private final Action action;
     private Object[] params;
     Map<String, Object> contextData = new HashMap<>();
 
-    @FunctionalInterface
-    interface Action {
-        Object invoke(Object instance, Method method, Object[] params) throws Throwable;
-    }
-
-    public RepositoryMethodInterceptorInvocationContext(Object[] params, Object instance, Method method, final EntityManager entityManager, Action action) {
+    public InterceptorInvocationContext(Object[] params, Object instance, Method method, Map<? extends String, ? extends Object> contextData) {
         this.params = params;
         this.instance = instance;
         this.method = method;
-        this.contextData.put(EntityManager.class.getName(), entityManager);
-        this.action = action;
+        if (contextData != null) {
+            this.contextData.putAll(contextData);
+        }
     }
+
+    /**
+     * Selector for interceptors. Should select a single bean. If multiple beans selected, an exception is thrown.
+     */
+    abstract protected Instance<MethodInterceptor> selectInterceptor();
+
+    /**
+      Action that is intercepted.
+    */
+    abstract protected Object invoke(Object instance, Method method, Object[] params) throws Throwable;
 
     @Override
     public Object getTarget() {
@@ -90,7 +94,7 @@ class RepositoryMethodInterceptorInvocationContext implements InvocationContext 
     @Override
     public Object proceed() throws Exception {
         try {
-            return action.invoke(instance, method, params);
+            return invoke(instance, method, params);
         } catch (Exception e) {
             throw e;
         } catch (Throwable t) {
@@ -99,8 +103,8 @@ class RepositoryMethodInterceptorInvocationContext implements InvocationContext 
     }
 
     public Object execute() throws Exception {
-        final Instance<RepositoryMethodInterceptor> selector = CDI.current().select(RepositoryMethodInterceptor.class);
-        if (selector.isUnsatisfied()) {
+        final Instance<MethodInterceptor> selector = selectInterceptor();
+        if (selector == null || selector.isUnsatisfied()) {
             return this.proceed();
         }
         return selector.get().intercept(this);

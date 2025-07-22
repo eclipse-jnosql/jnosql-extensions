@@ -21,7 +21,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Transactional;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.RepositoryMethodInterceptor;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
 /**
  *
@@ -29,7 +29,8 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.RepositoryMethodInterce
  */
 @ApplicationScoped
 @Transactional
-public class EnsureTransactionInterceptor implements RepositoryMethodInterceptor {
+@MethodInterceptor.Repository
+public class EnsureTransactionInterceptor implements MethodInterceptor {
 
     @Override
     public Object intercept(InvocationContext context) throws Exception {
