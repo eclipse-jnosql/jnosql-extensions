@@ -24,7 +24,6 @@ import jakarta.validation.ConstraintViolationException;
 
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 
 /**
  * Create or convert to exceptions that Jakarta Data expects
@@ -50,17 +49,11 @@ public final class DataExceptions {
         return new OptimisticLockingFailureException(e.getMessage(), e);
     }
 
-    public static <T> T toDataExceptions(Supplier<T> supplier) {
-        try {
-            return supplier.get();
-        } catch (NonUniqueResultException e) {
-            throw new jakarta.data.exceptions.NonUniqueResultException(e);
-        }
-    }
-
     public static Object handlePersistenceException(Callable<Object> callable) throws Exception {
         try {
             return callable.call();
+        } catch (NonUniqueResultException e) {
+            throw new jakarta.data.exceptions.NonUniqueResultException(e);
         } catch (PersistenceException e) {
             if (e.getCause() != null) {
                 final Throwable cause = e.getCause();

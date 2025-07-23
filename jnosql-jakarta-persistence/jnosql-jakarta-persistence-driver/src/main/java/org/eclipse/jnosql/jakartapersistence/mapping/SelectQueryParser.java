@@ -213,7 +213,7 @@ class SelectQueryParser extends BaseQueryParser {
 
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
         TypedQuery<T> query = getSelectTypedQuery(selectQuery);
-        return Optional.ofNullable(DataExceptions.toDataExceptions(query::getSingleResultOrNull))
+        return Optional.ofNullable(query.getSingleResultOrNull())
                 .map(this::refreshEntity);
     }
 

@@ -102,9 +102,9 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
             @Override
             protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
                 if (ORDER_BY == type) {
-                    return executeOrderByQuery(instanceArg, methodArg, paramsArg);
+                    return executeOrderByQuery(instance, method, params);
                 }
-                return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instanceArg, methodArg, paramsArg);
+                return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
             }
 
         };
