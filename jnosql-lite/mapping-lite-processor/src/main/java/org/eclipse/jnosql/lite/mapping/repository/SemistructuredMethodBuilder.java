@@ -40,7 +40,7 @@ enum SemiStructuredMethodBuilder implements Function<MethodMetadata, List<String
         public List<String> apply(MethodMetadata metadata) {
             List<String> lines = new ArrayList<>();
             Query query = metadata.getQuery();
-            lines.add("var prepareJNoSQL = template.prepare(\"" + query.value() + "\")");
+            lines.add("var prepareJNoSQL = template.prepare(\"" + query.value() + "\", this.entityMetadata().name())");
             for (Parameter parameter : metadata.getParameters()) {
                 if (parameter.hasParam()) {
                     Param param = parameter.param();
