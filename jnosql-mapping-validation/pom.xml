@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>jnosql-mapping-validation</artifactId>
+    <name>JNoSQL Mapping Validation</name>
     <packaging>jar</packaging>
 
 

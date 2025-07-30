@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-metamodel-processor</artifactId>
+    <name>JNoSQL Static Model Processor</name>
     <packaging>jar</packaging>
 
     <properties>

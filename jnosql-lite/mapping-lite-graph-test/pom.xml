@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-lite-graph-test</artifactId>
+    <name>JNoSQL Lite Graph Test</name>
     <packaging>jar</packaging>
 
     <dependencies>

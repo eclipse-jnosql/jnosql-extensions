@@ -25,6 +25,7 @@
     </parent>
 
     <artifactId>jnosql-tinkerpop-connections</artifactId>
+    <name>JNoSQL Apache Tinkerpop Connections</name>
     <description>Eclipse JNoSQL connections to Apache Tinkerpop</description>
 
     <properties>

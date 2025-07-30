@@ -29,6 +29,7 @@
 
     <groupId>org.eclipse.jnosql.metamodel</groupId>
     <artifactId>jnosql-static-metamodel-parent</artifactId>
+    <name>JNoSQL Static Model Parent</name>
 
     <packaging>pom</packaging>
 

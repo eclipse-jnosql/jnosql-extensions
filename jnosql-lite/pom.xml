@@ -28,6 +28,7 @@
     </parent>
 
     <groupId>org.eclipse.jnosql.lite</groupId>
+    <name>JNoSQL Lite Parent</name>
     <artifactId>jnosql-lite-parent</artifactId>
 
     <packaging>pom</packaging>
