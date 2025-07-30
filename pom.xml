@@ -25,6 +25,7 @@
     </parent>
 
     <artifactId>jnosql-mapping-extensions</artifactId>
+    <name>JNoSQL Parent Extensions</name>
     <packaging>pom</packaging>
 
     <description>Eclipse JNoSQL extensions</description>
