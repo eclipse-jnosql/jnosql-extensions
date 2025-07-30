@@ -20,6 +20,7 @@ import org.eclipse.jnosql.mapping.metadata.ClassInformationNotFoundException;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.InheritanceMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -112,6 +113,11 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
         Objects.requireNonNull(name, "name is required");
         return Optional.ofNullable(findByClassName.get(name));
     }
+
+    @Override
+    public Optional<ProjectionMetadata> projection(Class<?> aClass) {
+        return Optional.empty();
+   }
 
     @Override
     public String toString() {
