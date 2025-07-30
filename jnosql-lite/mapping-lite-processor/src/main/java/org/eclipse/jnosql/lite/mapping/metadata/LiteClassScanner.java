@@ -55,4 +55,9 @@ public final class LiteClassScanner implements ClassScanner {
         return Collections.emptySet();
     }
 
+    @Override
+    public Set<Class<?>> projections() {
+        return Collections.emptySet();
+    }
+
 }
