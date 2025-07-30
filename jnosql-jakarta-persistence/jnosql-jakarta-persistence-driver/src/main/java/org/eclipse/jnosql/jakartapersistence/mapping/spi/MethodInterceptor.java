@@ -19,9 +19,14 @@ import jakarta.enterprise.util.AnnotationLiteral;
 import jakarta.inject.Qualifier;
 import jakarta.interceptor.InvocationContext;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.Set;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -62,28 +67,6 @@ public interface MethodInterceptor {
     }
 
     /**
-     * Interceptors marked with this qualifier intercept repository method calls
-     * as they are called from outside of the repository. Enabling an
-     * alternative with this qualifier replaces the default interceptor that
-     * ensures that a repository methods run within a transaction.
-     *
-     * The entities to be saved are in the parameters of invocation context,
-     * while method and instance should be ignored.
-     */
-    @Documented
-    @Qualifier
-    @Retention(RUNTIME)
-    @Target({TYPE, METHOD, FIELD, PARAMETER})
-    public @interface SaveEntity {
-
-        public static final SaveEntity INSTANCE = new SaveEntityLiteral();
-
-        public static class SaveEntityLiteral extends AnnotationLiteral<MethodInterceptor.SaveEntity> implements MethodInterceptor.SaveEntity {
-        }
-
-    }
-
-    /**
      * Called to intercept any methods.
      *
      * @param context Invocation context
@@ -91,4 +74,79 @@ public interface MethodInterceptor {
      * @throws Exception
      */
     Object intercept(InvocationContext context) throws Exception;
+
+    /**
+     * Allows chaining multiple interceptors. A single interceptor can chain other interceptors together from
+     * the {@link MethodInterceptor#intercept(jakarta.interceptor.InvocationContext)} method
+     * with
+     * <pre>{@code Object intercept(InvocationContext context) throws Exception {
+     *   return secondInterceptor.intercept(new ChainedInvocationContext(thirdInterceptor, context));
+     * }}</pre>
+     */
+    public static class ChainedInvocationContext implements InvocationContext {
+
+        InvocationContext originalContext;
+        MethodInterceptor interceptor;
+
+        public ChainedInvocationContext(MethodInterceptor interceptor, InvocationContext originalContext) {
+            this.interceptor = interceptor;
+            this.originalContext = originalContext;
+        }
+
+        @Override
+        public Object getTarget() {
+            return originalContext.getTarget();
+        }
+
+        @Override
+        public Object getTimer() {
+            return originalContext.getTimer();
+        }
+
+        @Override
+        public Method getMethod() {
+            return originalContext.getMethod();
+        }
+
+        @Override
+        public Constructor<?> getConstructor() {
+            return originalContext.getConstructor();
+        }
+
+        @Override
+        public Object[] getParameters() {
+            return originalContext.getParameters();
+        }
+
+        @Override
+        public void setParameters(Object[] params) {
+            originalContext.setParameters(params);
+        }
+
+        @Override
+        public Map<String, Object> getContextData() {
+            return originalContext.getContextData();
+        }
+
+        @Override
+        public Object proceed() throws Exception {
+            return interceptor.intercept(originalContext);
+        }
+
+        @Override
+        public Set<Annotation> getInterceptorBindings() {
+            return originalContext.getInterceptorBindings();
+        }
+
+        @Override
+        public <T extends Annotation> T getInterceptorBinding(Class<T> annotationType) {
+            return originalContext.getInterceptorBinding(annotationType);
+        }
+
+        @Override
+        public <T extends Annotation> Set<T> getInterceptorBindings(Class<T> annotationType) {
+            return originalContext.getInterceptorBindings(annotationType);
+        }
+
+    }
 }

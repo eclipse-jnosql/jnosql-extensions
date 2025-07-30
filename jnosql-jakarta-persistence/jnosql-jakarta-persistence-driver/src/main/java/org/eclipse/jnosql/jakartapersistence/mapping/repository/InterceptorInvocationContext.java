@@ -32,13 +32,15 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
  */
 abstract class InterceptorInvocationContext implements InvocationContext {
 
+    private static final Object[] NO_PARAMS_ARRAY = new Object[0];
+
     private final Object instance;
     private final Method method;
     private Object[] params;
     Map<String, Object> contextData = new HashMap<>();
 
     public InterceptorInvocationContext(Object[] params, Object instance, Method method, Map<? extends String, ? extends Object> contextData) {
-        this.params = params;
+        this.params = params != null ? params : NO_PARAMS_ARRAY;
         this.instance = instance;
         this.method = method;
         if (contextData != null) {

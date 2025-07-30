@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
@@ -54,7 +53,7 @@ import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRep
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
+
 import static org.eclipse.jnosql.mapping.core.query.RepositoryType.ORDER_BY;
 
 public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
@@ -279,46 +278,6 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         @Override
         public <S extends T> S save(S entity) {
             requireNonNull(entity, "Entity is required");
-            final Object[] entityArray = new Object[]{entity};
-            List<S> resultWrapper = saveEntitiesWithInterception(entityArray);
-            return resultWrapper.getFirst();
-        }
-
-        @Override
-        public <S extends T> List<S> saveAll(List<S> entities) {
-            requireNonNull(entities, "entities is required");
-            final Object[] entitiesArray = entities.toArray(Object[]::new);
-            return saveEntitiesWithInterception(entitiesArray);
-        }
-
-        private <S extends T> List<S> saveEntitiesWithInterception(final Object[] entities) throws RuntimeException {
-            final var owningObject = this;
-            InterceptorInvocationContext context
-                    = new InterceptorInvocationContext(entities, this, null, null) {
-                @Override
-                protected Instance<MethodInterceptor> selectInterceptor() {
-                    return CDI.current().select(MethodInterceptor.class, MethodInterceptor.SaveEntity.INSTANCE);
-                }
-
-                @Override
-                protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
-                    return owningObject.invokeSaveAll(instance, method, params);
-                }
-            };
-            try {
-                return (List<S>) context.execute();
-            } catch (RuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private <S extends T> Object invokeSaveAll(Object instance, Method method, Object[] params) {
-            return Stream.of((S[]) params).map(this::saveSingle).collect(toList());
-        }
-
-        private <S extends T> S saveSingle(S entity) {
 
             K id = getEntityId(entity);
             if (nonNull(id) && existsById(id)) {
