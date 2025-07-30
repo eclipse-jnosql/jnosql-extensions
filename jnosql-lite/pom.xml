@@ -24,11 +24,12 @@
     <parent>
         <groupId>org.eclipse.jnosql.mapping</groupId>
         <artifactId>jnosql-mapping-extensions</artifactId>
-        <version>1.1.9-SNAPSHOT</version>
+        <version>1.1.9</version>
     </parent>
 
     <groupId>org.eclipse.jnosql.lite</groupId>
     <artifactId>jnosql-lite-parent</artifactId>
+    <name>JNoSQL Lite Parent</name>
 
     <packaging>pom</packaging>
 

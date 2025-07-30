@@ -21,10 +21,11 @@
     <parent>
         <groupId>org.eclipse.jnosql.mapping</groupId>
         <artifactId>jnosql-mapping-parent</artifactId>
-        <version>1.1.9-SNAPSHOT</version>
+        <version>1.1.9</version>
     </parent>
 
     <artifactId>jnosql-mapping-extensions</artifactId>
+    <name>JNoSQL Parent Extensions</name>
     <packaging>pom</packaging>
 
     <description>Eclipse JNoSQL extensions</description>

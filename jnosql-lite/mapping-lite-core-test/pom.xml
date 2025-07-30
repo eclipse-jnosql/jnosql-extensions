@@ -20,10 +20,11 @@
     <parent>
         <groupId>org.eclipse.jnosql.lite</groupId>
         <artifactId>jnosql-lite-parent</artifactId>
-        <version>1.1.9-SNAPSHOT</version>
+        <version>1.1.9</version>
     </parent>
 
     <artifactId>mapping-lite-core-test</artifactId>
+    <name>JNoSQL Lite Core Test</name>
     <packaging>jar</packaging>
 
     <properties>

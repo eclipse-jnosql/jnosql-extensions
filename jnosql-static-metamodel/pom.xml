@@ -24,20 +24,17 @@
     <parent>
         <groupId>org.eclipse.jnosql.mapping</groupId>
         <artifactId>jnosql-mapping-extensions</artifactId>
-        <version>1.1.9-SNAPSHOT</version>
+        <version>1.1.9</version>
     </parent>
 
     <groupId>org.eclipse.jnosql.metamodel</groupId>
     <artifactId>jnosql-static-metamodel-parent</artifactId>
+    <name>JNoSQL Static Model Parent</name>
 
     <packaging>pom</packaging>
 
     <description>A JNoSQL static metamodel</description>
     <url>http://jnosql.org/</url>
-
-
-    <properties>
-   </properties>
 
     <modules>
         <module>jnosql-metamodel-processor</module>
