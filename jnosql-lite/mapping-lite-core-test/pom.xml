@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-lite-core-test</artifactId>
+    <name>JNoSQL Lite Core Test</name>
     <packaging>jar</packaging>
 
     <properties>

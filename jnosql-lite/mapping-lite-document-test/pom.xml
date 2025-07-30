@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-lite-document-test</artifactId>
+    <name>JNoSQL Lite Document Test</name>
     <packaging>jar</packaging>
 
     <dependencies>

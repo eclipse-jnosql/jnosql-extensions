@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-lite-processor</artifactId>
+    <name>JNoSQL Lite Processor</name>
     <packaging>jar</packaging>
 
     <properties>

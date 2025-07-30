@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-lite-sample</artifactId>
+    <name>JNoSQL Static Model Sample</name>
     <packaging>jar</packaging>
 
     <properties>

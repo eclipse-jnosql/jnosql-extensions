@@ -24,6 +24,7 @@
     </parent>
 
     <artifactId>mapping-lite-key-value-test</artifactId>
+    <name>JNoSQL Lite Key Value Test</name>
     <packaging>jar</packaging>
 
     <dependencies>
