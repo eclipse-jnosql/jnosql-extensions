@@ -17,6 +17,7 @@ package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
 
 
 import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
 
 import jakarta.data.repository.BasicRepository;
@@ -119,7 +120,7 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
 
     @SuppressWarnings("rawtypes")
     private static List<Class<DataRepository>> loadRepositories(ScanResult scan) {
-        return scan.getClassesWithAnnotation(Repository.class)
+        return getClassesWithSupportedRepositoryAnnotation(scan)
                 .getInterfaces()
                 .filter(c -> c.implementsInterface(DataRepository.class))
                 .loadClasses(DataRepository.class)
@@ -129,7 +130,7 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
     }
 
     private static List<Class<?>> loadCustomRepositories(ScanResult scan) {
-        return scan.getClassesWithAnnotation(Repository.class)
+        return getClassesWithSupportedRepositoryAnnotation(scan)
                 .getInterfaces()
                 .filter(c -> !c.implementsInterface(DataRepository.class))
                 .loadClasses()
@@ -137,9 +138,23 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
                 .toList();
     }
 
+    private static ClassInfoList getClassesWithSupportedRepositoryAnnotation(ScanResult scan) {
+        return scan.getClassesWithAnnotation(Repository.class)
+                .filter(c -> {
+                    final Object provider = c.getAnnotationInfo(Repository.class).getParameterValues().getValue("provider");
+                    if (provider instanceof String providerName) {
+                        if (providerName.equals(Repository.ANY_PROVIDER)
+                                || providerName.equals(PersistenceClassScanner.PROVIDER)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+    }
+
     @SuppressWarnings("rawtypes")
     private static List<Class<DataRepository>> loadNotSupportedRepositories(ScanResult scan) {
-        return scan.getClassesWithAnnotation(Repository.class)
+        return getClassesWithSupportedRepositoryAnnotation(scan)
                 .getInterfaces()
                 .filter(c -> c.implementsInterface(DataRepository.class))
                 .loadClasses(DataRepository.class)
