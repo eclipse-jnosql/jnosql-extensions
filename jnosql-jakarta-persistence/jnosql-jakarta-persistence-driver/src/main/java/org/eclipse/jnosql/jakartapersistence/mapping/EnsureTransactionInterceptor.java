@@ -15,11 +15,15 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.page.Page;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.interceptor.InvocationContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Transactional;
+
+import java.util.concurrent.Callable;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
@@ -28,22 +32,32 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
  * @author Ondro Mihalyi
  */
 @ApplicationScoped
-@Transactional
 @MethodInterceptor.Repository
 public class EnsureTransactionInterceptor implements MethodInterceptor {
+
+    @Inject
+    RunInGlobalTransaction runInGlobalTransaction;
 
     @Override
     public Object intercept(InvocationContext context) throws Exception {
         EntityManager entityManager = (EntityManager)context.getContextData().get(EntityManager.class.getName());
+        final boolean transactionWillBeCreated = !entityManager.isJoinedToTransaction();
+
+        return runInGlobalTransaction.execute(() -> runInNewOrExistingTransaction(entityManager, context, transactionWillBeCreated));
+    }
+
+    private Object runInNewOrExistingTransaction(EntityManager entityManager, InvocationContext context, boolean transactionWillBeCreated) throws Exception {
         try {
             boolean inTransaction = entityManager.isJoinedToTransaction();
             if (inTransaction) {
-                return context.proceed();
+                final Object result = context.proceed();
+                return fetchIfNeeded(result, transactionWillBeCreated);
             } else {
                 EntityTransaction transaction = entityManager.getTransaction();
                 transaction.begin();
                 try {
                     Object result = context.proceed();
+                    result = fetchIfNeeded(result, transactionWillBeCreated);
                     transaction.commit();
                     return result;
                 } catch (Exception e) {
@@ -55,6 +69,21 @@ public class EnsureTransactionInterceptor implements MethodInterceptor {
             throw e;
         } catch (Throwable t) {
             throw new Exception(t);
+        }
+    }
+
+    private Object fetchIfNeeded(Object result, boolean transactionWillBeCreated) {
+        if (transactionWillBeCreated && result instanceof Page page) {
+            page.hasContent();
+        }
+        return result;
+    }
+
+    @ApplicationScoped
+    @Transactional
+    public static class RunInGlobalTransaction {
+        public Object execute(Callable callable) throws Exception {
+            return callable.call();
         }
     }
 }
