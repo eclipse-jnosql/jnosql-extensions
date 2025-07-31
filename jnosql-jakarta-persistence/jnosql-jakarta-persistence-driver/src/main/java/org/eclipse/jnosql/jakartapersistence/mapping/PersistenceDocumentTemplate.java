@@ -14,6 +14,8 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.exceptions.OptimisticLockingFailureException;
+
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 import jakarta.data.page.CursoredPage;
@@ -235,12 +237,14 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         try {
             T entityToBeRemoved = entityToDelete;
             if (!entityManager().contains(entityToDelete)) {
-                /* Call getReference to make sure that the database contains the entity and
-                   the following call to merge will not create a new entity.
-                   If it doesn't exist, EntityNotFoundException is thrown
+                /* Call find to make sure that the database contains the entity.
+                   If it doesn't exist, throw exception
                  */
-                entityToBeRemoved = entityManager().getReference(entityToDelete);
-                /* Call merge to make sure that the version number matches the version in the persistence context.
+                final Object identifier = getPersistenceUnitUtil().getIdentifier(entityToDelete);
+                if (null == entityManager().find((Class<T>)entityToDelete.getClass(), identifier)) {
+                    throw new OptimisticLockingFailureException("Entity " + entityToDelete + " doesn't exist in the database");
+                }
+                 /* Call merge to make sure that the version number matches the version in the persistence context.
                    The merged entity then can be removed. Detached entities cannot be removed.
                  */
                 entityToBeRemoved = entityManager().merge(entityToDelete);
