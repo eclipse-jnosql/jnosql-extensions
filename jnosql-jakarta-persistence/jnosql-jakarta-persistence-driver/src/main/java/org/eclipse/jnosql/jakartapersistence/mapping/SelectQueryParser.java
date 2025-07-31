@@ -316,9 +316,8 @@ class SelectQueryParser extends BaseQueryParser {
             Consumer<Query> queryModifier, Consumer<Query> countQueryModifier) {
 
         if (PageRequest.Mode.OFFSET.equals(pageRequest.mode())) {
-            final Class<T> entityClass = entityClassFromEntityName(entity);
             final String queryString = preProcessQuery(queryStringParam, entity, sorts);
-            TypedQuery<T> query = buildQuery(queryString, entity, entityClass, sorts);
+            Query query = buildQuery(queryString, entity, sorts);
             queryModifier.accept(query);
             try {
                 query.setFirstResult(Math.toIntExact(pageRequest.page() - 1) * pageRequest.size());

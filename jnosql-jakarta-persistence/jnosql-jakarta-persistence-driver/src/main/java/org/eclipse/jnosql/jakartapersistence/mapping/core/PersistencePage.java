@@ -18,6 +18,7 @@ package org.eclipse.jnosql.jakartapersistence.mapping.core;
 
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 
 import java.util.Iterator;
@@ -36,7 +37,7 @@ import java.util.function.Supplier;
  */
 public class PersistencePage<T> implements Page<T> {
 
-    private final TypedQuery<T> query;
+    private final Query query;
 
     private final Supplier<TypedQuery<Long>> countQuerySupplier;
 
@@ -56,7 +57,7 @@ public class PersistencePage<T> implements Page<T> {
      * Must be non-null if {@code pageRequest.requestTotal()} returns {@code true}.
      * @param pageRequest Defines which page to retrieve from the entities defined by {@code query}
      */
-    public PersistencePage(TypedQuery<T> query, Supplier<TypedQuery<Long>> countQuerySupplier, PageRequest pageRequest) {
+    public PersistencePage(Query query, Supplier<TypedQuery<Long>> countQuerySupplier, PageRequest pageRequest) {
         Objects.requireNonNull(query, "query is required");
         Objects.requireNonNull(pageRequest, "pageRequest is required");
         if (pageRequest.requestTotal()) {
