@@ -92,7 +92,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
         Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), template.entityManager());
         InterceptorInvocationContext context
-                = new InterceptorInvocationContext(params, instance, method, contextData) {
+                = new InterceptorInvocationContext(instance, method, params, contextData) {
             @Override
             protected Instance<MethodInterceptor> selectInterceptor() {
                 return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
@@ -165,10 +165,6 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     private Object executeOrderByQuery(Object instance, Method method, Object[] params) {
-        // TODO - revise, maybe use something else than SemiStructuredParameterBasedQuery with no params - use query(method, params) plus sorts
-//        Class<?> type = entityMetadata().type();
-//        var query = SemiStructuredParameterBasedQuery.INSTANCE.toQuery(Map.of(), getSorts(method, entityMetadata()), entityMetadata());
-//        return template().select(query);
         SelectQuery selectQuery = query(method, params);
         final List<Sort<?>> sorts = getSorts(method, entityMetadata());
         selectQuery = modifySelectQuery(sorts, selectQuery);

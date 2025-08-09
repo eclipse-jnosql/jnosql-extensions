@@ -64,7 +64,7 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
     public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
         Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), entityManager);
         InterceptorInvocationContext context
-                = new InterceptorInvocationContext(params, instance, method, contextData) {
+                = new InterceptorInvocationContext(instance, method, params, contextData) {
             @Override
             protected Instance<MethodInterceptor> selectInterceptor() {
                 return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
@@ -72,6 +72,7 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
 
             @Override
             protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                // TODO: Do we need to support ORDER_BY here?
                 return CustomRepositoryPersistenceHandler.super.invoke(instance, method, params);
             }
 

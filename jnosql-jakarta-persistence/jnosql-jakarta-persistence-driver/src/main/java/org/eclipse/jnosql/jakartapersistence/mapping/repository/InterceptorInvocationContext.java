@@ -36,10 +36,10 @@ abstract class InterceptorInvocationContext implements InvocationContext {
 
     private final Object instance;
     private final Method method;
+    private final Map<String, Object> contextData = new HashMap<>();
     private Object[] params;
-    Map<String, Object> contextData = new HashMap<>();
 
-    public InterceptorInvocationContext(Object[] params, Object instance, Method method, Map<? extends String, ? extends Object> contextData) {
+    public InterceptorInvocationContext(Object instance, Method method, Object[] params, Map<? extends String, ? extends Object> contextData) {
         this.params = params != null ? params : NO_PARAMS_ARRAY;
         this.instance = instance;
         this.method = method;
