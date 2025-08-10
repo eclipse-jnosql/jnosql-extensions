@@ -1,26 +1,28 @@
 /*
- *  Copyright (c) 2022, 2024 Contributors to the Eclipse Foundation
- *   All rights reserved. This program and the accompanying materials
- *   are made available under the terms of the Eclipse Public License v1.0
- *   and Apache License v2.0 which accompanies this distribution.
- *   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
- *   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+ * Copyright (c) 2022, 2025 Contributors to the Eclipse Foundation
  *
- *   You may elect to redistribute this code under either of these licenses.
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  and Apache License v2.0 which accompanies this distribution.
+ *  The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+ *  and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
  *
- *   Contributors:
+ *  You may elect to redistribute this code under either of these licenses.
  *
- *   Otavio Santana
- *   Ondro Mihalyi
+ *  Contributors:
+ *
+ *  Ondro Mihalyi
+ *  Otavio Santana
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import jakarta.data.repository.DataRepository;
 import jakarta.enterprise.context.spi.CreationalContext;
+
+import org.eclipse.jnosql.mapping.DatabaseQualifier;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
@@ -28,11 +30,12 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 
 
 /**
- * This class serves as a JNoSQL discovery bean for CDI extension, responsible for registering Repository instances for Jakarta Persistence entities.
+ * This class serves as a JNoSQL discovery bean for CDI extension, responsible for registering Custom Repository nstances for the Jakarta Persistence extension.
  * It extends {@link AbstractBean} and is parameterized with type {@code T} representing the repository type.
  * <p>
  * Upon instantiation, it initializes with the provided repository type and qualifiers.
@@ -41,7 +44,7 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
  * @param <T> the type of the repository
  * @see AbstractBean
  */
-public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends AbstractBean<T> {
+public class CustomRepositoryPersistenceBean<T> extends AbstractBean<T> {
 
     private final Class<T> type;
 
@@ -50,15 +53,14 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
     private final Set<Annotation> qualifiers;
 
     /**
-     * Constructor
-     *
-     * @param type The bean class
+     * @param type the bean class
      */
     @SuppressWarnings("unchecked")
-    public RepositoryPersistenceBean(Class<?> type) {
+    public CustomRepositoryPersistenceBean(Class<?> type) {
         this.type = (Class<T>) type;
         this.types = Collections.singleton(type);
         this.qualifiers = new HashSet<>();
+        qualifiers.add(DatabaseQualifier.ofDocument());
         qualifiers.add(AnnotationLiteralUtil.DEFAULT_ANNOTATION);
         qualifiers.add(AnnotationLiteralUtil.ANY_ANNOTATION);
     }
@@ -68,16 +70,21 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
         return type;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
+    @Override
     public T create(CreationalContext<T> context) {
-        EntitiesMetadata entities = getInstance(EntitiesMetadata.class);
+        var entities = getInstance(EntitiesMetadata.class);
         var template = getInstance(PersistenceDocumentTemplate.class);
 
-        Converters converters = getInstance(Converters.class);
+        var converters = getInstance(Converters.class);
 
-        var handler = new JakartaPersistenceRepositoryProxy<>(template,
-                entities, type, converters);
+        var handler = CustomRepositoryPersistenceHandler.builder()
+                .entitiesMetadata(entities)
+                .template(template)
+                .customRepositoryType(type)
+                .converters(converters)
+                .build();
+
         return (T) Proxy.newProxyInstance(type.getClassLoader(),
                 new Class[]{type},
                 handler);

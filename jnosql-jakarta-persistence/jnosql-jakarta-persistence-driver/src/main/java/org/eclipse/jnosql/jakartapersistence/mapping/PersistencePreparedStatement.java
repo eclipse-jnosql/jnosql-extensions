@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -27,7 +27,7 @@ import org.eclipse.jnosql.mapping.PreparedStatement;
  *
  * @author Ondro Mihalyi
  */
-class PersistencePreparedStatement implements PreparedStatement {
+public class PersistencePreparedStatement implements PreparedStatement {
 
     private final String queryString;
     private final SelectQueryParser selectParser;
@@ -39,7 +39,14 @@ class PersistencePreparedStatement implements PreparedStatement {
     }
 
     private void applyParameters(Query query) {
-        parameters.forEach((name, value) -> query.setParameter(name, value));
+        parameters.forEach((name, value) -> {
+            if (name.startsWith("?")) {
+                var position = Integer.parseInt(name, 1, name.length(), 10);
+                query.setParameter(position, value);
+            } else {
+                query.setParameter(name, value);
+            }
+        });
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -163,6 +163,9 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public Query buildQuery(String query) {
+        if (query.startsWith("WHERE")) {
+            query = "SELECT this FROM Coordinate " + query;
+        }
         EntityManager em = entityManager();
         return em.createQuery(query);
     }

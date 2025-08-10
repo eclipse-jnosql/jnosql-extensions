@@ -67,6 +67,11 @@
                 <artifactId>jnosql-mapping-key-value</artifactId>
                 <version>${jnosql-mapping.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.eclipse.jnosql.databases</groupId>
+                <artifactId>jnosql-database-commons</artifactId>
+                <version>${jnosql-mapping.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

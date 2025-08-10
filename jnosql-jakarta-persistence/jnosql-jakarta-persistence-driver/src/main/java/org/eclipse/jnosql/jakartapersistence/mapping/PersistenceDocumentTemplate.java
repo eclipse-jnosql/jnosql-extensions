@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -16,8 +16,10 @@ package org.eclipse.jnosql.jakartapersistence.mapping;
 
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+
 import jakarta.annotation.Priority;
 import jakarta.data.page.CursoredPage;
+import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
@@ -26,9 +28,11 @@ import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.stream.Stream;
+
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.Database;
@@ -192,6 +196,11 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> QueryMapper.MapperDeleteFrom delete(Class<T> type) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
