@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2022,2025 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -65,7 +65,8 @@ public class JakartaPersistenceExtension implements Extension {
         repository handler, because CustomRepositoryHandler for documents is not compatible
         with PersistencePreparedStatement.
 
-        We might need to remove the service file for DocumentExtension, or create our custom repositories as lternatives so that they supporess repositories created by the DocumentExtension.
+        We might need to remove the service file for DocumentExtension, or create our custom repositories as
+        lternatives so that they supporess repositories created by the DocumentExtension.
          */
     }
 }
