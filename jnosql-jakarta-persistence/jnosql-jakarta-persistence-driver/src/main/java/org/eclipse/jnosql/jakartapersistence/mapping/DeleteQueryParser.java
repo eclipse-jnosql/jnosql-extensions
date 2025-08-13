@@ -30,7 +30,7 @@ import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 
-class DeleteQueryParser extends BaseQueryParser {
+class DeleteQueryParser extends BaseUpdateQueryParser {
 
 
     public DeleteQueryParser(PersistenceDatabaseManager manager) {
@@ -53,21 +53,20 @@ class DeleteQueryParser extends BaseQueryParser {
         return entityIdName;
     }
 
-    <T> void deleteAll(Class<T> type) {
+    <T> long deleteAll(Class<T> type) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
-    void delete(DeleteQuery deleteQuery) {
-                final String entityName = deleteQuery.name();
-        final EntityType<?> entityType = findEntityType(entityName);
+    long delete(DeleteQuery deleteQuery) {
+        final Class<?> type = entityTypeFromEntityName(deleteQuery.name());
         if (deleteQuery.condition().isEmpty()) {
-            deleteAll(entityType.getJavaType());
+            return deleteAll(type);
         } else {
             final CriteriaCondition criteria = deleteQuery.condition().get();
-            Query query = buildQuery(entityType.getJavaType(), ctx -> {
+            Query query = buildQuery(type, ctx -> {
                 return ctx.query().where(parseCriteria(criteria, ctx.queryContext()));
             });
-            query.executeUpdate();
+            return query.executeUpdate();
         }
     }
 

@@ -12,7 +12,7 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.communication;
+package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
 
 import jakarta.data.repository.DataRepository;
 import java.util.Set;

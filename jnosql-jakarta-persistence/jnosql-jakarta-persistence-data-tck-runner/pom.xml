@@ -122,6 +122,8 @@
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-jakarta-persistence</artifactId>
             <version>${project.version}</version>
+            <!-- dependency jnosql-mapping-reflection must be after this in the classpath 
+               to prioritize service files in this artifact -->
         </dependency>
         <!-- test frameworks -->
         <dependency>

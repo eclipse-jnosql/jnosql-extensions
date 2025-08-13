@@ -20,9 +20,9 @@ import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
+import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
-import org.eclipse.jnosql.mapping.semistructured.query.SemiStructuredRepositoryProxy;
 
 /**
  *
@@ -30,7 +30,8 @@ import org.eclipse.jnosql.mapping.semistructured.query.SemiStructuredRepositoryP
  */
 public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler {
 
-    public CustomRepositoryPersistenceHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Class<?> customRepositoryType, Converters converters) {
+    public CustomRepositoryPersistenceHandler(EntitiesMetadata entitiesMetadata,
+            PersistenceDocumentTemplate template, Class<?> customRepositoryType, Converters converters) {
         super(entitiesMetadata, template, customRepositoryType, converters);
     }
 
@@ -43,7 +44,7 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
         return new CustomRepositoryPersistenceHandlerBuilder();
     }
 
-    protected SemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(
+    protected AbstractSemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(
             SemiStructuredTemplate template, EntityMetadata entityMetadata,  Class<?> entityType, Converters converters) {
         return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate)template, entityMetadata, entityType, converters);
     }

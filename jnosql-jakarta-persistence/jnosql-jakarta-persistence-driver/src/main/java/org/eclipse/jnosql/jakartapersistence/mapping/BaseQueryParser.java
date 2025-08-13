@@ -16,6 +16,8 @@
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -24,6 +26,8 @@ import jakarta.persistence.metamodel.EntityType;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
@@ -42,7 +46,7 @@ import static org.eclipse.jnosql.communication.Condition.NOT;
 import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.elementCollection;
 import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.getName;
 
-class BaseQueryParser {
+abstract class BaseQueryParser {
 
     protected final PersistenceDatabaseManager manager;
 
@@ -50,12 +54,41 @@ class BaseQueryParser {
         this.manager = manager;
     }
 
-    protected <T> EntityType<T> findEntityType(String entityName) {
-        return manager.findEntityType(entityName);
+    protected <T> Class<T> entityTypeFromEntityName(String entityName) {
+        final EntityType<T> entityType = manager.findEntityType(entityName);
+        return entityType.getJavaType();
     }
 
     protected EntityManager entityManager() {
         return manager.getEntityManager();
+    }
+
+    protected PersistenceUnitUtil getPersistenceUnitUtil() {
+        return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+    }
+
+    public <T> Stream<T> query(String queryString) {
+        return query(queryString, null, null);
+    }
+
+    public <T> Stream<T> query(String queryString, String entity) {
+        return query(queryString, entity, null);
+    }
+
+    public abstract <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier);
+
+    public Query buildQuery(String queryString) {
+        return buildQuery(queryString, null);
+    }
+
+    public Query buildQuery(String queryString, String entity) {
+        queryString = preProcessQuery(queryString, entity);
+        EntityManager em = entityManager();
+        return em.createQuery(queryString);
+    }
+
+    protected String preProcessQuery(String queryString, String entity) {
+        return queryString;
     }
 
     protected static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx) {
@@ -72,8 +105,9 @@ class BaseQueryParser {
                     }
                 }
                 case AND -> {
-                    Iterator<?> iterator = elementCollection(criteria).iterator();
-                    yield ctx.builder().and(parseCriteria(iterator.next(), ctx), parseCriteria(iterator.next(), ctx));
+                    yield elementCollection(criteria).stream()
+                            .map(elem -> parseCriteria(elem, ctx))
+                            .reduce(ctx.builder()::and).get();
                 }
                 case LESSER_THAN -> {
                     ComparableContext comparableContext = ComparableContext.from(ctx.root(), criteria);
@@ -102,7 +136,8 @@ class BaseQueryParser {
                     yield inExpr;
                 }
                 case LIKE -> {
-                    throw new UnsupportedOperationException("LIKE is not supported yet.");
+                    StringContext stringContext = StringContext.from(ctx.root(), criteria);
+                    yield ctx.builder().like(stringContext.field(), stringContext.fieldValue());
                 }
 
                 default ->
@@ -117,8 +152,12 @@ class BaseQueryParser {
 
     protected static String getName(Element element) {
         String name = element.name();
+        return getFieldName(name);
+    }
+
+    protected static String getFieldName(String fieldName) {
         // NoSQL DBs translate id field into "_id" but we don't want it
-        return name.equals("_id") ? "id" : name;
+        return fieldName.equals("_id") ? "id" : fieldName;
     }
 
     protected static Collection<?> elementCollection(CriteriaCondition criteria) {
@@ -138,6 +177,16 @@ record ComparableContext(Path<Comparable> field, Comparable fieldValue) {
         Path<Comparable> field = root.get(getName(element));
         Comparable fieldValue = element.value().get(Comparable.class);
         return new ComparableContext(field, fieldValue);
+    }
+}
+
+record StringContext(Path<String> field, String fieldValue) {
+
+    public static <FROM> StringContext from(Root<FROM> root, CriteriaCondition criteria) {
+        Element element = (Element) criteria.element();
+        Path<String> field = root.get(getName(element));
+        String fieldValue = element.value().get(String.class);
+        return new StringContext(field, fieldValue);
     }
 }
 

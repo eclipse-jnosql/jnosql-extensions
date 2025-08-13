@@ -16,11 +16,12 @@
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.persistence.Query;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
 /**
@@ -30,12 +31,18 @@ import org.eclipse.jnosql.mapping.PreparedStatement;
 public class PersistencePreparedStatement implements PreparedStatement {
 
     private final String queryString;
-    private final SelectQueryParser selectParser;
-    private Map<String, Object> parameters = new HashMap<>();
+    private final BaseQueryParser queryParser;
+    private final Map<String, Object> parameters = new HashMap<>();
+    private String entity = null;
 
-    public PersistencePreparedStatement(String queryString, final SelectQueryParser selectParser) {
-        this.selectParser = selectParser;
+    PersistencePreparedStatement(String queryString, final BaseQueryParser queryParser) {
+        this.queryParser = queryParser;
         this.queryString = queryString;
+    }
+
+    PersistencePreparedStatement(String queryString, final BaseQueryParser selectParser, String entity) {
+        this(queryString, selectParser);
+        this.entity = entity;
     }
 
     private void applyParameters(Query query) {
@@ -57,25 +64,20 @@ public class PersistencePreparedStatement implements PreparedStatement {
 
     @Override
     public <T> Stream<T> result() {
-        Query query = createQuery();
-        try {
-            return query.getResultStream();
-        } catch (IllegalStateException e) {
-            return IntStream.rangeClosed(1, query.executeUpdate())
-                    .mapToObj(i -> (T)Integer.valueOf(i));
-        }
+        return queryParser.query(queryString, entity, this::applyParameters);
     }
 
     @Override
     public <T> Optional<T> singleResult() {
-        Query query = createQuery();
-        return Optional.ofNullable((T) query.getSingleResultOrNull());
+        Query query = queryParser.buildQuery(queryString, entity);
+        applyParameters(query);
+        return Optional.ofNullable((T) query.getSingleResultOrNull())
+                .map(this::refreshEntity);
     }
 
-    private Query createQuery() {
-        Query query = selectParser.buildQuery(queryString);
-        applyParameters(query);
-        return query;
+    private <T> T refreshEntity(T entity) {
+        queryParser.entityManager().refresh(entity);
+        return entity;
     }
 
     @Override

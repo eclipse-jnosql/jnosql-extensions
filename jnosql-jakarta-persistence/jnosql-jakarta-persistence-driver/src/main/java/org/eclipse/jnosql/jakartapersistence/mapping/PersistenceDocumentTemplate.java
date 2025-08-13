@@ -14,10 +14,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
-
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 import jakarta.annotation.Priority;
+import jakarta.data.exceptions.EntityExistsException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -28,6 +28,7 @@ import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitUtil;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -40,6 +41,9 @@ import org.eclipse.jnosql.mapping.DatabaseType;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
+import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
+import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
+
 @Alternative
 @Priority(Interceptor.Priority.APPLICATION)
 @Default
@@ -50,18 +54,21 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final PersistenceDatabaseManager manager;
     private final SelectQueryParser selectParser;
     private final DeleteQueryParser deleteParser;
+    private final UpdateQueryParser updateParser;
 
     @Inject
     PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
         this.manager = manager;
         this.selectParser = new SelectQueryParser(manager);
         this.deleteParser = new DeleteQueryParser(manager);
+        this.updateParser = new UpdateQueryParser(manager);
     }
 
     PersistenceDocumentTemplate() {
         manager = null;
         selectParser = null;
         deleteParser = null;
+        updateParser = null;
     }
 
     private EntityManager entityManager() {
@@ -85,12 +92,14 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> Stream<T> query(String query) {
-        return selectParser.query(query);
+        final BaseQueryParser queryParser = getParserForQuery(query);
+        return queryParser.query(query);
     }
 
     @Override
     public <T> Stream<T> query(String query, String entity) {
-        return selectParser.query(query, entity);
+        final BaseQueryParser queryParser = getParserForQuery(query);
+        return queryParser.query(query, entity);
     }
 
     @Override
@@ -108,30 +117,57 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         return selectParser.find(type, k);
     }
 
-    @Override
-    public <T> T insert(T t) {
-        entityManager().persist(t);
-        return t;
+    public <T, K> boolean existsById(Class<T> type, K k) {
+        return selectParser.existsById(type, k);
     }
 
     @Override
-    public <T> T update(T t) {
-        return entityManager().merge(t);
+    public <T> T insert(T entity) {
+        final Object identifier = getPersistenceUnitUtil().getIdentifier(entity);
+        final Object entityWithSameId = entityManager().find(entity.getClass(), identifier);
+        if (entityWithSameId != null) {
+            throw new EntityExistsException("Entity of type " + entity.getClass() + " with id=" + identifier + " already exists");
+        }
+        entityManager().persist(entity);
+        return entity;
     }
 
     @Override
-    public PreparedStatement prepare(String query, String entity) {
-        return prepare(query);
+    public <T> T update(T entity) {
+        return entityManager().merge(entity);
+    }
+
+    @Override
+    public PreparedStatement prepare(String queryString, String entity) {
+        BaseQueryParser queryParser = getParserForQuery(queryString);
+        return new PersistencePreparedStatement(queryString, queryParser, entity);
     }
 
     @Override
     public PreparedStatement prepare(String queryString) {
-        return new PersistencePreparedStatement(queryString, selectParser);
+        BaseQueryParser queryParser = getParserForQuery(queryString);
+        return new PersistencePreparedStatement(queryString, queryParser);
+    }
+
+    private BaseQueryParser getParserForQuery(String entity) {
+        BaseQueryParser queryParser;
+        if (isUpdateQuery(entity)) {
+            queryParser = updateParser;
+        } else if (isDeleteQuery(entity)) {
+            queryParser = deleteParser;
+        } else {
+            queryParser = selectParser;
+        }
+        return queryParser;
     }
 
     @Override
     public void delete(DeleteQuery query) {
-        deleteParser.delete(query);
+        deleteWithCount(query);
+    }
+
+    public long deleteWithCount(DeleteQuery query) {
+        return deleteParser.delete(query);
     }
 
     @Override
@@ -201,7 +237,11 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr) {
-        throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported yet.");
+        return selectParser.selectOffset(sq, pr);
+    }
+
+    public PersistenceUnitUtil getPersistenceUnitUtil() {
+        return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
     }
 
 }
