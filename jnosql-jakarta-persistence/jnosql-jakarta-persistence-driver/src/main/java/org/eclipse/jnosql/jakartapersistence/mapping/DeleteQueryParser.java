@@ -61,7 +61,7 @@ class DeleteQueryParser extends BaseUpdateQueryParser {
     }
 
     long delete(DeleteQuery deleteQuery) {
-        final Class<?> type = entityTypeFromEntityName(deleteQuery.name());
+        final Class<?> type = entityClassFromEntityName(deleteQuery.name());
         if (deleteQuery.condition().isEmpty()) {
             return deleteAll(type);
         } else {

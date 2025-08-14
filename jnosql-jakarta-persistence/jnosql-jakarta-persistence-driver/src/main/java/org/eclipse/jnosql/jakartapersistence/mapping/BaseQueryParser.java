@@ -15,10 +15,12 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.Sort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -29,6 +31,7 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.eclipse.jnosql.communication.ParamValue;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
@@ -43,8 +46,6 @@ import static org.eclipse.jnosql.communication.Condition.IN;
 import static org.eclipse.jnosql.communication.Condition.LESSER_EQUALS_THAN;
 import static org.eclipse.jnosql.communication.Condition.LESSER_THAN;
 import static org.eclipse.jnosql.communication.Condition.NOT;
-import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.elementCollection;
-import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.getName;
 
 abstract class BaseQueryParser {
 
@@ -54,9 +55,17 @@ abstract class BaseQueryParser {
         this.manager = manager;
     }
 
-    protected <T> Class<T> entityTypeFromEntityName(String entityName) {
+    protected <T> Class<T> entityClassFromEntityName(String entityName) {
         final EntityType<T> entityType = manager.findEntityType(entityName);
         return entityType.getJavaType();
+    }
+
+    protected <T> EntityType<T> entityTypeFromEntityName(String entityName) {
+        return manager.findEntityType(entityName);
+    }
+
+    protected Class<?> entityAttributeClass(EntityType<?> entityType, String attributeName) {
+        return entityType.getAttribute(attributeName).getJavaType();
     }
 
     protected EntityManager entityManager() {
@@ -68,27 +77,26 @@ abstract class BaseQueryParser {
     }
 
     public <T> Stream<T> query(String queryString) {
-        return query(queryString, null, null);
+        return query(queryString, null, null, null);
     }
 
     public <T> Stream<T> query(String queryString, String entity) {
-        return query(queryString, entity, null);
+        return query(queryString, entity, null, null);
     }
 
-    public abstract <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier);
+    public abstract <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier);
 
     public Query buildQuery(String queryString) {
-        return buildQuery(queryString, null);
+        return buildQuery(queryString, null, null);
     }
 
     public Query buildQuery(String queryString, String entity) {
-        queryString = preProcessQuery(queryString, entity);
-        EntityManager em = entityManager();
-        return em.createQuery(queryString);
+        return buildQuery(queryString, entity, null);
     }
 
-    protected String preProcessQuery(String queryString, String entity) {
-        return queryString;
+    public Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+        EntityManager em = entityManager();
+        return em.createQuery(queryString);
     }
 
     protected static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx) {
@@ -106,37 +114,37 @@ abstract class BaseQueryParser {
                 }
                 case AND -> {
                     yield elementCollection(criteria).stream()
-                            .map(elem -> parseCriteria(elem, ctx))
-                            .reduce(ctx.builder()::and).get();
+                    .map(elem -> parseCriteria(elem, ctx))
+                    .reduce(ctx.builder()::and).get();
                 }
                 case LESSER_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx.root(), criteria);
-                    yield ctx.builder().lessThan(comparableContext.field(), comparableContext.fieldValue());
+                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+                    yield ctx.builder().lessThan(comparableContext.field(), comparableContext.expression());
                 }
                 case LESSER_EQUALS_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx.root(), criteria);
-                    yield ctx.builder().lessThanOrEqualTo(comparableContext.field(), comparableContext.fieldValue());
+                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+                    yield ctx.builder().lessThanOrEqualTo(comparableContext.field(), comparableContext.expression());
                 }
                 case GREATER_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx.root(), criteria);
-                    yield ctx.builder().greaterThan(comparableContext.field(), comparableContext.fieldValue());
+                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+                    yield ctx.builder().greaterThan(comparableContext.field(), comparableContext.expression());
                 }
                 case GREATER_EQUALS_THAN -> {
-                    ComparableContext comparableContext = ComparableContext.from(ctx.root(), criteria);
-                    yield ctx.builder().greaterThanOrEqualTo(comparableContext.field(), comparableContext.fieldValue());
+                    ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
+                    yield ctx.builder().greaterThanOrEqualTo(comparableContext.field(), comparableContext.expression());
                 }
                 case BETWEEN -> {
-                    BiComparableContext comparableContext = BiComparableContext.from(ctx.root(), criteria);
-                    yield ctx.builder().between(comparableContext.field(), comparableContext.fieldValue1(), comparableContext.fieldValue2());
+                    BiComparableContext comparableContext = BiComparableContext.from(ctx, criteria);
+                    yield ctx.builder().between(comparableContext.field(), comparableContext.expression1(), comparableContext.expression2());
                 }
                 case IN -> {
-                    MultiValueContext valueContext = MultiValueContext.from(ctx.root(), criteria);
+                    MultiValueContext valueContext = MultiValueContext.from(ctx, criteria);
                     CriteriaBuilder.In<Object> inExpr = ctx.builder().in(valueContext.field());
                     valueContext.fieldValues().forEach(v -> inExpr.value(v));
                     yield inExpr;
                 }
                 case LIKE -> {
-                    StringContext stringContext = StringContext.from(ctx.root(), criteria);
+                    StringContext stringContext = StringContext.from(ctx, criteria);
                     yield ctx.builder().like(stringContext.field(), stringContext.fieldValue());
                 }
 
@@ -157,57 +165,77 @@ abstract class BaseQueryParser {
 
     protected static String getFieldName(String fieldName) {
         // NoSQL DBs translate id field into "_id" but we don't want it
-        return fieldName.equals("_id") ? "id" : fieldName;
+        return fieldName.equalsIgnoreCase("_id") ? "id" : fieldName;
     }
 
     protected static Collection<?> elementCollection(CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
+        Element element = criteria.element();
         return (Collection<?>) element.value().get();
     }
 
-}
-
-record QueryContext<FROM>(Root<FROM> root, CriteriaBuilder builder) {
-}
-
-record ComparableContext(Path<Comparable> field, Comparable fieldValue) {
-
-    public static <FROM> ComparableContext from(Root<FROM> root, CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
-        Path<Comparable> field = root.get(getName(element));
-        Comparable fieldValue = element.value().get(Comparable.class);
-        return new ComparableContext(field, fieldValue);
-    }
-}
-
-record StringContext(Path<String> field, String fieldValue) {
-
-    public static <FROM> StringContext from(Root<FROM> root, CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
-        Path<String> field = root.get(getName(element));
-        String fieldValue = element.value().get(String.class);
-        return new StringContext(field, fieldValue);
-    }
-}
-
-record BiComparableContext(Path<Comparable> field, Comparable fieldValue1, Comparable fieldValue2) {
-
-    public static <FROM> BiComparableContext from(Root<FROM> root, CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
-        final Path<Comparable> field = root.get(getName(element));
-        Iterator<?> iterator = elementCollection(criteria).iterator();
-        final Comparable fieldValue1 = ((Value) iterator.next()).get(Comparable.class);
-        final Comparable fieldValue2 = ((Value) iterator.next()).get(Comparable.class);
-        return new BiComparableContext(field, fieldValue1, fieldValue2);
+    static Expression<? extends Comparable> getComparableValue(CriteriaBuilder cb, Object value) {
+        if (value instanceof Comparable result) {
+            return cb.literal(result);
+        } else if (value instanceof ParamValue param && param.isEmpty()) {
+            // We only create parameter if we have no value
+            // If we have the value, we use the value instead
+            return cb.parameter(Comparable.class, param.getName());
+        } else {
+            return cb.literal(((Value) value).get(Comparable.class));
+        }
     }
 
-}
+    static record QueryContext<FROM>(Root<FROM> root, CriteriaBuilder builder) {
+    }
 
-record MultiValueContext(Path<?> field, Collection<?> fieldValues) {
+    static record ComparableContext(Path<Comparable> field, Expression<? extends Comparable> expression) {
 
-    public static <FROM> MultiValueContext from(Root<FROM> root, CriteriaCondition criteria) {
-        Element element = (Element) criteria.element();
-        Path<Comparable> field = root.get(getName(element));
-        return new MultiValueContext(field, elementCollection(criteria));
+        public static <FROM> ComparableContext from(QueryContext ctx, CriteriaCondition criteria) {
+            Element element = (Element) criteria.element();
+            Path<Comparable> field = ctx.root().get(getName(element));
+            return new ComparableContext(field, getComparableValue(ctx.builder(), element.value()));
+        }
+    }
+
+    static record StringContext(Path<String> field, String fieldValue) {
+
+        public static <FROM> StringContext from(QueryContext ctx, CriteriaCondition criteria) {
+            Element element = (Element) criteria.element();
+            Path<String> field = ctx.root().get(getName(element));
+            String fieldValue = element.value().get(String.class);
+            return new StringContext(field, fieldValue);
+        }
+    }
+
+    static record BiComparableContext(Path<Comparable> field, Expression<? extends Comparable> expression1, Expression<? extends Comparable> expression2) {
+
+        public static <FROM> BiComparableContext from(QueryContext ctx, CriteriaCondition criteria) {
+            Element element = criteria.element();
+            final Path<Comparable> field = ctx.root().get(getName(element));
+            Iterator<?> iterator = elementCollection(criteria).iterator();
+            final Expression<? extends Comparable> expression1 = getComparableValue(ctx.builder(), iterator.next());
+            final Expression<? extends Comparable> expression2 = getComparableValue(ctx.builder(), iterator.next());
+            return new BiComparableContext(field, expression1, expression2);
+        }
+
+    }
+
+    static record MultiValueContext(Path<?> field, Collection<?> fieldValues) {
+
+        public static <FROM> MultiValueContext from(QueryContext ctx, CriteriaCondition criteria) {
+            Element element = (Element) criteria.element();
+            Path<Comparable> field = ctx.root().get(getName(element));
+            final var expressions = elementCollection(criteria)
+                    .stream()
+                    .map(elem -> {
+                        if (elem instanceof Value value) {
+                            return value.get();
+                        } else {
+                            return elem;
+                        }
+                    })
+                    .toList();
+            return new MultiValueContext(field, expressions);
+        }
     }
 }

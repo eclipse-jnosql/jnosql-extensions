@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import jakarta.data.Limit;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Query;
@@ -28,10 +29,12 @@ import java.util.logging.Logger;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
+import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepository;
@@ -91,7 +94,8 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .pageRequest(pageRequest)
                 .prepareConverter(textQuery -> {
                     var prepare = template().prepare(textQuery, entity);
-//                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query));
+                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query));
+                    setProjections(prepare, params);
                     return prepare;
                 }).build();
         return methodReturn.execute();
@@ -153,6 +157,20 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     @Override
     protected Class<?> repositoryType() {
         return repositoryType;
+    }
+
+    private void setProjections(PersistencePreparedStatement prepare, Object[] params) {
+        SpecialParameters special = DynamicReturn.findSpecialParameters(params, sortParser());
+        Limit limit = special.pageRequest()
+                .map(pageRequest -> {
+                    long size = pageRequest.size();
+                    long startAt = pageRequest.size() * pageRequest.page();
+                    return new Limit(Math.toIntExact(size), startAt);
+                })
+                .or(() -> special.limit())
+                .orElse(null);
+        prepare.setLimit(limit);
+        prepare.setSorts(special.sorts());
     }
 
     /**

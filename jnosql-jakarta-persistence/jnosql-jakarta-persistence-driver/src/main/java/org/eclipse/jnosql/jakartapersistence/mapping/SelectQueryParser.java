@@ -24,24 +24,27 @@ import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.Params;
+import org.eclipse.jnosql.communication.query.data.SelectProvider;
+import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
+import org.eclipse.jnosql.communication.semistructured.Conditions;
+import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
 
-import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.parseCriteria;
 import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
 
 class SelectQueryParser extends BaseQueryParser {
@@ -50,91 +53,75 @@ class SelectQueryParser extends BaseQueryParser {
         super(manager);
     }
 
-    private static interface QueryModifier<FROM, RESULT> extends Function<SelectQueryContext<FROM, RESULT>, CriteriaQuery<RESULT>> {
-
-        static <ENTITY> QueryModifier<ENTITY, ENTITY> findAll() {
-            return ctx -> ctx.query().select((Root<ENTITY>) ctx.root());
-        }
-
-        static <ENTITY> QueryModifier<ENTITY, ENTITY> selectWhere(CriteriaCondition criteria) {
-            return ctx -> {
-                CriteriaQuery<ENTITY> query = ctx.query().select(ctx.root());
-                query = query.where(parseCriteria(criteria, ctx.queryContext()));
-                return query;
-            };
-        }
-
-        static <ENTITY> QueryModifier<ENTITY, ENTITY> applySorts(List<Sort<?>> sorts) {
-            return ctx -> {
-                CriteriaQuery<ENTITY> query = ctx.query();
-                if (sorts != null && !sorts.isEmpty()) {
-                    List<Order> orders = new ArrayList<>();
-                    for (Sort sort : sorts) {
-                        // Handle nested properties (e.g., "category.name")
-                        Path<?> path = ctx.root();
-                        String[] fields = sort.property().split("\\.");
-                        for (String field : fields) {
-                            path = path.get(getFieldName(field));
-                        }
-                        // Create order based on direction
-                        Order order = sort.isAscending()
-                                ? ctx.builder().asc(path)
-                                : ctx.builder().desc(path);
-                        orders.add(order);
-                    }
-                    query.select(ctx.root()).orderBy(orders);
-                }
-
-                // Apply sorting to query
-                return query;
-            };
-        }
-
-        static <ENTITY> QueryModifier<ENTITY, ENTITY> combine(QueryModifier<ENTITY, ENTITY>... modifiers) {
-            return ctx -> {
-                CriteriaQuery<ENTITY> query = ctx.query();
-                for (QueryModifier<ENTITY, ENTITY> modifier : modifiers) {
-                    query = modifier.apply(new SelectQueryContext<>(query, ctx.queryContext()));
-                }
-                return query;
-            };
-        }
-
-        static <ENTITY> QueryModifier<ENTITY, Long> countAll() {
-            return ctx -> ctx.query().select(ctx.builder().count(ctx.root()));
-        }
-
-        static <ENTITY> QueryModifier<ENTITY, Long> countWhere(CriteriaCondition criteria) {
-            return ctx -> {
-                CriteriaQuery<Long> query = ctx.query().select(ctx.builder().count(ctx.root()));
-                query = query.where(parseCriteria(criteria, ctx.queryContext()));
-                return query;
-            };
-        }
-
-    }
-
     public long count(String entity) {
-        final Class<?> type = entityTypeFromEntityName(entity);
+        final Class<?> type = entityClassFromEntityName(entity);
         return count(type);
     }
 
     public <T> long count(Class<T> type) {
-        TypedQuery<Long> query = buildQuery(type, Long.class, QueryModifier.countAll());
+        TypedQuery<Long> query = buildQuery(type, Long.class, QueryModifier.selectCount());
         return query.getSingleResult();
     }
 
     public <T> Stream<T> findAll(Class<T> type) {
-        return buildQuery(type, type, QueryModifier.findAll())
+        return buildQuery(type, type, QueryModifier.selectEntity())
                 .getResultStream();
     }
 
-    public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
-        final Query query = buildQuery(queryString, entity);
+    @Override
+    public <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
+        final Query query = buildQuery(queryString, entity, sorts);
         if (queryModifier != null) {
             queryModifier.accept(query);
         }
         return query.getResultStream();
+    }
+
+    @Override
+    public Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+        queryString = preProcessQuery(queryString, entity, sorts);
+        return super.buildQuery(queryString, entity, sorts);
+    }
+
+    /* Alternative way to parse JDQL query using the JNoSQL parser. Supports annotations like @OrderBy,
+     * doesn't support full JPQL. If not useful, remove this and related methods,
+     * including setSelectMapper on prepared statement.
+     */
+    private <T> Stream<T> queryJNoSQLParser(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper,
+            Map<String, Object> parameters, Consumer<Query> queryModifier) {
+        SelectQuery selectQuery = parseQuery(queryString, entity, parameters);
+        if (selectMapper != null) {
+            selectQuery = selectMapper.apply(selectQuery);
+        }
+        final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
+        if (queryModifier != null) {
+            queryModifier.accept(query);
+        }
+        return query.getResultStream();
+    }
+
+    private SelectQuery parseQuery(String query, String entity, Map<String, Object> parameters) {
+
+        CommunicationObserverParser noopObserver = new CommunicationObserverParser() {
+        };
+
+        var converter = SelectProvider.INSTANCE;
+        var selectQuery = converter.apply(query, entity);
+        var entityName = selectQuery.entity();
+        var limit = selectQuery.limit();
+        var skip = selectQuery.skip();
+        var columns = selectQuery.fields();
+        List<Sort<?>> sorts = selectQuery.orderBy();
+
+        Params params = Params.newParams();
+
+        var condition = selectQuery.where()
+                .map(c -> Conditions.getCondition(c, params, noopObserver, entityName)).orElse(null);
+
+        parameters.forEach(params::bind);
+
+        boolean count = selectQuery.isCount();
+        return new DefaultSelectQuery(limit, skip, entityName, columns, sorts, condition, count);
     }
 
     public <T> Optional<T> singleResult(String queryString) {
@@ -142,7 +129,7 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Optional<T> singleResult(String queryString, String entity) {
-        queryString = preProcessQuery(queryString, entity);
+        queryString = preProcessQuery(queryString, entity, null);
         return Optional.ofNullable((T) buildQuery(queryString).getSingleResultOrNull())
                 .map(this::refreshEntity);
     }
@@ -166,20 +153,23 @@ class SelectQueryParser extends BaseQueryParser {
         return query.getResultStream();
     }
 
-    private <T> TypedQuery<T> getSelectTypedQuery(SelectQuery selectQuery) {
-        Class<T> type = entityTypeFromEntityName(selectQuery.name());
-        TypedQuery<T> query;
-        if (selectQuery.condition().isEmpty()) {
-            query = buildQuery(type, type, QueryModifier.combine(
-                    QueryModifier.findAll(),
+    private <FROM, RESULT> TypedQuery<RESULT> getSelectTypedQuery(SelectQuery selectQuery) {
+        Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
+        TypedQuery<RESULT> query;
+        if (selectQuery.columns().isEmpty()) {
+            TypedQuery<FROM> queryEntity = buildQuery(fromType, fromType, QueryModifier.combine(
+                    QueryModifier.selectEntity(),
+                    QueryModifier.where(selectQuery.condition()),
                     QueryModifier.applySorts(selectQuery.sorts())
             ));
+            query = (TypedQuery<RESULT>) queryEntity;
         } else {
-            final CriteriaCondition criteria = selectQuery.condition().get();
-            query = buildQuery(type, type, QueryModifier.combine(
-                    QueryModifier.selectWhere(criteria),
+            TypedQuery<RESULT> queryColumns = buildQuery(fromType, null, QueryModifier.combine(
+                    QueryModifier.selectColumns(selectQuery.columns()),
+                    QueryModifier.where(selectQuery.condition()),
                     QueryModifier.applySorts(selectQuery.sorts())
             ));
+            query = (TypedQuery<RESULT>) queryColumns;
         }
         if (selectQuery.limit() > 0) {
             try {
@@ -198,17 +188,27 @@ class SelectQueryParser extends BaseQueryParser {
         return query;
     }
 
+    /*
+     * To be used if we want to retrieve paginate lazily and retrieve the number of elements
+     * without loading all the results.
+     */
+    private <FROM> TypedQuery<Long> getCountQuery(SelectQuery selectQuery) {
+        Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
+        TypedQuery<Long> queryEntity = buildQuery(fromType, Long.class, QueryModifier.combine(
+                QueryModifier.selectCount(),
+                QueryModifier.where(selectQuery.condition())
+        ));
+        return queryEntity;
+    }
+
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
-        final Class<T> type = entityTypeFromEntityName(selectQuery.name());
+        final Class<T> type = entityClassFromEntityName(selectQuery.name());
         Optional<T> result;
-        if (selectQuery.condition().isEmpty()) {
-            TypedQuery<T> query = buildQuery(type, type, ctx -> ctx.query().select((Root<T>) ctx.root()));
-            result = Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
-        } else {
-            final CriteriaCondition criteria = selectQuery.condition().get();
-            TypedQuery<T> query = buildQuery(type, type, QueryModifier.selectWhere(criteria));
-            result = Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
-        }
+        TypedQuery<T> query = buildQuery(type, type, QueryModifier.combine(
+                QueryModifier.selectEntity(),
+                QueryModifier.where(selectQuery.condition())
+        ));
+        result = Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull));
         return result.map(this::refreshEntity);
     }
 
@@ -225,23 +225,50 @@ class SelectQueryParser extends BaseQueryParser {
         if (selectQuery.condition().isEmpty()) {
             return count(entityName);
         } else {
-            Class<?> type = entityTypeFromEntityName(entityName);
-            final CriteriaCondition criteria = selectQuery.condition().get();
-            TypedQuery<Long> query = buildQuery(type, Long.class, QueryModifier.countWhere(criteria));
+            Class<?> type = entityClassFromEntityName(entityName);
+            TypedQuery<Long> query = buildQuery(type, Long.class, QueryModifier.combine(
+                    QueryModifier.selectCount(),
+                    QueryModifier.where(selectQuery.condition())
+            ));
             return query.getSingleResult();
         }
     }
 
-    @Override
-    protected String preProcessQuery(String queryString, String entity) {
-        return new OptionalPartsParser(queryString, entity).getCompleteSelect();
+    private String preProcessQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+        if (sorts != null) {
+            sorts = sorts.stream()
+                    .map(this::correctSortPropertyName)
+                    .toList();
+        }
+        return new OptionalPartsParser(queryString, entity, sorts)
+                .getCompleteSelect();
+    }
+
+    private Sort<?> correctSortPropertyName(Sort<?> sort) {
+        final String property = sort.property();
+        final int lastDotIndex = property.lastIndexOf(".");
+        final String idField = "_id";
+        final int idFieldLength = idField.length();
+        if (property.length() == lastDotIndex + 1 + idFieldLength
+                && property.regionMatches(true, lastDotIndex + 1, idField, 0, idFieldLength)) {
+            String newPropertyName = property.substring(0, lastDotIndex + 1) + getFieldName(idField);
+            return new Sort(newPropertyName, sort.isAscending(), sort.ignoreCase());
+        }
+        return sort;
+    }
+
+    private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType,
+            Function<SelectQueryContext<FROM, RESULT>, CriteriaQuery<RESULT>> queryModifier) {
+        return buildQuery(fromType, null, queryModifier);
     }
 
     private <FROM, RESULT> TypedQuery<RESULT> buildQuery(Class<FROM> fromType, Class<RESULT> resultType,
             Function<SelectQueryContext<FROM, RESULT>, CriteriaQuery<RESULT>> queryModifier) {
         EntityManager em = entityManager();
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
-        CriteriaQuery<RESULT> criteriaQuery = criteriaBuilder.createQuery(resultType);
+        CriteriaQuery<RESULT> criteriaQuery = resultType != null
+                ? criteriaBuilder.createQuery(resultType)
+                : (CriteriaQuery<RESULT>) criteriaBuilder.createQuery();
         Root<FROM> from = criteriaQuery.from(fromType);
         criteriaQuery = queryModifier.apply(
                 new SelectQueryContext(criteriaQuery,
@@ -250,15 +277,16 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Page<T> selectOffset(SelectQuery selectQuery, PageRequest pageRequest) {
-        final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
         if (PageRequest.Mode.OFFSET.equals(pageRequest.mode())) {
+            final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
             try {
                 query.setFirstResult(Math.toIntExact(pageRequest.page() - 1) * pageRequest.size());
             } catch (ArithmeticException e) {
                 throw new IllegalArgumentException("The offset of the first element is too big, page request: " + pageRequest, e);
             }
             query.setMaxResults(Math.min(query.getMaxResults(), pageRequest.size()));
-            return PersistencePage.of(query.getResultList(), pageRequest);
+            TypedQuery<Long> countQuery = pageRequest.requestTotal() ? getCountQuery(selectQuery) : null;
+            return new PersistencePage(query, countQuery, pageRequest);
         } else {
             throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported on CURSOR modes");
         }
