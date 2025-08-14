@@ -20,16 +20,18 @@ package org.eclipse.jnosql.jakartapersistence.mapping;
  * @author Ondro Mihalyi
  */
 final class QLUtil {
+    private static final String UPDATE_KEYWORD = "UPDATE";
+    private static final String DELETE_KEYWORD = "DELETE";
 
     private QLUtil() {
     }
 
     static boolean isUpdateQuery(String query) {
-        return queryStartsWith(query, "UPDATE", 6);
+        return queryStartsWith(query, UPDATE_KEYWORD, UPDATE_KEYWORD.length());
     }
 
     static boolean isDeleteQuery(String query) {
-        return queryStartsWith(query, "DELETE", 6);
+        return queryStartsWith(query, DELETE_KEYWORD, DELETE_KEYWORD.length());
     }
 
     static boolean queryStartsWith(String query, String word, int lengthOfWord) {
