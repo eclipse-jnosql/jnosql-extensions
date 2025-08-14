@@ -114,8 +114,8 @@ abstract class BaseQueryParser {
                 }
                 case AND -> {
                     yield elementCollection(criteria).stream()
-                            .map(elem -> parseCriteria(elem, ctx))
-                            .reduce(ctx.builder()::and).get();
+                    .map(elem -> parseCriteria(elem, ctx))
+                    .reduce(ctx.builder()::and).get();
                 }
                 case LESSER_THAN -> {
                     ComparableContext comparableContext = ComparableContext.from(ctx, criteria);
@@ -213,9 +213,9 @@ abstract class BaseQueryParser {
             Element element = criteria.element();
             final Path<Comparable> field = ctx.root().get(getName(element));
             Iterator<?> iterator = elementCollection(criteria).iterator();
-            final Expression<? extends Comparable> fieldValue1 = getComparableValue(ctx.builder(), iterator.next());
-            final Expression<? extends Comparable> fieldValue2 = getComparableValue(ctx.builder(), iterator.next());
-            return new BiComparableContext(field, fieldValue1, fieldValue2);
+            final Expression<? extends Comparable> expression1 = getComparableValue(ctx.builder(), iterator.next());
+            final Expression<? extends Comparable> expression2 = getComparableValue(ctx.builder(), iterator.next());
+            return new BiComparableContext(field, expression1, expression2);
         }
 
     }
@@ -225,8 +225,17 @@ abstract class BaseQueryParser {
         public static <FROM> MultiValueContext from(QueryContext ctx, CriteriaCondition criteria) {
             Element element = (Element) criteria.element();
             Path<Comparable> field = ctx.root().get(getName(element));
-            return new MultiValueContext(field, elementCollection(criteria));
+            final var expressions = elementCollection(criteria)
+                    .stream()
+                    .map(elem -> {
+                        if (elem instanceof Value value) {
+                            return value.get();
+                        } else {
+                            return elem;
+                        }
+                    })
+                    .toList();
+            return new MultiValueContext(field, expressions);
         }
     }
 }
-

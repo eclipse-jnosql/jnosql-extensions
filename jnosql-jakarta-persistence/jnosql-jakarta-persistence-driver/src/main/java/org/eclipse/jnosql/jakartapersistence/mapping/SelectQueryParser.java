@@ -27,6 +27,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -67,11 +68,11 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Stream<T> query(String queryString, String entity, Consumer<Query> queryModifier) {
-        return query(queryString, entity, null, queryModifier);
+        return query(queryString, entity, null, Map.of(),queryModifier);
     }
 
-    public <T> Stream<T> query(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper, Consumer<Query> queryModifier) {
-        SelectQuery selectQuery = parseQuery(queryString, entity);
+    public <T> Stream<T> query(String queryString, String entity, UnaryOperator<SelectQuery> selectMapper, Map<String, Object> parameters, Consumer<Query> queryModifier) {
+        SelectQuery selectQuery = parseQuery(queryString, entity, parameters);
         if (selectMapper != null) {
             selectQuery = selectMapper.apply(selectQuery);
         }
@@ -82,7 +83,7 @@ class SelectQueryParser extends BaseQueryParser {
         return query.getResultStream();
     }
 
-    private SelectQuery parseQuery(String query, String entity) {
+    private SelectQuery parseQuery(String query, String entity, Map<String, Object> parameters) {
 
         CommunicationObserverParser noopObserver = new CommunicationObserverParser() {
         };
@@ -95,8 +96,12 @@ class SelectQueryParser extends BaseQueryParser {
         var columns = selectQuery.fields();
         List<Sort<?>> sorts = selectQuery.orderBy();
 
+        Params params = Params.newParams();
+
         var condition = selectQuery.where()
-                .map(c -> Conditions.getCondition(c, Params.newParams(), noopObserver, entityName)).orElse(null);
+                .map(c -> Conditions.getCondition(c, params, noopObserver, entityName)).orElse(null);
+
+        parameters.forEach(params::bind);
 
         boolean count = selectQuery.isCount();
         return new DefaultSelectQuery(limit, skip, entityName, columns, sorts, condition, count);
