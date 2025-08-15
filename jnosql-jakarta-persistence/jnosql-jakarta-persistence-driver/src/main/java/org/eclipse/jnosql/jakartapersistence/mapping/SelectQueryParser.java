@@ -69,7 +69,7 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     @Override
-    public <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
+    protected <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
         final Query query = buildQuery(queryString, entity, sorts);
         if (queryModifier != null) {
             queryModifier.accept(query);
@@ -78,7 +78,7 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     @Override
-    public Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+    protected Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
         queryString = preProcessQuery(queryString, entity, sorts);
         return super.buildQuery(queryString, entity, sorts);
     }
@@ -201,6 +201,17 @@ class SelectQueryParser extends BaseQueryParser {
         return queryEntity;
     }
 
+    /*
+     * To be used if we want to retrieve paginate lazily and retrieve the number of elements
+     * without loading all the results.
+     */
+    private TypedQuery<Long> getCountQuery(String selectQuery, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier) {
+        String countQuery = QLUtil.convertToCount(selectQuery);
+        final TypedQuery<Long> query = buildQuery(countQuery, entity, Long.class, sorts);
+        queryModifier.accept(query);
+        return query;
+    }
+
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
         TypedQuery<T> query = getSelectTypedQuery(selectQuery);
         return Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull))
@@ -232,8 +243,9 @@ class SelectQueryParser extends BaseQueryParser {
     /**
      * Return true if there is an entity exists described by the provided query.
      *
-     * As JPA query builder doesn't allow a select without entity class, the solution is to select 1 instead of entity
-     * (so it doesn't load all data from the database) and limit to 1 record, so it succeeds with any data.
+     * As JPA query builder doesn't allow a select without entity class, the
+     * solution is to select 1 instead of entity (so it doesn't load all data
+     * from the database) and limit to 1 record, so it succeeds with any data.
      *
      * @param selectQuery query to find an entity
      * @return true if there exists an entity returned by the query
@@ -302,11 +314,35 @@ class SelectQueryParser extends BaseQueryParser {
                 throw new IllegalArgumentException("The offset of the first element is too big, page request: " + pageRequest, e);
             }
             query.setMaxResults(Math.min(query.getMaxResults(), pageRequest.size()));
-            TypedQuery<Long> countQuery = pageRequest.requestTotal() ? getCountQuery(selectQuery) : null;
-            return new PersistencePage(query, countQuery, pageRequest);
+            Supplier<TypedQuery<Long>> countQuerySupplier = pageRequest.requestTotal() ? () -> getCountQuery(selectQuery) : null;
+            return new PersistencePage(query, countQuerySupplier, pageRequest);
         } else {
             throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported on CURSOR modes");
         }
+    }
+
+    public <T> Page<T> selectOffset(PageRequest pageRequest, String queryStringParam, String entity, Collection<Sort<?>> sorts,
+            Consumer<Query> queryModifier, Consumer<Query> countQueryModifier) {
+        
+        if (PageRequest.Mode.OFFSET.equals(pageRequest.mode())) {
+            final Class<T> entityClass = entityClassFromEntityName(entity);
+            final String queryString = preProcessQuery(queryStringParam, entity, sorts);
+            TypedQuery<T> query = buildQuery(queryString, entity, entityClass, sorts);
+            queryModifier.accept(query);
+            try {
+                query.setFirstResult(Math.toIntExact(pageRequest.page() - 1) * pageRequest.size());
+            } catch (ArithmeticException e) {
+                throw new IllegalArgumentException("The offset of the first element is too big, page request: " + pageRequest, e);
+            }
+            query.setMaxResults(Math.min(query.getMaxResults(), pageRequest.size()));
+            Supplier<TypedQuery<Long>> countQuerySupplier = pageRequest.requestTotal() ?
+                    () -> getCountQuery(queryString, entity, sorts, countQueryModifier)
+                    : null;
+            return new PersistencePage(query, countQuerySupplier, pageRequest);
+        } else {
+            throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported on CURSOR modes");
+        }
+
     }
 
     record SelectQueryContext<FROM, RESULT>(CriteriaQuery<RESULT> query, QueryContext<FROM> queryContext) {

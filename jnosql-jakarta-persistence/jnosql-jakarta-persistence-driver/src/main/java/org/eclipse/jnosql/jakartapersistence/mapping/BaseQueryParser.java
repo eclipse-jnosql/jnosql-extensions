@@ -19,6 +19,7 @@ import jakarta.data.Sort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
@@ -57,6 +58,24 @@ abstract class BaseQueryParser {
         this.manager = manager;
     }
 
+    protected abstract <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier);
+
+    public <T> Stream<T> query(String queryString) {
+        return query(queryString, null, null, null);
+    }
+
+    public <T> Stream<T> query(String queryString, String entity) {
+        return query(queryString, entity, null, null);
+    }
+
+    public Query buildQuery(String queryString) {
+        return buildQuery(queryString, null, null);
+    }
+
+    public Query buildQuery(String queryString, String entity) {
+        return buildQuery(queryString, entity, null);
+    }
+
     protected <T> Class<T> entityClassFromEntityName(String entityName) {
         final EntityType<T> entityType = manager.findEntityType(entityName);
         return entityType.getJavaType();
@@ -78,27 +97,29 @@ abstract class BaseQueryParser {
         return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
     }
 
-    public <T> Stream<T> query(String queryString) {
-        return query(queryString, null, null, null);
+    protected static String getName(Element element) {
+        String name = element.name();
+        return getFieldName(name);
     }
 
-    public <T> Stream<T> query(String queryString, String entity) {
-        return query(queryString, entity, null, null);
+    protected static String getFieldName(String fieldName) {
+        // NoSQL DBs translate id field into "_id" but we don't want it
+        return fieldName.equalsIgnoreCase("_id") ? "id" : fieldName;
     }
 
-    public abstract <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier);
-
-    public Query buildQuery(String queryString) {
-        return buildQuery(queryString, null, null);
+    protected static Collection<?> elementCollection(CriteriaCondition criteria) {
+        Element element = criteria.element();
+        return (Collection<?>) element.value().get();
     }
 
-    public Query buildQuery(String queryString, String entity) {
-        return buildQuery(queryString, entity, null);
-    }
-
-    public Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
+    protected Query buildQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
         EntityManager em = entityManager();
         return em.createQuery(queryString);
+    }
+
+    protected <T> TypedQuery<T> buildQuery(String queryString, String entity, Class<T> entityClass, Collection<Sort<?>> sorts) {
+        EntityManager em = entityManager();
+        return em.createQuery(queryString, entityClass);
     }
 
     protected static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx) {
@@ -221,21 +242,6 @@ abstract class BaseQueryParser {
     private static <FROM> Predicate parseEndsWith(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
         StringContext stringContext = StringContext.from(ctx, criteria, ignoreCase);
         return ctx.builder().like(stringContext.field(), "%" + stringContext.fieldValue());
-    }
-
-    protected static String getName(Element element) {
-        String name = element.name();
-        return getFieldName(name);
-    }
-
-    protected static String getFieldName(String fieldName) {
-        // NoSQL DBs translate id field into "_id" but we don't want it
-        return fieldName.equalsIgnoreCase("_id") ? "id" : fieldName;
-    }
-
-    protected static Collection<?> elementCollection(CriteriaCondition criteria) {
-        Element element = criteria.element();
-        return (Collection<?>) element.value().get();
     }
 
     static Expression<? extends Comparable> getComparableExpression(CriteriaBuilder cb, Object value) {

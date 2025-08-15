@@ -17,6 +17,8 @@ package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.data.Limit;
 import jakarta.data.Sort;
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.persistence.Query;
 
 import java.util.Collection;
@@ -114,7 +116,34 @@ public class PersistencePreparedStatement implements PreparedStatement {
         this.sorts = sorts;
     }
 
-    private void applyParameters(Query query) {
+    public String getQueryString() {
+        return queryString;
+    }
+
+    public String getEntity() {
+        return entity;
+    }
+
+    public Collection<Sort<?>> getSorts() {
+        return sorts;
+    }
+
+    public <T> Page<T> selectOffset(PageRequest pageRequest) {
+        if (queryParser instanceof SelectQueryParser selectParser) {
+            return selectParser.selectOffset(pageRequest, this.queryString, this.entity, this.sorts,
+                    query -> {
+                        applyParameters(query);
+                        applyProjections(query);
+                    },
+                    query -> {
+                        applyParameters(query);
+                    });
+        } else {
+            throw new IllegalStateException("The current parser " + queryParser.getClass() + " is not suitable for select queries. Likely a defect to fix.");
+        }
+    }
+
+    void applyParameters(Query query) {
         parameters.forEach((name, value) -> {
             if (name.startsWith("?")) {
                 var position = Integer.parseInt(name, 1, name.length(), 10);
@@ -125,7 +154,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
         });
     }
 
-    private void applyProjections(Query query) {
+    void applyProjections(Query query) {
         if (limit != null) {
             query.setFirstResult(Math.toIntExact(limit.startAt()) - 1);
             query.setMaxResults(limit.maxResults());

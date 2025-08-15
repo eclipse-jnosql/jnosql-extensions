@@ -16,6 +16,7 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.Limit;
+import jakarta.data.Sort;
 import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -23,6 +24,7 @@ import jakarta.data.repository.Query;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -34,16 +36,18 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
-import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
+import org.eclipse.jnosql.mapping.core.query.RepositoryType;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepository;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.jnosql.mapping.core.query.RepositoryType.ORDER_BY;
 
 public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
 
@@ -78,6 +82,14 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @Override
+    protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
+        if (ORDER_BY == type) {
+            return executeOrderByQuery(instance, method, params);
+        }
+        return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
+    }
+
+    @Override
     protected Object executeQuery(Object instance, Method method, Object[] params) {
         LOGGER.finest(() -> "Executing query on method: " + method);
         Class<?> type = entityMetadata().type();
@@ -89,7 +101,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         LOGGER.finest(() -> "Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
 
-        var methodReturn = DynamicQueryMethodReturn.builder()
+        var methodReturn = JakartaPersistenceDynamicQueryMethodReturn.builder()
                 .args(params)
                 .method(method)
                 .typeClass(type)
@@ -130,14 +142,24 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     private Object executeOrderByQuery(Object instance, Method method, Object[] params) {
+        // TODO - revise, maybe use something else than SemiStructuredParameterBasedQuery with no params - use query(method, params) plus sorts
+//        Class<?> type = entityMetadata().type();
+//        var query = SemiStructuredParameterBasedQuery.INSTANCE.toQuery(Map.of(), getSorts(method, entityMetadata()), entityMetadata());
+//        return template().select(query);
         SelectQuery selectQuery = query(method, params);
+        final List<Sort<?>> sorts = getSorts(method, entityMetadata());
+        selectQuery = modifySelectQuery(sorts, selectQuery);
         return template().select(selectQuery);
+    }
+
+    private static MappingQuery modifySelectQuery(List<Sort<?>> sorts, SelectQuery selectQuery) {
+        return new MappingQuery(sorts, selectQuery.limit(), selectQuery.skip(), selectQuery.condition().orElse(null), selectQuery.name(), selectQuery.columns());
     }
 
     @Override
     protected Object executeCursorPagination(Object instance, Method method, Object[] params) {
-        // We need to override this because SemiStructuredRepositoryProxy
-        // expects the semistructured.PreparedStatement template
+        /* TODO We need to override this because SemiStructuredRepositoryProxy
+         expects the semistructured.PreparedStatement template */
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

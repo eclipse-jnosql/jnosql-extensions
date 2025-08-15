@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * A Jakarta Persistence implementation of {@link  Page}
@@ -37,7 +38,9 @@ public class PersistencePage<T> implements Page<T> {
 
     private final TypedQuery<T> query;
 
-    private final TypedQuery<Long> countQuery;
+    private final Supplier<TypedQuery<Long>> countQuerySupplier;
+
+    private TypedQuery<Long> suppliedCountQuery;
 
     private final PageRequest pageRequest;
 
@@ -45,24 +48,35 @@ public class PersistencePage<T> implements Page<T> {
 
     private Long totalElements;
 
-    public PersistencePage(TypedQuery<T> query, TypedQuery<Long> countQuery, PageRequest pageRequest) {
+    /**
+     *
+     * @param query Query to retrieve entities
+     * @param countQuerySupplier Supplies a query to retrieve the total number of entities.
+     * {@code null} value means {@link #totalElements()} method is not supported.
+     * Must be non-null if {@code pageRequest.requestTotal()} returns {@code true}.
+     * @param pageRequest Defines which page to retrieve from the entities defined by {@code query}
+     */
+    public PersistencePage(TypedQuery<T> query, Supplier<TypedQuery<Long>> countQuerySupplier, PageRequest pageRequest) {
         Objects.requireNonNull(query, "query is required");
         Objects.requireNonNull(pageRequest, "pageRequest is required");
         if (pageRequest.requestTotal()) {
-            Objects.requireNonNull(countQuery, "countQuery is required if totals are requested");
+            Objects.requireNonNull(countQuerySupplier, "countQuerySupplier is required if totals are requested");
         }
         this.query = query;
-        this.countQuery = countQuery;
+        this.countQuerySupplier = countQuerySupplier;
         this.pageRequest = pageRequest;
     }
 
     @Override
     public long totalElements() {
-        if (countQuery == null) {
-            throw new IllegalStateException("Page request did not request to retrieve total number elements");
+        if (countQuerySupplier == null) {
+            throw new IllegalStateException("Page request did not request retrieving the total number of elements. Total number of elements is not available.");
+        }
+        if (suppliedCountQuery == null) {
+            suppliedCountQuery = countQuerySupplier.get();
         }
         if (totalElements == null) {
-            totalElements = countQuery.getResultList().get(0);
+            totalElements = suppliedCountQuery.getResultList().get(0);
         }
         return totalElements;
     }
@@ -132,7 +146,7 @@ public class PersistencePage<T> implements Page<T> {
 
     @Override
     public boolean hasTotals() {
-        return false; // TODO support pageRequest.requestTotal
+        return countQuerySupplier != null;
     }
 
     @Override
@@ -150,8 +164,6 @@ public class PersistencePage<T> implements Page<T> {
             return false;
         }
         PersistencePage<?> otherPage = (PersistencePage<?>) o;
-        countQueriesBothNull(otherPage);
-        countQueriesBothNotNull(otherPage);
         totalElementsEqual(otherPage);
         return Objects.equals(entities(), otherPage.entities())
                 && Objects.equals(query, otherPage.query)
@@ -166,11 +178,11 @@ public class PersistencePage<T> implements Page<T> {
     }
 
     private boolean countQueriesBothNotNull(PersistencePage<?> otherPage) {
-        return countQuery != null && otherPage.countQuery != null;
+        return countQuerySupplier != null && otherPage.countQuerySupplier != null;
     }
 
     private boolean countQueriesBothNull(PersistencePage<?> otherPage) {
-        return countQuery == null && otherPage.countQuery == null;
+        return countQuerySupplier == null && otherPage.countQuerySupplier == null;
     }
 
     @Override
