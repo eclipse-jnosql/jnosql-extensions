@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -38,11 +38,6 @@ SELECT e FROM Employee e WHERE e.department = 'IT' GROUP BY e.department        
 SELECT COUNT(e), e.department FROM Employee e GROUP BY e.department                                        | SELECT COUNT(this) FROM Employee e GROUP BY e.department
 SELECT id FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1 ORDER BY id ASC                   | SELECT COUNT(this) FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1
 """)
-//"""
-//selectQuery                                                                                                | expectedCountQuery
-//SELECT id FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1 ORDER BY id ASC                   | SELECT COUNT(this) FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1
-//""")
-
     @ParameterizedTest
         void convertToCount(String selectQuery, String expectedCountQuery) {
             assertEquals(sanitize(expectedCountQuery), sanitize(QLUtil.convertToCount(selectQuery)), "Query " + selectQuery);
