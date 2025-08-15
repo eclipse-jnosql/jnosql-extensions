@@ -36,6 +36,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
+import org.eclipse.jnosql.mapping.core.query.RepositoryType;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
@@ -46,6 +47,7 @@ import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRep
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+import static org.eclipse.jnosql.mapping.core.query.RepositoryType.ORDER_BY;
 
 public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
 
@@ -77,6 +79,14 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
         this.converters = converters;
         this.repositoryType = repositoryType;
+    }
+
+    @Override
+    protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
+        if (ORDER_BY == type) {
+            return executeOrderByQuery(instance, method, params);
+        }
+        return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
     }
 
     @Override
