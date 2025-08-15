@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~
-  ~  Copyright (c) 2024 Contributors to the Eclipse Foundation
+  ~  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
   ~   All rights reserved. This program and the accompanying materials
   ~   are made available under the terms of the Eclipse Public License v1.0
   ~   and Apache License v2.0 which accompanies this distribution.
@@ -36,6 +36,7 @@
       <property name="jakarta.persistence.jdbc.user" value="APP"/>
       <property name="jakarta.persistence.jdbc.password" value="APP"/>
       <!-- EclipseLink specific properties -->
+      <property name="eclipselink.orm.throw.exceptions" value="true"/>
       <property name="eclipselink.target-database" value="Derby"/>
       <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
       <property name="eclipselink.debug" value="ALL"/>

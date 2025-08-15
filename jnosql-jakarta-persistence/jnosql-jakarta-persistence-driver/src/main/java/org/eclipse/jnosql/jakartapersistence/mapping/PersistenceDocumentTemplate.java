@@ -18,6 +18,7 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 
 import jakarta.annotation.Priority;
 import jakarta.data.exceptions.EntityExistsException;
+import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -28,11 +29,16 @@ import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitUtil;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
@@ -49,7 +55,11 @@ import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery
 @Default
 @ApplicationScoped
 @Database(DatabaseType.DOCUMENT)
+@EnsureTransaction
+// TODO Interceptor to turn relevant PersistenceException into OptimisticLockingFailureException
 public class PersistenceDocumentTemplate implements DocumentTemplate {
+
+    private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
 
     private final PersistenceDatabaseManager manager;
     private final SelectQueryParser selectParser;
@@ -134,7 +144,16 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> T update(T entity) {
-        return entityManager().merge(entity);
+        T result = entity;
+        try {
+            result = entityManager().merge(entity);
+            entityManager().flush();
+        } catch (OptimisticLockException e) {
+            if (e.getEntity() == null || e.getEntity().equals(entity)) {
+                throw new OptimisticLockingFailureException(e.getMessage(), e);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -187,7 +206,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public boolean exists(SelectQuery query) {
-        throw new UnsupportedOperationException("'exists' not supported yet.");
+        return selectParser.exists(query);
     }
 
     @Override
@@ -201,28 +220,59 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     }
 
     @Override
-    public <T> T insert(T t, Duration drtn) {
-        throw new UnsupportedOperationException("'insert(T t, Duration drtn)' not supported yet.");
+    public <T> T insert(T entity, Duration duration) {
+        LOGGER.warning(() -> "Trying to insert an entity with a TTL duration, which is not supported by SQL databases. The duration argument of " + duration + " will be ignored");
+        return insert(entity);
     }
 
     @Override
-    public <T> Iterable<T> insert(Iterable<T> itrbl) {
-        throw new UnsupportedOperationException("'insert(Iterable<T> itrbl)' not supported yet.");
+    public <T> Iterable<T> insert(Iterable<T> entities) {
+        return StreamSupport.stream(entities.spliterator(), false)
+                .map(this::insert)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public <T> Iterable<T> insert(Iterable<T> itrbl, Duration drtn) {
-        throw new UnsupportedOperationException("'insert(Iterable<T> itrbl, Duration drtn)' not supported yet.");
+    public <T> Iterable<T> insert(Iterable<T> entities, Duration duration) {
+        LOGGER.warning(() -> "Trying to insert an entity with a TTL duration, which is not supported by SQL databases. The duration argument of " + duration + " will be ignored");
+        return insert(entities);
     }
 
     @Override
-    public <T> Iterable<T> update(Iterable<T> itrbl) {
-        throw new UnsupportedOperationException("'update' not supported yet.");
+    public <T> Iterable<T> update(Iterable<T> entities) {
+        return StreamSupport.stream(entities.spliterator(), false)
+                .map(this::update)
+                .collect(Collectors.toList());
     }
 
     @Override
     public <T, K> void delete(Class<T> type, K key) {
-        deleteParser.delete(type, key);
+        try {
+            T entityToDelete = entityManager().getReference(type, key);
+            entityManager().remove(entityToDelete);
+        } catch (PersistenceException e) {
+            throw new OptimisticLockingFailureException(e.getMessage(), e);
+        }
+    }
+
+    public <T> void deleteEntity(T entityToDelete) {
+        try {
+            T entityToBeRemoved = entityToDelete;
+            if (!entityManager().contains(entityToDelete)) {
+                /* Call getReference to make sure that the database contains the entity and
+                   the following call to merge will not create a new entity.
+                   If it doesn't exist, EntityNotFoundException is thrown
+                */
+                entityToBeRemoved = entityManager().getReference(entityToDelete);
+                /* Call merge to make sure that the version number matches the version in the persistence context.
+                   The merged entity then can be removed. Detached entities cannot be removed.
+                */
+                entityToBeRemoved = entityManager().merge(entityToDelete);
+            }
+            entityManager().remove(entityToBeRemoved);
+        } catch (PersistenceException e) {
+            throw new OptimisticLockingFailureException(e.getMessage(), e);
+        }
     }
 
     @Override

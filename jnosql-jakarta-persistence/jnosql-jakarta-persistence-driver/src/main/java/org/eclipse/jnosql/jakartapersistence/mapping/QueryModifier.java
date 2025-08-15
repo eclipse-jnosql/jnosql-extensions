@@ -42,6 +42,10 @@ interface QueryModifier<FROM, RESULT> extends Function<SelectQueryParser.SelectQ
         return ctx -> ctx.query().select(ctx.builder().count(ctx.root()));
     }
 
+    static <FROM> QueryModifier<FROM, Integer> selectLiteral(int literal) {
+        return ctx -> ctx.query().select(ctx.builder().literal(literal));
+    }
+
     static <FROM, RESULT> QueryModifier<FROM, RESULT> selectColumns(List<String> columns) {
         if (columns.isEmpty()) {
             return ctx -> ctx.query();

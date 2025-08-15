@@ -16,6 +16,7 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.Limit;
+import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Query;
@@ -28,6 +29,7 @@ import java.util.logging.Logger;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.Converters;
@@ -113,13 +115,23 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .singleResultPagination(getSingleResult(query))
                 .page(getPage(query))
                 .build();
-        return dynamicReturn.execute();
+        Object result = dynamicReturn.execute();
+        if (result != null) {
+            return result;
+        } else {
+            throw new EmptyResultException("Call to method " + method + " found no matching results.");
+        }
     }
 
     @Override
     protected Object executeDeleteByAll(Object instance, Method method, Object[] params) {
         DeleteQuery deleteQuery = deleteQuery(method, params);
         return template().deleteWithCount(deleteQuery);
+    }
+
+    private Object executeOrderByQuery(Object instance, Method method, Object[] params) {
+        SelectQuery selectQuery = query(method, params);
+        return template().select(selectQuery);
     }
 
     @Override
@@ -240,7 +252,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
             requireNonNull(entity, "Entity is required");
 
             K id = getEntityId(entity);
-            template().delete(entityMetadata.type(), id);
+            template().deleteEntity(entity);
         }
 
         private K getEntityId(T entity) {
