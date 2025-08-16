@@ -16,34 +16,33 @@
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
+import jakarta.interceptor.InvocationContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import jakarta.transaction.Transactional;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.StatementInterceptionEvent;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.RepositoryMethodInterceptor;
 
 /**
  *
  * @author Ondro Mihalyi
  */
 @ApplicationScoped
-public class EnsureTransactionInterceptor {
+@Transactional
+public class EnsureTransactionInterceptor implements RepositoryMethodInterceptor {
 
-    public void invokeInTransaction(@Observes StatementInterceptionEvent event) throws Throwable {
-        final StatementInterceptionEvent.CallableWithThrowable<Object> action = event.getAction();
-        event.setAction(() -> intercept(event.getEntityManager(), action));
-    }
-
-        // TODO: Support JTA transactions
-    private Object intercept(EntityManager entityManager, StatementInterceptionEvent.CallableWithThrowable<Object> action) throws Throwable {
+    @Override
+    public Object intercept(InvocationContext context) throws Exception {
+        EntityManager entityManager = (EntityManager)context.getContextData().get(EntityManager.class.getName());
+        try {
             boolean inTransaction = entityManager.isJoinedToTransaction();
             if (inTransaction) {
-                return action.call();
+                return context.proceed();
             } else {
                 EntityTransaction transaction = entityManager.getTransaction();
                 transaction.begin();
                 try {
-                    Object result = action.call();
+                    Object result = context.proceed();
                     transaction.commit();
                     return result;
                 } catch (Exception e) {
@@ -51,6 +50,10 @@ public class EnsureTransactionInterceptor {
                     throw e;
                 }
             }
-
+        } catch (Exception e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new Exception(t);
+        }
     }
 }

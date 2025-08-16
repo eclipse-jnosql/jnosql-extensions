@@ -19,9 +19,7 @@ import jakarta.persistence.EntityManager;
 
 import java.lang.reflect.Method;
 
-import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.StatementInterceptionEvent;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -54,17 +52,15 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
     }
 
     protected AbstractSemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(
-            SemiStructuredTemplate template, EntityMetadata entityMetadata,  Class<?> entityType, Converters converters) {
-        return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate)template, entityMetadata, entityType, converters);
+            SemiStructuredTemplate template, EntityMetadata entityMetadata, Class<?> entityType, Converters converters) {
+        return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate) template, entityMetadata, entityType, converters);
     }
 
     @Override
     public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
-        StatementInterceptionEvent event = new StatementInterceptionEvent(entityManager, () -> super.invoke(instance, method, params));
-        CdiUtil.getEvent(StatementInterceptionEvent.class).fire(event);
-        return event.getAction().call();
+        RepositoryMethodInterceptorInvocationContext context = new RepositoryMethodInterceptorInvocationContext(params, instance, method, entityManager, super::invoke);
+        return context.execute();
     }
-
 
 
 }
