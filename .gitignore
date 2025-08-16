@@ -17,3 +17,6 @@ test-output/
 **/.DS_Store
 /.quarkus/
 nbproject/
+.project
+.flattened-pom.xml
+dependency-reduced-pom.xml

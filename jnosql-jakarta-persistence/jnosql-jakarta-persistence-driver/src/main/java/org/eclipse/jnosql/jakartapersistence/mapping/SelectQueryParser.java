@@ -19,7 +19,6 @@ import jakarta.data.Sort;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -214,16 +213,8 @@ class SelectQueryParser extends BaseQueryParser {
 
     public <T> Optional<T> singleResult(SelectQuery selectQuery) {
         TypedQuery<T> query = getSelectTypedQuery(selectQuery);
-        return Optional.ofNullable(toDataExceptions(query::getSingleResultOrNull))
+        return Optional.ofNullable(query.getSingleResultOrNull())
                 .map(this::refreshEntity);
-    }
-
-    private static <T> T toDataExceptions(Supplier<T> supplier) {
-        try {
-            return supplier.get();
-        } catch (NonUniqueResultException e) {
-            throw new jakarta.data.exceptions.NonUniqueResultException(e);
-        }
     }
 
     public long count(SelectQuery selectQuery) {
@@ -323,11 +314,10 @@ class SelectQueryParser extends BaseQueryParser {
 
     public <T> Page<T> selectOffset(PageRequest pageRequest, String queryStringParam, String entity, Collection<Sort<?>> sorts,
             Consumer<Query> queryModifier, Consumer<Query> countQueryModifier) {
-        
+
         if (PageRequest.Mode.OFFSET.equals(pageRequest.mode())) {
-            final Class<T> entityClass = entityClassFromEntityName(entity);
             final String queryString = preProcessQuery(queryStringParam, entity, sorts);
-            TypedQuery<T> query = buildQuery(queryString, entity, entityClass, sorts);
+            Query query = buildQuery(queryString, entity, sorts);
             queryModifier.accept(query);
             try {
                 query.setFirstResult(Math.toIntExact(pageRequest.page() - 1) * pageRequest.size());

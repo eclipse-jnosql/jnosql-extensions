@@ -52,9 +52,9 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 @AddPackages(value = Reflections.class)
 @AddExtensions(value = {ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class})
 @AddPackages(value = {PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class})
-@AddPackages(value = {JNoSqlPersistenceEntityNoGlobalTxTests.class, EntityTests.class})
+@AddPackages(value = {JNoSqlNoGlobalTxPersistenceEntityTests.class, EntityTests.class})
 @ExtendWith(RunOnlyCondition.class)
-public class JNoSqlPersistenceEntityNoGlobalTxTests extends PersistenceEntityTests {
+public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
 
     @Override
     @RunOnly

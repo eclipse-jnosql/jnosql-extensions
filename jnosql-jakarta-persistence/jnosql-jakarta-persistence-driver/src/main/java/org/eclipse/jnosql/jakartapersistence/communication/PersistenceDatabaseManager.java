@@ -14,34 +14,24 @@
  */
 package org.eclipse.jnosql.jakartapersistence.communication;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@ApplicationScoped
 public class PersistenceDatabaseManager {
 
     private final EntityManager em;
 
     private final Map<String, EntityType<?>> entityTypesByName = new HashMap<>();
 
-    record QueryContext<FROM, RESULT>(CriteriaQuery<RESULT> query, Root<FROM> root, CriteriaBuilder builder) {
-    }
-
-    @Inject
     public PersistenceDatabaseManager(EntityManager em) {
         this.em = em;
         cacheEntityTypes();
     }
 
-    PersistenceDatabaseManager() {
+    public PersistenceDatabaseManager() {
         em = null;
     }
 

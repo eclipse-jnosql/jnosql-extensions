@@ -21,10 +21,14 @@ import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.Query;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.persistence.EntityManager;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -32,8 +36,10 @@ import java.util.logging.Logger;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryType;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
@@ -47,6 +53,7 @@ import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRep
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
+
 import static org.eclipse.jnosql.mapping.core.query.RepositoryType.ORDER_BY;
 
 public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
@@ -83,10 +90,24 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
-        if (ORDER_BY == type) {
-            return executeOrderByQuery(instance, method, params);
-        }
-        return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
+        Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), template.entityManager());
+        InterceptorInvocationContext context
+                = new InterceptorInvocationContext(instance, method, params, contextData) {
+            @Override
+            protected Instance<MethodInterceptor> selectInterceptor() {
+                return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
+            }
+
+            @Override
+            protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                if (ORDER_BY == type) {
+                    return executeOrderByQuery(instance, method, params);
+                }
+                return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
+            }
+
+        };
+        return DataExceptions.handlePersistenceException(context::execute);
     }
 
     @Override
@@ -116,7 +137,9 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @SuppressWarnings("unchecked")
-    protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, org.eclipse.jnosql.communication.semistructured.SelectQuery query) {
+    protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, SelectQuery query) {
+        // TODO: Perform type check on return type during deployment and fail deployment if not supported.
+        // Currently, different types are supported by implementations of RepositoryReturn via service loader
         DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
                 .classSource(typeClass)
                 .methodSource(method)
@@ -142,10 +165,6 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     private Object executeOrderByQuery(Object instance, Method method, Object[] params) {
-        // TODO - revise, maybe use something else than SemiStructuredParameterBasedQuery with no params - use query(method, params) plus sorts
-//        Class<?> type = entityMetadata().type();
-//        var query = SemiStructuredParameterBasedQuery.INSTANCE.toQuery(Map.of(), getSorts(method, entityMetadata()), entityMetadata());
-//        return template().select(query);
         SelectQuery selectQuery = query(method, params);
         final List<Sort<?>> sorts = getSorts(method, entityMetadata());
         selectQuery = modifySelectQuery(sorts, selectQuery);

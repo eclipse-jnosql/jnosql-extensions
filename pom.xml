@@ -45,6 +45,7 @@
 
     <modules>
         <module>jnosql-lite</module>
+        <module>jnosql-jakarta-persistence</module>
         <module>jnosql-mapping-validation</module>
         <module>jnosql-static-metamodel</module>
         <module>jnosql-tinkerpop-connections</module>

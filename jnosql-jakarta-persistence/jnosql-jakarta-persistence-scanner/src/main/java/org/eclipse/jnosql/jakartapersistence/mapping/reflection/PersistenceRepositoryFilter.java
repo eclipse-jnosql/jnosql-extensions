@@ -21,6 +21,9 @@ import java.lang.reflect.Type;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+
 /**
  * A filter to validate Repository that either Eclipse JNoSQL or the Jakarta Persistence extension support. It will
  * check the first parameter on the repository, and if the entity has not had an unsupported annotation, it will return
@@ -33,7 +36,8 @@ enum PersistenceRepositoryFilter implements Predicate<Class<?>> {
     @Override
     public boolean test(Class<?> type) {
         Optional<Class<?>> entity = getEntityClass(type);
-        return entity.map(this::toSupportedAnnotation)
+        return entity
+                .map(this::toSupportedAnnotation)
                 .isPresent();
     }
 
@@ -45,13 +49,14 @@ enum PersistenceRepositoryFilter implements Predicate<Class<?>> {
     private Optional<Class<?>> getEntityClass(Class<?> repository) {
         Type[] interfaces = repository.getGenericInterfaces();
         if (interfaces.length == 0) {
-            return Optional.empty();
+            return empty();
         }
+
         if (interfaces[0] instanceof ParameterizedType interfaceType) {
-            return Optional.ofNullable(getEntityFromInterface(interfaceType));
-        } else {
-            return Optional.empty();
+            return ofNullable(getEntityFromInterface(interfaceType));
         }
+
+        return empty();
     }
 
     private Class<?> getEntityFromInterface(ParameterizedType param) {
@@ -59,10 +64,12 @@ enum PersistenceRepositoryFilter implements Predicate<Class<?>> {
         if (arguments.length == 0) {
             return null;
         }
+
         Type argument = arguments[0];
         if (argument instanceof Class<?> entity) {
             return entity;
         }
+
         return null;
     }
 

@@ -14,9 +14,9 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.spi;
 
-
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
+import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
 
 import org.eclipse.jnosql.mapping.metadata.ClassScanner;
@@ -37,9 +37,15 @@ public class JakartaPersistenceExtension implements Extension {
 
     private static final Logger LOGGER = Logger.getLogger(JakartaPersistenceExtension.class.getName());
 
-    void onAfterBeanDiscovery(@Observes final AfterBeanDiscovery afterBeanDiscovery) {
+    private ClassScanner scanner;
 
-        ClassScanner scanner = ClassScanner.load();
+    public void setScanner(ClassScanner scanner) {
+        this.scanner = scanner;
+    }
+
+    void onAfterBeanDiscovery(@Observes final AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
+
+        ClassScanner scanner = this.scanner != null ? this.scanner : ClassScanner.load();
 
         Set<Class<?>> crudTypes = scanner.repositoriesStandard();
         Set<Class<?>> customRepositories = scanner.customRepositories();
@@ -50,12 +56,15 @@ public class JakartaPersistenceExtension implements Extension {
         LOGGER.fine(() -> "Processing standard repositories as a Jakarta Persistence implementation: " + crudTypes);
         LOGGER.fine(() -> "Processing custom repositories as a Jakarta Persistence implementation: " + customRepositories);
 
+        // TODO: Copy all qualifiers and interceptors from interface to bean
+
         crudTypes.forEach(type -> {
-            afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type));
+            afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type, beanManager));
         });
 
         customRepositories.forEach(type -> {
-            afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type));
+            afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type, beanManager));
         });
+
     }
 }

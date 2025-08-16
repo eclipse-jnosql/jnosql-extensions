@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;

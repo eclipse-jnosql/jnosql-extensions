@@ -13,33 +13,33 @@
   ~   Contributors:
   ~
   ~   Ondro Mihalyi
+  ~   Arjan Tijms
   ~
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.eclipse.jnosql.mapping</groupId>
         <artifactId>jnosql-jakarta-persistence-parent</artifactId>
         <version>1.1.10-SNAPSHOT</version>
     </parent>
+
     <artifactId>jnosql-jakarta-persistence</artifactId>
     <name>Eclipse JNoSQL Jakarta Persistence Driver</name>
     <packaging>jar</packaging>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-document</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>jakarta.nosql</groupId>
-                    <artifactId>jakarta.nosql-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
@@ -54,16 +54,23 @@
                     <groupId>org.eclipse.jnosql.communication</groupId>
                     <artifactId>jnosql-communication-query</artifactId>
                 </exclusion>
+                <!-- <exclusion> <groupId>org.eclipse.jnosql.mapping</groupId>
+                    <artifactId>jnosql-mapping-reflection</artifactId> </exclusion> -->
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
-            <artifactId>jnosql-mapping-api-core</artifactId>
-            <version>${jnosql-mapping.version}</version>
+            <artifactId>jnosql-jakarta-persistence-scanner</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-reflection</artifactId>
+            <version>${jnosql-mapping.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-api-core</artifactId>
             <version>${jnosql-mapping.version}</version>
         </dependency>
         <dependency>
@@ -81,11 +88,6 @@
             <groupId>org.eclipse.jnosql.communication</groupId>
             <artifactId>jnosql-communication-core</artifactId>
             <version>${jnosql-communication-driver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.classgraph</groupId>
-            <artifactId>classgraph</artifactId>
-            <version>4.8.179</version>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
@@ -126,28 +128,38 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbytools</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>eclipselink</artifactId>
-            <version>5.0.0-SNAPSHOT</version>
+            <version>5.0.0-B09</version>
             <scope>test</scope>
         </dependency>
-
+        <!-- Optional dependency, only needed at compile time-->
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>2.0.1</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -168,5 +180,23 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+
+            <!-- Check licenses of dependencies -->
+            <plugin>
+                <groupId>org.eclipse.dash</groupId>
+                <artifactId>license-tool-plugin</artifactId>
+            </plugin>
+
+            <!-- Generate a "consumer pom" for the generated jar -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 </project>
