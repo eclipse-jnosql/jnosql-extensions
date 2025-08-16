@@ -35,6 +35,8 @@
 
     <properties>
         <eclipselink.version>5.0.0-B06</eclipselink.version>
+        <!-- Newer Derby requires Java 21. Upgrade to 10.17.1.0 or newer when porting this to the main branch for 1.2.x -->
+        <derby.version>10.15.2.0</derby.version>
     </properties>
 
     <pluginRepositories>
