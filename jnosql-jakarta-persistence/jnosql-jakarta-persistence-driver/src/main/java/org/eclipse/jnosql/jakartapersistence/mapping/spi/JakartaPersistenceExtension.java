@@ -15,7 +15,9 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.spi;
 
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.Default;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.Extension;
 
@@ -26,6 +28,7 @@ import java.util.logging.Logger;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.repository.CustomRepositoryPersistenceBean;
 import org.eclipse.jnosql.jakartapersistence.mapping.repository.RepositoryPersistenceBean;
+import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 
 /**
  * This CDI extension, {@code JakartaPersistenceExtension}, observes the CDI
@@ -37,9 +40,15 @@ public class JakartaPersistenceExtension implements Extension {
 
     private static final Logger LOGGER = Logger.getLogger(JakartaPersistenceExtension.class.getName());
 
+    private ClassScanner scanner;
+
+    public void setScanner(ClassScanner scanner) {
+        this.scanner = scanner;
+    }
+
     void onAfterBeanDiscovery(@Observes final AfterBeanDiscovery afterBeanDiscovery) {
 
-        ClassScanner scanner = ClassScanner.load();
+        ClassScanner scanner = this.scanner != null ? this.scanner : ClassScanner.load();
 
         Set<Class<?>> crudTypes = scanner.repositoriesStandard();
         Set<Class<?>> customRepositories = scanner.customRepositories();
@@ -57,5 +66,14 @@ public class JakartaPersistenceExtension implements Extension {
         customRepositories.forEach(type -> {
             afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type));
         });
+
+        afterBeanDiscovery.addBean()
+            .types(AbstractBean.class)
+            .scope(ApplicationScoped.class)
+            .qualifiers(Default.Literal.INSTANCE)
+            .createWith(ctx -> {
+                // This is just to define beanManager for AbstractBean, it shouldn't be injected
+                return null;
+            });
     }
 }
