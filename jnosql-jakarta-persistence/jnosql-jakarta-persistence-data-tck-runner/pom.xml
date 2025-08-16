@@ -66,18 +66,6 @@
 
     <!-- Runtime Dependencies -->
     <dependencies>
-        <!--
-            Standalone annotation scanner implementation
-            Dependency jnosql-mapping-reflection must be after this in the classpath
-            to prioritize service files in this artifact
-        -->
-        <dependency>
-            <groupId>org.eclipse.jnosql.mapping</groupId>
-            <artifactId>jnosql-jakarta-persistence-scanner</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-
         <!-- tck - data - external TCK -->
         <dependency>
             <groupId>jakarta.data</groupId>
@@ -89,7 +77,6 @@
         <dependency>
             <groupId>jakarta.data</groupId>
             <artifactId>jakarta.data-api</artifactId>
-            <version>${jakarta.data.version}</version>
         </dependency>
 
         <!-- impl - data -->

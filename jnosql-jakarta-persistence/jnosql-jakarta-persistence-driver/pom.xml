@@ -68,7 +68,11 @@
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-jakarta-persistence-scanner</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-reflection</artifactId>
+            <version>${jnosql-mapping.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
@@ -106,11 +110,6 @@
         </dependency>
 
         <!-- Testing -->
-        <dependency>
-            <groupId>org.eclipse.jnosql.mapping</groupId>
-            <artifactId>jnosql-mapping-reflection</artifactId>
-            <version>${jnosql-mapping.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
