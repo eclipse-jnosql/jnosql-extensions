@@ -129,7 +129,7 @@ public class {{className}} implements {{repository}} {
         EntityMetadata metadata = entityMetadata();
         List<Sort<?>> sorts = order.sorts().stream().collect(toList());
         SelectQuery query = new MappingQuery(sorts,
-        pageRequest.size(), NoSQLPage.skip(pageRequest), null ,metadata.name(), null);
+        pageRequest.size(), NoSQLPage.skip(pageRequest), null, metadata.name(), null);
 
         List<{{entityType}}> entities = template().<{{entityType}}>select(query).toList();
         return NoSQLPage.of(entities, pageRequest);

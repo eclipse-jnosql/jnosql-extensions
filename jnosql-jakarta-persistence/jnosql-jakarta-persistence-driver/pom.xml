@@ -40,12 +40,6 @@
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-document</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>jakarta.nosql</groupId>
-                    <artifactId>jakarta.nosql-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>

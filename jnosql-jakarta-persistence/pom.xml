@@ -36,7 +36,7 @@
     <properties>
         <eclipselink.version>5.0.0-B06</eclipselink.version>
     </properties>
-    
+
     <pluginRepositories>
         <pluginRepository>
             <id>dash-licenses-snapshots</id>
