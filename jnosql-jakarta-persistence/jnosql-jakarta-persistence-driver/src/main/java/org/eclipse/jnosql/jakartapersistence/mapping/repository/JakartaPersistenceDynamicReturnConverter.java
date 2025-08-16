@@ -45,9 +45,8 @@ public enum JakartaPersistenceDynamicReturnConverter {
      */
     public Object convert(DynamicReturn<?> dynamic) {
 
-        Method method = dynamic.getMethod();
         Class<?> typeClass = dynamic.typeClass();
-        Class<?> returnType = method.getReturnType();
+        Class<?> returnType = dynamic.getMethod().getReturnType();
 
         RepositoryReturn repositoryReturn = ServiceLoader.load(RepositoryReturn.class)
                 .stream()
@@ -59,9 +58,9 @@ public enum JakartaPersistenceDynamicReturnConverter {
 
         if (dynamic.hasPagination()) {
             return repositoryReturn.convertPageRequest(dynamic);
-        } else {
-            return repositoryReturn.convert(dynamic);
         }
+
+        return repositoryReturn.convert(dynamic);
     }
 
     /**
