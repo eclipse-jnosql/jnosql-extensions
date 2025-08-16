@@ -116,7 +116,9 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @SuppressWarnings("unchecked")
-    protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, org.eclipse.jnosql.communication.semistructured.SelectQuery query) {
+    protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, SelectQuery query) {
+        // TODO: Perform type check on return type during deployment and fail deployment if not supported.
+        // Currently, different types are supported by implementations of RepositoryReturn via service loader
         DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
                 .classSource(typeClass)
                 .methodSource(method)
