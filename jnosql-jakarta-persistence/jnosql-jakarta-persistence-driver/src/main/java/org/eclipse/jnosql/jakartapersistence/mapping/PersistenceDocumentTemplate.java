@@ -14,19 +14,13 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.data.exceptions.OptimisticLockingFailureException;
+
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-import jakarta.annotation.Priority;
-import jakarta.data.exceptions.EntityExistsException;
-import jakarta.data.exceptions.OptimisticLockingFailureException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.Default;
-import jakarta.inject.Inject;
-import jakarta.interceptor.Interceptor;
 import jakarta.nosql.QueryMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
@@ -42,21 +36,12 @@ import java.util.stream.StreamSupport;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.mapping.Database;
-import org.eclipse.jnosql.mapping.DatabaseType;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
 
-@Alternative
-@Priority(Interceptor.Priority.APPLICATION)
-@Default
-@ApplicationScoped
-@Database(DatabaseType.DOCUMENT)
-@EnsureTransaction
-// TODO Interceptor to turn relevant PersistenceException into OptimisticLockingFailureException
 public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
@@ -66,22 +51,14 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final DeleteQueryParser deleteParser;
     private final UpdateQueryParser updateParser;
 
-    @Inject
-    PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
+    public PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
         this.manager = manager;
         this.selectParser = new SelectQueryParser(manager);
         this.deleteParser = new DeleteQueryParser(manager);
         this.updateParser = new UpdateQueryParser(manager);
     }
 
-    PersistenceDocumentTemplate() {
-        manager = null;
-        selectParser = null;
-        deleteParser = null;
-        updateParser = null;
-    }
-
-    private EntityManager entityManager() {
+    public EntityManager entityManager() {
         return manager.getEntityManager();
     }
 
@@ -136,7 +113,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         final Object identifier = getPersistenceUnitUtil().getIdentifier(entity);
         final Object entityWithSameId = entityManager().find(entity.getClass(), identifier);
         if (entityWithSameId != null) {
-            throw new EntityExistsException("Entity of type " + entity.getClass() + " with id=" + identifier + " already exists");
+            throw DataExceptions.newEntityExistsException(entity, identifier);
         }
         entityManager().persist(entity);
         return entity;
@@ -149,9 +126,10 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
             result = entityManager().merge(entity);
             entityManager().flush();
         } catch (OptimisticLockException e) {
-            if (e.getEntity() == null || e.getEntity().equals(entity)) {
-                throw new OptimisticLockingFailureException(e.getMessage(), e);
-            }
+            DataExceptions.asOptimisticLockingFailureException(e, entity)
+                    .ifPresent(ex -> {
+                        throw ex;
+                    });
         }
         return result;
     }
@@ -251,7 +229,7 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
             T entityToDelete = entityManager().getReference(type, key);
             entityManager().remove(entityToDelete);
         } catch (PersistenceException e) {
-            throw new OptimisticLockingFailureException(e.getMessage(), e);
+            throw DataExceptions.asOptimisticLockingFailureException(e);
         }
     }
 
@@ -259,19 +237,21 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         try {
             T entityToBeRemoved = entityToDelete;
             if (!entityManager().contains(entityToDelete)) {
-                /* Call getReference to make sure that the database contains the entity and
-                   the following call to merge will not create a new entity.
-                   If it doesn't exist, EntityNotFoundException is thrown
-                */
-                entityToBeRemoved = entityManager().getReference(entityToDelete);
-                /* Call merge to make sure that the version number matches the version in the persistence context.
+                /* Call find to make sure that the database contains the entity.
+                   If it doesn't exist, throw exception
+                 */
+                final Object identifier = getPersistenceUnitUtil().getIdentifier(entityToDelete);
+                if (null == entityManager().find((Class<T>)entityToDelete.getClass(), identifier)) {
+                    throw new OptimisticLockingFailureException("Entity " + entityToDelete + " doesn't exist in the database");
+                }
+                 /* Call merge to make sure that the version number matches the version in the persistence context.
                    The merged entity then can be removed. Detached entities cannot be removed.
-                */
+                 */
                 entityToBeRemoved = entityManager().merge(entityToDelete);
             }
             entityManager().remove(entityToBeRemoved);
         } catch (PersistenceException e) {
-            throw new OptimisticLockingFailureException(e.getMessage(), e);
+            throw DataExceptions.asOptimisticLockingFailureException(e);
         }
     }
 

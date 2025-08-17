@@ -15,10 +15,7 @@
 ~   Ondro Mihalyi
 ~
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -26,23 +23,9 @@
         <artifactId>jnosql-jakarta-persistence-parent</artifactId>
         <version>1.1.10-SNAPSHOT</version>
     </parent>
+
     <artifactId>jnosql-jakarta-persistence-data-tck-runner</artifactId>
     <name>Eclipse JNoSQL Jakarta Persistence Runner For Jakarta Data TCK</name>
-
-    <repositories>
-        <!-- For artifacts not yet in Maven Central -->
-        <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Sonatype Nexus Staging</name>
-            <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <properties>
         <targetDirectory>${project.basedir}/target</targetDirectory>
@@ -89,12 +72,13 @@
             <artifactId>jakarta.data-tck</artifactId>
             <version>${jakarta.data.tck.version}</version>
         </dependency>
+
         <!-- api - data -->
         <dependency>
             <groupId>jakarta.data</groupId>
             <artifactId>jakarta.data-api</artifactId>
-            <version>${jakarta.data.version}</version>
         </dependency>
+
         <!-- impl - data -->
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
@@ -105,27 +89,34 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbytools</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
         </dependency>
+
+        <!-- Our actual implementation of Jakarta Data that we are testing  -->
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-jakarta-persistence</artifactId>
             <version>${project.version}</version>
-            <!-- dependency jnosql-mapping-reflection must be after this in the classpath 
-               to prioritize service files in this artifact -->
         </dependency>
+
         <!-- test frameworks -->
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-reflection</artifactId>
+            <version>${jnosql-mapping.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -136,12 +127,14 @@
             <artifactId>sigtest-maven-plugin</artifactId>
             <version>${sigtest.version}</version>
         </dependency>
+
         <!-- CDI for resource injection - managed by Junit -->
         <dependency>
             <groupId>org.jboss.weld</groupId>
             <artifactId>weld-junit5</artifactId>
             <version>${weld.junit5.version}</version>
         </dependency>
+
         <!-- APIs referenced by TCK that do not require implementations for standalone tests -->
         <dependency>
             <groupId>org.jboss.shrinkwrap</groupId>
@@ -158,6 +151,7 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <version>${jakarta.servlet.version}</version>
         </dependency>
+
         <!-- APIs referenced by TCK that do require implementations for standalone tests -->
         <dependency>
             <groupId>jakarta.enterprise</groupId>
@@ -172,6 +166,21 @@
         </dependency>
 
     </dependencies>
+
+    <repositories>
+        <!-- For artifacts not yet in Maven Central -->
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <name>Sonatype Nexus Staging</name>
+            <url>https://jakarta.oss.sonatype.org/content/repositories/staging/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <directory>${targetDirectory}</directory>

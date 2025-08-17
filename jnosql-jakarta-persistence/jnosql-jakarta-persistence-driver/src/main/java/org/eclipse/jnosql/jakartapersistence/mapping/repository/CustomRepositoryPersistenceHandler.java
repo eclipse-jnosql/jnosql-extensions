@@ -15,7 +15,15 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.persistence.EntityManager;
+
+import java.lang.reflect.Method;
+import java.util.Map;
+
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -30,9 +38,12 @@ import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBu
  */
 public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler {
 
+    private EntityManager entityManager;
+
     public CustomRepositoryPersistenceHandler(EntitiesMetadata entitiesMetadata,
             PersistenceDocumentTemplate template, Class<?> customRepositoryType, Converters converters) {
         super(entitiesMetadata, template, customRepositoryType, converters);
+        this.entityManager = template.entityManager();
     }
 
     /**
@@ -45,8 +56,28 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
     }
 
     protected AbstractSemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(
-            SemiStructuredTemplate template, EntityMetadata entityMetadata,  Class<?> entityType, Converters converters) {
-        return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate)template, entityMetadata, entityType, converters);
+            SemiStructuredTemplate template, EntityMetadata entityMetadata, Class<?> entityType, Converters converters) {
+        return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate) template, entityMetadata, entityType, converters);
+    }
+
+    @Override
+    public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+        Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), entityManager);
+        InterceptorInvocationContext context
+                = new InterceptorInvocationContext(instance, method, params, contextData) {
+            @Override
+            protected Instance<MethodInterceptor> selectInterceptor() {
+                return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
+            }
+
+            @Override
+            protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                // TODO: Do we need to support ORDER_BY here?
+                return CustomRepositoryPersistenceHandler.super.invoke(instance, method, params);
+            }
+
+        };
+        return context.execute();
     }
 
 }

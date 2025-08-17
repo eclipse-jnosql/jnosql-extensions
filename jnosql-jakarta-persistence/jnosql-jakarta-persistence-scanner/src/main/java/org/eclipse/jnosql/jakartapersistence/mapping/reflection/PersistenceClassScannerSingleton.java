@@ -17,23 +17,28 @@ package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
 
 
 import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
+
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.DataRepository;
 import jakarta.data.repository.Repository;
 import jakarta.nosql.Embeddable;
 import jakarta.nosql.Entity;
-import java.util.Arrays;
-import java.util.Collections;
+
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 import org.eclipse.jnosql.mapping.metadata.ClassScanner;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 /**
  * Scanner classes that will load entities with both Entity and Embeddable
@@ -44,57 +49,54 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
 
     INSTANCE;
 
-    private final Set<Class<?>> entities;
-    private final Set<Class<?>> repositories;
-    private final Set<Class<?>> embeddables;
-    private final Set<Class<?>> customRepositories;
-
+    private final Set<Class<?>> entities= new HashSet<>();
+    private final Set<Class<?>> repositories = new HashSet<>();
+    private final Set<Class<?>> embeddables = new HashSet<>();
+    private final Set<Class<?>> customRepositories = new HashSet<>();
 
     PersistenceClassScannerSingleton() {
-        entities = new HashSet<>();
-        embeddables = new HashSet<>();
-        repositories = new HashSet<>();
-        customRepositories = new HashSet<>();
-
         Logger logger = Logger.getLogger(PersistenceClassScannerSingleton.class.getName());
         logger.fine("Starting scan class to find entities, embeddable and repositories.");
+
         try (ScanResult result = new ClassGraph().enableAllInfo().scan()) {
             var notSupportedRepositories = loadNotSupportedRepositories(result);
             logger.warning(() -> "The following repositories are not supported: " + notSupportedRepositories);
-            this.entities.addAll(loadEntities(result));
-            this.embeddables.addAll(loadEmbeddable(result));
-            this.repositories.addAll(loadRepositories(result));
-            this.customRepositories.addAll(loadCustomRepositories(result));
-            notSupportedRepositories.forEach(this.repositories::remove);
+
+            entities.addAll(loadEntities(result));
+            embeddables.addAll(loadEmbeddable(result));
+            repositories.addAll(loadRepositories(result));
+            customRepositories.addAll(loadCustomRepositories(result));
+
+            notSupportedRepositories.forEach(repositories::remove);
         }
+
         logger.fine(String.format("Finished the class scan with entities %d, embeddables %d and repositories: %d"
                 , entities.size(), embeddables.size(), repositories.size()));
-
     }
-
 
     @Override
     public Set<Class<?>> entities() {
-        return Collections.unmodifiableSet(entities);
+        return unmodifiableSet(entities);
     }
 
-  @Override
+    @Override
     public Set<Class<?>> repositories() {
-        return Collections.unmodifiableSet(repositories);
+        return unmodifiableSet(repositories);
     }
 
-
-   @Override
+    @Override
     public Set<Class<?>> embeddables() {
-        return Collections.unmodifiableSet(embeddables);
+        return unmodifiableSet(embeddables);
     }
 
     @Override
     public <T extends DataRepository<?, ?>> Set<Class<?>> repositories(Class<T> filter) {
-        Objects.requireNonNull(filter, "filter is required");
-        return repositories.stream().filter(filter::isAssignableFrom)
-                .filter(c -> Arrays.asList(c.getInterfaces()).contains(filter))
-                .collect(Collectors.toUnmodifiableSet());
+        requireNonNull(filter, "filter is required");
+
+        return repositories.stream()
+                .filter(filter::isAssignableFrom)
+                .filter(c -> asList(c.getInterfaces()).contains(filter))
+                .collect(toUnmodifiableSet());
     }
 
 
@@ -102,12 +104,12 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
     public Set<Class<?>> repositoriesStandard() {
         return repositories.stream()
                 .filter(c -> {
-                    List<Class<?>> interfaces = Arrays.asList(c.getInterfaces());
+                    List<Class<?>> interfaces = asList(c.getInterfaces());
                     return interfaces.contains(CrudRepository.class)
                             || interfaces.contains(BasicRepository.class)
                             || interfaces.contains(NoSQLRepository.class)
                             || interfaces.contains(DataRepository.class);
-                }).collect(Collectors.toUnmodifiableSet());
+                }).collect(toUnmodifiableSet());
     }
 
     @Override
@@ -118,28 +120,46 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
 
     @SuppressWarnings("rawtypes")
     private static List<Class<DataRepository>> loadRepositories(ScanResult scan) {
-        return scan.getClassesWithAnnotation(Repository.class)
+        return getClassesWithSupportedRepositoryAnnotation(scan)
                 .getInterfaces()
                 .filter(c -> c.implementsInterface(DataRepository.class))
                 .loadClasses(DataRepository.class)
-                .stream().filter(PersistenceRepositoryFilter.INSTANCE)
+                .stream()
+                .filter(PersistenceRepositoryFilter.INSTANCE)
                 .toList();
     }
 
     private static List<Class<?>> loadCustomRepositories(ScanResult scan) {
-        return scan.getClassesWithAnnotation(Repository.class)
+        return getClassesWithSupportedRepositoryAnnotation(scan)
                 .getInterfaces()
                 .filter(c -> !c.implementsInterface(DataRepository.class))
-                .loadClasses().stream().toList();
+                .loadClasses()
+                .stream()
+                .toList();
+    }
+
+    private static ClassInfoList getClassesWithSupportedRepositoryAnnotation(ScanResult scan) {
+        return scan.getClassesWithAnnotation(Repository.class)
+                .filter(c -> {
+                    final Object provider = c.getAnnotationInfo(Repository.class).getParameterValues().getValue("provider");
+                    if (provider instanceof String providerName) {
+                        if (providerName.equals(Repository.ANY_PROVIDER)
+                                || providerName.equals(PersistenceClassScanner.PROVIDER)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
     }
 
     @SuppressWarnings("rawtypes")
     private static List<Class<DataRepository>> loadNotSupportedRepositories(ScanResult scan) {
-        return scan.getClassesWithAnnotation(Repository.class)
+        return getClassesWithSupportedRepositoryAnnotation(scan)
                 .getInterfaces()
                 .filter(c -> c.implementsInterface(DataRepository.class))
                 .loadClasses(DataRepository.class)
-                .stream().filter(PersistenceRepositoryFilter.INSTANCE.negate())
+                .stream()
+                .filter(PersistenceRepositoryFilter.INSTANCE.negate())
                 .toList();
     }
 

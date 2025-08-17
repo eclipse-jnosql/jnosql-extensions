@@ -1,4 +1,5 @@
 /*
+ *  Copyright (c) 2025 Contributors to the Eclipse Foundation
  *  Copyright (c) 2021 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
@@ -24,6 +25,7 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

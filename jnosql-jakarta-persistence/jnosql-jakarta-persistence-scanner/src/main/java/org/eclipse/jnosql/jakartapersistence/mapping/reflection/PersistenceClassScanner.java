@@ -20,6 +20,8 @@ import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 
 public class PersistenceClassScanner implements ClassScanner {
 
+    public static final String PROVIDER = "jnosql.jakarta.persistence";
+
     @Override
     public Set<Class<?>> entities() {
         return PersistenceClassScannerSingleton.INSTANCE.entities();

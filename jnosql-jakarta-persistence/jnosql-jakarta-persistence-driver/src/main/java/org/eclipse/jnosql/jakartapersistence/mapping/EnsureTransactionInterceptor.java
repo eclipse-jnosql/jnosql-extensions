@@ -15,46 +15,75 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
-import jakarta.annotation.Priority;
+import jakarta.data.page.Page;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.interceptor.AroundInvoke;
-import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
+import jakarta.transaction.Transactional;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import java.util.concurrent.Callable;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
 /**
  *
  * @author Ondro Mihalyi
  */
-@Interceptor
-@EnsureTransaction
-@Priority(100)
-public class EnsureTransactionInterceptor {
+@ApplicationScoped
+@MethodInterceptor.Repository
+public class EnsureTransactionInterceptor implements MethodInterceptor {
 
     @Inject
-    PersistenceDatabaseManager manager;
+    RunInGlobalTransaction runInGlobalTransaction;
 
-    @AroundInvoke
-    public Object intercept(InvocationContext ctx) throws Exception {
-        EntityManager entityManager = manager.getEntityManager();
-        boolean inTransaction = entityManager.isJoinedToTransaction();
-        if (inTransaction) {
-            return ctx.proceed();
-        } else {
-            EntityTransaction transaction = entityManager.getTransaction();
-            transaction.begin();
-            try {
-                Object result = ctx.proceed();
-                transaction.commit();
-                return result;
-            } catch (Exception e) {
-                transaction.rollback();
-                throw e;
+    @Override
+    public Object intercept(InvocationContext context) throws Exception {
+        EntityManager entityManager = (EntityManager)context.getContextData().get(EntityManager.class.getName());
+        final boolean transactionWillBeCreated = !entityManager.isJoinedToTransaction();
+
+        return runInGlobalTransaction.execute(() -> runInNewOrExistingTransaction(entityManager, context, transactionWillBeCreated));
+    }
+
+    private Object runInNewOrExistingTransaction(EntityManager entityManager, InvocationContext context, boolean transactionWillBeCreated) throws Exception {
+        try {
+            boolean inTransaction = entityManager.isJoinedToTransaction();
+            if (inTransaction) {
+                final Object result = context.proceed();
+                return fetchIfNeeded(result, transactionWillBeCreated);
+            } else {
+                EntityTransaction transaction = entityManager.getTransaction();
+                transaction.begin();
+                try {
+                    Object result = context.proceed();
+                    result = fetchIfNeeded(result, transactionWillBeCreated);
+                    transaction.commit();
+                    return result;
+                } catch (Exception e) {
+                    transaction.rollback();
+                    throw e;
+                }
             }
+        } catch (Exception e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new Exception(t);
+        }
+    }
+
+    private Object fetchIfNeeded(Object result, boolean transactionWillBeCreated) {
+        if (transactionWillBeCreated && result instanceof Page page) {
+            page.hasContent();
+        }
+        return result;
+    }
+
+    @ApplicationScoped
+    @Transactional
+    public static class RunInGlobalTransaction {
+        public Object execute(Callable callable) throws Exception {
+            return callable.call();
         }
     }
 }
