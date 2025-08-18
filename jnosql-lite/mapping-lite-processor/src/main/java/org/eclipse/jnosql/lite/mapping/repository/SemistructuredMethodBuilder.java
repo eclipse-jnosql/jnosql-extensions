@@ -76,8 +76,8 @@ enum SemiStructuredMethodBuilder implements Function<MethodMetadata, List<String
             List<String> lines = new ArrayList<>();
             lines.add("org.eclipse.jnosql.communication.query.method.DeleteMethodProvider deleteMethodFactoryJNoSQL = " + SPACE +
                     "org.eclipse.jnosql.communication.query.method.DeleteMethodProvider.INSTANCE");
-            lines.add("org.eclipse.jnosql.communication.query.method.DeleteByMethodQueryParser supplierJNoSQL = " + SPACE +
-                    " new org.eclipse.jnosql.communication.query.method.DeleteByMethodQueryParser()");
+            lines.add("org.eclipse.jnosql.communication.query.method.DeleteMethodProvider supplierJNoSQL = " + SPACE +
+                    " org.eclipse.jnosql.communication.query.method.DeleteMethodProvider.INSTANCE");
             lines.add("org.eclipse.jnosql.communication.query.DeleteQuery deleteJNoSQL = supplierJNoSQL.apply(\"" +
                     metadata.getMethodName() + "\", metadata.name())");
             lines.add("org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser parserJNoSQL = " + SPACE +
@@ -155,8 +155,8 @@ enum SemiStructuredMethodBuilder implements Function<MethodMetadata, List<String
     private static final String SPACE = "\n          ";
 
     private static void feedSelectQuery(MethodMetadata metadata, List<String> lines) {
-        lines.add("org.eclipse.jnosql.communication.query.method.SelectMethodQueryParser supplierJNoSQL = " + SPACE +
-                "new org.eclipse.jnosql.communication.query.method.SelectMethodQueryParser()");
+        lines.add("org.eclipse.jnosql.communication.query.method.SelectMethodProvider supplierJNoSQL = " + SPACE +
+                "org.eclipse.jnosql.communication.query.method.SelectMethodProvider.INSTANCE");
         lines.add("org.eclipse.jnosql.communication.query.SelectQuery selectQueryJNoSQL = " + SPACE +
                 "supplierJNoSQL.apply(\"" + metadata.getMethodName() + "\", metadata.name())");
         lines.add("org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser parserJNoSQL = " + SPACE +
