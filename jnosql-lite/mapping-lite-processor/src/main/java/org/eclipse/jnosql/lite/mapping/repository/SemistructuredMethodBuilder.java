@@ -75,8 +75,8 @@ enum SemiStructuredMethodBuilder implements Function<MethodMetadata, List<String
             List<String> lines = new ArrayList<>();
             lines.add("org.eclipse.jnosql.communication.query.method.DeleteMethodProvider deleteMethodFactoryJNoSQL = " + SPACE +
                     "org.eclipse.jnosql.communication.query.method.DeleteMethodProvider.INSTANCE");
-            lines.add("org.eclipse.jnosql.communication.query.method.DeleteByMethodQueryProvider supplierJNoSQL = " + SPACE +
-                    " new org.eclipse.jnosql.communication.query.method.DeleteByMethodQueryProvider()");
+            lines.add("org.eclipse.jnosql.communication.query.method.DeleteMethodProvider supplierJNoSQL = " + SPACE +
+                    " DeleteMethodProvider.INSTANCE");
             lines.add("org.eclipse.jnosql.communication.query.DeleteQuery deleteJNoSQL = supplierJNoSQL.apply(\"" +
                     metadata.getMethodName() + "\", metadata.name())");
             lines.add("org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser parserJNoSQL = " + SPACE +
