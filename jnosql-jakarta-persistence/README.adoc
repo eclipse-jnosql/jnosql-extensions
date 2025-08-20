@@ -8,7 +8,8 @@ Sub projects:
 * link:jnosql-jakarta-persistence-driver[Jakarta Persistence Driver] - the actual implementation
 * link:jnosql-jakarta-persistence-data-tck-runner[Jakarta Data TCK Runner] - the project to run the Jakarta Data TCK
 
-=== How To Install
+[#_how_to_install]
+== How To Install
 
 You can use either the Maven or Gradle dependencies:
 
@@ -48,5 +49,6 @@ Then you need to configure the persistence unit ("testPersistenceUnit") via stan
      ... custom configuration ...
   </persistence-unit>
 </persistence>
+----
 
 For an example configuration, with EclipseLink and DerbyDB, look into the test setup of the link:jnosql-jakarta-persistence-connector[Jakarta Persistence Connector] project.
