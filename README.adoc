@@ -367,13 +367,13 @@ jnosql.neo4j.host=/home/otaviojava/data/
 
 == Jakarta Persistence
 
-The `jakarta-persistence` module brings Jakarta Persistence (JPA) into the Eclipse JNoSQL ecosystem.
-Why does this matter? Because Eclipse JNoSQL provides multiple drivers that communicate with databases in different ways.
-For relational databases, JDBC is the natural choice, and Jakarta Persistence already builds on top of JDBC. But many modern databases blur the line: some *NewSQL* solutions use JDBC as their entry point, and even a few *NoSQL databases* expose JDBC drivers to interact with them.
+The `jakarta-persistence` module integrates Jakarta Persistence into the Eclipse JNoSQL ecosystem.
 
-With this module, developers can continue to use the Jakarta Persistence programming model (`@Entity`, `EntityManager`, `PersistenceUnit`) across these heterogeneous environments. Whether you are targeting a traditional RDBMS, a NewSQL engine, or a NoSQL store that happens to provide JDBC connectivity, Eclipse JNoSQL + Jakarta Persistence makes it possible to unify the experience.
+Why does this matter? Because Eclipse JNoSQL already provides multiple drivers that communicate with databases in different ways. For relational databases, JDBC is the natural choice, and Jakarta Persistence builds directly on top of it. Some *NewSQL* solutions also rely on JDBC, and even certain *NoSQL databases* expose JDBC drivers as an integration point.
 
-This lowers the adoption barrier: instead of learning a new API, developers can leverage the well-established Jakarta Persistence standard while extending their reach to polyglot persistence.
+By bridging Jakarta Persistence into Eclipse JNoSQL, we enable developers to use the **Jakarta Data** specification as the main programming model. Jakarta Data repositories (`CrudRepository`, `Repository`, etc.) can run on top of any Jakarta Persistence provider, meaning developers interact with high-level repositories while the module handles the underlying persistence plumbing.
+
+This lowers the adoption barrier: instead of writing low-level database code, you can use the familiar Jakarta Data abstractions, which then leverage Jakarta Persistence behind the scenes.
 
 === How To Use
 
@@ -387,7 +387,7 @@ Add the dependency to your project:
 </dependency>
 ----
 
-Then provide an `EntityManager` instance, just as you would in a traditional Jakarta Persistence setup:
+This is **not meant to be used directly** in your application, but it must be produced so that Jakarta Data can initialize repositories correctly:
 
 [source,java]
 ----
@@ -422,7 +422,9 @@ Configure your persistence unit via `persistence.xml`:
 </persistence>
 ----
 
-Once configured, you can map entities and run queries just as in standard Jakarta Persistence:
+=== Example With Jakarta Data
+
+Once configured, you can declare repositories with Jakarta Data and let the module handle the interaction with Jakarta Persistence under the hood:
 
 [source,java]
 ----
@@ -436,10 +438,25 @@ public class Book {
 
 [source,java]
 ----
-public class
+@Repository
+public interface Library extends CrudRepository<Book, Long> {
+    List<Book> findByTitle(String title);
+}
 ----
 
-With this approach, Eclipse JNoSQL lets you use Jakarta Persistence in familiar ways, while enabling access to relational, NewSQL, and even some NoSQL databases via their JDBC drivers.
+Usage:
+
+[source,java]
+----
+@Inject
+Library library;
+
+library.save(new Book(1L, "Domain-Driven Design with JNoSQL"));
+List<Book> results = books.findByTitle("Domain-Driven Design with JNoSQL");
+----
+
+With this approach, developers work with Jakarta Data repositories, while Jakarta Persistence is only used as the provider under the covers.
+This ensures compatibility with relational, NewSQL, and even some NoSQL databases that provide JDBC drivers, all without forcing developers to use `EntityManager` directly.
 
 == TCK Runners
 
