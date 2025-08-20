@@ -384,6 +384,7 @@ Add the dependency to your project:
 <dependency>
   <groupId>org.eclipse.jnosql.mapping</groupId>
   <artifactId>jnosql-jakarta-persistence</artifactId>
+  <version>1.1.10</version>
 </dependency>
 ----
 
