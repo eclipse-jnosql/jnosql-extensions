@@ -365,9 +365,81 @@ jnosql.graph.provider=org.eclipse.jnosql.mapping.tinkerpop.connections.Neo4JEmbe
 jnosql.neo4j.host=/home/otaviojava/data/
 ----
 
-== Driver for Jakarta Persistence entities
+== Jakarta Persistence
 
-Provides a driver for Eclipse JNoSQL that supports Jakarta Persistence entities over a Jakarta Persistence provider. This project also contains a runner for the Jakarta Data TCK.
+The `jakarta-persistence` module brings Jakarta Persistence (JPA) into the Eclipse JNoSQL ecosystem.
+Why does this matter? Because Eclipse JNoSQL provides multiple drivers that communicate with databases in different ways.
+For relational databases, JDBC is the natural choice, and Jakarta Persistence already builds on top of JDBC. But many modern databases blur the line: some *NewSQL* solutions use JDBC as their entry point, and even a few *NoSQL databases* expose JDBC drivers to interact with them.
+
+With this module, developers can continue to use the Jakarta Persistence programming model (`@Entity`, `EntityManager`, `PersistenceUnit`) across these heterogeneous environments. Whether you are targeting a traditional RDBMS, a NewSQL engine, or a NoSQL store that happens to provide JDBC connectivity, Eclipse JNoSQL + Jakarta Persistence makes it possible to unify the experience.
+
+This lowers the adoption barrier: instead of learning a new API, developers can leverage the well-established Jakarta Persistence standard while extending their reach to polyglot persistence.
+
+=== How To Use
+
+Add the dependency to your project:
+
+[source,xml]
+----
+<dependency>
+  <groupId>org.eclipse.jnosql.mapping</groupId>
+  <artifactId>jnosql-jakarta-persistence</artifactId>
+</dependency>
+----
+
+Then provide an `EntityManager` instance, just as you would in a traditional Jakarta Persistence setup:
+
+[source,java]
+----
+@ApplicationScoped
+public class EntityManagerProducer {
+
+    @Produces
+    @ApplicationScoped
+    public EntityManager createEntityManager() {
+        return Persistence.createEntityManagerFactory("testPersistenceUnit")
+                          .createEntityManager();
+    }
+
+    public void closeEntityManager(@Disposes EntityManager entityManager) {
+        entityManager.close();
+    }
+}
+----
+
+Configure your persistence unit via `persistence.xml`:
+
+[source,xml]
+----
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+                                 http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+  <persistence-unit name="testPersistenceUnit" transaction-type="RESOURCE_LOCAL">
+     ... your configuration here ...
+  </persistence-unit>
+</persistence>
+----
+
+Once configured, you can map entities and run queries just as in standard Jakarta Persistence:
+
+[source,java]
+----
+@Entity
+public class Book {
+    @Id
+    private Long id;
+    private String title;
+}
+----
+
+[source,java]
+----
+public class
+----
+
+With this approach, Eclipse JNoSQL lets you use Jakarta Persistence in familiar ways, while enabling access to relational, NewSQL, and even some NoSQL databases via their JDBC drivers.
 
 == TCK Runners
 
