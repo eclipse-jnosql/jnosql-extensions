@@ -15,6 +15,8 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+
 import jakarta.data.Limit;
 import jakarta.data.Sort;
 import jakarta.data.exceptions.EmptyResultException;
@@ -39,7 +41,6 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
@@ -86,6 +87,20 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
         this.converters = converters;
         this.repositoryType = repositoryType;
+    }
+
+    @Override
+    public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+        try {
+            return super.invoke(instance, method, params);
+        } catch (UnsupportedOperationException e) {
+            // TODO Check if we can externalize reflection, e.g. using ClassGraph
+            if (EntityManager.class.isAssignableFrom(method.getReturnType()) && method.getReturnType().isInstance(template.entityManager())) {
+                return template.entityManager();
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override

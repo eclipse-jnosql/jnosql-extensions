@@ -15,6 +15,8 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.persistence.EntityManager;
@@ -23,7 +25,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -62,21 +63,34 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
 
     @Override
     public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+        try {
+            return invokeIntercepted(instance, method, params);
+        } catch (UnsupportedOperationException e) {
+            // TODO Check if we can externalize reflection, e.g. using ClassGraph
+            if (EntityManager.class.isAssignableFrom(method.getReturnType()) && method.getReturnType().isInstance(entityManager)) {
+                return entityManager;
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private Object invokeIntercepted(Object instance, Method method, Object[] params) throws Exception {
         Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), entityManager);
         InterceptorInvocationContext context
                 = new InterceptorInvocationContext(instance, method, params, contextData) {
-            @Override
-            protected Instance<MethodInterceptor> selectInterceptor() {
-                return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
-            }
+                    @Override
+                    protected Instance<MethodInterceptor> selectInterceptor() {
+                        return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
+                    }
 
-            @Override
-            protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
-                // TODO: Do we need to support ORDER_BY here?
-                return CustomRepositoryPersistenceHandler.super.invoke(instance, method, params);
-            }
+                    @Override
+                    protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                        // TODO: Do we need to support ORDER_BY here?
+                        return CustomRepositoryPersistenceHandler.super.invoke(instance, method, params);
+                    }
 
-        };
+                };
         return context.execute();
     }
 

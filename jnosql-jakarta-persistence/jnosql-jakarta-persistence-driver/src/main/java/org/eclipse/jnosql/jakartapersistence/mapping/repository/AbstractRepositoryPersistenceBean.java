@@ -17,16 +17,20 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.repository.Repository;
 import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
@@ -49,7 +53,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
 
     private final Set<Annotation> qualifiersForBean;
 
-    private final Set<Annotation> qualifiersOnRepository;
+    protected final BeanManager beanManager;
 
     /**
      * Constructor
@@ -60,10 +64,8 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     public AbstractRepositoryPersistenceBean(Class<?> type, BeanManager beanManager) {
         this.type = (Class<T>) type;
         this.types = Collections.singleton(type);
-        this.qualifiersOnRepository = initQualifiersOnRepository(beanManager);
-        this.qualifiersForBean = new HashSet<>(qualifiersOnRepository);
-        qualifiersForBean.add(AnnotationLiteralUtil.DEFAULT_ANNOTATION);
-        qualifiersForBean.add(AnnotationLiteralUtil.ANY_ANNOTATION);
+        this.beanManager = beanManager;
+        this.qualifiersForBean = initializeQualifiers();
     }
 
     @Override
@@ -88,7 +90,6 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
                 handler);
     }
 
-
     @Override
     public Set<Type> getTypes() {
         return types;
@@ -104,6 +105,11 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         return type.getName() + "@JakartaPersistence";
     }
 
+    protected PersistenceDocumentTemplate createTemplate() {
+        var entityManager = findEntityManager();
+        return new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
+    }
+
     protected EntityManager findEntityManager() throws IllegalStateException {
         final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
                 .produceMatchingEntityManager(this::getPersistenceUnit, this::getEntityManagerQualifiers);
@@ -115,6 +121,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     }
 
     private String getPersistenceUnit() {
+        // TODO Check if we can externalize reflection, e.g. using ClassGraph
         final Repository annotation = type.getAnnotation(Repository.class);
         final String persistenceUnit = annotation.dataStore();
         return Repository.DEFAULT_DATA_STORE.equals(persistenceUnit)
@@ -123,11 +130,43 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     }
 
     private Annotation[] getEntityManagerQualifiers() {
-        return qualifiersOnRepository.toArray(Annotation[]::new);
+        // TODO Check if we can externalize reflection, e.g. using ClassGraph
+        Set<Annotation> qualifiers = null;
+        List<Method> matchingMethods = new ArrayList();
+        for (Method method : type.getMethods()) {
+            if (returnsEntityManager(method)) {
+                if (qualifiers == null) {
+                    qualifiers = CdiUtil.getAllQualifiersRecursively(beanManager, method.getAnnotations());
+                }
+                matchingMethods.add(method);
+            }
+        }
+        if (matchingMethods.size() > 1) {
+            throw new AmbiguousResolutionException("Expected at most one method on " + type + " that returns EntityManager, found multiple: "
+                    + matchingMethods.stream().map(Method::toString).collect(Collectors.joining(", ")));
+
+        }
+        return qualifiers != null ? qualifiers.toArray(Annotation[]::new) : new Annotation[0];
     }
 
-    private Set<Annotation> initQualifiersOnRepository(BeanManager beanManager) {
+    protected static boolean returnsEntityManager(Method method) {
+        return EntityManager.class.isAssignableFrom(method.getReturnType());
+    }
+
+    private Set<Annotation> getQualifiersOnRepositoryInterface() {
+        // TODO Check if we can externalize reflection, e.g. using ClassGraph
         return CdiUtil.getAllQualifiersRecursively(beanManager, type.getDeclaredAnnotations());
+    }
+
+    private Set<Annotation> initializeQualifiers() {
+        // TODO Check if we can externalize reflection, e.g. using ClassGraph
+        Set<Annotation> qualifiersOnRepository = getQualifiersOnRepositoryInterface();
+        if (qualifiersOnRepository.isEmpty()) {
+            qualifiersOnRepository.add(AnnotationLiteralUtil.DEFAULT_ANNOTATION);
+            // TODO Port this to JNoSQL core for NoSQL repositories, in BaseRepositoryBean.initializeQualifiers
+        }
+        qualifiersOnRepository.add(AnnotationLiteralUtil.ANY_ANNOTATION);
+        return qualifiersOnRepository;
     }
 
 }

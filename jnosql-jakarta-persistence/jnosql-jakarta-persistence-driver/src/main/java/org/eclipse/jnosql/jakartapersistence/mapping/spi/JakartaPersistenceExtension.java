@@ -56,8 +56,6 @@ public class JakartaPersistenceExtension implements Extension {
         LOGGER.fine(() -> "Processing standard repositories as a Jakarta Persistence implementation: " + crudTypes);
         LOGGER.fine(() -> "Processing custom repositories as a Jakarta Persistence implementation: " + customRepositories);
 
-        // TODO: Copy all qualifiers and interceptors from interface to bean
-
         crudTypes.forEach(type -> {
             afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type, beanManager));
         });
