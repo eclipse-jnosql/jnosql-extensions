@@ -15,6 +15,8 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+
 import jakarta.data.Limit;
 import jakarta.data.Sort;
 import jakarta.data.exceptions.EmptyResultException;
@@ -39,7 +41,6 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
@@ -101,7 +102,6 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
             }
         }
     }
-
 
     @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {

@@ -24,8 +24,8 @@ import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.DataRepository;
 import jakarta.data.repository.Repository;
-import jakarta.nosql.Embeddable;
-import jakarta.nosql.Entity;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
 
 import java.util.HashSet;
 import java.util.List;

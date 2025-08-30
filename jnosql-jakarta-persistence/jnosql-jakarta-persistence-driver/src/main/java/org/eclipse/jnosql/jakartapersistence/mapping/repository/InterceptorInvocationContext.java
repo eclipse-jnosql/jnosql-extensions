@@ -16,6 +16,8 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+
 import jakarta.enterprise.inject.Instance;
 import jakarta.interceptor.InvocationContext;
 
@@ -24,7 +26,6 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
 /**
  *
