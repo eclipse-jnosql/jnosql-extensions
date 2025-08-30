@@ -85,8 +85,8 @@ public interface MethodInterceptor {
      */
     public static class ChainedInvocationContext implements InvocationContext {
 
-        InvocationContext originalContext;
-        MethodInterceptor interceptor;
+        private InvocationContext originalContext;
+        private MethodInterceptor interceptor;
 
         public ChainedInvocationContext(MethodInterceptor interceptor, InvocationContext originalContext) {
             this.interceptor = interceptor;

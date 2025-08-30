@@ -36,7 +36,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 public class EnsureTransactionInterceptor implements MethodInterceptor {
 
     @Inject
-    RunInGlobalTransaction runInGlobalTransaction;
+    private RunInGlobalTransaction runInGlobalTransaction;
 
     @Override
     public Object intercept(InvocationContext context) throws Exception {

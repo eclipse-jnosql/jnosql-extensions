@@ -17,7 +17,6 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.enterprise.inject.spi.InterceptionFactory;
 import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 
 import java.lang.annotation.Annotation;
@@ -48,14 +47,10 @@ public class MethodInterceptorProxy<T> implements InvocationHandler {
         for (Method method : type.getMethods()) {
             Set<Annotation> methodBindings = CdiUtil.getAllInterceptorBindingsRecursively(beanManager, method.getDeclaredAnnotations());
             if (!methodBindings.isEmpty()) {
-                // Create intercepted instance for this specific method
-                InterceptionFactory<T> factory = beanManager.createInterceptionFactory(context, type);
+                var factory = beanManager.createInterceptionFactory(context, type);
                 var configurator = factory.configure();
-                for (Annotation binding : methodBindings) {
-                    configurator.add(binding);
-                }
-                Object interceptedInstance = factory.createInterceptedInstance(delegate);
-                interceptedMethods.put(method, interceptedInstance);
+                methodBindings.forEach(configurator::add);
+                interceptedMethods.put(method, factory.createInterceptedInstance(delegate));
             }
         }
     }

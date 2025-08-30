@@ -18,19 +18,14 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.enterprise.inject.spi.CDI;
-import jakarta.persistence.EntityManager;
 
 import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
-import java.util.Set;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.CdiUtil;
+import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 
 
 /**
@@ -57,10 +52,7 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersis
     @Override
     public T create(CreationalContext<T> context) {
         var entities = getInstance(EntitiesMetadata.class);
-
-        EntityManager entityManager = findEntityManager();
-        var template = new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
-
+        var template = createTemplate();
         var converters = getInstance(Converters.class);
 
         var handler = CustomRepositoryPersistenceHandler.builder()
@@ -70,27 +62,9 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersis
                 .converters(converters)
                 .build();
 
-        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(),
-                new Class[]{type},
-                handler);
+        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
 
-        // Apply class-level interceptor bindings using InterceptionFactory
-        Set<Annotation> classLevelBindings = getClassLevelInterceptorBindings();
-        if (!classLevelBindings.isEmpty()) {
-            var interceptionFactory = CDI.current().getBeanManager().createInterceptionFactory(context, type);
-            var configurator = interceptionFactory.configure();
-            for (Annotation binding : classLevelBindings) {
-                configurator.add(binding);
-            }
-            proxy = (T)interceptionFactory.createInterceptedInstance(proxy);
-        }
-
-        // Apply method-level interceptor bindings using custom proxy
-        if (hasMethodLevelInterceptorBindings()) {
-            proxy = MethodInterceptorProxy.create(proxy, CDI.current().getBeanManager(), context, type);
-        }
-
-        return proxy;
+        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
     }
 
 }
