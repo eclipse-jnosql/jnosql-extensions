@@ -89,6 +89,21 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @Override
+    public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+        try {
+            return super.invoke(instance, method, params);
+        } catch (UnsupportedOperationException e) {
+            // TODO Check if we can externalize reflection, e.g. using ClassGraph
+            if (EntityManager.class.isAssignableFrom(method.getReturnType()) && method.getReturnType().isInstance(template.entityManager())) {
+                return template.entityManager();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+
+    @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
         Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), template.entityManager());
         InterceptorInvocationContext context

@@ -76,4 +76,43 @@ public class CdiUtil {
         }
     }
 
+    /**
+     * Find all interceptor bindings in the list of annotations, including interceptor bindings nested in stereotypes
+     * @param annotations
+     * @return
+     */
+    public static Set<Annotation> getAllInterceptorBindingsRecursively(BeanManager beanManager, Annotation... annotations) {
+        Set<Annotation> interceptorBindings = new HashSet<>();
+        Set<Class<? extends Annotation>> visitedStereotypes = new HashSet<>();
+
+        for (Annotation annotation : annotations) {
+            Class<? extends Annotation> type = annotation.annotationType();
+
+            if (beanManager.isInterceptorBinding(type)) {
+                interceptorBindings.add(annotation);
+            } else if (beanManager.isStereotype(type)) {
+                resolveStereotypeInterceptorBindings(type, beanManager, interceptorBindings, visitedStereotypes);
+            }
+        }
+
+        return interceptorBindings;
+    }
+
+    private static void resolveStereotypeInterceptorBindings(Class<? extends Annotation> stereotype, BeanManager beanManager,
+            Set<Annotation> interceptorBindings, Set<Class<? extends Annotation>> visitedStereotypes) {
+        if (!visitedStereotypes.add(stereotype)) {
+            return; // avoid infinite loop
+        }
+
+        for (Annotation inner : stereotype.getAnnotations()) {
+            Class<? extends Annotation> innerType = inner.annotationType();
+
+            if (beanManager.isInterceptorBinding(innerType)) {
+                interceptorBindings.add(inner);
+            } else if (beanManager.isStereotype(innerType)) {
+                resolveStereotypeInterceptorBindings(innerType, beanManager, interceptorBindings, visitedStereotypes);
+            }
+        }
+    }
+
 }

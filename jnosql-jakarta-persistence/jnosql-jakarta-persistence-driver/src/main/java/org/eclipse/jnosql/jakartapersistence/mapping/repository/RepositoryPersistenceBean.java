@@ -20,11 +20,13 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
 import jakarta.data.repository.DataRepository;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.CDI;
 import jakarta.persistence.EntityManager;
 
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
@@ -56,17 +58,24 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
     @Override
     public T create(CreationalContext<T> context) {
         EntitiesMetadata entities = getInstance(EntitiesMetadata.class);
-
         EntityManager entityManager = findEntityManager();
         var template = new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
-
         Converters converters = getInstance(Converters.class);
 
-        var handler = new JakartaPersistenceRepositoryProxy<>(template,
-                entities, type, converters);
-        return (T) Proxy.newProxyInstance(type.getClassLoader(),
-                new Class[]{type},
-                handler);
+        var handler = new JakartaPersistenceRepositoryProxy<>(template, entities, type, converters);
+        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
+
+        // Apply interceptor bindings using InterceptionFactory if any exist
+        if (!getInterceptorBindings().isEmpty()) {
+            var interceptionFactory = CDI.current().getBeanManager().createInterceptionFactory(context, type);
+            var configurator = interceptionFactory.configure();
+            for (Annotation binding : getInterceptorBindings()) {
+                configurator.add(binding);
+            }
+            return (T)interceptionFactory.createInterceptedInstance(proxy);
+        }
+
+        return proxy;
     }
 
 }
