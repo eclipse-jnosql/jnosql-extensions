@@ -28,6 +28,7 @@ import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Proxy;
+import java.util.Set;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
@@ -65,14 +66,20 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
         var handler = new JakartaPersistenceRepositoryProxy<>(template, entities, type, converters);
         T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
 
-        // Apply interceptor bindings using InterceptionFactory if any exist
-        if (!getInterceptorBindings().isEmpty()) {
+        // Apply class-level interceptor bindings using InterceptionFactory
+        Set<Annotation> classLevelBindings = getClassLevelInterceptorBindings();
+        if (!classLevelBindings.isEmpty()) {
             var interceptionFactory = CDI.current().getBeanManager().createInterceptionFactory(context, type);
             var configurator = interceptionFactory.configure();
-            for (Annotation binding : getInterceptorBindings()) {
+            for (Annotation binding : classLevelBindings) {
                 configurator.add(binding);
             }
-            return (T)interceptionFactory.createInterceptedInstance(proxy);
+            proxy = (T)interceptionFactory.createInterceptedInstance(proxy);
+        }
+
+        // Apply method-level interceptor bindings using custom proxy
+        if (hasMethodLevelInterceptorBindings()) {
+            proxy = MethodInterceptorProxy.create(proxy, CDI.current().getBeanManager(), context, type);
         }
 
         return proxy;

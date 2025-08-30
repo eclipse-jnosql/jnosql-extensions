@@ -27,6 +27,7 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -53,8 +54,6 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
 
     private final Set<Annotation> qualifiersForBean;
 
-    private final Set<Annotation> interceptorBindingsForBean;
-
     private final BeanManager beanManager;
 
     /**
@@ -68,7 +67,6 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         this.types = Collections.singleton(type);
         this.beanManager = beanManager;
         this.qualifiersForBean = initializeQualifiers();
-        this.interceptorBindingsForBean = initializeInterceptorBindings();
     }
 
     @Override
@@ -108,8 +106,18 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         return type.getName() + "@JakartaPersistence";
     }
 
-    protected Set<Annotation> getInterceptorBindings() {
-        return interceptorBindingsForBean;
+    protected Set<Annotation> getClassLevelInterceptorBindings() {
+        return CdiUtil.getAllInterceptorBindingsRecursively(beanManager, type.getDeclaredAnnotations());
+    }
+
+    protected boolean hasMethodLevelInterceptorBindings() {
+        for (Method method : type.getMethods()) {
+            Set<Annotation> methodBindings = CdiUtil.getAllInterceptorBindingsRecursively(beanManager, method.getDeclaredAnnotations());
+            if (!methodBindings.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected EntityManager findEntityManager() throws IllegalStateException {
@@ -161,8 +169,17 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     }
 
     private Set<Annotation> initializeInterceptorBindings() {
-        // TODO Check if we can externalize reflection, e.g. using ClassGraph
-        return CdiUtil.getAllInterceptorBindingsRecursively(beanManager, type.getDeclaredAnnotations());
+        Set<Annotation> bindings = new HashSet<>();
+
+        // Add class-level interceptor bindings
+        bindings.addAll(CdiUtil.getAllInterceptorBindingsRecursively(beanManager, type.getDeclaredAnnotations()));
+
+        // Add method-level interceptor bindings
+        for (Method method : type.getMethods()) {
+            bindings.addAll(CdiUtil.getAllInterceptorBindingsRecursively(beanManager, method.getDeclaredAnnotations()));
+        }
+
+        return bindings;
     }
 
     private Set<Annotation> initializeQualifiers() {
