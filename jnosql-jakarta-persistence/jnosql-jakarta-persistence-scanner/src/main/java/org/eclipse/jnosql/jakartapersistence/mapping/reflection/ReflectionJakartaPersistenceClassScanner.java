@@ -15,12 +15,13 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
 
 import jakarta.data.repository.DataRepository;
+
 import java.util.Set;
-import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 
-public class PersistenceClassScanner implements ClassScanner {
+import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
 
-    public static final String PROVIDER = "jnosql.jakarta.persistence";
+
+public class ReflectionJakartaPersistenceClassScanner implements JakartaPersistenceClassScanner {
 
     @Override
     public Set<Class<?>> entities() {

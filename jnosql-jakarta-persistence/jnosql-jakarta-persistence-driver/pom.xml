@@ -60,11 +60,6 @@
         </dependency>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
-            <artifactId>jnosql-jakarta-persistence-scanner</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-reflection</artifactId>
             <version>${jnosql-mapping.version}</version>
         </dependency>

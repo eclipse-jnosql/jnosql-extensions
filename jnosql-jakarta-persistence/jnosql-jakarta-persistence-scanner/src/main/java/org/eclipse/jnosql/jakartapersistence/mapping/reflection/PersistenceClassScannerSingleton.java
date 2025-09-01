@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.eclipse.jnosql.jakartapersistence.JNoSQLJakartaPersistence;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 
@@ -144,7 +145,7 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
                     final Object provider = c.getAnnotationInfo(Repository.class).getParameterValues().getValue("provider");
                     if (provider instanceof String providerName) {
                         if (providerName.equals(Repository.ANY_PROVIDER)
-                                || providerName.equals(PersistenceClassScanner.PROVIDER)) {
+                                || providerName.equals(JNoSQLJakartaPersistence.PROVIDER)) {
                             return true;
                         }
                     }

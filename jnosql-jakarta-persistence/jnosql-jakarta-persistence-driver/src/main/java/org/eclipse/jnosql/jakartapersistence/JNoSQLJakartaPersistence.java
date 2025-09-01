@@ -15,12 +15,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.reflection.PersistenceClassScanner;
-
 /**
  *
  * @author Ondro Mihalyi
  */
 public interface JNoSQLJakartaPersistence {
-    static final String PROVIDER = PersistenceClassScanner.PROVIDER;
+    public static final String PROVIDER = "jnosql.jakarta.persistence";
 }
