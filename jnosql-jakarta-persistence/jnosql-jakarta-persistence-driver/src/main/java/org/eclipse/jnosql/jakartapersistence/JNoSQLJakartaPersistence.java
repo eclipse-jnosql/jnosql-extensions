@@ -20,5 +20,5 @@ package org.eclipse.jnosql.jakartapersistence;
  * @author Ondro Mihalyi
  */
 public interface JNoSQLJakartaPersistence {
-    public static final String PROVIDER = "jnosql.jakarta.persistence";
+    public static final String PROVIDER = "Eclipse_JNoSQL_Jakarta_Persistence";
 }
