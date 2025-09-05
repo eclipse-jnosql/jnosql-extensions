@@ -22,6 +22,7 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -68,26 +69,18 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         this.qualifiersForBean = initializeQualifiers();
     }
 
+    /**
+     * Invocation handler for invoking repository methods
+     * @param entitiesMetadata
+     * @param template Template for executing queries
+     * @param converters
+     * @return
+     */
+    abstract protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters);
+
     @Override
     public Class<?> getBeanClass() {
         return type;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public T create(CreationalContext<T> context) {
-        EntitiesMetadata entities = getInstance(EntitiesMetadata.class);
-
-        EntityManager entityManager = findEntityManager();
-        var template = new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
-
-        Converters converters = getInstance(Converters.class);
-
-        var handler = new JakartaPersistenceRepositoryProxy<>(template,
-                entities, type, converters);
-        return (T) Proxy.newProxyInstance(type.getClassLoader(),
-                new Class[]{type},
-                handler);
     }
 
     @Override
@@ -105,19 +98,41 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         return type.getName() + "@JakartaPersistence";
     }
 
-    protected PersistenceDocumentTemplate createTemplate() {
-        var entityManager = findEntityManager();
-        return new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
+    @SuppressWarnings("unchecked")
+    @Override
+    public T create(CreationalContext<T> context) {
+        PersistenceDatabaseManager databaseManager = findDatabaseManager();
+
+        var entities = databaseManager.getEntitiesMetadata();
+        var template = new PersistenceDocumentTemplate(databaseManager);
+        var converters = getInstance(Converters.class);
+
+        var handler = createInvocationHandler(entities, template, converters);
+
+        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
+
+        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
     }
 
-    protected EntityManager findEntityManager() throws IllegalStateException {
+    /**
+     * Finds and returns the {@link EntityManager} that matches this
+     * repository's configuration. Delegates to the injected
+     * {@link EntityManagerProvider#produceMatchingEntityManager} method with
+     * persistence unit defined in the {@link Repository} annotation's dataStore
+     * attribute, and qualifiers present on a non-default interface method that
+     * returns {@link EntityManager}.
+     *
+     * @return the matching {@link EntityManager} instance
+     * @throws {@link IllegalStateException} if no matching
+     * {@link EntityManager} is found
+     */
+    protected PersistenceDatabaseManager findDatabaseManager() throws IllegalStateException {
         final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
                 .produceMatchingEntityManager(this::getPersistenceUnit, this::getEntityManagerQualifiers);
         if (entityManager.isEmpty()) {
             throw new IllegalStateException("Found no entity manager matching the " + type + " repository declaration");
         }
-        final EntityManager em = entityManager.get();
-        return em;
+        return new PersistenceDatabaseManager(entityManager.get());
     }
 
     private String getPersistenceUnit() {
@@ -134,7 +149,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         Set<Annotation> qualifiers = null;
         List<Method> matchingMethods = new ArrayList();
         for (Method method : type.getMethods()) {
-            if (returnsEntityManager(method)) {
+            if (!method.isDefault() && returnsEntityManager(method)) {
                 if (qualifiers == null) {
                     qualifiers = CdiUtil.getAllQualifiersRecursively(beanManager, method.getAnnotations());
                 }

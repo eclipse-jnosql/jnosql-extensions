@@ -20,6 +20,9 @@ import jakarta.persistence.metamodel.EntityType;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+
+// TODO Cache metadata for the same persistence unit
 public class PersistenceDatabaseManager {
 
     private final EntityManager em;
@@ -31,15 +34,8 @@ public class PersistenceDatabaseManager {
         cacheEntityTypes();
     }
 
-    public PersistenceDatabaseManager() {
-        em = null;
-    }
-
     public EntityManager getEntityManager() {
         return em;
-    }
-
-    public void close() {
     }
 
     public <T> EntityType<T> findEntityType(String entityName) {
@@ -64,4 +60,7 @@ public class PersistenceDatabaseManager {
         });
     }
 
+    public EntitiesMetadata getEntitiesMetadata() {
+        return new JakataPersistenceEntitiesMetadata(this);
+    }
 }
