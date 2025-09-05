@@ -160,6 +160,8 @@ class JakataPersistenceEntitiesMetadata implements EntitiesMetadata {
 
                 @Override
                 public <X, Y, T extends AttributeConverter<X, Y>> Optional<Class<T>> converter() {
+                    // Not need to convert, EntityManager works with the same type
+                    // and makes the conversion when interacting with the database
                     return Optional.empty();
                 }
 

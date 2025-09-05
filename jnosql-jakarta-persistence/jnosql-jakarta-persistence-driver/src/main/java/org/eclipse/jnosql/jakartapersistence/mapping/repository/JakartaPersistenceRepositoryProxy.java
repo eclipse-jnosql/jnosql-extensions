@@ -198,6 +198,11 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @Override
+    protected SelectQuery toQuery(Map<String, Object> parameters, Method method) {
+        return JakartaPersistenceParameterBasedQuery.INSTANCE.toQuery(parameters, getSorts(method, entityMetadata()), entityMetadata());
+    }
+
+    @Override
     protected Function<PageRequest, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query) {
         return p -> template().selectOffSet(query, p);
     }

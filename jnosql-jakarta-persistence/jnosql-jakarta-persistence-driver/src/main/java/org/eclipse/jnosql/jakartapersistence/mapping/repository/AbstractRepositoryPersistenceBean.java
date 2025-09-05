@@ -105,9 +105,11 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
 
         var entities = databaseManager.getEntitiesMetadata();
         var template = new PersistenceDocumentTemplate(databaseManager);
-        var converters = getInstance(Converters.class);
+        // converters required by JNoSQL core but are not used because
+        /// JakataPersistenceEntitiesMetadata doesn't return a converter - lets EntityManager to convert'
+        var dummyConverters = new Converters(){};
 
-        var handler = createInvocationHandler(entities, template, converters);
+        var handler = createInvocationHandler(entities, template, dummyConverters);
 
         T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
 
