@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Utility methods for working with the CDI container
  *
  * @author Ondro Mihalyi
  */

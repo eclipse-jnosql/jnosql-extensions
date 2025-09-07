@@ -16,6 +16,7 @@
 package org.eclipse.jnosql.jakartapersistence;
 
 /**
+ * Metadata about this Jakarta Persistence implementation
  *
  * @author Ondro Mihalyi
  */

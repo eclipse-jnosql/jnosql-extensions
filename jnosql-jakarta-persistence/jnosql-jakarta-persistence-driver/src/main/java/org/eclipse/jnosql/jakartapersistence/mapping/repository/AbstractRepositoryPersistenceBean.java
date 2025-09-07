@@ -43,6 +43,7 @@ import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 /**
+ * Base class with common functionality shared Jakarta Persistence Data repository beans
  *
  * @author Ondro Mihalyi
  */
@@ -125,7 +126,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
      * returns {@link EntityManager}.
      *
      * @return the matching {@link EntityManager} instance
-     * @throws {@link IllegalStateException} if no matching
+     * @throws IllegalStateException if no matching
      * {@link EntityManager} is found
      */
     protected PersistenceDatabaseManager findDatabaseManager() throws IllegalStateException {
