@@ -19,13 +19,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
 
 import java.util.Set;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,11 +36,8 @@ public class InterceptorTest {
     void init() {
         TestJakartaPersistenceClassScanner.standardRepositories = Set.of(CountedPersonRepository.class);
 
-        cdiContainer = SeContainerInitializer.newInstance()
-                .disableDiscovery()
-                .addExtensions(JakartaPersistenceExtension.class)
-                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class, CallCountInterceptor.class, CallCounter.class)
+        cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
+                .addBeanClasses(CallCountInterceptor.class, CallCounter.class)
                 .initialize();
 
         repository = cdiContainer.select(CountedPersonRepository.class).get();

@@ -17,9 +17,6 @@ import jakarta.enterprise.inject.spi.DeploymentException;
 
 import java.util.Set;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,11 +30,7 @@ class AmbiguousEntityManagerTest {
 
         TestJakartaPersistenceClassScanner.standardRepositories = Set.of(AmbiguousEntityManagerRepository.class);
 
-        final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
-                .disableDiscovery()
-                .addExtensions(JakartaPersistenceExtension.class)
-                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class);
+        final SeContainerInitializer cdiInitializer = TestSupport.cdiInitializerWithDefaultEmProducer();
         assertThrows(DeploymentException.class, () -> {
             cdiInitializer.initialize();
         });
