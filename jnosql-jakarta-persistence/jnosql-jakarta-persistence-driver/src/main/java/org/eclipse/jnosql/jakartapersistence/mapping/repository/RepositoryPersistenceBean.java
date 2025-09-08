@@ -16,23 +16,24 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.repository.DataRepository;
-import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
+
+import java.lang.reflect.InvocationHandler;
 
 import org.eclipse.jnosql.mapping.core.Converters;
 
-import java.lang.reflect.Proxy;
-
-import org.eclipse.jnosql.jakartapersistence.CdiUtil;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
-
 /**
- * This class serves as a JNoSQL discovery bean for CDI extension, responsible for registering Repository instances for Jakarta Persistence entities.
- * It extends {@link AbstractBean} and is parameterized with type {@code T} representing the repository type.
+ * This class serves as a JNoSQL discovery bean for CDI extension, responsible
+ * for registering Repository instances for Jakarta Persistence entities. It
+ * extends {@link AbstractBean} and is parameterized with type {@code T}
+ * representing the repository type.
  * <p>
- * Upon instantiation, it initializes with the provided repository type and qualifiers.
+ * Upon instantiation, it initializes with the provided repository type and
+ * qualifiers.
  * </p>
  *
  * @param <T> the type of the repository
@@ -51,15 +52,8 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
     }
 
     @Override
-    public T create(CreationalContext<T> context) {
-        var entities = getInstance(EntitiesMetadata.class);
-        var template = createTemplate();
-        var converters = getInstance(Converters.class);
-
-        var handler = new JakartaPersistenceRepositoryProxy<>(template, entities, type, converters);
-        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
-
-        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
+    protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters) {
+        return new JakartaPersistenceRepositoryProxy<>(template, entitiesMetadata, type, converters);
     }
 
 }

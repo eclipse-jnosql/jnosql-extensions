@@ -19,16 +19,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.enterprise.inject.spi.CDI;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.reflection.Reflections;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
-import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
+import java.util.Set;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,13 +33,9 @@ public class QualifierTest {
 
     @BeforeEach
     void init() {
-        cdiContainer = SeContainerInitializer.newInstance()
-                .disableDiscovery()
-                .addPackages(Converters.class, EntityConverter.class)
-                .addPackages(Reflections.class)
-                .addExtensions(ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class)
-                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class)
+        TestJakartaPersistenceClassScanner.standardRepositories = Set.of(QualifiedPersonRepository.class);
+
+        cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
                 .initialize();
     }
 

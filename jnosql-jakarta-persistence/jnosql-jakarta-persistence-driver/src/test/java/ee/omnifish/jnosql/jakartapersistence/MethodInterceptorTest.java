@@ -13,15 +13,9 @@
 package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.reflection.Reflections;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
-import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
+import java.util.Set;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,13 +29,10 @@ class MethodInterceptorTest {
 
     @BeforeEach
     void init() {
-        cdiContainer = SeContainerInitializer.newInstance()
-                .disableDiscovery()
-                .addPackages(Converters.class, EntityConverter.class)
-                .addPackages(Reflections.class)
-                .addExtensions(ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class)
-                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class, CallCountInterceptor.class, CallCounter.class)
+        TestJakartaPersistenceClassScanner.standardRepositories = Set.of(MethodInterceptedPersonRepository.class);
+
+        cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
+                .addBeanClasses(CallCountInterceptor.class, CallCounter.class)
                 .initialize();
     }
 

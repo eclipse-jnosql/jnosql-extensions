@@ -22,19 +22,11 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.persistence.EntityManager;
 
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.reflection.Reflections;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
-import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,13 +38,9 @@ public class PersonRepositoryTest {
 
     @BeforeEach
     void init() {
-        cdiContainer = SeContainerInitializer.newInstance()
-                .disableDiscovery()
-                .addPackages(Converters.class, EntityConverter.class)
-                .addPackages(Reflections.class)
-                .addExtensions(ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class)
-                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class)
+        TestJakartaPersistenceClassScanner.standardRepositories = Set.of(PersonRepository.class);
+
+        cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
                 .initialize();
         personRepo = cdiContainer.select(PersonRepository.class).get();
 

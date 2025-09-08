@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -13,13 +13,20 @@
  *
  *  Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence;
+package org.eclipse.jnosql.jakartapersistence.communication;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
 
 /**
- * Metadata about this Jakarta Persistence implementation
- *
+ * Provides a {@link PersistenceDatabaseManager} for a specific {@link EntityManager}.
  * @author Ondro Mihalyi
  */
-public interface JNoSQLJakartaPersistence {
-    public static final String PROVIDER = "Eclipse_JNoSQL_Jakarta_Persistence";
+@ApplicationScoped
+public class PersistenceDatabaseManagerProvider {
+
+    public PersistenceDatabaseManager getManager(EntityManager entityManager) {
+        return new PersistenceDatabaseManager(entityManager);
+    }
+
 }

@@ -22,13 +22,11 @@ import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.persistence.EntityManager;
 
+import java.util.Set;
+
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.reflection.Reflections;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
-import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,22 +34,19 @@ import org.junit.jupiter.api.Test;
 public class EntityManagerAccessTest {
 
     private SeContainer cdiContainer;
-    private EntityManagerAccessRepository repository;
-    private EntityManager entityManager;
 
     @BeforeEach
     void init() {
+        TestJakartaPersistenceClassScanner.standardRepositories = Set.of(
+                EntityManagerAccessRepository.class, QualifiedEntityManagerRepository.class);
+
         cdiContainer = SeContainerInitializer.newInstance()
                 .disableDiscovery()
-                .addPackages(Converters.class, EntityConverter.class)
-                .addPackages(Reflections.class)
-                .addExtensions(ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class)
+                .addExtensions(JakartaPersistenceExtension.class)
                 .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
                 .addBeanClasses(EntityManagerProducer.class)
                 .initialize();
-        
-        repository = cdiContainer.select(EntityManagerAccessRepository.class).get();
-        entityManager = cdiContainer.select(EntityManager.class).get();
+
     }
 
     @AfterEach
@@ -61,8 +56,10 @@ public class EntityManagerAccessTest {
 
     @Test
     void repositoryReturnsEntityManager() {
+        EntityManagerAccessRepository repository = cdiContainer.select(EntityManagerAccessRepository.class).get();
+        EntityManager entityManager = cdiContainer.select(EntityManager.class).get();
         EntityManager repositoryEntityManager = repository.getEntityManager();
-        
+
         assertThat(repositoryEntityManager, notNullValue());
         assertThat(repositoryEntityManager, sameInstance(entityManager));
     }
@@ -71,9 +68,9 @@ public class EntityManagerAccessTest {
     void repositoryReturnsQualifiedEntityManager() {
         QualifiedEntityManagerRepository qualifiedRepository = cdiContainer.select(QualifiedEntityManagerRepository.class).get();
         EntityManager specialEntityManager = cdiContainer.select(EntityManager.class, SpecialEntityManager.Literal.INSTANCE).get();
-        
+
         EntityManager repositoryEntityManager = qualifiedRepository.getEntityManager();
-        
+
         assertThat(repositoryEntityManager, notNullValue());
         assertThat(repositoryEntityManager, sameInstance(specialEntityManager));
     }

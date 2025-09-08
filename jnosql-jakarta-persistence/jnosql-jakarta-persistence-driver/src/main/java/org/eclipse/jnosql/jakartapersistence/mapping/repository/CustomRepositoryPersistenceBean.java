@@ -16,16 +16,15 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.BeanManager;
 
+import java.lang.reflect.InvocationHandler;
+
 import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
-import java.lang.reflect.Proxy;
-
-import org.eclipse.jnosql.jakartapersistence.CdiUtil;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 
 /**
@@ -48,23 +47,14 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersis
         super(type, beanManager);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public T create(CreationalContext<T> context) {
-        var entities = getInstance(EntitiesMetadata.class);
-        var template = createTemplate();
-        var converters = getInstance(Converters.class);
-
-        var handler = CustomRepositoryPersistenceHandler.builder()
-                .entitiesMetadata(entities)
+    protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters) {
+        return CustomRepositoryPersistenceHandler.builder()
+                .entitiesMetadata(entitiesMetadata)
                 .template(template)
                 .customRepositoryType(type)
                 .converters(converters)
                 .build();
-
-        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
-
-        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
     }
 
 }

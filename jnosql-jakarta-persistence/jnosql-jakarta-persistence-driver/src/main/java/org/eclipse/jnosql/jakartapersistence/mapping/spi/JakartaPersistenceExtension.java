@@ -14,13 +14,16 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.spi;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
+
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
+import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
 
-import org.eclipse.jnosql.mapping.metadata.ClassScanner;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -37,15 +40,17 @@ public class JakartaPersistenceExtension implements Extension {
 
     private static final Logger LOGGER = Logger.getLogger(JakartaPersistenceExtension.class.getName());
 
-    private ClassScanner scanner;
+    private JakartaPersistenceClassScanner scanner;
 
-    public void setScanner(ClassScanner scanner) {
+    private List<Exception> beanCreationExceptions = new ArrayList();
+
+    public void setScanner(JakartaPersistenceClassScanner scanner) {
         this.scanner = scanner;
     }
 
     void onAfterBeanDiscovery(@Observes final AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
 
-        ClassScanner scanner = this.scanner != null ? this.scanner : ClassScanner.load();
+        JakartaPersistenceClassScanner scanner = this.scanner != null ? this.scanner : JakartaPersistenceClassScanner.load();
 
         Set<Class<?>> crudTypes = scanner.repositoriesStandard();
         Set<Class<?>> customRepositories = scanner.customRepositories();
@@ -57,12 +62,24 @@ public class JakartaPersistenceExtension implements Extension {
         LOGGER.fine(() -> "Processing custom repositories as a Jakarta Persistence implementation: " + customRepositories);
 
         crudTypes.forEach(type -> {
-            afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type, beanManager));
+            try {
+                afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type, beanManager));
+            } catch (Exception e) {
+                beanCreationExceptions.add(e);
+            }
         });
 
         customRepositories.forEach(type -> {
-            afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type, beanManager));
+            try {
+                afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type, beanManager));
+            } catch (Exception e) {
+                beanCreationExceptions.add(e);
+            }
         });
 
+    }
+
+    void onAfterDeploymentValidation(@Observes final AfterDeploymentValidation afterDeploymentValidation) {
+        beanCreationExceptions.forEach(afterDeploymentValidation::addDeploymentProblem);
     }
 }

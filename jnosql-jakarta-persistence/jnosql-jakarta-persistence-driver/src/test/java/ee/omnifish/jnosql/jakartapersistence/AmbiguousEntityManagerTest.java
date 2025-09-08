@@ -12,26 +12,27 @@
  */
 package ee.omnifish.jnosql.jakartapersistence;
 
-import jakarta.enterprise.inject.AmbiguousResolutionException;
-import org.jboss.weld.environment.se.Weld;
-import org.jboss.weld.environment.se.WeldContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.spi.DeploymentException;
+
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 class AmbiguousEntityManagerTest {
 
     // TODO Assert that an exception is throw at container initialization time, not when the repository is actually created later
     @Test
     void repositoryWithMultipleEntityManagerMethodsThrowsAmbiguousException() {
-        Weld weld = new Weld();
-        weld.addBeanClass(AmbiguousEntityManagerRepository.class);
-        weld.addBeanClass(EntityManagerProducer.class);
 
-        try (WeldContainer container = weld.initialize()) {
-            assertThrows(AmbiguousResolutionException.class, () -> {
-                AmbiguousEntityManagerRepository repository = container.select(AmbiguousEntityManagerRepository.class).get();
-            });
-        }
+        TestJakartaPersistenceClassScanner.standardRepositories = Set.of(AmbiguousEntityManagerRepository.class);
+
+        final SeContainerInitializer cdiInitializer = TestSupport.cdiInitializerWithDefaultEmProducer();
+        assertThrows(DeploymentException.class, () -> {
+            cdiInitializer.initialize();
+        });
     }
 }

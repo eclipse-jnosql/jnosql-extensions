@@ -22,6 +22,7 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManagerProvider;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
@@ -42,18 +44,19 @@ import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 /**
+ * Base class with common functionality shared Jakarta Persistence Data repository beans
  *
  * @author Ondro Mihalyi
  */
 public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<T> {
 
     protected final Class<T> type;
+    protected final BeanManager beanManager;
 
     private final Set<Type> types;
-
     private final Set<Annotation> qualifiersForBean;
-
-    protected final BeanManager beanManager;
+    private Annotation[] entityManagerQualifiers;
+    private String persistenceUnit;
 
     /**
      * Constructor
@@ -66,28 +69,22 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         this.types = Collections.singleton(type);
         this.beanManager = beanManager;
         this.qualifiersForBean = initializeQualifiers();
+        this.persistenceUnit = findPersistenceUnit();
+        entityManagerQualifiers = findEntityManagerQualifiers();
     }
+
+    /**
+     * Invocation handler for invoking repository methods
+     * @param entitiesMetadata
+     * @param template Template for executing queries
+     * @param converters
+     * @return
+     */
+    abstract protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters);
 
     @Override
     public Class<?> getBeanClass() {
         return type;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public T create(CreationalContext<T> context) {
-        EntitiesMetadata entities = getInstance(EntitiesMetadata.class);
-
-        EntityManager entityManager = findEntityManager();
-        var template = new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
-
-        Converters converters = getInstance(Converters.class);
-
-        var handler = new JakartaPersistenceRepositoryProxy<>(template,
-                entities, type, converters);
-        return (T) Proxy.newProxyInstance(type.getClassLoader(),
-                new Class[]{type},
-                handler);
     }
 
     @Override
@@ -105,22 +102,46 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         return type.getName() + "@JakartaPersistence";
     }
 
-    protected PersistenceDocumentTemplate createTemplate() {
-        var entityManager = findEntityManager();
-        return new PersistenceDocumentTemplate(new PersistenceDatabaseManager(entityManager));
+    @SuppressWarnings("unchecked")
+    @Override
+    public T create(CreationalContext<T> context) {
+        PersistenceDatabaseManager databaseManager = findDatabaseManager();
+
+        var entities = databaseManager.getEntitiesMetadata();
+        var template = new PersistenceDocumentTemplate(databaseManager);
+        // converters required by JNoSQL core but are not used because
+        /// JakataPersistenceEntitiesMetadata doesn't return a converter - lets EntityManager to convert'
+        var dummyConverters = new Converters(){};
+
+        var handler = createInvocationHandler(entities, template, dummyConverters);
+
+        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
+
+        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
     }
 
-    protected EntityManager findEntityManager() throws IllegalStateException {
+    /**
+     * Finds and returns the {@link EntityManager} that matches this
+     * repository's configuration. Delegates to the injected
+     * {@link EntityManagerProvider#produceMatchingEntityManager} method with
+     * persistence unit defined in the {@link Repository} annotation's dataStore
+     * attribute, and qualifiers present on a non-default interface method that
+     * returns {@link EntityManager}.
+     *
+     * @return the matching {@link EntityManager} instance
+     * @throws IllegalStateException if no matching
+     * {@link EntityManager} is found
+     */
+    protected PersistenceDatabaseManager findDatabaseManager() throws IllegalStateException {
         final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
-                .produceMatchingEntityManager(this::getPersistenceUnit, this::getEntityManagerQualifiers);
+                .produceMatchingEntityManager(persistenceUnit, entityManagerQualifiers);
         if (entityManager.isEmpty()) {
             throw new IllegalStateException("Found no entity manager matching the " + type + " repository declaration");
         }
-        final EntityManager em = entityManager.get();
-        return em;
+        return getInstance(PersistenceDatabaseManagerProvider.class).getManager(entityManager.get());
     }
 
-    private String getPersistenceUnit() {
+    private String findPersistenceUnit() {
         // TODO Check if we can externalize reflection, e.g. using ClassGraph
         final Repository annotation = type.getAnnotation(Repository.class);
         final String persistenceUnit = annotation.dataStore();
@@ -129,12 +150,12 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
                 : persistenceUnit;
     }
 
-    private Annotation[] getEntityManagerQualifiers() {
+    private Annotation[] findEntityManagerQualifiers() {
         // TODO Check if we can externalize reflection, e.g. using ClassGraph
         Set<Annotation> qualifiers = null;
         List<Method> matchingMethods = new ArrayList();
         for (Method method : type.getMethods()) {
-            if (returnsEntityManager(method)) {
+            if (!method.isDefault() && returnsEntityManager(method)) {
                 if (qualifiers == null) {
                     qualifiers = CdiUtil.getAllQualifiersRecursively(beanManager, method.getAnnotations());
                 }
