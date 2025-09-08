@@ -12,26 +12,35 @@
  */
 package ee.omnifish.jnosql.jakartapersistence;
 
-import jakarta.enterprise.inject.AmbiguousResolutionException;
-import org.jboss.weld.environment.se.Weld;
-import org.jboss.weld.environment.se.WeldContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.spi.DeploymentException;
+
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
+import org.eclipse.jnosql.mapping.core.Converters;
+import org.eclipse.jnosql.mapping.reflection.Reflections;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
+import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 class AmbiguousEntityManagerTest {
 
     // TODO Assert that an exception is throw at container initialization time, not when the repository is actually created later
     @Test
     void repositoryWithMultipleEntityManagerMethodsThrowsAmbiguousException() {
-        Weld weld = new Weld();
-        weld.addBeanClass(AmbiguousEntityManagerRepository.class);
-        weld.addBeanClass(EntityManagerProducer.class);
-
-        try (WeldContainer container = weld.initialize()) {
-            assertThrows(AmbiguousResolutionException.class, () -> {
-                AmbiguousEntityManagerRepository repository = container.select(AmbiguousEntityManagerRepository.class).get();
-            });
-        }
+        final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
+                .disableDiscovery()
+                .addPackages(Converters.class, EntityConverter.class)
+                .addPackages(Reflections.class)
+                .addExtensions(ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class)
+                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
+                .addBeanClasses(EntityManagerProducer.class);
+        assertThrows(DeploymentException.class, () -> {
+            cdiInitializer.initialize();
+        });
     }
 }

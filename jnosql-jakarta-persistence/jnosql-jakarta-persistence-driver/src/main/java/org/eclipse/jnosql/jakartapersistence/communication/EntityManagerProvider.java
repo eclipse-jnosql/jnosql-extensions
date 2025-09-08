@@ -23,7 +23,6 @@ import jakarta.persistence.EntityManager;
 
 import java.lang.annotation.Annotation;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  *
@@ -32,18 +31,16 @@ import java.util.function.Supplier;
 @ApplicationScoped
 public class EntityManagerProvider {
 
-    public Optional<EntityManager> produceMatchingEntityManager(Supplier<String> persistenceUnitSupplier, Supplier<Annotation[]> qualifiersSupplier) {
+    public Optional<EntityManager> produceMatchingEntityManager(String persistenceUnit, Annotation[] qualifiers) {
         Optional<EntityManager> result = Optional.empty();
         boolean qualifiersPresent = false;
         if (result.isEmpty()) {
-            var qualifiers = qualifiersSupplier.get();
             if (qualifiers != null && qualifiers.length > 0) {
                 qualifiersPresent = true;
                 result = produceEntityManagerForQualifiers(qualifiers);
             }
         }
         if (result.isEmpty()) {
-            var persistenceUnit = persistenceUnitSupplier.get();
             if (persistenceUnit != null && !persistenceUnit.isBlank()) {
                 result = produceEntityManagerForPersistenceUnit(persistenceUnit);
             }

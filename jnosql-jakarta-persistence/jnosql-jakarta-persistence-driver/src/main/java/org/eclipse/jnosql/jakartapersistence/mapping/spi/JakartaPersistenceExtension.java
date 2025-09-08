@@ -18,9 +18,12 @@ import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistence
 
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
+import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -38,6 +41,8 @@ public class JakartaPersistenceExtension implements Extension {
     private static final Logger LOGGER = Logger.getLogger(JakartaPersistenceExtension.class.getName());
 
     private JakartaPersistenceClassScanner scanner;
+
+    private List<Exception> beanCreationExceptions = new ArrayList();
 
     public void setScanner(JakartaPersistenceClassScanner scanner) {
         this.scanner = scanner;
@@ -57,12 +62,24 @@ public class JakartaPersistenceExtension implements Extension {
         LOGGER.fine(() -> "Processing custom repositories as a Jakarta Persistence implementation: " + customRepositories);
 
         crudTypes.forEach(type -> {
-            afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type, beanManager));
+            try {
+                afterBeanDiscovery.addBean(new RepositoryPersistenceBean<>(type, beanManager));
+            } catch (Exception e) {
+                beanCreationExceptions.add(e);
+            }
         });
 
         customRepositories.forEach(type -> {
-            afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type, beanManager));
+            try {
+                afterBeanDiscovery.addBean(new CustomRepositoryPersistenceBean<>(type, beanManager));
+            } catch (Exception e) {
+                beanCreationExceptions.add(e);
+            }
         });
 
+    }
+
+    void onAfterDeploymentValidation(@Observes final AfterDeploymentValidation afterDeploymentValidation) {
+        beanCreationExceptions.forEach(afterDeploymentValidation::addDeploymentProblem);
     }
 }

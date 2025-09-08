@@ -50,12 +50,12 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<T> {
 
     protected final Class<T> type;
+    protected final BeanManager beanManager;
 
     private final Set<Type> types;
-
     private final Set<Annotation> qualifiersForBean;
-
-    protected final BeanManager beanManager;
+    private Annotation[] entityManagerQualifiers;
+    private String persistenceUnit;
 
     /**
      * Constructor
@@ -68,6 +68,8 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         this.types = Collections.singleton(type);
         this.beanManager = beanManager;
         this.qualifiersForBean = initializeQualifiers();
+        this.persistenceUnit = findPersistenceUnit();
+        entityManagerQualifiers = findEntityManagerQualifiers();
     }
 
     /**
@@ -131,14 +133,14 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
      */
     protected PersistenceDatabaseManager findDatabaseManager() throws IllegalStateException {
         final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
-                .produceMatchingEntityManager(this::getPersistenceUnit, this::getEntityManagerQualifiers);
+                .produceMatchingEntityManager(persistenceUnit, entityManagerQualifiers);
         if (entityManager.isEmpty()) {
             throw new IllegalStateException("Found no entity manager matching the " + type + " repository declaration");
         }
         return new PersistenceDatabaseManager(entityManager.get());
     }
 
-    private String getPersistenceUnit() {
+    private String findPersistenceUnit() {
         // TODO Check if we can externalize reflection, e.g. using ClassGraph
         final Repository annotation = type.getAnnotation(Repository.class);
         final String persistenceUnit = annotation.dataStore();
@@ -147,7 +149,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
                 : persistenceUnit;
     }
 
-    private Annotation[] getEntityManagerQualifiers() {
+    private Annotation[] findEntityManagerQualifiers() {
         // TODO Check if we can externalize reflection, e.g. using ClassGraph
         Set<Annotation> qualifiers = null;
         List<Method> matchingMethods = new ArrayList();
