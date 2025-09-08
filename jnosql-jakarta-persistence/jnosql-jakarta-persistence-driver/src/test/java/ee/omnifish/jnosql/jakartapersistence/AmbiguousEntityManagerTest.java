@@ -20,10 +20,6 @@ import java.util.Set;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.reflection.Reflections;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
-import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,9 +35,7 @@ class AmbiguousEntityManagerTest {
 
         final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
                 .disableDiscovery()
-                .addPackages(Converters.class, EntityConverter.class)
-                .addPackages(Reflections.class)
-                .addExtensions(ReflectionEntityMetadataExtension.class, JakartaPersistenceExtension.class)
+                .addExtensions(JakartaPersistenceExtension.class)
                 .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
                 .addBeanClasses(EntityManagerProducer.class);
         assertThrows(DeploymentException.class, () -> {

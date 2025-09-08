@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManagerProvider;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
@@ -137,7 +138,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         if (entityManager.isEmpty()) {
             throw new IllegalStateException("Found no entity manager matching the " + type + " repository declaration");
         }
-        return new PersistenceDatabaseManager(entityManager.get());
+        return getInstance(PersistenceDatabaseManagerProvider.class).getManager(entityManager.get());
     }
 
     private String findPersistenceUnit() {
