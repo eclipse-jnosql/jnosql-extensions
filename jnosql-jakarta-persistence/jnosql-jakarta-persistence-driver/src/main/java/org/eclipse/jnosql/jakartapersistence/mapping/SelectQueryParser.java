@@ -45,11 +45,12 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
+import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
 
 class SelectQueryParser extends BaseQueryParser {
 
-    public SelectQueryParser(PersistenceDatabaseManager manager) {
-        super(manager);
+    public SelectQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
+        super(manager, queryCache);
     }
 
     public long count(String entity) {

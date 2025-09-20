@@ -17,21 +17,19 @@ package org.eclipse.jnosql.jakartapersistence.communication;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
 
 // TODO Cache metadata for the same persistence unit
 public class PersistenceDatabaseManager {
 
     private final EntityManager em;
 
-    private final Map<String, EntityType<?>> entityTypesByName = new HashMap<>();
+    private final PersistenceUnitCache persistenceUnitCache;
 
-    public PersistenceDatabaseManager(EntityManager em) {
+    public PersistenceDatabaseManager(EntityManager em, PersistenceUnitCache persistenceUnitCache) {
         this.em = em;
-        cacheEntityTypes();
+        this.persistenceUnitCache = persistenceUnitCache;
     }
 
     public EntityManager getEntityManager() {
@@ -43,7 +41,7 @@ public class PersistenceDatabaseManager {
             return (EntityType<T>) em.getMetamodel().entity(entityName);
         } catch (IllegalArgumentException e) {
             // EclipseLink expects full class name in MM.entity() method. We need to find out the type otherwise
-            EntityType<?> entityType = entityTypesByName.get(entityName);
+            EntityType<?> entityType = persistenceUnitCache.getEntityTypesByName().get(entityName);
             if (entityType != null) {
                 return (EntityType<T>)entityType;
             } else {
@@ -52,12 +50,6 @@ public class PersistenceDatabaseManager {
                 throw ex;
             }
         }
-    }
-
-    private void cacheEntityTypes() {
-        em.getMetamodel().getEntities().forEach(type -> {
-            entityTypesByName.put(type.getName(), type);
-        });
     }
 
     public EntitiesMetadata getEntitiesMetadata() {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -13,19 +13,18 @@
  *
  *  Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping;
+package org.eclipse.jnosql.jakartapersistence.mapping.cache;
 
+import jakarta.persistence.metamodel.EntityType;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
+import java.util.Map;
+import java.util.function.Supplier;
 
-
-class UpdateQueryParser extends BaseUpdateQueryParser {
-
-
-    public UpdateQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
-        super(manager, queryCache);
-    }
-
+/**
+ *
+ * @author Ondro Mihalyi
+ */
+public interface PersistenceUnitCache {
+    Map<String, EntityType<?>> getEntityTypesByName();
+    void setEntityTypesByNameSupplier(Supplier<Map<String, EntityType<?>>> supplier);
 }
-

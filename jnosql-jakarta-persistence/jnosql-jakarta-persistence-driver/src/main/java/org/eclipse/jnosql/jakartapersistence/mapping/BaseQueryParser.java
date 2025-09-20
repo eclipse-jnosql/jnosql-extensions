@@ -50,12 +50,16 @@ import static org.eclipse.jnosql.communication.Condition.LESSER_THAN;
 import static org.eclipse.jnosql.communication.Condition.LIKE;
 import static org.eclipse.jnosql.communication.Condition.NOT;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
+
 abstract class BaseQueryParser {
 
     protected final PersistenceDatabaseManager manager;
+    protected final PersistenceUnitCache queryCache;
 
-    protected BaseQueryParser(PersistenceDatabaseManager manager) {
+    protected BaseQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
         this.manager = manager;
+        this.queryCache = queryCache;
     }
 
     protected abstract <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier);
