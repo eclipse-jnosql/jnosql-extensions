@@ -55,11 +55,11 @@ import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
 abstract class BaseQueryParser {
 
     protected final PersistenceDatabaseManager manager;
-    protected final PersistenceUnitCache queryCache;
+    protected final PersistenceUnitCache persistenceUnitCache;
 
-    protected BaseQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
+    protected BaseQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache persistenceUnitCache) {
         this.manager = manager;
-        this.queryCache = queryCache;
+        this.persistenceUnitCache = persistenceUnitCache;
     }
 
     protected abstract <T> Stream<T> query(String queryString, String entity, Collection<Sort<?>> sorts, Consumer<Query> queryModifier);

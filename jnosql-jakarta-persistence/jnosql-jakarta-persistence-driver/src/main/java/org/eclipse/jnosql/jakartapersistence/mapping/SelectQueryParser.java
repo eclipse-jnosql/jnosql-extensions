@@ -59,14 +59,20 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> long count(Class<T> type) {
-        CriteriaQuery<Long> criteriaQuery = buildQuery(type, Long.class, QueryModifier.selectCount());
+        List<Object> selectQueryKey = List.of("count", type);
+        CriteriaQuery<Long> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+                key -> buildQuery(type, Long.class, QueryModifier.selectCount())
+        );
         return entityManager()
                 .createQuery(criteriaQuery)
                 .getSingleResult();
     }
 
     public <T> Stream<T> findAll(Class<T> type) {
-        CriteriaQuery<T> criteriaQuery = buildQuery(type, type, QueryModifier.selectEntity());
+        List<Object> selectQueryKey = List.of("findAll", type);
+        CriteriaQuery<T> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+                key -> buildQuery(type, type, QueryModifier.selectEntity())
+        );
         return entityManager()
                 .createQuery(criteriaQuery)
                 .getResultStream();
@@ -160,20 +166,25 @@ class SelectQueryParser extends BaseQueryParser {
     private <FROM, RESULT> TypedQuery<RESULT> getSelectTypedQuery(SelectQuery selectQuery) {
         Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
         TypedQuery<RESULT> query;
+        List<Object> selectQueryKey = List.of(selectQuery.name(), selectQuery.condition(), selectQuery.sorts(), selectQuery.columns());
         if (selectQuery.columns().isEmpty()) {
-            CriteriaQuery<FROM> criteriaQuery = buildQuery(fromType, fromType, QueryModifier.combine(
-                    QueryModifier.selectEntity(),
-                    QueryModifier.where(selectQuery.condition()),
-                    QueryModifier.applySorts(selectQuery.sorts())
-            ));
+            CriteriaQuery<FROM> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+                    key -> buildQuery(fromType, fromType, QueryModifier.combine(
+                            QueryModifier.selectEntity(),
+                            QueryModifier.where(selectQuery.condition()),
+                            QueryModifier.applySorts(selectQuery.sorts())
+                    ))
+            );
             TypedQuery<FROM> queryEntity = entityManager().createQuery(criteriaQuery);
             query = (TypedQuery<RESULT>) queryEntity;
         } else {
-            CriteriaQuery<RESULT> criteriaQuery = buildQuery(fromType, null, QueryModifier.combine(
-                    QueryModifier.selectColumns(selectQuery.columns()),
-                    QueryModifier.where(selectQuery.condition()),
-                    QueryModifier.applySorts(selectQuery.sorts())
-            ));
+            CriteriaQuery<RESULT> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+                    key -> buildQuery(fromType, null, QueryModifier.combine(
+                            QueryModifier.selectColumns(selectQuery.columns()),
+                            QueryModifier.where(selectQuery.condition()),
+                            QueryModifier.applySorts(selectQuery.sorts())
+                    ))
+            );
             TypedQuery<RESULT> queryColumns = entityManager().createQuery(criteriaQuery);
             query = queryColumns;
         }
@@ -200,10 +211,13 @@ class SelectQueryParser extends BaseQueryParser {
      */
     private <FROM> TypedQuery<Long> getCountQuery(SelectQuery selectQuery) {
         Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
-        CriteriaQuery<Long> criteriaQuery = buildQuery(fromType, Long.class, QueryModifier.combine(
-                QueryModifier.selectCount(),
-                QueryModifier.where(selectQuery.condition())
-        ));
+        List<Object> selectQueryKey = List.of("count", selectQuery.name(), selectQuery.condition());
+        CriteriaQuery<Long> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+                key -> buildQuery(fromType, Long.class, QueryModifier.combine(
+                        QueryModifier.selectCount(),
+                        QueryModifier.where(selectQuery.condition())
+                ))
+        );
         return entityManager().createQuery(criteriaQuery);
     }
 
@@ -230,10 +244,13 @@ class SelectQueryParser extends BaseQueryParser {
             return count(entityName);
         } else {
             Class<?> type = entityClassFromEntityName(entityName);
-            CriteriaQuery<Long> criteriaQuery = buildQuery(type, Long.class, QueryModifier.combine(
-                    QueryModifier.selectCount(),
-                    QueryModifier.where(selectQuery.condition())
-            ));
+            List<Object> selectQueryKey = List.of("count", entityName, selectQuery.condition());
+            CriteriaQuery<Long> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+                    key -> buildQuery(type, Long.class, QueryModifier.combine(
+                            QueryModifier.selectCount(),
+                            QueryModifier.where(selectQuery.condition())
+                    ))
+            );
             return entityManager().createQuery(criteriaQuery).getSingleResult();
         }
     }

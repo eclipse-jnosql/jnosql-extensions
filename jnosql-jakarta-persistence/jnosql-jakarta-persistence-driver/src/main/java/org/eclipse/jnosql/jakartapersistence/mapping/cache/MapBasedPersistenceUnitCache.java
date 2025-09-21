@@ -15,9 +15,12 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.cache;
 
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.metamodel.EntityType;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -28,6 +31,7 @@ public class MapBasedPersistenceUnitCache implements PersistenceUnitCache {
 
     private volatile Map<String, EntityType<?>> entityTypesByName = null;
     private Supplier<Map<String, EntityType<?>>> entityTypesByNameSupplier;
+    private Map<Object,CriteriaQuery<?>> selectQueryCache = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, EntityType<?>> getEntityTypesByName() {
@@ -46,6 +50,12 @@ public class MapBasedPersistenceUnitCache implements PersistenceUnitCache {
     @Override
     public void setEntityTypesByNameSupplier(Supplier<Map<String, EntityType<?>>> supplier) {
         this.entityTypesByNameSupplier = supplier;
+    }
+
+    @Override
+    public <T> CriteriaQuery<T> getOrCreateSelectQuery(Object key, Function<Object, CriteriaQuery<T>> supplier) {
+        CriteriaQuery<?> valueFromCache = selectQueryCache.computeIfAbsent(key, supplier);
+        return (CriteriaQuery<T>) valueFromCache;
     }
 
 }

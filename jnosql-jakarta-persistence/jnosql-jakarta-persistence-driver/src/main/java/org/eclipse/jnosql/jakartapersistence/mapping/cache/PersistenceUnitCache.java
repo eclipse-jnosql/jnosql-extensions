@@ -15,9 +15,11 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.cache;
 
+import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.metamodel.EntityType;
 
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -27,4 +29,5 @@ import java.util.function.Supplier;
 public interface PersistenceUnitCache {
     Map<String, EntityType<?>> getEntityTypesByName();
     void setEntityTypesByNameSupplier(Supplier<Map<String, EntityType<?>>> supplier);
+    <T> CriteriaQuery<T> getOrCreateSelectQuery(Object key, Function<Object, CriteriaQuery<T>> supplier);
 }
