@@ -30,4 +30,5 @@ public interface PersistenceUnitCache {
     Map<String, EntityType<?>> getEntityTypesByName();
     void setEntityTypesByNameSupplier(Supplier<Map<String, EntityType<?>>> supplier);
     <T> CriteriaQuery<T> getOrCreateSelectQuery(Object key, Function<Object, CriteriaQuery<T>> supplier);
+    String getOrCreateStringQuery(Object key, Function<Object, String> supplier);
 }

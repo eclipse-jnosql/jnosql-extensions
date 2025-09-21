@@ -24,14 +24,11 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
-
 
 class BaseUpdateQueryParser extends BaseQueryParser {
 
-
-    public BaseUpdateQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
-        super(manager, queryCache);
+    public BaseUpdateQueryParser(PersistenceDatabaseManager manager) {
+        super(manager);
     }
 
     @Override

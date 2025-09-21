@@ -55,4 +55,10 @@ public class PersistenceDatabaseManager {
     public EntitiesMetadata getEntitiesMetadata() {
         return new JakataPersistenceEntitiesMetadata(this);
     }
+
+    public PersistenceUnitCache getPersistenceUnitCache() {
+        return persistenceUnitCache;
+    }
+
+    
 }

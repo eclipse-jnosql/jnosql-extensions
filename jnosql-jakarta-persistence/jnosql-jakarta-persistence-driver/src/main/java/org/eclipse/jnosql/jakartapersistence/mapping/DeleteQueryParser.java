@@ -28,14 +28,11 @@ import java.util.function.Function;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
-
 
 class DeleteQueryParser extends BaseUpdateQueryParser {
 
-
-    public DeleteQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
-        super(manager, queryCache);
+    public DeleteQueryParser(PersistenceDatabaseManager manager) {
+        super(manager);
     }
 
     public <T, K> void delete(Class<T> type, K key) {

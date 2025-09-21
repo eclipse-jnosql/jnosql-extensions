@@ -42,8 +42,6 @@ import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
-
 public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
@@ -54,14 +52,10 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final UpdateQueryParser updateParser;
 
     public PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
-        this(manager, null);
-    }
-
-    public PersistenceDocumentTemplate(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
         this.manager = manager;
-        this.selectParser = new SelectQueryParser(manager, queryCache);
-        this.deleteParser = new DeleteQueryParser(manager, queryCache);
-        this.updateParser = new UpdateQueryParser(manager, queryCache);
+        this.selectParser = new SelectQueryParser(manager);
+        this.deleteParser = new DeleteQueryParser(manager);
+        this.updateParser = new UpdateQueryParser(manager);
     }
 
     public EntityManager entityManager() {

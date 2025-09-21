@@ -15,16 +15,12 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
-
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
-
 
 class UpdateQueryParser extends BaseUpdateQueryParser {
 
-
-    public UpdateQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
-        super(manager, queryCache);
+    public UpdateQueryParser(PersistenceDatabaseManager manager) {
+        super(manager);
     }
 
 }

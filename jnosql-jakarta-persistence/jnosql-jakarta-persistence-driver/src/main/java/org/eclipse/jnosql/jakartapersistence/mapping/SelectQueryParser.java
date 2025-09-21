@@ -25,6 +25,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -45,12 +46,11 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
 
 class SelectQueryParser extends BaseQueryParser {
 
-    public SelectQueryParser(PersistenceDatabaseManager manager, PersistenceUnitCache queryCache) {
-        super(manager, queryCache);
+    public SelectQueryParser(PersistenceDatabaseManager manager) {
+        super(manager);
     }
 
     public long count(String entity) {
@@ -59,8 +59,8 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> long count(Class<T> type) {
-        List<Object> selectQueryKey = List.of("count", type);
-        CriteriaQuery<Long> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+        List<Object> selectQueryKey = Arrays.asList("count", type);
+        CriteriaQuery<Long> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
                 key -> buildQuery(type, Long.class, QueryModifier.selectCount())
         );
         return entityManager()
@@ -69,8 +69,8 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     public <T> Stream<T> findAll(Class<T> type) {
-        List<Object> selectQueryKey = List.of("findAll", type);
-        CriteriaQuery<T> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+        List<Object> selectQueryKey = Arrays.asList("findAll", type);
+        CriteriaQuery<T> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
                 key -> buildQuery(type, type, QueryModifier.selectEntity())
         );
         return entityManager()
@@ -166,9 +166,9 @@ class SelectQueryParser extends BaseQueryParser {
     private <FROM, RESULT> TypedQuery<RESULT> getSelectTypedQuery(SelectQuery selectQuery) {
         Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
         TypedQuery<RESULT> query;
-        List<Object> selectQueryKey = List.of(selectQuery.name(), selectQuery.condition(), selectQuery.sorts(), selectQuery.columns());
+        List<Object> selectQueryKey = Arrays.asList(selectQuery.name(), selectQuery.condition(), selectQuery.sorts(), selectQuery.columns());
         if (selectQuery.columns().isEmpty()) {
-            CriteriaQuery<FROM> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+            CriteriaQuery<FROM> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
                     key -> buildQuery(fromType, fromType, QueryModifier.combine(
                             QueryModifier.selectEntity(),
                             QueryModifier.where(selectQuery.condition()),
@@ -178,7 +178,7 @@ class SelectQueryParser extends BaseQueryParser {
             TypedQuery<FROM> queryEntity = entityManager().createQuery(criteriaQuery);
             query = (TypedQuery<RESULT>) queryEntity;
         } else {
-            CriteriaQuery<RESULT> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+            CriteriaQuery<RESULT> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
                     key -> buildQuery(fromType, null, QueryModifier.combine(
                             QueryModifier.selectColumns(selectQuery.columns()),
                             QueryModifier.where(selectQuery.condition()),
@@ -211,8 +211,8 @@ class SelectQueryParser extends BaseQueryParser {
      */
     private <FROM> TypedQuery<Long> getCountQuery(SelectQuery selectQuery) {
         Class<FROM> fromType = entityClassFromEntityName(selectQuery.name());
-        List<Object> selectQueryKey = List.of("count", selectQuery.name(), selectQuery.condition());
-        CriteriaQuery<Long> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+        List<Object> selectQueryKey = Arrays.asList("count", selectQuery.name(), selectQuery.condition());
+        CriteriaQuery<Long> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
                 key -> buildQuery(fromType, Long.class, QueryModifier.combine(
                         QueryModifier.selectCount(),
                         QueryModifier.where(selectQuery.condition())
@@ -244,8 +244,8 @@ class SelectQueryParser extends BaseQueryParser {
             return count(entityName);
         } else {
             Class<?> type = entityClassFromEntityName(entityName);
-            List<Object> selectQueryKey = List.of("count", entityName, selectQuery.condition());
-            CriteriaQuery<Long> criteriaQuery = persistenceUnitCache.getOrCreateSelectQuery(selectQueryKey,
+            List<Object> selectQueryKey = Arrays.asList("count", entityName, selectQuery.condition());
+            CriteriaQuery<Long> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
                     key -> buildQuery(type, Long.class, QueryModifier.combine(
                             QueryModifier.selectCount(),
                             QueryModifier.where(selectQuery.condition())
@@ -278,14 +278,19 @@ class SelectQueryParser extends BaseQueryParser {
         return resultOrNull != null;
     }
 
-    private String preProcessQuery(String queryString, String entity, Collection<Sort<?>> sorts) {
-        if (sorts != null) {
-            sorts = sorts.stream()
-                    .map(this::correctSortPropertyName)
-                    .toList();
-        }
-        return new OptionalPartsParser(queryString, entity, sorts)
-                .getCompleteSelect();
+    private String preProcessQuery(String queryString, String entity, final Collection<Sort<?>> sortsArg) {
+        return manager.getPersistenceUnitCache().getOrCreateStringQuery(Arrays.asList(queryString, entity, sortsArg),
+                key -> {
+                    Collection<Sort<?>> sorts = sortsArg;
+                    if (sorts != null) {
+                        sorts = sorts.stream()
+                                .map(this::correctSortPropertyName)
+                                .toList();
+                    }
+                    return new OptionalPartsParser(queryString, entity, sorts)
+                            .getCompleteSelect();
+                }
+        );
     }
 
     private Sort<?> correctSortPropertyName(Sort<?> sort) {
@@ -348,8 +353,8 @@ class SelectQueryParser extends BaseQueryParser {
                 throw new IllegalArgumentException("The offset of the first element is too big, page request: " + pageRequest, e);
             }
             query.setMaxResults(Math.min(query.getMaxResults(), pageRequest.size()));
-            Supplier<TypedQuery<Long>> countQuerySupplier = pageRequest.requestTotal() ?
-                    () -> getCountQuery(queryString, entity, sorts, countQueryModifier)
+            Supplier<TypedQuery<Long>> countQuerySupplier = pageRequest.requestTotal()
+                    ? () -> getCountQuery(queryString, entity, sorts, countQueryModifier)
                     : null;
             return new PersistencePage(query, countQuerySupplier, pageRequest);
         } else {

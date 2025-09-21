@@ -32,6 +32,7 @@ public class MapBasedPersistenceUnitCache implements PersistenceUnitCache {
     private volatile Map<String, EntityType<?>> entityTypesByName = null;
     private Supplier<Map<String, EntityType<?>>> entityTypesByNameSupplier;
     private Map<Object,CriteriaQuery<?>> selectQueryCache = new ConcurrentHashMap<>();
+    private Map<Object,String> stringQueryCache = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, EntityType<?>> getEntityTypesByName() {
@@ -56,6 +57,11 @@ public class MapBasedPersistenceUnitCache implements PersistenceUnitCache {
     public <T> CriteriaQuery<T> getOrCreateSelectQuery(Object key, Function<Object, CriteriaQuery<T>> supplier) {
         CriteriaQuery<?> valueFromCache = selectQueryCache.computeIfAbsent(key, supplier);
         return (CriteriaQuery<T>) valueFromCache;
+    }
+
+    @Override
+    public String getOrCreateStringQuery(Object key, Function<Object, String> supplier) {
+        return stringQueryCache.computeIfAbsent(key, supplier);
     }
 
 }
