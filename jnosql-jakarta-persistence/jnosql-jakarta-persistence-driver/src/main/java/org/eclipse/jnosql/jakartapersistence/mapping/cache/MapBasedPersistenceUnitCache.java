@@ -24,16 +24,45 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
+ * Map-based implementation of PersistenceUnitCache using ConcurrentHashMap for thread-safe caching.
+ * This implementation provides efficient caching of entity metadata and queries at the persistence unit level.
+ *
+ * <p>Features:
+ * <ul>
+ *   <li>Thread-safe lazy initialization of entity types using double-checked locking</li>
+ *   <li>Concurrent caching of CriteriaQuery objects for SELECT operations</li>
+ *   <li>Concurrent caching of processed query strings</li>
+ * </ul>
  *
  * @author Ondro Mihalyi
  */
 public class MapBasedPersistenceUnitCache implements PersistenceUnitCache {
 
+    /**
+     * Lazily initialized map of entity types by name. Uses volatile for fast publication to other threads.
+     */
     private volatile Map<String, EntityType<?>> entityTypesByName = null;
+
+    /**
+     * Supplier function used to compute entity types map on first access.
+     */
     private Supplier<Map<String, EntityType<?>>> entityTypesByNameSupplier;
+
+    /**
+     * Thread-safe cache for CriteriaQuery objects indexed by cache keys.
+     */
     private Map<Object,CriteriaQuery<?>> selectQueryCache = new ConcurrentHashMap<>();
+
+    /**
+     * Thread-safe cache for processed query strings indexed by cache keys.
+     */
     private Map<Object,String> stringQueryCache = new ConcurrentHashMap<>();
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Implementation uses double-checked locking pattern for thread-safe lazy initialization.
+     */
     @Override
     public Map<String, EntityType<?>> getEntityTypesByName() {
         Map<String, EntityType<?>> entityTypesByNameLocal = this.entityTypesByName;
@@ -48,17 +77,30 @@ public class MapBasedPersistenceUnitCache implements PersistenceUnitCache {
         return entityTypesByNameLocal;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setEntityTypesByNameSupplier(Supplier<Map<String, EntityType<?>>> supplier) {
         this.entityTypesByNameSupplier = supplier;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Uses ConcurrentHashMap.computeIfAbsent for atomic cache operations.
+     */
     @Override
     public <T> CriteriaQuery<T> getOrCreateSelectQuery(Object key, Function<Object, CriteriaQuery<T>> supplier) {
         CriteriaQuery<?> valueFromCache = selectQueryCache.computeIfAbsent(key, supplier);
         return (CriteriaQuery<T>) valueFromCache;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Uses ConcurrentHashMap.computeIfAbsent for atomic cache operations.
+     */
     @Override
     public String getOrCreateStringQuery(Object key, Function<Object, String> supplier) {
         return stringQueryCache.computeIfAbsent(key, supplier);

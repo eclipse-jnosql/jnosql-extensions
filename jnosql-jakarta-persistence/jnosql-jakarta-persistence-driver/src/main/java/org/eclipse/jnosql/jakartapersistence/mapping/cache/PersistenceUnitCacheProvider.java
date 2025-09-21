@@ -22,13 +22,22 @@ import jakarta.persistence.EntityManagerFactory;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * CDI-managed provider for PersistenceUnitCache instances.
+ * This application-scoped bean manages cache instances per persistence unit,
+ * ensuring that each EntityManagerFactory gets its own dedicated cache.
+ *
+ * <p>The provider uses the persistence unit name as the cache key to maintain
+ * separate cache instances for different persistence units within the same application.
  *
  * @author Ondro Mihalyi
  */
 @ApplicationScoped
 public class PersistenceUnitCacheProvider {
 
-    // The keys are persistence unit names
+    /**
+     * Map of cache instances indexed by persistence unit names.
+     * Uses ConcurrentHashMap for thread-safe access across multiple threads.
+     */
     private ConcurrentHashMap<String, PersistenceUnitCache> caches;
 
     @PostConstruct
@@ -36,10 +45,25 @@ public class PersistenceUnitCacheProvider {
        caches = new ConcurrentHashMap<>();
     }
 
+    /**
+     * Retrieves or creates a cache instance for the specified EntityManagerFactory.
+     * Uses the persistence unit name as the cache key to ensure proper isolation
+     * between different persistence units.
+     *
+     * @param entityManagerFactory the EntityManagerFactory to get cache for
+     * @return dedicated PersistenceUnitCache instance for the persistence unit
+     */
     public PersistenceUnitCache getCacheFor(EntityManagerFactory entityManagerFactory) {
         return caches.computeIfAbsent(entityManagerFactory.getName(), this::createQueryCache);
     }
 
+    /**
+     * Creates a new cache instance for the specified persistence unit.
+     * Currently returns a MapBasedPersistenceUnitCache implementation.
+     *
+     * @param persistenceUnitName name of the persistence unit
+     * @return new PersistenceUnitCache instance
+     */
     private PersistenceUnitCache createQueryCache(String persistenceUnitName) {
         return new MapBasedPersistenceUnitCache();
     }

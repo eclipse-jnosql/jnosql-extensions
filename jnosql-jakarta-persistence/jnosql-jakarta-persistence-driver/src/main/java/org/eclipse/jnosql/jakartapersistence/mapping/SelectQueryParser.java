@@ -47,17 +47,47 @@ import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
 
+/**
+ * Parser for SELECT queries in the Jakarta Persistence driver.
+ * This class handles the conversion of JNoSQL queries to JPA CriteriaQuery objects
+ * and provides caching mechanisms to improve performance.
+ *
+ * <p>Key features:
+ * <ul>
+ *   <li>Caches CriteriaQuery objects to avoid repeated query compilation</li>
+ *   <li>Supports both entity and projection queries</li>
+ *   <li>Handles pagination with offset-based page requests</li>
+ *   <li>Provides count queries for efficient pagination</li>
+ * </ul>
+ */
 class SelectQueryParser extends BaseQueryParser {
 
+    /**
+     * @param manager the PersistenceDatabaseManager providing access to EntityManager and cache
+     */
     public SelectQueryParser(PersistenceDatabaseManager manager) {
         super(manager);
     }
 
+    /**
+     * Counts the total number of entities of the specified type.
+
+     *
+     * @param entity the entity name to count
+     * @return total count of entities
+     */
     public long count(String entity) {
         final Class<?> type = entityClassFromEntityName(entity);
         return count(type);
     }
 
+    /**
+     * Counts the total number of entities of the specified type.
+     *
+     * @param <T> the entity type
+     * @param type the entity class to count
+     * @return total count of entities
+     */
     public <T> long count(Class<T> type) {
         List<Object> selectQueryKey = Arrays.asList("count", type);
         CriteriaQuery<Long> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
@@ -68,6 +98,13 @@ class SelectQueryParser extends BaseQueryParser {
                 .getSingleResult();
     }
 
+    /**
+     * Finds all entities of the specified type.
+     *
+     * @param <T> the entity type
+     * @param type the entity class to find
+     * @return stream of all entities of the specified type
+     */
     public <T> Stream<T> findAll(Class<T> type) {
         List<Object> selectQueryKey = Arrays.asList("findAll", type);
         CriteriaQuery<T> criteriaQuery = manager.getPersistenceUnitCache().getOrCreateSelectQuery(selectQueryKey,
@@ -256,14 +293,14 @@ class SelectQueryParser extends BaseQueryParser {
     }
 
     /**
-     * Return true if there is an entity exists described by the provided query.
+     * Checks if there exists an entity matching the provided query conditions.
      *
-     * As JPA query builder doesn't allow a select without entity class, the
-     * solution is to select 1 instead of entity (so it doesn't load all data
-     * from the database) and limit to 1 record, so it succeeds with any data.
+     * <p>Implementation note: Since JPA CriteriaQuery requires an entity class for selection,
+     * this method selects the literal value 1 instead of the full entity to minimize
+     * database load. The query is limited to 1 result for efficiency.
      *
-     * @param selectQuery query to find an entity
-     * @return true if there exists an entity returned by the query
+     * @param selectQuery query conditions to check for entity existence
+     * @return true if at least one entity matches the query conditions, false otherwise
      */
     public boolean exists(SelectQuery selectQuery) {
         final String entityName = selectQuery.name();
@@ -363,12 +400,32 @@ class SelectQueryParser extends BaseQueryParser {
 
     }
 
+    /**
+     * Context record that encapsulates CriteriaQuery and QueryContext for SELECT operations.
+     * Provides convenient access to the query builder components needed for constructing
+     * JPA CriteriaQuery objects.
+     *
+     * @param <FROM> the entity type being queried from
+     * @param <RESULT> the result type of the query
+     * @param query the CriteriaQuery being built
+     * @param queryContext the QueryContext containing root and builder references
+     */
     record SelectQueryContext<FROM, RESULT>(CriteriaQuery<RESULT> query, QueryContext<FROM> queryContext) {
 
+        /**
+         * Returns the root entity for the FROM clause.
+         *
+         * @return the Root entity reference
+         */
         public Root<FROM> root() {
             return queryContext.root();
         }
 
+        /**
+         * Returns the CriteriaBuilder for constructing query predicates and expressions.
+         *
+         * @return the CriteriaBuilder instance
+         */
         public CriteriaBuilder builder() {
             return queryContext.builder();
         }

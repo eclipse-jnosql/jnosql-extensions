@@ -20,6 +20,12 @@ import jakarta.persistence.metamodel.EntityType;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
 
+/**
+ * Database manager that provides access to Jakarta Persistence EntityManager
+ * and associated caching functionality. This class serves as a bridge between
+ * the JNoSQL framework and Jakarta Persistence, providing cached access to
+ * entity metadata and query objects.
+ */
 // TODO Cache metadata for the same persistence unit
 public class PersistenceDatabaseManager {
 
@@ -27,15 +33,37 @@ public class PersistenceDatabaseManager {
 
     private final PersistenceUnitCache persistenceUnitCache;
 
+    /**
+     * Constructs a new PersistenceDatabaseManager with the specified EntityManager and cache.
+     *
+     * @param em the EntityManager to use for persistence operations
+     * @param persistenceUnitCache the cache instance for this persistence unit
+     */
     public PersistenceDatabaseManager(EntityManager em, PersistenceUnitCache persistenceUnitCache) {
         this.em = em;
         this.persistenceUnitCache = persistenceUnitCache;
     }
 
+    /**
+     * Returns the underlying EntityManager for direct JPA operations.
+     *
+     * @return the EntityManager instance
+     */
     public EntityManager getEntityManager() {
         return em;
     }
 
+    /**
+     * Finds an EntityType by entity name, with fallback to cached metadata lookup.
+     * This method first attempts to use the standard JPA metamodel lookup,
+     * and if that fails (e.g., with EclipseLink requiring full class names),
+     * it falls back to the cached entity types by name.
+     *
+     * @param <T> the entity type
+     * @param entityName the simple name of the entity
+     * @return the EntityType metadata for the specified entity
+     * @throws IllegalArgumentException if the entity is not found
+     */
     public <T> EntityType<T> findEntityType(String entityName) {
         try {
             return (EntityType<T>) em.getMetamodel().entity(entityName);
@@ -52,10 +80,20 @@ public class PersistenceDatabaseManager {
         }
     }
 
+    /**
+     * Returns the entities metadata wrapper for this database manager.
+     *
+     * @return EntitiesMetadata instance providing access to entity information
+     */
     public EntitiesMetadata getEntitiesMetadata() {
         return new JakataPersistenceEntitiesMetadata(this);
     }
 
+    /**
+     * Returns the persistence unit cache associated with this database manager.
+     *
+     * @return the PersistenceUnitCache instance
+     */
     public PersistenceUnitCache getPersistenceUnitCache() {
         return persistenceUnitCache;
     }
