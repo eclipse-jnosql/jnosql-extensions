@@ -19,14 +19,10 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.persistence.EntityManager;
 
 import java.util.Set;
 
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,11 +36,7 @@ public class EntityManagerAccessTest {
         TestJakartaPersistenceClassScanner.standardRepositories = Set.of(
                 EntityManagerAccessRepository.class, QualifiedEntityManagerRepository.class);
 
-        cdiContainer = SeContainerInitializer.newInstance()
-                .disableDiscovery()
-                .addExtensions(JakartaPersistenceExtension.class)
-                .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class)
+        cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
                 .initialize();
 
     }
