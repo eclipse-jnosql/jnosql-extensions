@@ -29,9 +29,7 @@ import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-
 class DeleteQueryParser extends BaseUpdateQueryParser {
-
 
     public DeleteQueryParser(PersistenceDatabaseManager manager) {
         super(manager);

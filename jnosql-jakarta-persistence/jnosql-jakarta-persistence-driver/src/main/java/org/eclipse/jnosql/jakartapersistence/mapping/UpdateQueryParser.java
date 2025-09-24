@@ -15,12 +15,9 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
-
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-
 class UpdateQueryParser extends BaseUpdateQueryParser {
-
 
     public UpdateQueryParser(PersistenceDatabaseManager manager) {
         super(manager);

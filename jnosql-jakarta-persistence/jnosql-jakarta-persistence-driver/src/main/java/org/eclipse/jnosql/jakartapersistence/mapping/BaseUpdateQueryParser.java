@@ -25,9 +25,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-
 class BaseUpdateQueryParser extends BaseQueryParser {
-
 
     public BaseUpdateQueryParser(PersistenceDatabaseManager manager) {
         super(manager);

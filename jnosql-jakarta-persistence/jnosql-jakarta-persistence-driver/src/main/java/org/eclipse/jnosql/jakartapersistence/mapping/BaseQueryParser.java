@@ -50,6 +50,7 @@ import static org.eclipse.jnosql.communication.Condition.LESSER_THAN;
 import static org.eclipse.jnosql.communication.Condition.LIKE;
 import static org.eclipse.jnosql.communication.Condition.NOT;
 
+
 abstract class BaseQueryParser {
 
     protected final PersistenceDatabaseManager manager;
