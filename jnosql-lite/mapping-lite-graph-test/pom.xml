@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.eclipse.jnosql.lite</groupId>
         <artifactId>jnosql-lite-parent</artifactId>
-        <version>1.1.11-SNAPSHOT</version>
+        <version>1.1.11</version>
     </parent>
 
     <artifactId>mapping-lite-graph-test</artifactId>
