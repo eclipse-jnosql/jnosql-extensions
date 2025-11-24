@@ -1,5 +1,6 @@
 /*
- *  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ *   Copyright (c) 2024, 2025 Contributors to the Eclipse Foundation.
+ *   
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -111,10 +112,13 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     @Override
     public <T> T insert(T entity) {
         final Object identifier = getPersistenceUnitUtil().getIdentifier(entity);
-        final Object entityWithSameId = entityManager().find(entity.getClass(), identifier);
-        if (entityWithSameId != null) {
-            throw DataExceptions.newEntityExistsException(entity, identifier);
+        if (identifier != null) {
+            final Object entityWithSameId = entityManager().find(entity.getClass(), identifier);
+            if (entityWithSameId != null) {
+                throw DataExceptions.newEntityExistsException(entity, identifier);
+            }
         }
+
         entityManager().persist(entity);
         return entity;
     }
