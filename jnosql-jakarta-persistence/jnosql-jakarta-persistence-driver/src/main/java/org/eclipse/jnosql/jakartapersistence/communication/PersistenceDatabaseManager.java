@@ -86,7 +86,7 @@ public class PersistenceDatabaseManager {
      * @return EntitiesMetadata instance providing access to entity information
      */
     public EntitiesMetadata getEntitiesMetadata() {
-        return new JakataPersistenceEntitiesMetadata(this);
+        return new JakartaPersistenceEntitiesMetadata(this);
     }
 
     /**

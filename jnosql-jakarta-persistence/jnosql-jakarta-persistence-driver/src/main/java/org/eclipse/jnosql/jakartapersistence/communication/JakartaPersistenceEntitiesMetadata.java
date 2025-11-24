@@ -36,11 +36,11 @@ import org.eclipse.jnosql.mapping.metadata.MappingType;
  *
  * @author Ondro Mihalyi
  */
-class JakataPersistenceEntitiesMetadata implements EntitiesMetadata {
+class JakartaPersistenceEntitiesMetadata implements EntitiesMetadata {
 
     private final PersistenceDatabaseManager databaseManager;
 
-    public JakataPersistenceEntitiesMetadata(PersistenceDatabaseManager databaseManager) {
+    public JakartaPersistenceEntitiesMetadata(PersistenceDatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
     }
 
