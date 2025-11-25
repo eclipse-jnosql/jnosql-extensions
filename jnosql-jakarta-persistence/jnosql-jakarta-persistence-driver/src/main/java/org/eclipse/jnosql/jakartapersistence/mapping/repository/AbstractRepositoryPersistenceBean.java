@@ -110,7 +110,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         var entities = databaseManager.getEntitiesMetadata();
         var template = new PersistenceDocumentTemplate(databaseManager);
         // converters required by JNoSQL core but are not used because
-        /// JakataPersistenceEntitiesMetadata doesn't return a converter - lets EntityManager to convert'
+        /// JakartaPersistenceEntitiesMetadata doesn't return a converter - lets EntityManager to convert'
         var dummyConverters = new Converters(){};
 
         var handler = createInvocationHandler(entities, template, dummyConverters);
