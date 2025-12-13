@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EnableAutoWeld
-@AddPackages(value = {Converters.class, KeyValueEntityConverter.class})
+@AddPackages(value = {Converters.class, KeyValueEntityConverter.class, TempRepositoriesMetadata.class})
 @AddPackages(LiteEntitiesMetadata.class)
 @AddExtensions({KeyValueExtension.class})
 public class KeyValueEntityConverterTest {
