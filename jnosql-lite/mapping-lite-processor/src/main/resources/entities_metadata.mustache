@@ -49,6 +49,7 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     private final List<LiteEntityMetadata> entities;
     private final Map<String, EntityMetadata> findByClassName;
     private final Map<String, EntityMetadata> findBySimpleName;
+    private final Map<String, EntityMetadata> findByMappingName;
     private final Map<Class<?>, EntityMetadata> classes;
     private final Map<String, EntityMetadata> mappings;
 
@@ -56,6 +57,7 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     public LiteEntitiesMetadata() {
         this.findByClassName = new HashMap<>();
         this.findBySimpleName = new HashMap<>();
+        this.findByMappingName = new HashMap<>();
         this.classes = new HashMap<>();
         this.mappings = new HashMap<>();
         this.entities = new ArrayList<>();
@@ -70,6 +72,7 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
                 this.mappings.put(entity.name().toUpperCase(Locale.US), entity);
                 this.findBySimpleName.put(entity.simpleName(), entity);
                 this.findByClassName.put(entity.className(), entity);
+                this.findByMappingName.put(entity.mappingName(), entity);
             }
         }
     }
@@ -115,18 +118,25 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     }
 
     @Override
+    public Optional<EntityMetadata> findByMappingName(String mappingName) {
+       Objects.requireNonNull(mappingName, "mappingName is required");
+       return Optional.ofNullable(findByMappingName.get(mappingName));
+    }
+
+    @Override
     public Optional<ProjectionMetadata> projection(Class<?> aClass) {
         return Optional.empty();
    }
 
     @Override
     public String toString() {
-        return "DefaultEntitiesMetadata{" +
+         return "LiteEntitiesMetadata{" +
                 "entities=" + entities +
-                ", findByClassName=" + findByClassName +
-                ", findBySimpleName=" + findBySimpleName +
-                ", classes=" + classes +
-                ", mappings=" + mappings +
+                ", findByClassName=" + findByClassName.keySet() +
+                ", findBySimpleName=" + findBySimpleName.keySet() +
+                ", findByMappingName=" + findByMappingName.keySet() +
+                ", classes=" + classes.keySet() +
+                ", mappings=" + mappings.keySet() +
                 '}';
     }
 }

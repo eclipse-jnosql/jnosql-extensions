@@ -24,9 +24,12 @@ final class EntityModel extends BaseMappingModel {
 
     private final String name;
 
+    private final String mappingName;
+
     private final List<String> fields;
 
     private final boolean embedded;
+
     private final String inheritanceParameter;
 
     private final boolean notConcrete;
@@ -37,7 +40,10 @@ final class EntityModel extends BaseMappingModel {
 
     private final String constructorClassName;
 
-    EntityModel(String packageName, String entity, String name,
+    EntityModel(String packageName,
+                String entity,
+                String name,
+                String mappingName,
                 List<String> fields,
                 boolean embedded,
                 boolean notConcrete,
@@ -48,6 +54,7 @@ final class EntityModel extends BaseMappingModel {
         this.packageName = packageName;
         this.entity = entity;
         this.name = name;
+        this.mappingName = mappingName;
         this.fields = fields;
         this.embedded = embedded;
         this.notConcrete = notConcrete;
@@ -109,17 +116,24 @@ final class EntityModel extends BaseMappingModel {
         return constructorClassName;
     }
 
+    public String getMappingName() {
+        return mappingName;
+    }
+
     @Override
     public String toString() {
         return "EntityModel{" +
                 "packageName='" + packageName + '\'' +
                 ", entity='" + entity + '\'' +
                 ", name='" + name + '\'' +
+                ", mappingName='" + mappingName + '\'' +
                 ", fields=" + fields +
                 ", embedded=" + embedded +
                 ", inheritanceParameter='" + inheritanceParameter + '\'' +
                 ", notConcrete=" + notConcrete +
                 ", entityAnnotation=" + entityAnnotation +
+                ", hasInheritanceAnnotation=" + hasInheritanceAnnotation +
+                ", constructorClassName='" + constructorClassName + '\'' +
                 '}';
     }
 }

@@ -35,7 +35,7 @@ import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 @AddPackages(value = {Converters.class, EntityConverter.class, DocumentTemplate.class})
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
-@AddExtensions({EntityMetadataExtension.class, DocumentExtension.class})
+@AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
 public class MyEntityTests extends EntityTests {
 
     public static final String DATABASE_NAME = "tck";

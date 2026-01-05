@@ -169,6 +169,10 @@ class ClassAnalyzer implements Supplier<String> {
                 .map(Entity::value)
                 .filter(v -> !v.isBlank())
                 .orElse(sourceClassName);
+        var mappingName = Optional.ofNullable(annotation)
+                .map(Entity::name)
+                .filter(v -> !v.isBlank())
+                .orElse(sourceClassName);
         String inheritanceParameter = null;
         boolean notConcrete = element.getModifiers().contains(Modifier.ABSTRACT)
                 || !element.getRecordComponents().isEmpty();
@@ -179,7 +183,7 @@ class ClassAnalyzer implements Supplier<String> {
         } else if (element.getAnnotation(Inheritance.class) != null) {
             inheritanceParameter = getInheritanceParameter(element, element);
         }
-        return new EntityModel(packageName, sourceClassName, entityName, fields, embedded, notConcrete,
+        return new EntityModel(packageName, sourceClassName, entityName, mappingName, fields, embedded, notConcrete,
                 inheritanceParameter, entityAnnotation, hasInheritanceAnnotation, constructorClassName);
     }
 
