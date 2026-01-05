@@ -69,6 +69,11 @@ public final class {{className}} implements LiteEntityMetadata {
     }
 
     @Override
+    public String mappingName() {
+          return "{{mappingName}}";
+    }
+
+    @Override
     public String className() {
         return "{{entityQualified}}";
     }
