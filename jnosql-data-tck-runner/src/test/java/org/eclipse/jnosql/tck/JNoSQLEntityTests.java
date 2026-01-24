@@ -36,7 +36,7 @@ import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
 @AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
-public class MyEntityTests extends EntityTests {
+public class JNoSQLEntityTests extends EntityTests {
 
     public static final String DATABASE_NAME = "tck";
 
@@ -45,4 +45,5 @@ public class MyEntityTests extends EntityTests {
         System.setProperty(MongoDBDocumentConfigurations.HOST.get() + ".1", INSTANCE.host());
         System.setProperty(MappingConfigurations.DOCUMENT_DATABASE.get(), DATABASE_NAME);
     }
+
 }
