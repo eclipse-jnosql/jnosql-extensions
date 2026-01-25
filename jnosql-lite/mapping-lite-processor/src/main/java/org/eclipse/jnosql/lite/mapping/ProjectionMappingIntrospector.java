@@ -14,5 +14,38 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-public class ProjectionMappingIntrospector {
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.Element;
+import java.util.function.Supplier;
+import java.util.logging.Logger;
+
+public class ProjectionMappingIntrospector implements Supplier<String> {
+
+    private static final Logger LOGGER = Logger.getLogger(ProjectionMappingIntrospector.class.getName());
+    private static final String NEW_INSTANCE = "entity_metadata.mustache";
+    private static final String INJECTABLE_CONSTRUCTOR = "projector_metadata.mustache";
+
+    private final Element entity;
+
+    private final ProcessingEnvironment processingEnv;
+
+    private final Mustache template;
+    private final Mustache constructorTemplate;
+
+    ProjectionMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
+        this.entity = entity;
+        this.processingEnv = processingEnv;
+        MustacheFactory factory = new DefaultMustacheFactory();
+        this.template = factory.compile(NEW_INSTANCE);
+        this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
+    }
+
+    @Override
+    public String get() {
+        return "";
+    }
 }
