@@ -107,8 +107,6 @@ class EntityMappingIntrospector {
         createClass(entity, metadata);
         LOGGER.info("Found the fields: " + fields);
 
-
-
         return metadata.getQualified();
     }
 
