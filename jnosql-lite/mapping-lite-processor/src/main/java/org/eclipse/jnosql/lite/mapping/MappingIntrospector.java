@@ -46,9 +46,9 @@ import java.util.stream.Stream;
 
 import static org.eclipse.jnosql.lite.mapping.ParameterAnalyzer.INJECT_CONSTRUCTOR;
 
-class ClassAnalyzer implements Supplier<String> {
+class MappingIntrospector implements Supplier<String> {
 
-    private static final Logger LOGGER = Logger.getLogger(ClassAnalyzer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "entity_metadata.mustache";
     private static final String INJECTABLE_CONSTRUCTOR = "constructor_metadata.mustache";
 
@@ -59,7 +59,7 @@ class ClassAnalyzer implements Supplier<String> {
     private final Mustache template;
     private final Mustache constructorTemplate;
 
-    ClassAnalyzer(Element entity, ProcessingEnvironment processingEnv) {
+    MappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
         MustacheFactory factory = new DefaultMustacheFactory();
