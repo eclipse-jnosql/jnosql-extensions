@@ -81,6 +81,10 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
                 this.findByMappingName.put(entity.mappingName(), entity);
             }
         }
+
+        for (ProjectionMetadata projection : projections) {
+            this.projectionsMap.put(projection.type(), projection);
+        }
     }
 
 
