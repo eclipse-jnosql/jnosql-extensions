@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 
 import static org.eclipse.jnosql.lite.mapping.ParameterAnalyzer.INJECT_CONSTRUCTOR;
 
-class EntityMappingIntrospector {
+final class EntityMappingIntrospector {
 
     private static final Logger LOGGER = Logger.getLogger(EntityMappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "entity_metadata.mustache";

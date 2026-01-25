@@ -20,10 +20,11 @@ import com.github.mustachejava.MustacheFactory;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import java.util.function.Supplier;
+import javax.lang.model.element.TypeElement;
+import java.io.IOException;
 import java.util.logging.Logger;
 
-public class ProjectionMappingIntrospector implements Supplier<String> {
+final class ProjectionMappingIntrospector  {
 
     private static final Logger LOGGER = Logger.getLogger(ProjectionMappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "entity_metadata.mustache";
@@ -44,8 +45,8 @@ public class ProjectionMappingIntrospector implements Supplier<String> {
         this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
     }
 
-    @Override
-    public String get() {
+    String buildMappingMetadata(TypeElement typeElement) throws IOException {
         return "";
     }
+
 }
