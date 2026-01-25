@@ -78,7 +78,7 @@ class MappingIntrospector implements Supplier<String> {
                     .anyMatch(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS));
             if (hasValidConstructor) {
                 try {
-                    return analyze(typeElement);
+                    return introspect(typeElement);
                 } catch (IOException exception) {
                     error(exception);
                 }
@@ -91,7 +91,7 @@ class MappingIntrospector implements Supplier<String> {
         return "";
     }
 
-    private String analyze(TypeElement typeElement) throws IOException {
+    private String introspect(TypeElement typeElement) throws IOException {
 
         TypeElement superclass =
                 (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
