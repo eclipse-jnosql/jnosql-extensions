@@ -74,8 +74,8 @@ class MappingIntrospector implements Supplier<String> {
             LOGGER.info("Processing the class: " + typeElement);
             boolean hasValidConstructor = processingEnv.getElementUtils().getAllMembers(typeElement)
                     .stream()
-                    .filter(EntityProcessor.IS_CONSTRUCTOR.and(EntityProcessor.HAS_ACCESS))
-                    .anyMatch(EntityProcessor.IS_CONSTRUCTOR.and(EntityProcessor.HAS_ACCESS));
+                    .filter(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS))
+                    .anyMatch(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS));
             if (hasValidConstructor) {
                 try {
                     return analyze(typeElement);
@@ -104,14 +104,14 @@ class MappingIntrospector implements Supplier<String> {
                 .getAllMembers(typeElement).stream();
 
         final List<String> fields = Stream.concat(elements, superElements)
-                .filter(EntityProcessor.IS_FIELD.and(EntityProcessor.HAS_ANNOTATION))
+                .filter(MappingProcessor.IS_FIELD.and(MappingProcessor.HAS_ANNOTATION))
                 .map(f -> new FieldAnalyzer(f, processingEnv, typeElement))
                 .map(FieldAnalyzer::get)
                 .collect(Collectors.toList());
 
         var constructor = processingEnv.getElementUtils().getAllMembers(typeElement)
                 .stream()
-                .filter(EntityProcessor.IS_CONSTRUCTOR.and(EntityProcessor.HAS_ACCESS)
+                .filter(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS)
                         .and(INJECT_CONSTRUCTOR)).findFirst();
         String constructorClassName = null;
 

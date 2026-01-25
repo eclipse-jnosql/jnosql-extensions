@@ -56,9 +56,9 @@ import static javax.lang.model.element.Modifier.PUBLIC;
         "jakarta.nosql.MappedSuperclass",
         "jakarta.nosql.Projection"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
-public class EntityProcessor extends AbstractProcessor {
+public class MappingProcessor extends AbstractProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(EntityProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MappingProcessor.class.getName());
     private static final EnumSet<Modifier> MODIFIERS = EnumSet.of(PUBLIC, PROTECTED);
     private static final String TEMPLATE = "entities_metadata.mustache";
     static final Predicate<Element> IS_CONSTRUCTOR = el -> el.getKind() == ElementKind.CONSTRUCTOR;
@@ -83,7 +83,7 @@ public class EntityProcessor extends AbstractProcessor {
             "org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilderSupplier");
     private final Mustache template;
 
-    public EntityProcessor() {
+    public MappingProcessor() {
         this.template = createTemplate();
     }
 
