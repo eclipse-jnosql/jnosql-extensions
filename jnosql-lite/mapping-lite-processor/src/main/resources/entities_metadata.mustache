@@ -52,6 +52,8 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     private final Map<String, EntityMetadata> findByMappingName;
     private final Map<Class<?>, EntityMetadata> classes;
     private final Map<String, EntityMetadata> mappings;
+    private final Map<Class<?>, ProjectionMetadata> projectionsMap;
+    private final List<ProjectionMetadata> projections;
 
 
     public LiteEntitiesMetadata() {
@@ -61,6 +63,8 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
         this.classes = new HashMap<>();
         this.mappings = new HashMap<>();
         this.entities = new ArrayList<>();
+        this.projectionsMap = new HashMap<>();
+        this.projections = new ArrayList<>();
 
         {{#entities}}
          this.entities.add(new {{.}}());
