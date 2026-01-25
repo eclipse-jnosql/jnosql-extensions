@@ -53,7 +53,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 @SupportedAnnotationTypes({"jakarta.nosql.Entity",
         "jakarta.nosql.Embeddable",
-        "jakarta.nosql.MappedSuperclass"})
+        "jakarta.nosql.MappedSuperclass",
+        "jakarta.nosql.Projection"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class EntityProcessor extends AbstractProcessor {
 
