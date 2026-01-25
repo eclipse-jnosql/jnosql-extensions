@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-class MappingIntrospector implements Supplier<String> {
+class MappingIntrospector implements Supplier<MappingResult> {
 
     private static final Logger LOGGER = Logger.getLogger(MappingIntrospector.class.getName());
 
@@ -38,7 +38,7 @@ class MappingIntrospector implements Supplier<String> {
     }
 
     @Override
-    public String get() {
+    public MappingResult get() {
         if (ProcessorUtil.isTypeElement(entity)) {
             TypeElement typeElement = (TypeElement) entity;
             LOGGER.info("Processing the class: " + typeElement);
@@ -57,7 +57,7 @@ class MappingIntrospector implements Supplier<String> {
                         + " must have at least an either public or default constructor");
             }
         }
-        return "";
+        return MappingResult.EMPTY;
     }
 
     private void error(IOException exception) {

@@ -15,4 +15,10 @@
 package org.eclipse.jnosql.lite.mapping;
 
 record MappingResult(MappingCategory category, String name) {
+
+    static final MappingResult EMPTY = new MappingResult(MappingCategory.ENTITY, "");
+
+    public boolean isNotEmpty() {
+        return !this.equals(EMPTY);
+    }
 }

@@ -65,7 +65,7 @@ final class EntityMappingIntrospector {
         this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
     }
 
-    String buildMappingMetadata(TypeElement typeElement) throws IOException {
+    MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
 
         TypeElement superclass =
                 (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
@@ -107,7 +107,7 @@ final class EntityMappingIntrospector {
         createClass(entity, metadata);
         LOGGER.info("Found the fields: " + fields);
 
-        return metadata.getQualified();
+        return new MappingResult(MappingCategory.ENTITY, metadata.getQualified());
     }
 
     private EntityModel getMetadata(TypeElement element, List<String> fields, String constructorClassName) {

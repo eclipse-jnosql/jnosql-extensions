@@ -62,8 +62,6 @@ public class MappingProcessor extends AbstractProcessor {
     private static final EnumSet<Modifier> MODIFIERS = EnumSet.of(PUBLIC, PROTECTED);
     private static final String TEMPLATE = "entities_metadata.mustache";
     static final Predicate<Element> IS_CONSTRUCTOR = el -> el.getKind() == ElementKind.CONSTRUCTOR;
-    static final Predicate<String> IS_BLANK = String::isBlank;
-    static final Predicate<String> IS_NOT_BLANK = IS_BLANK.negate();
     static final Predicate<Element> PUBLIC_PRIVATE = el -> el.getModifiers().stream().anyMatch(MODIFIERS::contains);
     static final Predicate<Element> DEFAULT_MODIFIER = el -> el.getModifiers().isEmpty();
     static final Predicate<Element> HAS_ACCESS = PUBLIC_PRIVATE.or(DEFAULT_MODIFIER);
@@ -92,7 +90,7 @@ public class MappingProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations,
                            RoundEnvironment roundEnv) {
 
-        final List<String> entities = new ArrayList<>();
+        final List<MappingResult> mappingResults = new ArrayList<>();
         final List<String> references = new ArrayList<>();
         for (TypeElement annotation : annotations) {
             roundEnv.getElementsAnnotatedWith(annotation)
@@ -101,13 +99,13 @@ public class MappingProcessor extends AbstractProcessor {
                     .peek(e -> references.add(e.toString()))
                     .map(e -> new MappingIntrospector(e, processingEnv))
                     .map(MappingIntrospector::get)
-                    .filter(IS_NOT_BLANK)
-                    .forEach(entities::add);
+                    .filter(MappingResult::isNotEmpty)
+                    .forEach(mappingResults::add);
         }
 
         try {
-            if (!entities.isEmpty()) {
-                createEntitiesMetadata(entities);
+            if (!mappingResults.isEmpty()) {
+                createEntitiesMetadata(mappingResults);
 
                 LOGGER.info("Appending the metadata interfaces");
                 createResources();
@@ -120,7 +118,7 @@ public class MappingProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void createEntitiesMetadata(List<String> entities) throws IOException {
+    private void createEntitiesMetadata(List<MappingResult> entities) throws IOException {
         LOGGER.info("Creating the default EntitiesMetadata class");
         EntitiesMetadataModel metadata = new EntitiesMetadataModel(entities);
         Filer filer = processingEnv.getFiler();
