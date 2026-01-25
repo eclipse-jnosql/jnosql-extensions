@@ -99,7 +99,8 @@ public class EntityProcessor extends AbstractProcessor {
                     .peek(e -> references.add(e.toString()))
                     .map(e -> new ClassAnalyzer(e, processingEnv))
                     .map(ClassAnalyzer::get)
-                    .filter(IS_NOT_BLANK).forEach(entities::add);
+                    .filter(IS_NOT_BLANK)
+                    .forEach(entities::add);
         }
 
         try {
