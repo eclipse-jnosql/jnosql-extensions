@@ -130,8 +130,9 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     }
 
     @Override
-    public Optional<ProjectionMetadata> projection(Class<?> aClass) {
-        return Optional.empty();
+    public Optional<ProjectionMetadata> projection(Class<?> projection) {
+       Objects.requireNonNull(projection, "projection is required");
+       return Optional.ofNullable(projectionsMap.get(projection));
    }
 
     @Override
