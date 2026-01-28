@@ -155,6 +155,4 @@ public class MappingProcessor extends AbstractProcessor {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
                 + exception.getMessage());
     }
-
-
 }
