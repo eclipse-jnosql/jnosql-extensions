@@ -45,11 +45,6 @@ public final class ProcessorUtil {
     static String getSimpleNameAsString(Element element) {
         return element.getSimpleName().toString();
     }
-
-    static String capitalize(String name) {
-        return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
-    }
-
     /**
      * Checks if the given Element is an instance of TypeElement.
      *
@@ -74,4 +69,9 @@ public final class ProcessorUtil {
             return returnType;
         }
     }
+
+    static String capitalize(String name) {
+        return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
+    }
+
 }
