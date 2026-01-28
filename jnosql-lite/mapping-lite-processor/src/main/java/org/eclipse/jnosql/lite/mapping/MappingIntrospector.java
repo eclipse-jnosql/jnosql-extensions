@@ -14,6 +14,8 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
+import jakarta.nosql.Projection;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -30,11 +32,13 @@ class MappingIntrospector implements Supplier<MappingResult> {
 
     private final ProcessingEnvironment processingEnv;
     private final EntityMappingIntrospector entityMappingIntrospector;
+    private final ProjectionMappingIntrospector projectionMappingIntrospector;
 
     MappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
         this.entityMappingIntrospector = new EntityMappingIntrospector(entity, processingEnv);
+        this.projectionMappingIntrospector = new ProjectionMappingIntrospector(entity, processingEnv);
     }
 
     @Override
@@ -42,22 +46,39 @@ class MappingIntrospector implements Supplier<MappingResult> {
         if (ProcessorUtil.isTypeElement(entity)) {
             TypeElement typeElement = (TypeElement) entity;
             LOGGER.info("Processing the class: " + typeElement);
-            boolean hasValidConstructor = processingEnv.getElementUtils().getAllMembers(typeElement)
-                    .stream()
-                    .filter(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS))
-                    .anyMatch(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS));
-            if (hasValidConstructor) {
+            var annotation = typeElement.getAnnotation(Projection.class);
+            if (annotation != null) {
                 try {
-                    return entityMappingIntrospector.buildMappingMetadata(typeElement);
+                    return projectionMappingIntrospector.buildMappingMetadata(typeElement);
                 } catch (IOException exception) {
                     error(exception);
                 }
             } else {
-                throw new ValidationException("The class " + ProcessorUtil.getSimpleNameAsString(entity)
-                        + " must have at least an either public or default constructor");
+                var mappingResult = entityMapping(typeElement);
+                if (mappingResult != null) {
+                    return mappingResult;
+                }
             }
         }
         return MappingResult.EMPTY;
+    }
+
+    private MappingResult entityMapping(TypeElement typeElement) {
+        boolean hasValidConstructor = processingEnv.getElementUtils().getAllMembers(typeElement)
+                .stream()
+                .filter(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS))
+                .anyMatch(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS));
+        if (hasValidConstructor) {
+            try {
+                return entityMappingIntrospector.buildMappingMetadata(typeElement);
+            } catch (IOException exception) {
+                error(exception);
+            }
+        } else {
+            throw new ValidationException("The class " + ProcessorUtil.getSimpleNameAsString(entity)
+                    + " must have at least an either public or default constructor");
+        }
+        return null;
     }
 
     private void error(IOException exception) {
