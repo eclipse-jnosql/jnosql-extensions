@@ -49,13 +49,13 @@ class MappingIntrospector implements Supplier<MappingResult> {
             var annotation = typeElement.getAnnotation(Projection.class);
             if (annotation != null) {
                 try {
-                    LOGGER.finest("Processing the projection: " + typeElement);
+                    LOGGER.finest("Processing as a projection: " + typeElement);
                     return projectionMappingIntrospector.buildMappingMetadata(typeElement);
                 } catch (IOException exception) {
                     error(exception);
                 }
             } else {
-                LOGGER.finest("Processing the entity: " + typeElement);
+                LOGGER.finest("Processing as an entity: " + typeElement);
                 var mappingResult = entityMapping(typeElement);
                 if (mappingResult != null) {
                     return mappingResult;
