@@ -72,6 +72,10 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
          this.entities.add(new {{.}}());
         {{/entities}}
 
+        {{#projections}}
+         this.projections.add(new {{.}}());
+        {{/projections}}
+
         for (LiteEntityMetadata entity : entities) {
             this.classes.put(entity.type(), entity);
             if (entity.isEntity() && entity.hasEntityName()) {
