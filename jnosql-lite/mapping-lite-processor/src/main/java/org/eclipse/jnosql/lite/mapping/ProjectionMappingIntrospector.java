@@ -23,6 +23,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 final class ProjectionMappingIntrospector  {
 
@@ -46,6 +47,10 @@ final class ProjectionMappingIntrospector  {
     }
 
     MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
+
+        Stream<? extends Element> elements = processingEnv.getElementUtils()
+                .getAllMembers(typeElement).stream();
+
         return null;
     }
 
