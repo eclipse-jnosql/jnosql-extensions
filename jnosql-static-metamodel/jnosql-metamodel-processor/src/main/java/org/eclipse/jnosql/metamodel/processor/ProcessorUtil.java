@@ -61,7 +61,7 @@ public final class ProcessorUtil {
      * @param returnType The input type string.
      * @return The extracted text from within angle brackets, or the input string if no match is found.
      */
-    public static String extractFromType(String returnType) {
+    static String extractFromType(String returnType) {
         Matcher matcher = COMPILE.matcher(returnType);
         if (matcher.find()) {
             return matcher.group(1);
