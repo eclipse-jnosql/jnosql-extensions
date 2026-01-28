@@ -54,24 +54,4 @@ public final class ProcessorUtil {
     public static boolean isTypeElement(Element element) {
         return element instanceof TypeElement;
     }
-
-    /**
-     * Extracts text enclosed in angle brackets from a type string using a regular expression pattern.
-     *
-     * @param returnType The input type string.
-     * @return The extracted text from within angle brackets, or the input string if no match is found.
-     */
-    static String extractFromType(String returnType) {
-        Matcher matcher = COMPILE.matcher(returnType);
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
-            return returnType;
-        }
-    }
-
-    static String capitalize(String name) {
-        return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
-    }
-
 }
