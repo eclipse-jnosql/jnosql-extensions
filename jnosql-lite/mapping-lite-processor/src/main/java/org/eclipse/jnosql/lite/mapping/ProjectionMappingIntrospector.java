@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 final class ProjectionMappingIntrospector  {
 
@@ -56,10 +55,8 @@ final class ProjectionMappingIntrospector  {
         String packageName = ProcessorUtil.getPackageName(typeElement);
         String className = ProcessorUtil.getSimpleNameAsString(typeElement);
         String type = ProcessorUtil.getSimpleNameAsString(typeElement).concat(".class");
-        String from = Optional.ofNullable(typeElement.getAnnotation(Projection.class))
-                .map(Projection::from)
-                .map(Class::getName)
-                .orElse("null");
+        var projection = typeElement.getAnnotation(Projection.class).toString();
+        var from = projection.substring(projection.indexOf("from=") +5, projection.lastIndexOf(")"));
 
         ProjectionModel metadata = new ProjectionModel(packageName, className, type, from);
         createClass(typeElement, metadata);
