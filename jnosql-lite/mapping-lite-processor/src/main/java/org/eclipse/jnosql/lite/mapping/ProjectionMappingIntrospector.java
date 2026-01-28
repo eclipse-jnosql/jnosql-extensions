@@ -31,8 +31,8 @@ import java.util.logging.Logger;
 final class ProjectionMappingIntrospector  {
 
     private static final Logger LOGGER = Logger.getLogger(ProjectionMappingIntrospector.class.getName());
-    private static final String NEW_INSTANCE = "entity_metadata.mustache";
-    private static final String INJECTABLE_CONSTRUCTOR = "projector_metadata.mustache";
+    private static final String NEW_INSTANCE = "projector_metadata.mustache";
+    private static final String INJECTABLE_CONSTRUCTOR = "constructor_metadata.mustache";
 
     private final Element entity;
 
@@ -59,7 +59,7 @@ final class ProjectionMappingIntrospector  {
 
         ProjectionModel metadata = new ProjectionModel(packageName, className, type, from);
         createClass(typeElement, metadata);
-        return new MappingResult(MappingCategory.ENTITY, metadata.getQualified());
+        return new MappingResult(MappingCategory.PROJECTION, metadata.getQualified());
     }
 
     private void createClass(Element entity, ProjectionModel metadata) throws IOException {
