@@ -18,6 +18,9 @@ package {{packageName}};
 import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
 
+import javax.annotation.processing.Generated;
+
+@Generated(value= "JNoSQL Lite ParameterMetaData Generator", date = "{{now}}")
 public class {{className}} implements ProjectionMetadata {
 
     @Override

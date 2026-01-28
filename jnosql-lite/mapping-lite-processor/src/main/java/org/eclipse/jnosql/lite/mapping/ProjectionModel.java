@@ -14,7 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-public class ProjectionModel {
+public class ProjectionModel extends BaseMappingModel {
 
     private final String packageName;
 
