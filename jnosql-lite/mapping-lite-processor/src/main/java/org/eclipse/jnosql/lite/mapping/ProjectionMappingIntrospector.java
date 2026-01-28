@@ -45,8 +45,8 @@ final class ProjectionMappingIntrospector  {
         this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
     }
 
-    String buildMappingMetadata(TypeElement typeElement) throws IOException {
-        return "";
+    MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
+        return null;
     }
 
 }
