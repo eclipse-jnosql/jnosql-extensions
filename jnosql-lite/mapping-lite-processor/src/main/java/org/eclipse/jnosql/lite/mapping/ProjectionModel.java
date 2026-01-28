@@ -50,4 +50,8 @@ public class ProjectionModel {
     public String getFrom() {
         return from;
     }
+
+    public String getQualified() {
+        return packageName + "." + getClassName();
+    }
 }
