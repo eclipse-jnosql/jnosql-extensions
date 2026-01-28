@@ -17,11 +17,16 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import jakarta.nosql.Projection;
 
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
 import java.io.IOException;
+import java.io.Writer;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -48,10 +53,25 @@ final class ProjectionMappingIntrospector  {
 
     MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
 
-        Stream<? extends Element> elements = processingEnv.getElementUtils()
-                .getAllMembers(typeElement).stream();
+        String packageName = ProcessorUtil.getPackageName(typeElement);
+        String className = ProcessorUtil.getSimpleNameAsString(typeElement);
+        String type = ProcessorUtil.getSimpleNameAsString(typeElement).concat(".class");
+        String from = Optional.ofNullable(typeElement.getAnnotation(Projection.class))
+                .map(Projection::from)
+                .map(Class::getName)
+                .orElse("null");
 
-        return null;
+        ProjectionModel metadata = new ProjectionModel(packageName, className, type, from);
+        createClass(typeElement, metadata);
+        return new MappingResult(MappingCategory.ENTITY, metadata.getQualified());
+    }
+
+    private void createClass(Element entity, ProjectionModel metadata) throws IOException {
+        Filer filer = processingEnv.getFiler();
+        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
+        try (Writer writer = fileObject.openWriter()) {
+            template.execute(writer, metadata);
+        }
     }
 
 }
