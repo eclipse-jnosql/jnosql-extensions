@@ -24,7 +24,11 @@ public class ProjectionModel {
 
     private final String from;
 
-    public ProjectionModel(String packageName, String className, String type, String from) {
+     ProjectionModel(String packageName,
+                           String className,
+                           String type,
+                           String from) {
+
         this.packageName = packageName;
         this.className = className;
         this.type = type;
