@@ -53,7 +53,7 @@ final class ProjectionMappingIntrospector  {
 
         String packageName = ProcessorUtil.getPackageName(typeElement);
         String className = ProcessorUtil.getSimpleNameAsString(typeElement);
-        String type = ProcessorUtil.getSimpleNameAsString(typeElement).concat(".class");
+        String type = ProcessorUtil.getSimpleNameAsString(typeElement);
         var projection = typeElement.getAnnotation(Projection.class).toString();
         var from = projection.substring(projection.indexOf("from=") +5, projection.lastIndexOf(")"));
 
