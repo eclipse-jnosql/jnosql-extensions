@@ -23,6 +23,12 @@ import javax.annotation.processing.Generated;
 @Generated(value= "JNoSQL Lite Projection Generator", date = "{{now}}")
 public class {{className}} implements ProjectionMetadata {
 
+   private final ProjectionConstructorMetadata constructor;
+
+   public {{className}} () {
+    this.constructor = new {{constructorClassName}}();
+   }
+
     @Override
     public String className() {
         return "{{type}}";
@@ -40,7 +46,7 @@ public class {{className}} implements ProjectionMetadata {
 
     @Override
     public ProjectionConstructorMetadata constructor() {
-        return null;
+        return constructor;
     }
 }
 
