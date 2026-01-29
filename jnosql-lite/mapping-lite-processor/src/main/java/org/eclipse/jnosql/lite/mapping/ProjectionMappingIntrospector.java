@@ -22,6 +22,7 @@ import jakarta.nosql.Projection;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -57,7 +58,26 @@ final class ProjectionMappingIntrospector  {
         var projection = typeElement.getAnnotation(Projection.class).toString();
         var from = projection.substring(projection.indexOf("from=") +5, projection.lastIndexOf(")"));
 
-        ProjectionModel metadata = new ProjectionModel(packageName, className, type, from);
+        var constructor = processingEnv.getElementUtils().getAllMembers(typeElement)
+                .stream()
+                .filter(MappingProcessor.IS_CONSTRUCTOR)
+                .findFirst().orElseThrow();
+
+        var executableElement = (ExecutableElement) constructor;
+        var parameters = executableElement.getParameters().stream()
+                .map(p -> new ParameterAnalyzer(p, processingEnv, typeElement))
+                .map(ParameterAnalyzer::get)
+                .toList();
+
+        LOGGER.finest("Found the parameters: " + parameters);
+        var constructorMetamodel = ConstructorMetamodel.of(ProcessorUtil.getPackageName(typeElement),
+                ProcessorUtil.getSimpleNameAsString(typeElement), parameters,
+                ProcessorUtil.getSimpleNameAsString(typeElement));
+
+        createConstructors(entity, constructorMetamodel);
+        var constructorClassName = constructorMetamodel.getQualified();
+
+        ProjectionModel metadata = new ProjectionModel(packageName, className, type, from, constructorClassName);
         createClass(typeElement, metadata);
         return new MappingResult(MappingCategory.PROJECTION, metadata.getQualified());
     }
@@ -67,6 +87,14 @@ final class ProjectionMappingIntrospector  {
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
             template.execute(writer, metadata);
+        }
+    }
+
+    private void createConstructors(Element entity, ConstructorMetamodel metadata) throws IOException {
+        Filer filer = processingEnv.getFiler();
+        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
+        try (Writer writer = fileObject.openWriter()) {
+            constructorTemplate.execute(writer, metadata);
         }
     }
 

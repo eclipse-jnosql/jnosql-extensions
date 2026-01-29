@@ -24,15 +24,19 @@ public class ProjectionModel extends BaseMappingModel {
 
     private final String from;
 
+    private final String constructorClassName;
+
      ProjectionModel(String packageName,
                            String className,
                            String type,
-                           String from) {
+                           String from,
+                           String constructorClassName) {
 
         this.packageName = packageName;
         this.className = className;
         this.type = type;
         this.from = from;
+        this.constructorClassName = constructorClassName;
     }
 
     public String getPackageName() {
@@ -49,6 +53,10 @@ public class ProjectionModel extends BaseMappingModel {
 
     public String getFrom() {
         return from;
+    }
+
+    public String getConstructorClassName() {
+        return constructorClassName;
     }
 
     public String getQualified() {
