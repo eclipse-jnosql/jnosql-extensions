@@ -109,14 +109,13 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
     }
 
     private String getName(String fieldName, Column column, Select select) {
-        if (select == null) {
-            if (column == null) {
-                return fieldName;
-            }
-            return column.value().isBlank() ? fieldName : column.value();
-        } else {
-            return select.value().isBlank() ? fieldName : select.value();
+        if (select != null && !select.value().isBlank()) {
+            return select.value();
         }
+        if (column != null && !column.value().isBlank()) {
+            return column.value();
+        }
+        return fieldName;
     }
 
     private static Mustache createTemplate() {
