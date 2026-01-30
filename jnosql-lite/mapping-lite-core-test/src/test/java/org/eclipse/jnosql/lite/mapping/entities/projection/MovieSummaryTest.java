@@ -29,7 +29,7 @@ import java.util.Optional;
 
 class MovieSummaryTest {
 
-    private EntitiesMetadata metadata = new LiteEntitiesMetadata();
+    private final EntitiesMetadata metadata = new LiteEntitiesMetadata();
 
 
     @Test
