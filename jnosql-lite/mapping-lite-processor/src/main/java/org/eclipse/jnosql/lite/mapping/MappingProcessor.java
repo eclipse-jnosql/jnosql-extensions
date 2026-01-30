@@ -78,7 +78,9 @@ public class MappingProcessor extends AbstractProcessor {
             "org.eclipse.jnosql.mapping.metadata.ClassScanner",
             "org.eclipse.jnosql.lite.mapping.metadata.LiteClassScanner",
             "org.eclipse.jnosql.mapping.metadata.ConstructorBuilderSupplier",
-            "org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilderSupplier");
+            "org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilderSupplier",
+            "org.eclipse.jnosql.mapping.metadata.ProjectionBuilderSupplier",
+            "org.eclipse.jnosql.lite.mapping.metadata.LiteProjectorConstructorBuilderSupplier");
 
     private final Mustache template;
 
