@@ -17,8 +17,21 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
 
 
+/**
+ * A lightweight, reflection-free variant of {@link ProjectionConstructorMetadata}.
+ * <p>
+ * Used by JNoSQL Lite to create projection instances without relying on
+ * Java reflection.
+ */
+
 public interface LiteProjectorConstructorMetadata extends ProjectionConstructorMetadata {
 
+    /**
+     * Builds a projection instance using the represented constructor.
+     *
+     * @param parameters the constructor arguments in declaration order
+     * @param <T> the projection type
+     * @return a new projection instance
+     */
     <T> T build(Object[] parameters);
-
 }
