@@ -92,8 +92,8 @@ class MovieSummaryTest {
         projectionBuilder.add("Otavio");
         projectionBuilder.add(Year.now());
         projectionBuilder.add(BigDecimal.TEN);
-        PersonSummary personSummary = projectionBuilder.build();
-        Assertions.assertThat(personSummary).isNotNull();
+        MovieSummary movieSummary = projectionBuilder.build();
+        Assertions.assertThat(movieSummary).isNotNull();
     }
 
 }
