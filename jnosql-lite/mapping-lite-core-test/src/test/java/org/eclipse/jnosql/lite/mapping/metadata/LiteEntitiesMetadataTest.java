@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
+import org.eclipse.jnosql.lite.mapping.entities.projection.MovieSummary;
 import org.eclipse.jnosql.mapping.metadata.ClassInformationNotFoundException;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -213,5 +214,13 @@ class LiteEntitiesMetadataTest {
                 .contains("findByClassName=")
                 .contains("findBySimpleName=")
                 .contains("mappings=");
+    }
+
+    @Test
+    @DisplayName("Should get projection metadata")
+    void shouldGetProjectionMetadata() {
+        EntitiesMetadata metadata = new LiteEntitiesMetadata();
+        Optional<ProjectionMetadata> result = metadata.projection(MovieSummary.class);
+        assertThat(result).isPresent();
     }
 }
