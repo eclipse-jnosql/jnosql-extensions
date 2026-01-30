@@ -24,14 +24,6 @@ import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
  * Java reflection.
  */
 
-public interface LiteProjectorConstructorMetadata extends ProjectionConstructorMetadata {
+public interface LiteProjectorConstructorMetadata extends ProjectionConstructorMetadata, LiteConstructorInvoker {
 
-    /**
-     * Builds a projection instance using the represented constructor.
-     *
-     * @param parameters the constructor arguments in declaration order
-     * @param <T> the projection type
-     * @return a new projection instance
-     */
-    <T> T build(Object[] parameters);
 }
