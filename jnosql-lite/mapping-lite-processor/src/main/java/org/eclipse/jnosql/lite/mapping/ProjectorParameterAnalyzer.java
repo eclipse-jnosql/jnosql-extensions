@@ -82,7 +82,7 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
     private ParameterModel getMetaData() {
         final String fieldName = parameter.getSimpleName().toString();
         LOGGER.finest("Processing the parameter: " + fieldName);
-
+        final String entityName = ProcessorUtil.getSimpleNameAsString(this.entity);
         final TypeMirror typeMirror = parameter.asType();
         String className;
 
@@ -103,6 +103,8 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
                 .packageName(packageName)
                 .name(name)
                 .type(className)
+                .entity(entityName)
+                .fieldName(fieldName)
                 .build();
     }
 
