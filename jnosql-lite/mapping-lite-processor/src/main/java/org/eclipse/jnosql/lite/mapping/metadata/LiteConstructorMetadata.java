@@ -16,7 +16,25 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
 
+/**
+ * A lightweight, reflection-free extension of {@link ConstructorMetadata}.
+ * <p>
+ * This interface is used by JNoSQL Lite to instantiate objects without relying
+ * on Java reflection, enabling better performance and compatibility with
+ * AOT and native-image environments.
+ */
 public interface LiteConstructorMetadata extends ConstructorMetadata {
 
+    /**
+     * Builds a new instance using the constructor represented by this metadata.
+     * <p>
+     * The {@code parameters} array must match the constructor signature in
+     * declaration order.
+     *
+     * @param parameters the constructor arguments
+     * @param <T> the resulting instance type
+     * @return a new instance
+     * @throws IllegalArgumentException if the parameters are invalid
+     */
     <T> T build(Object[] parameters);
 }
