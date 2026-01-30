@@ -74,7 +74,7 @@ class PersonSummaryTest {
             var release = constructor.parameters().get(1);
             var price = constructor.parameters().get(2);
 
-            soft.assertThat(name.name()).isEqualTo("name");
+            soft.assertThat(name.name()).isEqualTo("final_name");
             soft.assertThat(name.type()).isEqualTo(String.class);
 
             soft.assertThat(release.name()).isEqualTo("birthday");
