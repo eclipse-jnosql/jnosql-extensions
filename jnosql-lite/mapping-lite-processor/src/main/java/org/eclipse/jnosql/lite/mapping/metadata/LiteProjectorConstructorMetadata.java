@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020 Otávio Santana and others
+ *  Copyright (c) 2026 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -12,18 +12,18 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.metadata;
 
-import java.time.LocalDateTime;
-import java.time.Year;
+import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
 
-abstract class BaseMappingModel {
 
-    public LocalDateTime getNow() {
-        return LocalDateTime.now();
-    }
+/**
+ * A lightweight, reflection-free variant of {@link ProjectionConstructorMetadata}.
+ * <p>
+ * Used by JNoSQL Lite to create projection instances without relying on
+ * Java reflection.
+ */
 
-    public String getCurrentYear(){
-        return Year.now().toString();
-    }
+public interface LiteProjectorConstructorMetadata extends ProjectionConstructorMetadata, LiteConstructorInvoker {
+
 }

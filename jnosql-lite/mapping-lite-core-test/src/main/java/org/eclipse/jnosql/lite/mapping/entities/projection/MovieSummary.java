@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020 Otávio Santana and others
+ *  Copyright (c) 2026 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -12,18 +12,14 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entities.projection;
 
-import java.time.LocalDateTime;
+import jakarta.nosql.Projection;
+
+import java.math.BigDecimal;
 import java.time.Year;
 
-abstract class BaseMappingModel {
 
-    public LocalDateTime getNow() {
-        return LocalDateTime.now();
-    }
-
-    public String getCurrentYear(){
-        return Year.now().toString();
-    }
+@Projection
+public record MovieSummary(String name, Year release, BigDecimal price) {
 }

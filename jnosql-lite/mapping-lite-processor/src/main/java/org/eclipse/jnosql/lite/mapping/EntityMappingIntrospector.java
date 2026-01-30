@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020 Otávio Santana and others
+ *  Copyright (c) 2025 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -31,7 +31,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
@@ -39,16 +38,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.eclipse.jnosql.lite.mapping.ParameterAnalyzer.INJECT_CONSTRUCTOR;
 
-class ClassAnalyzer implements Supplier<String> {
+final class EntityMappingIntrospector {
 
-    private static final Logger LOGGER = Logger.getLogger(ClassAnalyzer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EntityMappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "entity_metadata.mustache";
     private static final String INJECTABLE_CONSTRUCTOR = "constructor_metadata.mustache";
 
@@ -59,7 +57,7 @@ class ClassAnalyzer implements Supplier<String> {
     private final Mustache template;
     private final Mustache constructorTemplate;
 
-    ClassAnalyzer(Element entity, ProcessingEnvironment processingEnv) {
+    EntityMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
         MustacheFactory factory = new DefaultMustacheFactory();
@@ -67,31 +65,7 @@ class ClassAnalyzer implements Supplier<String> {
         this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
     }
 
-    @Override
-    public String get() {
-        if (ProcessorUtil.isTypeElement(entity)) {
-            TypeElement typeElement = (TypeElement) entity;
-            LOGGER.info("Processing the class: " + typeElement);
-            boolean hasValidConstructor = processingEnv.getElementUtils().getAllMembers(typeElement)
-                    .stream()
-                    .filter(EntityProcessor.IS_CONSTRUCTOR.and(EntityProcessor.HAS_ACCESS))
-                    .anyMatch(EntityProcessor.IS_CONSTRUCTOR.and(EntityProcessor.HAS_ACCESS));
-            if (hasValidConstructor) {
-                try {
-                    return analyze(typeElement);
-                } catch (IOException exception) {
-                    error(exception);
-                }
-            } else {
-                throw new ValidationException("The class " + ProcessorUtil.getSimpleNameAsString(entity)
-                        + " must have at least an either public or default constructor");
-            }
-        }
-
-        return "";
-    }
-
-    private String analyze(TypeElement typeElement) throws IOException {
+    MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
 
         TypeElement superclass =
                 (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
@@ -104,14 +78,14 @@ class ClassAnalyzer implements Supplier<String> {
                 .getAllMembers(typeElement).stream();
 
         final List<String> fields = Stream.concat(elements, superElements)
-                .filter(EntityProcessor.IS_FIELD.and(EntityProcessor.HAS_ANNOTATION))
+                .filter(MappingProcessor.IS_FIELD.and(MappingProcessor.HAS_ANNOTATION))
                 .map(f -> new FieldAnalyzer(f, processingEnv, typeElement))
                 .map(FieldAnalyzer::get)
                 .collect(Collectors.toList());
 
         var constructor = processingEnv.getElementUtils().getAllMembers(typeElement)
                 .stream()
-                .filter(EntityProcessor.IS_CONSTRUCTOR.and(EntityProcessor.HAS_ACCESS)
+                .filter(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS)
                         .and(INJECT_CONSTRUCTOR)).findFirst();
         String constructorClassName = null;
 
@@ -121,7 +95,7 @@ class ClassAnalyzer implements Supplier<String> {
                     .map(p -> new ParameterAnalyzer(p, processingEnv, typeElement))
                     .map(ParameterAnalyzer::get)
                     .toList();
-           LOGGER.finest("Found the parameters: " + parameters);
+            LOGGER.finest("Found the parameters: " + parameters);
             var constructorMetamodel = ConstructorMetamodel.of(ProcessorUtil.getPackageName(typeElement),
                     ProcessorUtil.getSimpleNameAsString(typeElement), parameters,
                     ProcessorUtil.getSimpleNameAsString(typeElement));
@@ -133,25 +107,7 @@ class ClassAnalyzer implements Supplier<String> {
         createClass(entity, metadata);
         LOGGER.info("Found the fields: " + fields);
 
-
-
-        return metadata.getQualified();
-    }
-
-    private void createClass(Element entity, EntityModel metadata) throws IOException {
-        Filer filer = processingEnv.getFiler();
-        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
-        try (Writer writer = fileObject.openWriter()) {
-            template.execute(writer, metadata);
-        }
-    }
-
-    private void createConstructors(Element entity, ConstructorMetamodel metadata) throws IOException {
-        Filer filer = processingEnv.getFiler();
-        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
-        try (Writer writer = fileObject.openWriter()) {
-            constructorTemplate.execute(writer, metadata);
-        }
+        return new MappingResult(MappingCategory.ENTITY, metadata.getQualified());
     }
 
     private EntityModel getMetadata(TypeElement element, List<String> fields, String constructorClassName) {
@@ -187,6 +143,14 @@ class ClassAnalyzer implements Supplier<String> {
                 inheritanceParameter, entityAnnotation, hasInheritanceAnnotation, constructorClassName);
     }
 
+    private void createConstructors(Element entity, ConstructorMetamodel metadata) throws IOException {
+        Filer filer = processingEnv.getFiler();
+        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
+        try (Writer writer = fileObject.openWriter()) {
+            constructorTemplate.execute(writer, metadata);
+        }
+    }
+
     private String getInheritanceParameter(TypeElement element, TypeElement superclass) {
         String discriminatorColumn = Optional
                 .ofNullable(superclass.getAnnotation(DiscriminatorColumn.class))
@@ -206,8 +170,11 @@ class ClassAnalyzer implements Supplier<String> {
                 .toString();
     }
 
-    private void error(IOException exception) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
-                + exception.getMessage());
+    private void createClass(Element entity, EntityModel metadata) throws IOException {
+        Filer filer = processingEnv.getFiler();
+        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
+        try (Writer writer = fileObject.openWriter()) {
+            template.execute(writer, metadata);
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020 Otávio Santana and others
+ *  Copyright (c) 2025 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -14,16 +14,11 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-import java.time.LocalDateTime;
-import java.time.Year;
+record MappingResult(MappingCategory category, String name) {
 
-abstract class BaseMappingModel {
+    static final MappingResult EMPTY = new MappingResult(MappingCategory.ENTITY, "");
 
-    public LocalDateTime getNow() {
-        return LocalDateTime.now();
-    }
-
-    public String getCurrentYear(){
-        return Year.now().toString();
+    public boolean isNotEmpty() {
+        return !this.equals(EMPTY);
     }
 }

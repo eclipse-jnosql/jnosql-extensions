@@ -14,17 +14,17 @@
 */
 package {{packageName}};
 
-import org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorMetadata;
-import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteProjectorConstructorMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionParameterMetadata;
 
 import javax.annotation.processing.Generated;
 import java.util.List;
 import java.util.ArrayList;
 
-@Generated(value= "JNoSQL Lite ConstructorMetadata Generator", date = "{{now}}")
-public final class {{className}} implements LiteConstructorMetadata {
+@Generated(value= "JNoSQL Lite LiteProjectorConstructorMetadata Generator", date = "{{now}}")
+public final class {{className}} implements LiteProjectorConstructorMetadata {
 
-    private final List<ParameterMetaData> parameters = new ArrayList<>();
+    private final List<ProjectionParameterMetadata> parameters = new ArrayList<>();
 
     public {{className}}() {
     {{#parameters}}
@@ -33,12 +33,7 @@ public final class {{className}} implements LiteConstructorMetadata {
     }
 
     @Override
-    public boolean isDefault() {
-        return false;
-    }
-
-    @Override
-    public List<ParameterMetaData> parameters() {
+    public List<ProjectionParameterMetadata> parameters() {
         return parameters;
     }
 

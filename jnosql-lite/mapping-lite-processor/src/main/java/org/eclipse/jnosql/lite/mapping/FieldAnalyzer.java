@@ -126,7 +126,7 @@ class FieldAnalyzer implements Supplier<String> {
 
         final List<Element> accessors = processingEnv.getElementUtils()
                 .getAllMembers(entity).stream()
-                .filter(validName.and(IS_METHOD).and(EntityProcessor.HAS_ACCESS))
+                .filter(validName.and(IS_METHOD).and(MappingProcessor.HAS_ACCESS))
                 .collect(Collectors.toList());
 
         final TypeMirror typeMirror = field.asType();

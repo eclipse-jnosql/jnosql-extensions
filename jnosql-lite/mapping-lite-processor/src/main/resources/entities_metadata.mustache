@@ -1,5 +1,5 @@
 /*
-*  Copyright (c) 2023 Otávio Santana and others
+*   Copyright (c) {{currentYear}} Otávio Santana and others
 *   All rights reserved. This program and the accompanying materials
 *   are made available under the terms of the Eclipse Public License v1.0
 *   and Apache License v2.0 which accompanies this distribution.
@@ -24,11 +24,13 @@ import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -52,6 +54,8 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     private final Map<String, EntityMetadata> findByMappingName;
     private final Map<Class<?>, EntityMetadata> classes;
     private final Map<String, EntityMetadata> mappings;
+    private final Map<Class<?>, ProjectionMetadata> projectionsMap;
+    private final Set<ProjectionMetadata> projections;
 
 
     public LiteEntitiesMetadata() {
@@ -61,10 +65,16 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
         this.classes = new HashMap<>();
         this.mappings = new HashMap<>();
         this.entities = new ArrayList<>();
+        this.projectionsMap = new HashMap<>();
+        this.projections = new HashSet<>();
 
         {{#entities}}
          this.entities.add(new {{.}}());
         {{/entities}}
+
+        {{#projections}}
+         this.projections.add(new {{.}}());
+        {{/projections}}
 
         for (LiteEntityMetadata entity : entities) {
             this.classes.put(entity.type(), entity);
@@ -75,8 +85,11 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
                 this.findByMappingName.put(entity.mappingName(), entity);
             }
         }
-    }
 
+        for (ProjectionMetadata projection : projections) {
+            this.projectionsMap.put(projection.type(), projection);
+        }
+    }
 
     @Override
     public EntityMetadata get(Class<?> entity) {
@@ -124,14 +137,16 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
     }
 
     @Override
-    public Optional<ProjectionMetadata> projection(Class<?> aClass) {
-        return Optional.empty();
+    public Optional<ProjectionMetadata> projection(Class<?> projection) {
+       Objects.requireNonNull(projection, "projection is required");
+       return Optional.ofNullable(projectionsMap.get(projection));
    }
 
     @Override
     public String toString() {
          return "LiteEntitiesMetadata{" +
                 "entities=" + entities +
+                ", projections=" + projections +
                 ", findByClassName=" + findByClassName.keySet() +
                 ", findBySimpleName=" + findBySimpleName.keySet() +
                 ", findByMappingName=" + findByMappingName.keySet() +

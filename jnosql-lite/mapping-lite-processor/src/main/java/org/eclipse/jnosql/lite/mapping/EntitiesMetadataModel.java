@@ -20,12 +20,21 @@ class EntitiesMetadataModel extends BaseMappingModel {
 
     private final List<String> entities;
 
-    public EntitiesMetadataModel(List<String> entities) {
-        this.entities = entities;
+    private final List<String> projections;
+
+    public EntitiesMetadataModel(List<MappingResult> mappingResults) {
+        this.entities = mappingResults.stream().filter(m -> m.category() == MappingCategory.ENTITY)
+                .map(MappingResult::name).toList();
+        this.projections = mappingResults.stream().filter(m -> m.category() == MappingCategory.PROJECTION)
+                .map(MappingResult::name).toList();
     }
 
     public List<String> getEntities() {
         return entities;
+    }
+
+    public List<String> getProjections() {
+        return projections;
     }
 
     public String getQualified() {

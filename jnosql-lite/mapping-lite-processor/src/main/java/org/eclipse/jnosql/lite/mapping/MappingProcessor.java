@@ -53,16 +53,15 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 @SupportedAnnotationTypes({"jakarta.nosql.Entity",
         "jakarta.nosql.Embeddable",
-        "jakarta.nosql.MappedSuperclass"})
+        "jakarta.nosql.MappedSuperclass",
+        "jakarta.nosql.Projection"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
-public class EntityProcessor extends AbstractProcessor {
+public class MappingProcessor extends AbstractProcessor {
 
-    private static final Logger LOGGER = Logger.getLogger(EntityProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MappingProcessor.class.getName());
     private static final EnumSet<Modifier> MODIFIERS = EnumSet.of(PUBLIC, PROTECTED);
     private static final String TEMPLATE = "entities_metadata.mustache";
     static final Predicate<Element> IS_CONSTRUCTOR = el -> el.getKind() == ElementKind.CONSTRUCTOR;
-    static final Predicate<String> IS_BLANK = String::isBlank;
-    static final Predicate<String> IS_NOT_BLANK = IS_BLANK.negate();
     static final Predicate<Element> PUBLIC_PRIVATE = el -> el.getModifiers().stream().anyMatch(MODIFIERS::contains);
     static final Predicate<Element> DEFAULT_MODIFIER = el -> el.getModifiers().isEmpty();
     static final Predicate<Element> HAS_ACCESS = PUBLIC_PRIVATE.or(DEFAULT_MODIFIER);
@@ -79,10 +78,13 @@ public class EntityProcessor extends AbstractProcessor {
             "org.eclipse.jnosql.mapping.metadata.ClassScanner",
             "org.eclipse.jnosql.lite.mapping.metadata.LiteClassScanner",
             "org.eclipse.jnosql.mapping.metadata.ConstructorBuilderSupplier",
-            "org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilderSupplier");
+            "org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilderSupplier",
+            "org.eclipse.jnosql.mapping.metadata.ProjectionBuilderSupplier",
+            "org.eclipse.jnosql.lite.mapping.metadata.LiteProjectorConstructorBuilderSupplier");
+
     private final Mustache template;
 
-    public EntityProcessor() {
+    public MappingProcessor() {
         this.template = createTemplate();
     }
 
@@ -90,21 +92,22 @@ public class EntityProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations,
                            RoundEnvironment roundEnv) {
 
-        final List<String> entities = new ArrayList<>();
+        final List<MappingResult> mappingResults = new ArrayList<>();
         final List<String> references = new ArrayList<>();
         for (TypeElement annotation : annotations) {
             roundEnv.getElementsAnnotatedWith(annotation)
                     .stream()
                     .filter(e -> !references.contains(e.toString()))
                     .peek(e -> references.add(e.toString()))
-                    .map(e -> new ClassAnalyzer(e, processingEnv))
-                    .map(ClassAnalyzer::get)
-                    .filter(IS_NOT_BLANK).forEach(entities::add);
+                    .map(e -> new MappingIntrospector(e, processingEnv))
+                    .map(MappingIntrospector::get)
+                    .filter(MappingResult::isNotEmpty)
+                    .forEach(mappingResults::add);
         }
 
         try {
-            if (!entities.isEmpty()) {
-                createEntitiesMetadata(entities);
+            if (!mappingResults.isEmpty()) {
+                createEntitiesMetadata(mappingResults);
 
                 LOGGER.info("Appending the metadata interfaces");
                 createResources();
@@ -117,7 +120,7 @@ public class EntityProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void createEntitiesMetadata(List<String> entities) throws IOException {
+    private void createEntitiesMetadata(List<MappingResult> entities) throws IOException {
         LOGGER.info("Creating the default EntitiesMetadata class");
         EntitiesMetadataModel metadata = new EntitiesMetadataModel(entities);
         Filer filer = processingEnv.getFiler();
@@ -154,6 +157,4 @@ public class EntityProcessor extends AbstractProcessor {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
                 + exception.getMessage());
     }
-
-
 }
