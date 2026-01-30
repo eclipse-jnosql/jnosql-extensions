@@ -1,0 +1,36 @@
+/*
+ *  Copyright (c) 2023 Otávio Santana and others
+ *   All rights reserved. This program and the accompanying materials
+ *   are made available under the terms of the Eclipse Public License v1.0
+ *   and Apache License v2.0 which accompanies this distribution.
+ *   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+ *   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+ *
+ *   You may elect to redistribute this code under either of these licenses.
+ *
+ *   Contributors:
+ *
+ *   Otavio Santana
+ */
+package {{packageName}};
+
+import jakarta.nosql.AttributeConverter;
+import org.eclipse.jnosql.mapping.metadata.MappingType;
+import org.eclipse.jnosql.mapping.metadata.ProjectionParameterMetadata;
+
+import javax.annotation.processing.Generated;
+import java.util.Optional;
+
+@Generated(value= "JNoSQL Lite ProjectionParameterMetadata Generator", date = "{{now}}")
+public final class {{className}} implements ProjectionParameterMetadata {
+
+    @Override
+    public String name() {
+        return "{{name}}";
+    }
+
+    @Override
+    public Class<?> type() {
+        return {{type}}.class;
+    }
+}
