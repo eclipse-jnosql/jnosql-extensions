@@ -15,12 +15,17 @@
 package org.eclipse.jnosql.lite.mapping.entities.projection;
 
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionParameterMetadata;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.time.Year;
 import java.util.Optional;
 
 class MovieSummaryTest {
@@ -54,6 +59,28 @@ class MovieSummaryTest {
     void shouldFrom() {
         ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
         Assertions.assertThat(projection.from()).isEqualTo(void.class);
+    }
+
+    @Test
+    void shouldConstructor() {
+        ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
+        ProjectionConstructorMetadata constructor = projection.constructor();
+
+        SoftAssertions.assertSoftly(soft ->{
+            soft.assertThat(constructor.parameters()).hasSize(3);
+            var name = constructor.parameters().getFirst();
+            var release = constructor.parameters().get(1);
+            var price = constructor.parameters().get(2);
+
+            soft.assertThat(name.name()).isEqualTo("name");
+            soft.assertThat(name.type()).isEqualTo(String.class);
+
+            soft.assertThat(release.name()).isEqualTo("release");
+            soft.assertThat(release.type()).isEqualTo(Year.class);
+
+            soft.assertThat(price.name()).isEqualTo("price");
+            soft.assertThat(price.type()).isEqualTo(BigDecimal.class);
+        });
     }
 
 }
