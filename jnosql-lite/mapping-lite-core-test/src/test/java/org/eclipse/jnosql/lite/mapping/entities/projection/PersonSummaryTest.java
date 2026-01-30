@@ -20,6 +20,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionBuilder;
 import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
 import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
 import org.junit.jupiter.api.DisplayName;
@@ -83,5 +84,18 @@ class PersonSummaryTest {
             soft.assertThat(price.name()).isEqualTo("salary");
             soft.assertThat(price.type()).isEqualTo(BigDecimal.class);
         });
+    }
+
+    @Test
+    @DisplayName("Should create by constructor")
+    void shouldCreate() {
+        var projection = metadata.projection(PersonSummary.class).orElseThrow();
+        var constructor = projection.constructor();
+        ProjectionBuilder projectionBuilder = ProjectionBuilder.of(constructor);
+        projectionBuilder.add("Otavio");
+        projectionBuilder.add(LocalDate.now());
+        projectionBuilder.add(BigDecimal.TEN);
+        PersonSummary personSummary = projectionBuilder.build();
+        Assertions.assertThat(personSummary).isNotNull();
     }
 }
