@@ -33,7 +33,7 @@ final class ProjectionMappingIntrospector  {
 
     private static final Logger LOGGER = Logger.getLogger(ProjectionMappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "projector_metadata.mustache";
-    private static final String INJECTABLE_CONSTRUCTOR = "constructor_metadata.mustache";
+    private static final String INJECTABLE_CONSTRUCTOR = "projector_constructor_metadata.mustache";
 
     private final Element entity;
 
