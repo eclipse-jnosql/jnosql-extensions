@@ -16,6 +16,7 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
 
+
 public interface LiteProjectorConstructorMetadata extends ProjectionConstructorMetadata {
 
     <T> T build(Object[] parameters);
