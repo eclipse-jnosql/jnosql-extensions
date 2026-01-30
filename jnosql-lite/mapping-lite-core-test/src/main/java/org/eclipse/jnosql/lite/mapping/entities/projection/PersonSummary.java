@@ -14,6 +14,8 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.projection;
 
+import jakarta.data.repository.Select;
+import jakarta.nosql.Column;
 import jakarta.nosql.Projection;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
@@ -22,5 +24,7 @@ import java.time.Year;
 
 
 @Projection(from = Person.class)
-public record PersonSummary(String name, Year release, BigDecimal price) {
+public record PersonSummary(@Select("final_name") String name,
+                            @Column("birthday") Year release,
+                            @Select("salary") BigDecimal price) {
 }
