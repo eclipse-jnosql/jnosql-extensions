@@ -23,6 +23,7 @@ import jakarta.nosql.Column;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -30,6 +31,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -94,7 +97,7 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
         }
 
         var column = parameter.getAnnotation(Column.class);
-        var select = parameter.getAnnotation(Select.class);
+        var select = findSelectFromRecordComponent(entity, fieldName).orElse(null);
 
         final String packageName = ProcessorUtil.getPackageName(entity);
         final String name = getName(fieldName, column, select);
@@ -108,6 +111,20 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
                 .build();
     }
 
+    private Optional<Select> findSelectFromRecordComponent(
+            TypeElement entity,
+            String fieldName
+    ) {
+        if (entity.getKind() != ElementKind.RECORD) {
+            return Optional.empty();
+        }
+
+        return entity.getRecordComponents().stream()
+                .filter(rc -> rc.getSimpleName().contentEquals(fieldName))
+                .map(rc -> rc.getAnnotation(Select.class))
+                .filter(Objects::nonNull)
+                .findFirst();
+    }
     private String getName(String fieldName, Column column, Select select) {
         if (select != null && !select.value().isBlank()) {
             return select.value();
