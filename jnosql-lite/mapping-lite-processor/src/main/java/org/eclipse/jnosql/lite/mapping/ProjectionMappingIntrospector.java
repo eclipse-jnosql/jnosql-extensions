@@ -65,8 +65,8 @@ final class ProjectionMappingIntrospector  {
 
         var executableElement = (ExecutableElement) constructor;
         var parameters = executableElement.getParameters().stream()
-                .map(p -> new ParameterAnalyzer(p, processingEnv, typeElement))
-                .map(ParameterAnalyzer::get)
+                .map(p -> new ProjectorParameterAnalyzer(p, processingEnv, typeElement))
+                .map(ProjectorParameterAnalyzer::get)
                 .toList();
 
         LOGGER.finest("Found the parameters: " + parameters);
