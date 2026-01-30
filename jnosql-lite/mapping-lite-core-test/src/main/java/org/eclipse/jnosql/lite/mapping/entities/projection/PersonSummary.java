@@ -20,11 +20,11 @@ import jakarta.nosql.Projection;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
 import java.math.BigDecimal;
-import java.time.Year;
+import java.time.LocalDate;
 
 
 @Projection(from = Person.class)
 public record PersonSummary(@Select("final_name") String name,
-                            @Column("birthday") Year release,
+                            @Column("birthday") LocalDate release,
                             @Select("salary") BigDecimal price) {
 }

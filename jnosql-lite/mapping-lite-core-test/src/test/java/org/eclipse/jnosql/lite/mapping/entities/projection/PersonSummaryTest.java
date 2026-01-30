@@ -14,8 +14,74 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.projection;
 
-import static org.junit.jupiter.api.Assertions.*;
+
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.lite.mapping.entities.Person;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionConstructorMetadata;
+import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.Year;
+import java.util.Optional;
 
 class PersonSummaryTest {
 
+    private final EntitiesMetadata metadata = new LiteEntitiesMetadata();
+
+
+    @Test
+    @DisplayName("Should return movie summary")
+    void shouldReturnMovieSummary() {
+        Optional<ProjectionMetadata> projection = metadata.projection(PersonSummary.class);
+        Assertions.assertThat(projection).isPresent();
+    }
+
+    @Test
+    @DisplayName("Should return class name")
+    void shouldClassName() {
+        ProjectionMetadata projection = metadata.projection(PersonSummary.class).orElseThrow();
+        Assertions.assertThat(projection.className()).isEqualTo(PersonSummary.class.getSimpleName());
+    }
+
+    @Test
+    @DisplayName("Should return type")
+    void shouldType() {
+        ProjectionMetadata projection = metadata.projection(PersonSummary.class).orElseThrow();
+        Assertions.assertThat(projection.type()).isEqualTo(PersonSummary.class);
+    }
+
+    @Test
+    @DisplayName("Should from")
+    void shouldFrom() {
+        ProjectionMetadata projection = metadata.projection(PersonSummary.class).orElseThrow();
+        Assertions.assertThat(projection.from()).isEqualTo(Person.class);
+    }
+
+    @Test
+    void shouldConstructor() {
+        ProjectionMetadata projection = metadata.projection(PersonSummary.class).orElseThrow();
+        ProjectionConstructorMetadata constructor = projection.constructor();
+
+        SoftAssertions.assertSoftly(soft ->{
+            soft.assertThat(constructor.parameters()).hasSize(3);
+            var name = constructor.parameters().getFirst();
+            var release = constructor.parameters().get(1);
+            var price = constructor.parameters().get(2);
+
+            soft.assertThat(name.name()).isEqualTo("name");
+            soft.assertThat(name.type()).isEqualTo(String.class);
+
+            soft.assertThat(release.name()).isEqualTo("birthday");
+            soft.assertThat(release.type()).isEqualTo(LocalDate.class);
+
+            soft.assertThat(price.name()).isEqualTo("salary");
+            soft.assertThat(price.type()).isEqualTo(BigDecimal.class);
+        });
+    }
 }
