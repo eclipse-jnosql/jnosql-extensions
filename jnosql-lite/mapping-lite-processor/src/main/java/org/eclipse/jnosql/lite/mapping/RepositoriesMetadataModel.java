@@ -18,19 +18,19 @@ import java.util.List;
 
 class RepositoriesMetadataModel extends BaseMappingModel {
 
-    private final List<String> entities;
+    private final List<String> repositories;
 
     private final List<String> projections;
 
     public RepositoriesMetadataModel(List<MappingResult> mappingResults) {
-        this.entities = mappingResults.stream().filter(m -> m.category() == MappingCategory.ENTITY)
+        this.repositories = mappingResults.stream().filter(m -> m.category() == MappingCategory.REPOSITORY)
                 .map(MappingResult::name).toList();
         this.projections = mappingResults.stream().filter(m -> m.category() == MappingCategory.PROJECTION)
                 .map(MappingResult::name).toList();
     }
 
-    public List<String> getEntities() {
-        return entities;
+    public List<String> getRepositories() {
+        return repositories;
     }
 
     public List<String> getProjections() {
@@ -38,6 +38,6 @@ class RepositoriesMetadataModel extends BaseMappingModel {
     }
 
     public String getQualified() {
-        return "org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata";
+        return "org.eclipse.jnosql.lite.mapping.metadata.LiteRepositoriesMetadata";
     }
 }

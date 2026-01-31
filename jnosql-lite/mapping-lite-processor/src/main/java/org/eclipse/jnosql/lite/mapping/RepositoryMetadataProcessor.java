@@ -51,9 +51,9 @@ public class RepositoryMetadataProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void createEntitiesMetadata(List<MappingResult> entities) throws IOException {
+    private void createRepository(List<MappingResult> repositories) throws IOException {
         LOGGER.info("Creating the default repository class");
-        EntitiesMetadataModel metadata = new EntitiesMetadataModel(entities);
+        RepositoriesMetadataModel metadata = new RepositoriesMetadataModel(repositories);
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified());
         try (Writer writer = fileObject.openWriter()) {
