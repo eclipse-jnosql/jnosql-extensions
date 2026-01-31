@@ -29,6 +29,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -52,8 +53,23 @@ public class RepositoryMetadataProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
         try {
-            createRepository(Collections.emptyList());
-        } catch (IOException  exception) {
+            final List<MappingResult> mappingResults = new ArrayList<>();
+            final List<String> references = new ArrayList<>();
+            for (TypeElement annotation : annotations) {
+                roundEnv.getElementsAnnotatedWith(annotation)
+                        .stream()
+                        .filter(e -> !references.contains(e.toString()))
+                        .peek(e -> references.add(e.toString()))
+                        .map(e -> new RepositoryIntrospector(e, processingEnv))
+                        .map(RepositoryIntrospector::get)
+                        .filter(MappingResult::isNotEmpty)
+                        .forEach(mappingResults::add);
+            }
+
+            if (!mappingResults.isEmpty()) {
+                createRepository(Collections.emptyList());
+            }
+        } catch (IOException exception) {
             error(exception);
         }
         return false;
