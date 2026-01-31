@@ -16,5 +16,6 @@ package org.eclipse.jnosql.lite.mapping;
 
 enum MappingCategory {
     ENTITY,
-    PROJECTION
+    PROJECTION,
+    REPOSITORY;
 }
