@@ -14,21 +14,56 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
+
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 
 @SupportedAnnotationTypes("jakarta.data.repository.Repository")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class RepositoryMetadataProcessor extends AbstractProcessor {
 
+    private static final Logger LOGGER = Logger.getLogger(RepositoryMetadataProcessor.class.getName());
+    private static final String TEMPLATE = "repositories_metadata.mustache";
+
+    private final Mustache template;
+
+    public RepositoryMetadataProcessor() {
+        this.template = createTemplate();
+    }
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         return false;
     }
+
+    private void createEntitiesMetadata(List<MappingResult> entities) throws IOException {
+        LOGGER.info("Creating the default repository class");
+        EntitiesMetadataModel metadata = new EntitiesMetadataModel(entities);
+        Filer filer = processingEnv.getFiler();
+        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified());
+        try (Writer writer = fileObject.openWriter()) {
+            template.execute(writer, metadata);
+        }
+    }
+
+    private Mustache createTemplate() {
+        MustacheFactory factory = new DefaultMustacheFactory();
+        return factory.compile(TEMPLATE);
+    }
+
 }
