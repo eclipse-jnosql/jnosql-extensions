@@ -45,7 +45,7 @@ public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
     public LiteRepositoriesMetadata() {
         this.repositoryByType = new HashMap<>();
         this.repositories = new ArrayList<>();
-        this.projections = new HashSet<>();
+        this.projections = new ArrayList<>();
 
         {{#repositories}}
          this.repositories.add(new {{.}}());
@@ -56,7 +56,7 @@ public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
         {{/projections}}
 
         for (var repository : repositories) {
-            this.classes.put(repository.type(), repository);
+            this.repositoryByType.put(repository.type(), repository);
         }
     }
 
