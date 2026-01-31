@@ -25,9 +25,12 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -48,6 +51,12 @@ public class RepositoryMetadataProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+
+        try {
+            createRepository(Collections.emptyList());
+        } catch (IOException  exception) {
+            error(exception);
+        }
         return false;
     }
 
@@ -64,6 +73,11 @@ public class RepositoryMetadataProcessor extends AbstractProcessor {
     private Mustache createTemplate() {
         MustacheFactory factory = new DefaultMustacheFactory();
         return factory.compile(TEMPLATE);
+    }
+
+    private void error(Exception exception) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
+                + exception.getMessage());
     }
 
 }
