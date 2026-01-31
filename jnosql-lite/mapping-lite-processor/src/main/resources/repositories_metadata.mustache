@@ -14,26 +14,18 @@
 */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
-
 import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.jnosql.mapping.metadata.ClassInformationNotFoundException;
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
-import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
-import org.eclipse.jnosql.mapping.metadata.InheritanceMetadata;
 import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 
+import javax.annotation.processing.Generated;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.Generated;
 
@@ -71,7 +63,7 @@ public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
     @Override
     public Optional<RepositoryMetadata> get(Class<?> type) {
        Objects.requireNonNull(type, "type is required");
-       return Optional.ofNullable(findByMappingName.get(mappingName));
+            return Optional.ofNullable(repositoryByType.get(type));
     }
 
 }
