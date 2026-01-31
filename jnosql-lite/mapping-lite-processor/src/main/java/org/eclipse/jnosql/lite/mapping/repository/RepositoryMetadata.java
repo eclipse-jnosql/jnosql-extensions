@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.repository;
 
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.util.List;
 import java.util.function.Function;
 
@@ -68,5 +69,9 @@ abstract class RepositoryMetadata implements Function<MethodMetadata, MethodGene
 
     public String getProviderType() {
         return providerType;
+    }
+
+    public String getCurrentYear() {
+        return Year.now().toString();
     }
 }
