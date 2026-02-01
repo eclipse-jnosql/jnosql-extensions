@@ -46,15 +46,12 @@ public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
         this.repositoryByType = new HashMap<>();
         this.repositories = new ArrayList<>();
         this.projections = new ArrayList<>();
-
         {{#repositories}}
          this.repositories.add(new {{.}}());
         {{/repositories}}
-
         {{#projections}}
          this.projections.add(new {{.}}());
         {{/projections}}
-
         for (var repository : repositories) {
             this.repositoryByType.put(repository.type(), repository);
         }
