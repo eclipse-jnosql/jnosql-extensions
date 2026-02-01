@@ -33,11 +33,6 @@ import javax.annotation.processing.Generated;
 @ApplicationScoped
 public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
 
-    /**
-    * The singleton instance
-    */
-    public static final LiteRepositoriesMetadata INSTANCE = new LiteRepositoriesMetadata();
-
     private final List<RepositoryMetadata> repositories;
     private final List<ProjectionMetadata> projections;
     private final Map<Class<?>, RepositoryMetadata> repositoryByType;
@@ -63,4 +58,7 @@ public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
             return Optional.ofNullable(repositoryByType.get(type));
     }
 
+    public List<ProjectionMetadata> getProjections() {
+        return this.projections;
+    }
 }
