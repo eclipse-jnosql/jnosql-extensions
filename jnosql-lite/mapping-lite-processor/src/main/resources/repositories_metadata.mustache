@@ -57,7 +57,9 @@ public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
        Objects.requireNonNull(type, "type is required");
             return Optional.ofNullable(repositoryByType.get(type));
     }
-
+    /**
+    * @return returns projections that was found during the repository reading
+    */
     public List<ProjectionMetadata> getProjections() {
         return this.projections;
     }
