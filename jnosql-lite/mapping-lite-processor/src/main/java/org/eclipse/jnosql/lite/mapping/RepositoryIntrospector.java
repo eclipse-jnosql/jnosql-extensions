@@ -23,21 +23,22 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
 
     private static final Logger LOGGER = Logger.getLogger(RepositoryIntrospector.class.getName());
 
-    private final Element entity;
+    private final Element repository;
 
     private final ProcessingEnvironment processingEnv;
     private final EntityMappingIntrospector entityMappingIntrospector;
     private final ProjectionMappingIntrospector projectionMappingIntrospector;
 
-    RepositoryIntrospector(Element entity, ProcessingEnvironment processingEnv) {
-        this.entity = entity;
+    RepositoryIntrospector(Element repository, ProcessingEnvironment processingEnv) {
+        this.repository = repository;
         this.processingEnv = processingEnv;
-        this.entityMappingIntrospector = new EntityMappingIntrospector(entity, processingEnv);
-        this.projectionMappingIntrospector = new ProjectionMappingIntrospector(entity, processingEnv);
+        this.entityMappingIntrospector = new EntityMappingIntrospector(repository, processingEnv);
+        this.projectionMappingIntrospector = new ProjectionMappingIntrospector(repository, processingEnv);
     }
 
     @Override
     public MappingResult get() {
+        LOGGER.info("Processing the repository: " + repository);
         return new MappingResult(MappingCategory.PROJECTION, "");
     }
 }
