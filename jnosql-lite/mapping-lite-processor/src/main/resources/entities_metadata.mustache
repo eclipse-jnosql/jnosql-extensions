@@ -71,11 +71,9 @@ public final class LiteEntitiesMetadata implements EntitiesMetadata {
         {{#entities}}
          this.entities.add(new {{.}}());
         {{/entities}}
-
         {{#projections}}
          this.projections.add(new {{.}}());
         {{/projections}}
-
         var repositoriesMetadata = new LiteRepositoriesMetadata();
         this.projections.addAll(repositoriesMetadata.getProjections());
         for (LiteEntityMetadata entity : entities) {
