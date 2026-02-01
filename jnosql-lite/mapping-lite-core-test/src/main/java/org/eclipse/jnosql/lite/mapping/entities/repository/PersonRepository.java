@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping.entities.repositories;
+package org.eclipse.jnosql.lite.mapping.entities.repository;
 
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
