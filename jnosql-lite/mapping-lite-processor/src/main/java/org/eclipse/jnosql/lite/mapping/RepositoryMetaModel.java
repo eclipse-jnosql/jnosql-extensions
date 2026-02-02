@@ -14,5 +14,62 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-public class RepositoryMetaModel extends BaseMappingModel {
+import java.util.List;
+
+class RepositoryMetaModel extends BaseMappingModel {
+
+    private final String packageName;
+
+    private final String entity;
+
+    private final String name;
+
+    private final List<String> methods;
+
+    private final String type;
+
+     RepositoryMetaModel(String packageName,
+                         String entity,
+                         String name,
+                         String type,
+                         List<String> methods) {
+        this.packageName = packageName;
+        this.entity = entity;
+        this.name = name;
+        this.methods = methods;
+        this.type = type;
+    }
+
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public String getEntity() {
+        return entity;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<String> getMethods() {
+        return methods;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getEntityQualified() {
+        return packageName + '.' + entity;
+    }
+
+    public String getClassName() {
+        return entity + "RepositoryMetadata";
+    }
+
+    public String getQualified() {
+        return packageName + "." + getClassName();
+    }
 }
