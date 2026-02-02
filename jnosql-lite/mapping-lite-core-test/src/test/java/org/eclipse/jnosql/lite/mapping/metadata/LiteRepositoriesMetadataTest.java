@@ -15,9 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.assertj.core.api.Assertions;
-import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
-import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
