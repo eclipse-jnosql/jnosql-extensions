@@ -16,8 +16,10 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.lite.mapping.entities.Actor;
 import org.eclipse.jnosql.lite.mapping.entities.Computer;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
+import org.eclipse.jnosql.lite.mapping.entities.repository.ActorRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
@@ -77,6 +79,18 @@ public class LiteRepositoriesMetadataTest {
             soft.assertThat(repositoryMetadata).isNotNull();
             soft.assertThat(repositoryMetadata.type()).isEqualTo(ComputerRepository.class);
             soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Computer.class);
+        });
+    }
+
+    @Test
+    @DisplayName("Should load actor repository")
+    void shouldLoadActorRepository() {
+        var repositoryMetadata = repositoriesMetadata.get(ActorRepository.class).orElseThrow();
+
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(repositoryMetadata).isNotNull();
+            soft.assertThat(repositoryMetadata.type()).isEqualTo(ActorRepository.class);
+            soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Actor.class);
         });
     }
 
