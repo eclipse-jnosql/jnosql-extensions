@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.assertj.core.api.Assertions;
+import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +43,13 @@ public class LiteRepositoriesMetadataTest {
     void shouldReturnOptionalEmptyWhenRepositoryNotFound() {
         var repositoryMetadata = repositoriesMetadata.get(String.class);
         Assertions.assertThat(repositoryMetadata).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Should find when repository found")
+    void shouldFindWhenRepositoryFound() {
+        var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class);
+        Assertions.assertThat(repositoryMetadata).isNotEmpty();
     }
 
 }
