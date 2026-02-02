@@ -16,29 +16,66 @@ package org.eclipse.jnosql.lite.mapping;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public class RepositoryIntrospector implements Supplier<MappingResult> {
 
+    private static final Set<String> JAKARTA_DATA_REPOSITORIES = Set.of(
+            "jakarta.data.repository.DataRepository",
+            "jakarta.data.repository.BasicRepository",
+            "jakarta.data.repository.CrudRepository"
+    );
+
     private static final Logger LOGGER = Logger.getLogger(RepositoryIntrospector.class.getName());
 
-    private final Element repository;
+    private final Element element;
 
     private final ProcessingEnvironment processingEnv;
     private final EntityMappingIntrospector entityMappingIntrospector;
     private final ProjectionMappingIntrospector projectionMappingIntrospector;
 
-    RepositoryIntrospector(Element repository, ProcessingEnvironment processingEnv) {
-        this.repository = repository;
+    RepositoryIntrospector(Element element, ProcessingEnvironment processingEnv) {
+        this.element = element;
         this.processingEnv = processingEnv;
-        this.entityMappingIntrospector = new EntityMappingIntrospector(repository, processingEnv);
-        this.projectionMappingIntrospector = new ProjectionMappingIntrospector(repository, processingEnv);
+        this.entityMappingIntrospector = new EntityMappingIntrospector(element, processingEnv);
+        this.projectionMappingIntrospector = new ProjectionMappingIntrospector(element, processingEnv);
     }
 
     @Override
     public MappingResult get() {
-        LOGGER.info("Processing the repository: " + repository);
+        if(element instanceof TypeElement repository){
+            LOGGER.info("Processing the repository: " + repository);
+            String packageName = ProcessorUtil.getPackageName(repository);
+            String sourceClassName = ProcessorUtil.getSimpleNameAsString(repository);
+            String entity = entityOptionalLiteral(repository);
+            String type = ProcessorUtil.getSimpleNameAsString(repository);
+        }
         return new MappingResult(MappingCategory.PROJECTION, "");
+    }
+
+    private String entityOptionalLiteral(TypeElement repository) {
+
+        return repository.getInterfaces().stream()
+                .filter(t -> t.getKind() == TypeKind.DECLARED)
+                .map(t -> (DeclaredType) t)
+                .filter(dt -> {
+                    TypeElement interfaceElement = (TypeElement) dt.asElement();
+                    return JAKARTA_DATA_REPOSITORIES.contains(
+                            interfaceElement.getQualifiedName().toString()
+                    );
+                })
+                .filter(dt -> !dt.getTypeArguments().isEmpty())
+                .map(dt -> dt.getTypeArguments().getFirst())
+                .filter(t -> t.getKind() == TypeKind.DECLARED)
+                .map(t -> (DeclaredType) t)
+                .map(t -> (TypeElement) t.asElement())
+                .map(te -> "Optional.of(" + te.getQualifiedName() + ".class)")
+                .findFirst()
+                .orElse("Optional.empty()");
     }
 }
