@@ -77,7 +77,7 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         } catch (IOException exception) {
             error(exception);
         }
-        return new MappingResult(MappingCategory.ENTITY, metadata.getQualified());
+        return new MappingResult(MappingCategory.REPOSITORY, metadata.getQualified());
     }
 
     private String entityOptionalLiteral(TypeElement repository) {
