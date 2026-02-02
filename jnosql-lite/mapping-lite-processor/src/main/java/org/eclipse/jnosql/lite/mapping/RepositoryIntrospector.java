@@ -48,15 +48,11 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
     private final Element element;
 
     private final ProcessingEnvironment processingEnv;
-    private final EntityMappingIntrospector entityMappingIntrospector;
-    private final ProjectionMappingIntrospector projectionMappingIntrospector;
     private final Mustache template;
 
     RepositoryIntrospector(Element element, ProcessingEnvironment processingEnv) {
         this.element = element;
         this.processingEnv = processingEnv;
-        this.entityMappingIntrospector = new EntityMappingIntrospector(element, processingEnv);
-        this.projectionMappingIntrospector = new ProjectionMappingIntrospector(element, processingEnv);
         MustacheFactory factory = new DefaultMustacheFactory();
         this.template = factory.compile(NEW_INSTANCE);
 
