@@ -15,6 +15,10 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.lite.mapping.entities.Computer;
+import org.eclipse.jnosql.lite.mapping.entities.Person;
+import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +54,30 @@ public class LiteRepositoriesMetadataTest {
     void shouldFindWhenRepositoryFound() {
         var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class);
         Assertions.assertThat(repositoryMetadata).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Should load person repository")
+    void shouldLoadPersonRepository() {
+        var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(repositoryMetadata).isNotNull();
+            soft.assertThat(repositoryMetadata.type()).isEqualTo(PersonRepository.class);
+            soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Person.class);
+        });
+    }
+
+    @Test
+    @DisplayName("Should load Computer repository")
+    void shouldLoadComputerRepository() {
+        var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
+
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(repositoryMetadata).isNotNull();
+            soft.assertThat(repositoryMetadata.type()).isEqualTo(ComputerRepository.class);
+            soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Computer.class);
+        });
     }
 
 }
