@@ -14,9 +14,9 @@
 */
 package {{packageName}};
 
-import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.lite.mapping.metadata.RepositoryMethodLookup;
 import org.eclipse.jnosql.mapping.metadata.ProjectionMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.MethodKey;
 import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
@@ -34,20 +34,22 @@ import java.util.Optional;
 @Generated(value= "JNoSQL Lite RepositoryMetadata Generator", date = "{{now}}")
 public final class {{className}} implements RepositoryMetadata {
 
-   private final List<RepositoryMethodLookup> methods;
+   private final List<RepositoryMethod> methods;
    private final Map<MethodSignatureKey, RepositoryMethod> repositoryByType;
    private final Map<NameKey, RepositoryMethod> repositoryByName;
 
     public {{className}}() {
         this.repositoryByType = new HashMap<>();
         this.repositoryByName = new HashMap<>();
-        this.methods = new ArrayList<>();
+        List<RepositoryMethodLookup> methodLookup = new ArrayList<>();
         {{#methods}}
-         this.methods.add(new {{.}}());
+         this.methodLookup.add(new {{.}}());
         {{/methods}}
-        for (var method : methods) {
+        this.methods = new ArrayList<>(methodLookup.size());
+        for (var method : methodLookup) {
             this.repositoryByType.put(method.bySignature(), method);
             this.repositoryByName.put(method.byName(), method);
+            this.methods.add(method);
         }
     }
 
