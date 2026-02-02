@@ -54,11 +54,11 @@ class RepositoryMetaModel extends BaseMappingModel {
     }
 
     public String getEntityQualified() {
-        return packageName + '.' + entity;
+        return packageName + '.' + type;
     }
 
     public String getClassName() {
-        return entity + "RepositoryMetadata";
+        return type + "RepositoryMetadata";
     }
 
     public String getQualified() {

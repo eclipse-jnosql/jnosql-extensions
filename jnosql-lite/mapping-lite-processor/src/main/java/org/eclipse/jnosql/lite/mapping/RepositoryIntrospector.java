@@ -63,7 +63,7 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         if(element instanceof TypeElement repository){
             return generateMappingInterface(repository);
         }
-        return new MappingResult(MappingCategory.PROJECTION, "");
+        return MappingResult.EMPTY;
     }
 
     private MappingResult generateMappingInterface(TypeElement repository) {
