@@ -19,6 +19,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -51,9 +52,9 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         if(element instanceof TypeElement repository){
             LOGGER.info("Processing the repository: " + repository);
             String packageName = ProcessorUtil.getPackageName(repository);
-            String sourceClassName = ProcessorUtil.getSimpleNameAsString(repository);
             String entity = entityOptionalLiteral(repository);
             String type = ProcessorUtil.getSimpleNameAsString(repository);
+            var metaData = new RepositoryMetaModel(packageName, entity, type, Collections.emptyList());
         }
         return new MappingResult(MappingCategory.PROJECTION, "");
     }

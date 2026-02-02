@@ -22,20 +22,16 @@ class RepositoryMetaModel extends BaseMappingModel {
 
     private final String entity;
 
-    private final String name;
-
     private final List<String> methods;
 
     private final String type;
 
      RepositoryMetaModel(String packageName,
                          String entity,
-                         String name,
                          String type,
                          List<String> methods) {
         this.packageName = packageName;
         this.entity = entity;
-        this.name = name;
         this.methods = methods;
         this.type = type;
     }
@@ -47,10 +43,6 @@ class RepositoryMetaModel extends BaseMappingModel {
 
     public String getEntity() {
         return entity;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public List<String> getMethods() {
