@@ -30,7 +30,6 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -67,7 +66,7 @@ public class RepositoryMetadataProcessor extends AbstractProcessor {
             }
 
             if (!mappingResults.isEmpty()) {
-                createRepository(Collections.emptyList());
+                createRepository(mappingResults);
             }
         } catch (IOException exception) {
             error(exception);
@@ -76,7 +75,7 @@ public class RepositoryMetadataProcessor extends AbstractProcessor {
     }
 
     private void createRepository(List<MappingResult> repositories) throws IOException {
-        LOGGER.info("Creating the default repository class");
+        LOGGER.info("Creating the default repository class, with repositories: " + repositories.size());
         RepositoriesMetadataModel metadata = new RepositoriesMetadataModel(repositories);
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified());
