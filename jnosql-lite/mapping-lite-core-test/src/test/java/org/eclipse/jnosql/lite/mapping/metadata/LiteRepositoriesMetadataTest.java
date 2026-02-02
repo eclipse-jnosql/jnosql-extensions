@@ -21,6 +21,7 @@ import org.eclipse.jnosql.lite.mapping.entities.Computer;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ActorRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
+import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +92,19 @@ public class LiteRepositoriesMetadataTest {
             soft.assertThat(repositoryMetadata).isNotNull();
             soft.assertThat(repositoryMetadata.type()).isEqualTo(ActorRepository.class);
             soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Actor.class);
+        });
+    }
+
+
+    @Test
+    @DisplayName("Should load garage repository")
+    void shouldLoadGarage() {
+        var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
+
+        SoftAssertions.assertSoftly(soft -> {
+            soft.assertThat(repositoryMetadata).isNotNull();
+            soft.assertThat(repositoryMetadata.type()).isEqualTo(Garage.class);
+            soft.assertThat(repositoryMetadata.entity()).isEmpty();
         });
     }
 
