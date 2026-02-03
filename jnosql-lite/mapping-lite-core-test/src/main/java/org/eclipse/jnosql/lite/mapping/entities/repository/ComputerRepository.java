@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021 Otávio Santana and others
+ *  Copyright (c) 2026 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -12,19 +12,12 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping.metadata;
+package org.eclipse.jnosql.lite.mapping.entities.repository;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
-import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import jakarta.data.repository.DataRepository;
+import jakarta.data.repository.Repository;
+import org.eclipse.jnosql.lite.mapping.entities.Computer;
 
-import java.util.Optional;
-
-@ApplicationScoped
-public class LiteRepositoryMetadata implements RepositoriesMetadata {
-
-    @Override
-    public Optional<RepositoryMetadata> get(Class<?> type) {
-        return Optional.empty();
-    }
+@Repository
+public interface ComputerRepository extends DataRepository<Computer, String> {
 }

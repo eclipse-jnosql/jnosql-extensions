@@ -1,0 +1,74 @@
+/*
+*   Copyright (c) {{currentYear}} Otávio Santana and others
+*   All rights reserved. This program and the accompanying materials
+*   are made available under the terms of the Eclipse Public License v1.0
+*   and Apache License v2.0 which accompanies this distribution.
+*   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+*   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+*
+*   You may elect to redistribute this code under either of these licenses.
+*
+*   Contributors:
+*
+*   Otavio Santana
+*/
+package {{packageName}};
+
+import org.eclipse.jnosql.lite.mapping.metadata.RepositoryMethodLookup;
+import org.eclipse.jnosql.mapping.metadata.repository.MethodKey;
+import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
+import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
+
+import javax.annotation.processing.Generated;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+@Generated(value= "JNoSQL Lite RepositoryMetadata Generator", date = "{{now}}")
+public final class {{className}} implements RepositoryMetadata {
+
+   private final List<RepositoryMethod> methods;
+   private final Map<MethodSignatureKey, RepositoryMethod> repositoryByType;
+   private final Map<NameKey, RepositoryMethod> repositoryByName;
+
+    public {{className}}() {
+        this.repositoryByType = new HashMap<>();
+        this.repositoryByName = new HashMap<>();
+        List<RepositoryMethodLookup> methodLookup = new ArrayList<>();
+        {{#methods}}
+         this.methodLookup.add(new {{.}}());
+        {{/methods}}
+        this.methods = new ArrayList<>(methodLookup.size());
+        for (var method : methodLookup) {
+            this.repositoryByType.put(method.bySignature(), method);
+            this.repositoryByName.put(method.byName(), method);
+            this.methods.add(method);
+        }
+    }
+
+    @Override
+    public Optional<Class<?>> entity() {
+    return {{entity}};
+    }
+
+    @Override
+    public Class<?> type() {
+        return {{type}}.class;
+    }
+
+    @Override
+    public List<RepositoryMethod> methods() {
+        return methods;
+    }
+
+    @Override
+    public Optional<RepositoryMethod> find(MethodKey key) {
+         Objects.requireNonNull(key, "key is required");
+         return Optional.empty();
+    }
+}
