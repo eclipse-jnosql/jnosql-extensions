@@ -28,10 +28,12 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class RepositoryIntrospector implements Supplier<MappingResult> {
 
@@ -71,7 +73,12 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         String packageName = ProcessorUtil.getPackageName(repository);
         String entity = entityOptionalLiteral(repository);
         String type = ProcessorUtil.getSimpleNameAsString(repository);
-        var metadata = new RepositoryMetaModel(packageName, entity, type, Collections.emptyList());
+        List<String> methods = repository.getEnclosedElements()
+                .stream()
+                .map(e -> RepositoryMethodIntrospector.of(e, type, processingEnv))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        var metadata = new RepositoryMetaModel(packageName, entity, type, methods);
         try {
             createClass(element, metadata);
         } catch (IOException exception) {
