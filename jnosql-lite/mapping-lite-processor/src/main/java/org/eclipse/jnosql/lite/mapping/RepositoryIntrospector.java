@@ -76,7 +76,7 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         List<String> methods = repository.getEnclosedElements()
                 .stream()
                 .map(e -> RepositoryMethodIntrospector.of(e, type, processingEnv))
-                .filter(Objects::nonNull)
+                .map(RepositoryMethodIntrospector::generateMethodClass)
                 .collect(Collectors.toList());
         var metadata = new RepositoryMetaModel(packageName, entity, type, methods);
         try {
