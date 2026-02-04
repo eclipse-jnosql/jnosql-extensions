@@ -31,43 +31,73 @@ import javax.annotation.processing.Generated;
 @Generated(value= "JNoSQL Lite RepositoryMetadata Generator", date = "{{now}}")
 public final class {{className}} implements RepositoryMethodLookup {
 
-   private final List<RepositoryMethod> methods;
-   private final Map<MethodSignatureKey, RepositoryMethod> repositoryByType;
-   private final Map<NameKey, RepositoryMethod> repositoryByName;
 
     public {{className}}() {
-        this.repositoryByType = new HashMap<>();
-        this.repositoryByName = new HashMap<>();
-        List<RepositoryMethodLookup> methodLookup = new ArrayList<>();
-        {{#methods}}
-         this.methodLookup.add(new {{.}}());
-        {{/methods}}
-        this.methods = new ArrayList<>(methodLookup.size());
-        for (var method : methodLookup) {
-            this.repositoryByType.put(method.bySignature(), method);
-            this.repositoryByName.put(method.byName(), method);
-            this.methods.add(method);
-        }
     }
 
     @Override
-    public Optional<Class<?>> entity() {
-    return {{entity}};
+    public MethodSignatureKey bySignature() {
+        return null;
     }
 
     @Override
-    public Class<?> type() {
-        return {{type}}.class;
+    public NameKey byName() {
+        return null;
     }
 
     @Override
-    public List<RepositoryMethod> methods() {
-        return methods;
+    public Optional<String> query() {
+        return Optional.empty();
     }
 
     @Override
-    public Optional<RepositoryMethod> find(MethodKey key) {
-         Objects.requireNonNull(key, "key is required");
-         return Optional.empty();
+    public OptionalInt first() {
+        return OptionalInt.empty();
     }
+
+    @Override
+    public List<Sort<?>> sorts() {
+        return List.of();
+    }
+
+    @Override
+    public String name() {
+        return "";
+    }
+
+    @Override
+    public RepositoryMethodType type() {
+        return null;
+    }
+
+    @Override
+    public List<RepositoryParam> params() {
+        return List.of();
+    }
+
+    @Override
+    public Optional<Class<?>> returnType() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Class<?>> elementType() {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<String> select() {
+        return List.of();
+    }
+
+    @Override
+    public Optional<Class<?>> find() {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<RepositoryAnnotation> annotations() {
+        return List.of();
+    }
+
 }
