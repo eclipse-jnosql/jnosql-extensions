@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 public class RepositoryIntrospector implements Supplier<MappingResult> {
 
-    private static final String NEW_INSTANCE = "repository_metadata.mustache";
+    private static final String MUSTACHE_TEMPLATE = "repository_metadata.mustache";
 
     private static final Set<String> JAKARTA_DATA_REPOSITORIES = Set.of(
             "jakarta.data.repository.DataRepository",
@@ -56,7 +56,7 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         this.element = element;
         this.processingEnv = processingEnv;
         MustacheFactory factory = new DefaultMustacheFactory();
-        this.template = factory.compile(NEW_INSTANCE);
+        this.template = factory.compile(MUSTACHE_TEMPLATE);
 
     }
 
