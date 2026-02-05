@@ -24,6 +24,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 
 import javax.lang.model.element.Element;
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -52,6 +53,24 @@ enum MethodTypeUtils {
     private static final Set<MethodOperation> OPERATION_ANNOTATIONS =
             Set.of(INSERT, SAVE, DELETE, UPDATE, QUERY, FIND_QUERY);
 
+    private static final MethodPattern FIND_BY =
+            MethodPattern.of("find", RepositoryMethodType.FIND_BY);
+
+    private static final MethodPattern DELETE_BY =
+            MethodPattern.of("delete", RepositoryMethodType.DELETE_BY);
+
+    private static final MethodPattern COUNT_ALL =
+            MethodPattern.of("countAll", RepositoryMethodType.COUNT_ALL);
+
+    private static final MethodPattern COUNT_BY =
+            MethodPattern.of("count", RepositoryMethodType.COUNT_BY);
+
+    private static final MethodPattern EXISTS_BY =
+            MethodPattern.of("exists", RepositoryMethodType.EXISTS_BY);
+
+    private static final List<MethodPattern> METHOD_PATTERNS =
+            List.of(FIND_BY, DELETE_BY, COUNT_ALL, COUNT_BY, EXISTS_BY);
+
     public RepositoryMethodType type(Element method) {
 
         Predicate<MethodOperation> hasAnnotation =
@@ -61,7 +80,11 @@ enum MethodTypeUtils {
                 .map(MethodOperation::type)
                 .findFirst();
 
-        return annotationMatch.orElse(RepositoryMethodType.UNKNOWN);
+        return annotationMatch.orElseGet(() -> METHOD_PATTERNS.stream()
+                .filter(pattern -> method.getSimpleName().toString().startsWith(pattern.keyword()))
+                .findFirst()
+                .map(MethodPattern::type)
+                .orElse(RepositoryMethodType.UNKNOWN));
 
     }
 
@@ -69,6 +92,12 @@ enum MethodTypeUtils {
                                    RepositoryMethodType type) {
         static MethodOperation of(Class<? extends Annotation> annotation, RepositoryMethodType type) {
             return new MethodOperation(annotation, type);
+        }
+    }
+
+    private record MethodPattern(String keyword, RepositoryMethodType type) {
+        static MethodPattern of(String keyword, RepositoryMethodType type) {
+            return new MethodPattern(keyword, type);
         }
     }
 }
