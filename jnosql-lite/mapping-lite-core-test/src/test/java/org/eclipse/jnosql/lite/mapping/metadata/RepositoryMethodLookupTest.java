@@ -81,7 +81,7 @@ class RepositoryMethodLookupTest {
             RepositoryMethod method = repositoryMetadata.find(new NameKey("save")).orElseThrow();
             SoftAssertions.assertSoftly(soft ->{
                 soft.assertThat(method).isNotNull();
-                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DELETE);
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.SAVE);
             });
         }
 
@@ -98,13 +98,13 @@ class RepositoryMethodLookupTest {
         }
 
         @Test
-        @DisplayName("should define find type when there is find annotation")
+        @DisplayName("should define PARAMETER_BASED type when there is find annotation")
         void shouldDefineFindTypeWhenThereIsFindAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("find")).orElseThrow();
             SoftAssertions.assertSoftly(soft ->{
                 soft.assertThat(method).isNotNull();
-                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.QUERY);
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.PARAMETER_BASED);
             });
         }
     }
