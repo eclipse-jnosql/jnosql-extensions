@@ -32,8 +32,10 @@ import javax.annotation.processing.Generated;
 @Generated(value= "JNoSQL Lite RepositoryMetadata Generator", date = "{{now}}")
 public final class {{className}} implements RepositoryMethodLookup {
 
+   private final NameKey byName;
 
     public {{className}}() {
+      this.byName = new NameKey("{{methodName}}");
     }
 
     @Override
@@ -43,7 +45,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     @Override
     public NameKey byName() {
-        return null;
+        return byName;
     }
 
     @Override
