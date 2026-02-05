@@ -28,16 +28,16 @@ import java.io.Writer;
 
 final class RepositoryMethodIntrospector {
 
-    private static final String MUSTACHE_TEMPLATE = "repository_metadata.mustache";
+    private static final String MUSTACHE_TEMPLATE = "repository_method_metadata.mustache";
 
     private final Element method;
-    private final String type;
+    private final String repository;
     private final ProcessingEnvironment processingEnv;
     private final Mustache template;
 
-    RepositoryMethodIntrospector(Element method, String type, ProcessingEnvironment processingEnv) {
+    RepositoryMethodIntrospector(Element method, String repository, ProcessingEnvironment processingEnv) {
         this.method = method;
-        this.type = type;
+        this.repository = repository;
         this.processingEnv = processingEnv;
         MustacheFactory factory = new DefaultMustacheFactory();
         this.template = factory.compile(MUSTACHE_TEMPLATE);
@@ -48,17 +48,16 @@ final class RepositoryMethodIntrospector {
     }
 
     String generateMethodClass() {
-        String className = method.getSimpleName().toString();
+        String className = ProcessorUtil.generateClassName(repository, method.getSimpleName().toString());
         String methodName = method.getSimpleName().toString();
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         RepositoryMethodModel metadata = new RepositoryMethodModel(packageName, methodName, className);
         try {
-
             createClass(method, metadata);
         } catch (IOException exception) {
             error(exception);
         }
-        return "";
+        return metadata.getQualified();
     }
 
 
