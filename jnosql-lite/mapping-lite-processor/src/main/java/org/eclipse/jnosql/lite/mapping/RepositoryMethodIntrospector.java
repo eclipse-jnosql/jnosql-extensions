@@ -51,7 +51,11 @@ final class RepositoryMethodIntrospector {
         String className = ProcessorUtil.generateClassName(repository, method.getSimpleName().toString());
         String methodName = method.getSimpleName().toString();
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
-        RepositoryMethodModel metadata = new RepositoryMethodModel(packageName, methodName, className);
+        String methodType = "";
+        String query = "Optional.empty()";
+        String find = "Optional.empty()";
+        RepositoryMethodModel metadata = new RepositoryMethodModel(packageName, methodName, className,
+                methodType, query, find);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {
