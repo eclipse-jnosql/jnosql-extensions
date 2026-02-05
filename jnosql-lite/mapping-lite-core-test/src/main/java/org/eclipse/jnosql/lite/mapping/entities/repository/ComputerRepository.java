@@ -19,10 +19,7 @@ import jakarta.data.repository.Delete;
 import jakarta.data.repository.Insert;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Update;
-import jakarta.inject.Inject;
 import org.eclipse.jnosql.lite.mapping.entities.Computer;
-
-import java.util.List;
 
 @Repository
 public interface ComputerRepository extends DataRepository<Computer, String> {
