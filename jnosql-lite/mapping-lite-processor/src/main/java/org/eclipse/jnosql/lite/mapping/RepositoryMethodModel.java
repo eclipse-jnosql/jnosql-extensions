@@ -14,5 +14,31 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-public class RepositoryMethodModel extends BaseMappingModel{
+public class RepositoryMethodModel extends BaseMappingModel {
+
+    private final String packageName;
+    private final String methodName;
+    private final String className;
+
+    public RepositoryMethodModel(String packageName, String methodName, String className) {
+        this.methodName = methodName;
+        this.packageName = packageName;
+        this.className = className;
+    }
+
+    public String getClassName() {
+        return className +"RepositoryMethodLookup";
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public String getQualified() {
+        return packageName + "." + getClassName();
+    }
 }
