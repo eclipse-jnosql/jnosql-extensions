@@ -69,6 +69,11 @@ public final class {{className}} implements RepositoryMetadata {
     @Override
     public Optional<RepositoryMethod> find(MethodKey key) {
          Objects.requireNonNull(key, "key is required");
+         switch (key) {
+             case NameKey nameKey -> this.repositoryByName.get(key);
+             case MethodSignatureKey methodKey -> this.repositoryByType.get(methodKey);
+             default -> throw new UnsupportedOperationException("Unexpected value: " + key);
+         }
          return Optional.empty();
     }
 }
