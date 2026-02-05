@@ -48,11 +48,21 @@ final class RepositoryMethodIntrospector {
     }
 
     String generateMethodClass() {
+        String className = method.getSimpleName().toString();
+        String methodName = method.getSimpleName().toString();
+        String packageName = method.getEnclosingElement().getEnclosingElement().toString();
+        RepositoryMethodModel metadata = new RepositoryMethodModel(packageName, methodName, className);
+        try {
+
+            createClass(method, metadata);
+        } catch (IOException exception) {
+            error(exception);
+        }
         return "";
     }
 
 
-    private void createClass(Element entity, RepositoryMetaModel metadata) throws IOException {
+    private void createClass(Element entity, RepositoryMethodModel metadata) throws IOException {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
