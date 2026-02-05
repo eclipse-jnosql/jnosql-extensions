@@ -19,11 +19,19 @@ public class RepositoryMethodModel extends BaseMappingModel {
     private final String packageName;
     private final String methodName;
     private final String className;
+    private final String methodType;
+    private final String query;
+    private final String find;
 
-    public RepositoryMethodModel(String packageName, String methodName, String className) {
+    public RepositoryMethodModel(String packageName,
+                                 String methodName,
+                                 String className, String methodType, String query, String find) {
         this.methodName = methodName;
         this.packageName = packageName;
         this.className = className;
+        this.methodType = methodType;
+        this.query = query;
+        this.find = find;
     }
 
     public String getClassName() {
@@ -40,5 +48,17 @@ public class RepositoryMethodModel extends BaseMappingModel {
 
     public String getQualified() {
         return packageName + "." + getClassName();
+    }
+
+    public String getMethodType() {
+        return methodType;
+    }
+
+    public String getQuery() {
+        return query;
+    }
+
+    public String getFind() {
+        return find;
     }
 }
