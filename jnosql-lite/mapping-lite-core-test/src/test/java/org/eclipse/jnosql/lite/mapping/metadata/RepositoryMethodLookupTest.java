@@ -261,8 +261,15 @@ class RepositoryMethodLookupTest {
         }
 
         @Test
-        @DisplayName("should read value when the Find annotation does not have query annotation")
+        @DisplayName("should read value when the Find annotation")
         void shouldReadFindAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopTen")).orElseThrow();
+            OptionalInt first = method.first();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(first).isNotEmpty();
+                soft.assertThat(first.orElseThrow()).isEqualTo(10);
+            });
         }
 
         @Test
