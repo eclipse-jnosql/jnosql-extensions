@@ -33,9 +33,28 @@ import javax.annotation.processing.Generated;
 public final class {{className}} implements RepositoryMethodLookup {
 
    private final NameKey byName;
+   private final List<String> selects;
+   private final List<Sort<?>> sorts;
+   private final List<RepositoryAnnotation> annotations;
+   private final List<RepositoryParam> params;
 
     public {{className}}() {
       this.byName = new NameKey("{{methodName}}");
+      this.selects = new ArrayList<>();
+      this.sorts = new ArrayList<>();
+      this.annotations = new ArrayList<>();
+      {{#selects}}
+      this.selects.add({{.}});
+      {{/selects}}
+     {{#sorts}}
+     this.sorts.add({{.}});
+     {{/sorts}}
+     {{#annotations}}
+     this.annotations.add({{.}});
+     {{/annotations}}
+     {{#params}}
+     this.params.add({{.}});
+     {{/params}}
     }
 
     @Override
@@ -90,7 +109,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     @Override
     public List<String> select() {
-        return List.of();
+        return this.selects;
     }
 
     @Override
@@ -100,7 +119,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     @Override
     public List<RepositoryAnnotation> annotations() {
-        return List.of();
+        return this.annotations;
     }
 
 }
