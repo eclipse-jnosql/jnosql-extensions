@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import jakarta.data.repository.Query;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
@@ -27,6 +28,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.util.Optional;
 
 class RepositoryMethodLookupTest {
 
@@ -204,12 +207,22 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should read query annotation")
         void shouldReadQueryAnnotation() {
-
+            var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("query")).orElseThrow();
+            Optional<String> query = method.query();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(query).isNotEmpty();
+                soft.assertThat(query).get().isEqualTo("FROM Computer");
+            });
         }
 
         @Test
         @DisplayName("should be empty when the Query annotation does not have query annotation")
         void shouldReturnEmptyWhenThereIsNotQueryAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("insert")).orElseThrow();
+            Optional<String> query = method.query();
+            Assertions.assertThat(query).isEmpty();
         }
 
         @Test
