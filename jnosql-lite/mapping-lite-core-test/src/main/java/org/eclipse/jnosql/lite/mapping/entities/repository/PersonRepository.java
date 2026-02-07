@@ -18,6 +18,7 @@ import jakarta.data.page.CursoredPage;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
+import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Param;
 import jakarta.data.repository.Repository;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
@@ -42,6 +43,8 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Find
     @First(10)
+    @OrderBy(value = "username", descending = true)
+    @OrderBy(value = "email")
     List<Person> findTopTen(@Param("name") String name);
 
     @Find

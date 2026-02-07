@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
+import jakarta.data.Sort;
 import jakarta.data.repository.Query;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -287,17 +289,28 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should be empty when there is no Find Annotation ")
         void shouldReturnEmptyWhenThereIsNotFindAnnotation() {
-
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("countByUsername")).orElseThrow();
+            Optional<Class<?>> find = method.find();
+            Assertions.assertThat(find).isEmpty();
         }
 
         @Test
         @DisplayName("should return sort value")
         void shouldReadSortAnnotation() {
+
         }
 
         @Test
         @DisplayName("should return sort values")
         void shouldReadSortAnnotations() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopTen")).orElseThrow();
+            List<Sort<?>> sorts = method.sorts();
+            SoftAssertions.assertSoftly(soft -> {
+               soft.assertThat(sorts).hasSize(2);
+               soft.assertThat(sorts).contains(Sort.desc("name"), Sort.asc("email"));
+            });
         }
 
         @Test
