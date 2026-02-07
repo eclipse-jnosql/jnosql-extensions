@@ -23,6 +23,7 @@ import jakarta.data.repository.Update;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
@@ -72,6 +73,12 @@ enum MethodTypeUtils {
             List.of(FIND_BY, DELETE_BY, COUNT_ALL, COUNT_BY, EXISTS_BY);
 
     public RepositoryMethodType type(Element method) {
+
+        ExecutableElement executableElement = (ExecutableElement) method;
+
+        if(executableElement.isDefault()) {
+            return RepositoryMethodType.DEFAULT_METHOD;
+        }
 
         Predicate<MethodOperation> hasAnnotation =
                 op -> method.getAnnotation(op.annotation()) != null;
