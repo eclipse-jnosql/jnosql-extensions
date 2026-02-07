@@ -15,7 +15,6 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.assertj.core.api.SoftAssertions;
-import org.eclipse.jnosql.lite.mapping.entities.repository.ActorRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
@@ -23,7 +22,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
