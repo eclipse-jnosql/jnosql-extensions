@@ -177,13 +177,24 @@ class RepositoryMethodLookupTest {
         }
 
         @Test
-        @DisplayName("should define DEFAULT_METHOD where there predicate at method name")
-        void shouldDefineDefaultMethodWhenTheMethodNameHasFindPredicate() {
+        @DisplayName("should define DEFAULT_METHOD where the method is default")
+        void shouldDefineDefaultMethodWhenTheMethodIsDefault() {
             var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("defaultMethod")).orElseThrow();
             SoftAssertions.assertSoftly(soft ->{
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DEFAULT_METHOD);
+            });
+        }
+
+        @Test
+        @DisplayName("should define CURSOR_PAGINATION where the return is Cursor")
+        void shouldDefineCursorPaginationWhenTheReturnIsCursor() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("cursor")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.CURSOR_PAGINATION);
             });
         }
     }

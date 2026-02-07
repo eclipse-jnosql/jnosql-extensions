@@ -35,6 +35,6 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     void deleteByUsername(String firstName);
 
     @Find
-    CursoredPage<Person> findByUsername(String firstName, Pageable pageable);
+    CursoredPage<Person> cursor(String firstName, Pageable pageable);
 
 }
