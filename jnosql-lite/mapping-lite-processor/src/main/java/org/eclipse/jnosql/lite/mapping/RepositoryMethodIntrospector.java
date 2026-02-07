@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
 import jakarta.data.repository.Query;
 
@@ -34,6 +35,8 @@ final class RepositoryMethodIntrospector {
 
     private static final String MUSTACHE_TEMPLATE = "repository_method_metadata.mustache";
     private static final String OPTIONAL_EMPTY = "Optional.empty()";
+    private static final int FIND_INITIAL_SUBSTRING = 30;
+    private static final String FIND_LAST_SUBSTRING = ")";
 
     private final Element method;
     private final String repository;
@@ -66,7 +69,11 @@ final class RepositoryMethodIntrospector {
                 .map(First::value)
                 .map("OptionalInt.of(%d)"::formatted)
                 .orElse("OptionalInt.empty()");
-        String find = OPTIONAL_EMPTY;
+        String find = ofNullable(method.getAnnotation(Find.class))
+                .map(Find::toString)
+                .map(s -> s.substring(FIND_INITIAL_SUBSTRING, s.lastIndexOf(FIND_LAST_SUBSTRING)))
+                .map("Optional.of(%s)"::formatted)
+                .orElse(OPTIONAL_EMPTY);
         String returnType = OPTIONAL_EMPTY;
         String elementType = OPTIONAL_EMPTY;
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
