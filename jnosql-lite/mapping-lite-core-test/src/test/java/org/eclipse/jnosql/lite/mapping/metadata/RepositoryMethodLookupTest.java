@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
+import jakarta.data.repository.Query;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
@@ -195,6 +196,51 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.CURSOR_PAGINATION);
             });
         }
+    }
+
+    @Nested
+    class WhenThereIsAnnotationsAtTheMethod {
+
+        @Test
+        @DisplayName("should read query annotation")
+        void shouldReadQueryAnnotation() {
+
+        }
+
+        @Test
+        @DisplayName("should be empty when the Query annotation does not have query annotation")
+        void shouldReturnEmptyWhenThereIsNotQueryAnnotation() {
+        }
+
+        @Test
+        @DisplayName("should read First annotation")
+        void shouldReadFirstAnnotation() {
+
+        }
+
+        @Test
+        @DisplayName("should be empty when the First annotation does not have query annotation")
+        void shouldReturnEmptyWhenThereIsNotFirstAnnotation() {
+
+        }
+
+        @Test
+        @DisplayName("should read value when the Find annotation does not have query annotation")
+        void shouldReadFindAnnotation() {
+        }
+
+        @Test
+        @DisplayName("should return Find default value")
+        void shouldReadFindDefaultAnnotation() {
+        }
+
+        @Test
+        @DisplayName("should be empty when there is no Find Annotation ")
+        void shouldReturnEmptyWhenThereIsNotFindAnnotation() {
+
+        }
+
+
     }
 
 }
