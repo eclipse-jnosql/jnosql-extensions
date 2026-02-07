@@ -28,6 +28,9 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -46,6 +49,7 @@ final class RepositoryMethodIntrospector {
     private static final String FIND_LAST_SUBSTRING = ")";
     private static final String SORT_DESC_MASK = "Sort.desc(\"%s\")";
     private static final String SORT_ASC_MASK = "Sort.asc(\"%s\")";
+    private static final String OPTIONAL_CLASS_MASK = "Optional.of(%s.class)";
 
     private final Element method;
     private final String repository;
@@ -87,10 +91,17 @@ final class RepositoryMethodIntrospector {
         TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
         String returnType = ofNullable(returnElement)
                 .map(Object::toString)
-                .map("Optional.of(%s.class)"::formatted)
-                .orElse("Optional.of(%s.class)".formatted(executableElement.getReturnType().toString()));
+                .map(OPTIONAL_CLASS_MASK::formatted)
+                .orElse(OPTIONAL_CLASS_MASK.formatted(executableElement.getReturnType().toString()));
 
         String elementType = OPTIONAL_EMPTY;
+        if(executableElement.getReturnType() instanceof DeclaredType declaredType) {
+            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+            elementType = typeArguments.stream().map(TypeMirror::toString).findFirst().map(OPTIONAL_CLASS_MASK::formatted)
+                    .orElse(OPTIONAL_EMPTY);
+        } else if(executableElement.getReturnType() instanceof ArrayType arrayType) {
+            elementType = arrayType.toString();
+        }
 
         List<String> selects = Arrays.stream(method.getAnnotationsByType(Select.class))
                 .map(Select::value)
