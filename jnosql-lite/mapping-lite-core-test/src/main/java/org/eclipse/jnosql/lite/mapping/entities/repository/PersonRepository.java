@@ -58,4 +58,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Find
     List<Person> name(@Param("name") String name);
+
+    @Find
+    Person id(Long id);
 }

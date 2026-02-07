@@ -403,6 +403,17 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(method.elementType()).isEmpty();
             });
         }
+
+        @Test
+        @DisplayName("should return only entity on the return type")
+        void shouldReturnOnlyEntityOnReturnType() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("id")).orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(Person.class);
+                soft.assertThat(method.elementType()).isEmpty();
+            });
+        }
     }
 
 }
