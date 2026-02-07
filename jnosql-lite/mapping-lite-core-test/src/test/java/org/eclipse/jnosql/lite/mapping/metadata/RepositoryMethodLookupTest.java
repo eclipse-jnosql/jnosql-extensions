@@ -414,6 +414,28 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(method.elementType()).isEmpty();
             });
         }
+
+        @Test
+        @DisplayName("should return the structure and element type")
+        void shouldReturnTheStructureAndElementType(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("optional")).orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(Optional.class);
+                soft.assertThat(method.elementType()).isPresent().get().isEqualTo(Person.class);
+            });
+        }
+
+        @Test
+        @DisplayName("should return the structure and element type as iterable")
+        void shouldReturnTheStructureAndElementTypeAsIterable(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("list")).orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(List.class);
+                soft.assertThat(method.elementType()).isPresent().get().isEqualTo(Person.class);
+            });
+        }
     }
 
 }

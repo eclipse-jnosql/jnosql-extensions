@@ -26,6 +26,7 @@ import org.eclipse.jnosql.lite.mapping.entities.Person;
 
 import java.awt.print.Pageable;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PersonRepository extends BasicRepository<Person, Long> {
@@ -61,4 +62,10 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Find
     Person id(Long id);
+
+    @Find
+    Optional<Person> optional(Long id);
+
+    @Find
+    List<Person> list(String name);
 }
