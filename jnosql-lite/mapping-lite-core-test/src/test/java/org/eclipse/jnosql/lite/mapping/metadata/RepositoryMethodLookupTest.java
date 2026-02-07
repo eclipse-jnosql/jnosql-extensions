@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 import jakarta.data.repository.Query;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.lite.mapping.entities.Person;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
@@ -267,6 +268,13 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should return Find default value")
         void shouldReadFindDefaultAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("name")).orElseThrow();
+            Optional<Class<?>> find = method.find();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(find).isNotEmpty();
+                soft.assertThat(find).get().isEqualTo(void.class);
+            });
         }
 
         @Test
