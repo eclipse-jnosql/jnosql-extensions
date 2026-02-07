@@ -100,7 +100,7 @@ final class RepositoryMethodIntrospector {
             elementType = typeArguments.stream().map(TypeMirror::toString).findFirst().map(OPTIONAL_CLASS_MASK::formatted)
                     .orElse(OPTIONAL_EMPTY);
         } else if(executableElement.getReturnType() instanceof ArrayType arrayType) {
-            elementType = arrayType.toString();
+            elementType = OPTIONAL_CLASS_MASK.formatted(arrayType.getComponentType().toString());
         }
 
         List<String> selects = Arrays.stream(method.getAnnotationsByType(Select.class))
