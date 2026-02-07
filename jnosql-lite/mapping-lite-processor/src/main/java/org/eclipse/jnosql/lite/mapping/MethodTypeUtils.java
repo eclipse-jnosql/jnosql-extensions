@@ -22,8 +22,10 @@ import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -76,7 +78,7 @@ enum MethodTypeUtils {
     private static final String FIND_ALL = "findAll";
     private static final String JAKARTA_DATA_PAGE_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
 
-    public RepositoryMethodType type(Element method) {
+    public RepositoryMethodType type(Element method, ProcessingEnvironment processingEnv) {
 
         ExecutableElement executableElement = (ExecutableElement) method;
 
@@ -86,7 +88,7 @@ enum MethodTypeUtils {
 
         var returnType = executableElement.getReturnType();
 
-        if (isCursorMethod(returnType)) {
+        if (isCursorMethod(returnType, processingEnv)) {
             return RepositoryMethodType.CURSOR_PAGINATION;
         }
 
@@ -110,8 +112,9 @@ enum MethodTypeUtils {
 
     }
 
-    private static boolean isCursorMethod(TypeMirror returnType) {
-        return JAKARTA_DATA_PAGE_CURSORED_PAGE.equals(returnType.toString());
+    private static boolean isCursorMethod(TypeMirror returnType, ProcessingEnvironment processingEnv) {
+        TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(returnType);
+        return returnElement != null && JAKARTA_DATA_PAGE_CURSORED_PAGE.equals(returnElement.toString());
     }
 
     private record MethodOperation(Class<? extends Annotation> annotation,
