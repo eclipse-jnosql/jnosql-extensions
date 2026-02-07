@@ -430,9 +430,9 @@ class RepositoryMethodLookupTest {
         @DisplayName("should return the structure and element type as iterable")
         void shouldReturnTheStructureAndElementTypeAsIterable(){
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
-            var method = repositoryMetadata.find(new NameKey("list")).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("array")).orElseThrow();
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(List.class);
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(Person[].class);
                 soft.assertThat(method.elementType()).isPresent().get().isEqualTo(Person.class);
             });
         }
