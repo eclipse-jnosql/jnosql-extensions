@@ -14,10 +14,13 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.repository;
 
+import jakarta.data.page.CursoredPage;
 import jakarta.data.repository.BasicRepository;
+import jakarta.data.repository.Find;
 import jakarta.data.repository.Repository;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
+import java.awt.print.Pageable;
 import java.util.List;
 
 @Repository
@@ -30,5 +33,8 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     boolean existsByUsername(String firstName);
 
     void deleteByUsername(String firstName);
+
+    @Find
+    CursoredPage<Person> findByUsername(String firstName, Pageable pageable);
 
 }

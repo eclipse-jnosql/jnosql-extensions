@@ -24,6 +24,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
@@ -73,6 +74,7 @@ enum MethodTypeUtils {
             List.of(FIND_BY, DELETE_BY, COUNT_ALL, COUNT_BY, EXISTS_BY);
 
     private static final String FIND_ALL = "findAll";
+    private static final String JAKARTA_DATA_PAGE_CURSORED_PAGE = "jakarta.data.page.CursoredPage";
 
     public RepositoryMethodType type(Element method) {
 
@@ -80,6 +82,12 @@ enum MethodTypeUtils {
 
         if(executableElement.isDefault()) {
             return RepositoryMethodType.DEFAULT_METHOD;
+        }
+
+        var returnType = executableElement.getReturnType();
+
+        if (isCursorMethod(returnType)) {
+            return RepositoryMethodType.CURSOR_PAGINATION;
         }
 
         Predicate<MethodOperation> hasAnnotation =
@@ -100,6 +108,10 @@ enum MethodTypeUtils {
                 .map(MethodPattern::type)
                 .orElse(RepositoryMethodType.UNKNOWN));
 
+    }
+
+    private static boolean isCursorMethod(TypeMirror returnType) {
+        return JAKARTA_DATA_PAGE_CURSORED_PAGE.equals(returnType.toString());
     }
 
     private record MethodOperation(Class<? extends Annotation> annotation,
