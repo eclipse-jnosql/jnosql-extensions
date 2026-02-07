@@ -72,6 +72,8 @@ enum MethodTypeUtils {
     private static final List<MethodPattern> METHOD_PATTERNS =
             List.of(FIND_BY, DELETE_BY, COUNT_ALL, COUNT_BY, EXISTS_BY);
 
+    private static final String FIND_ALL = "findAll";
+
     public RepositoryMethodType type(Element method) {
 
         ExecutableElement executableElement = (ExecutableElement) method;
@@ -82,10 +84,15 @@ enum MethodTypeUtils {
 
         Predicate<MethodOperation> hasAnnotation =
                 op -> method.getAnnotation(op.annotation()) != null;
+
         Optional<RepositoryMethodType> annotationMatch = OPERATION_ANNOTATIONS.stream()
                 .filter(hasAnnotation)
                 .map(MethodOperation::type)
                 .findFirst();
+
+        if (FIND_ALL.equals(method.getSimpleName().toString())) {
+            return RepositoryMethodType.FIND_ALL;
+        }
 
         return annotationMatch.orElseGet(() -> METHOD_PATTERNS.stream()
                 .filter(pattern -> method.getSimpleName().toString().startsWith(pattern.keyword()))
