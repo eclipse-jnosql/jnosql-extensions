@@ -316,6 +316,10 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should return empty when Sort annotation does not exist")
         void shouldReturnEmptyWhenSortDoesNotHaveFindAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("name")).orElseThrow();
+            List<Sort<?>> sorts = method.sorts();
+            Assertions.assertThat(sorts).isEmpty();
         }
 
 

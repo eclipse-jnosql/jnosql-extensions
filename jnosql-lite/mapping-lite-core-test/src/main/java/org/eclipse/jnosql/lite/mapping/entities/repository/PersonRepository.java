@@ -49,6 +49,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Find
     @First
+    @OrderBy(value = "email")
     List<Person> findTopOne(@Param("name") String name);
 
     @Find
