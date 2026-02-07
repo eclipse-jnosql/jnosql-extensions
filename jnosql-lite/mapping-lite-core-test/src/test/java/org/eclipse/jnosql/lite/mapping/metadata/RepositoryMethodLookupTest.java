@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ActorRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
+import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
@@ -105,6 +106,39 @@ class RepositoryMethodLookupTest {
             SoftAssertions.assertSoftly(soft ->{
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.PARAMETER_BASED);
+            });
+        }
+
+        @Test
+        @DisplayName("should define FIND_BY where there predicate at method name")
+        void shouldDefineFindByWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.FIND_BY);
+            });
+        }
+
+        @Test
+        @DisplayName("should define COUNT_BY where there predicate at method name")
+        void shouldDefineCountByWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("countByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.COUNT_BY);
+            });
+        }
+
+        @Test
+        @DisplayName("should define EXISTS_BY where there predicate at method name")
+        void shouldDefineExistByWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("existsByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.EXISTS_BY);
             });
         }
     }

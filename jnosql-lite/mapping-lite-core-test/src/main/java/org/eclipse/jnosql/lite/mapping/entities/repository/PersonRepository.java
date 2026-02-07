@@ -27,7 +27,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     long countByUsername(String firstName);
 
-    boolean existByUsername(String firstName);
+    boolean existsByUsername(String firstName);
 
     void deleteByUsername(String firstName);
 
