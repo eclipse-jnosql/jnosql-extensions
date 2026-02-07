@@ -21,6 +21,7 @@ import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
 import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
+import jakarta.data.repository.Select;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -83,7 +84,9 @@ final class RepositoryMethodIntrospector {
         String returnType = OPTIONAL_EMPTY;
         String elementType = OPTIONAL_EMPTY;
 
-        List<String> selects = Collections.emptyList();
+        List<String> selects = Arrays.stream(method.getAnnotationsByType(Select.class))
+                .map(Select::value)
+                .toList();
         List<String> sorts = Arrays.stream(method.getAnnotationsByType(OrderBy.class))
                 .map(orderBy -> orderBy.descending() ? SORT_DESC_MASK.formatted(orderBy.value()) :
                         SORT_ASC_MASK.formatted(orderBy.value())).toList();
