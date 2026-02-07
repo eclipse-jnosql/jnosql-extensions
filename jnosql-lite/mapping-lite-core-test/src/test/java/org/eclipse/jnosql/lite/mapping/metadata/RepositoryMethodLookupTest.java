@@ -141,6 +141,17 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.EXISTS_BY);
             });
         }
+
+        @Test
+        @DisplayName("should define DELETE_BY where there predicate at method name")
+        void shouldDefineDeleteByWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("deleteByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DELETE_BY);
+            });
+        }
     }
 
 }
