@@ -29,6 +29,7 @@ import java.io.Writer;
 final class RepositoryMethodIntrospector {
 
     private static final String MUSTACHE_TEMPLATE = "repository_method_metadata.mustache";
+    private static final String OPTIONAL_EMPTY = "Optional.empty()";
 
     private final Element method;
     private final String repository;
@@ -52,10 +53,13 @@ final class RepositoryMethodIntrospector {
         String methodName = method.getSimpleName().toString();
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         String methodType = MethodTypeUtils.INSTANCE.type(method, processingEnv).name();
-        String query = "Optional.empty()";
-        String find = "Optional.empty()";
-        RepositoryMethodModel metadata = new RepositoryMethodModel(packageName, methodName, className,
-                methodType, query, find);
+        String query = OPTIONAL_EMPTY;
+        String find = OPTIONAL_EMPTY;
+        String first =  "OptionalInt.empty()";
+        String returnType = OPTIONAL_EMPTY;
+        String elementType = OPTIONAL_EMPTY;
+        var metadata = new RepositoryMethodModel(packageName, methodName, className,
+                methodType, query, find, first, returnType, elementType);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {

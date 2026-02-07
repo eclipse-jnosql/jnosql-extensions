@@ -22,16 +22,28 @@ public class RepositoryMethodModel extends BaseMappingModel {
     private final String methodType;
     private final String query;
     private final String find;
+    private final String first;
+    private final String returnType;
+    private final String elementType;
+
 
     public RepositoryMethodModel(String packageName,
                                  String methodName,
-                                 String className, String methodType, String query, String find) {
+                                 String className, String methodType,
+                                 String query,
+                                 String find,
+                                 String first,
+                                 String returnType,
+                                 String elementType) {
         this.methodName = methodName;
         this.packageName = packageName;
         this.className = className;
         this.methodType = methodType;
         this.query = query;
         this.find = find;
+        this.first = first;
+        this.returnType = returnType;
+        this.elementType = elementType;
     }
 
     public String getClassName() {
@@ -60,5 +72,17 @@ public class RepositoryMethodModel extends BaseMappingModel {
 
     public String getFind() {
         return find;
+    }
+
+    public String getFirst() {
+        return first;
+    }
+
+    public String getReturnType() {
+        return returnType;
+    }
+
+    public String getElementType() {
+        return elementType;
     }
 }
