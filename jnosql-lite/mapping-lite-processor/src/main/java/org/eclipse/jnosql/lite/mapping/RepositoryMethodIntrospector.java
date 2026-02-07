@@ -26,6 +26,8 @@ import jakarta.data.repository.Select;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -81,7 +83,13 @@ final class RepositoryMethodIntrospector {
                 .map(s -> s.substring(FIND_INITIAL_SUBSTRING, s.lastIndexOf(FIND_LAST_SUBSTRING)))
                 .map("Optional.of(%s)"::formatted)
                 .orElse(OPTIONAL_EMPTY);
-        String returnType = OPTIONAL_EMPTY;
+        ExecutableElement executableElement = (ExecutableElement) method;
+        TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
+        String returnType = ofNullable(returnElement)
+                .map(Object::toString)
+                .map("Optional.of(%s.class)"::formatted)
+                .orElse("Optional.of(%s.class)".formatted(executableElement.getReturnType().toString()));
+
         String elementType = OPTIONAL_EMPTY;
 
         List<String> selects = Arrays.stream(method.getAnnotationsByType(Select.class))
