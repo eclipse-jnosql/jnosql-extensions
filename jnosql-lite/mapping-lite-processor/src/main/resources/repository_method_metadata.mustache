@@ -46,17 +46,17 @@ public final class {{className}} implements RepositoryMethodLookup {
       this.annotations = new ArrayList<>();
       this.params = new ArrayList<>();
       {{#selects}}
-      this.selects.add({{.}});
+      this.selects.add({{{.}}});
       {{/selects}}
-     {{#sorts}}
-     this.sorts.add({{.}});
-     {{/sorts}}
-     {{#annotations}}
-     this.annotations.add({{.}});
-     {{/annotations}}
-     {{#params}}
-     this.params.add({{.}});
-     {{/params}}
+      {{#sorts}}
+      this.sorts.add({{{.}}});
+      {{/sorts}}
+      {{#annotations}}
+      this.annotations.add({{{.}}});
+      {{/annotations}}
+      {{#params}}
+      this.params.add({{{.}}});
+      {{/params}}
     }
 
     @Override
@@ -81,7 +81,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     @Override
     public List<Sort<?>> sorts() {
-        return List.of();
+        return this.sorts;
     }
 
     @Override

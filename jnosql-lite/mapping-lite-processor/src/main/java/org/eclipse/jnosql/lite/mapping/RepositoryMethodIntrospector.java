@@ -19,6 +19,7 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
+import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 
 import javax.annotation.processing.Filer;
@@ -28,6 +29,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,6 +41,8 @@ final class RepositoryMethodIntrospector {
     private static final String OPTIONAL_EMPTY = "Optional.empty()";
     private static final int FIND_INITIAL_SUBSTRING = 30;
     private static final String FIND_LAST_SUBSTRING = ")";
+    private static final String SORT_DESC_MASK = "Sort.desc(\"%s\")";
+    private static final String SORT_ASC_MASK = "Sort.asc(\"%s\")";
 
     private final Element method;
     private final String repository;
@@ -78,8 +82,11 @@ final class RepositoryMethodIntrospector {
                 .orElse(OPTIONAL_EMPTY);
         String returnType = OPTIONAL_EMPTY;
         String elementType = OPTIONAL_EMPTY;
+
         List<String> selects = Collections.emptyList();
-        List<String> sorts = Collections.emptyList();
+        List<String> sorts = Arrays.stream(method.getAnnotationsByType(OrderBy.class))
+                .map(orderBy -> orderBy.descending() ? SORT_DESC_MASK.formatted(orderBy.value()) :
+                        SORT_ASC_MASK.formatted(orderBy.value())).toList();
         List<String> annotations = Collections.emptyList();
         List<String> params = Collections.emptyList();
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
