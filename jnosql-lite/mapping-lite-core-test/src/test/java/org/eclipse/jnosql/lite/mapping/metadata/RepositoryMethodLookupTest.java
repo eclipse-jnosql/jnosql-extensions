@@ -360,8 +360,49 @@ class RepositoryMethodLookupTest {
             var selected = method.select();
             Assertions.assertThat(selected).isEmpty();
         }
+    }
 
 
+    @Nested
+    class WhenTheReturnMethod{
+        //should return just the entity type
+        //should return void
+        //should return primitive
+        //should return Optional and the entity type
+        //should return array
+
+        @Test
+        @DisplayName("should return void on return type")
+        void shouldReturnVoidOnReturnType() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("deleteByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+               soft.assertThat(method.returnType()).isPresent().get().isEqualTo(void.class);
+                soft.assertThat(method.elementType()).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("should return boolean primitive on return type")
+        void shouldReturnBooleanPrimitiveOnReturnType() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("existsByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(boolean.class);
+                soft.assertThat(method.elementType()).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("should return number primitive on return type")
+        void shouldReturnNumberPrimitiveOnReturnType() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("countByUsername")).orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(long.class);
+                soft.assertThat(method.elementType()).isEmpty();
+            });
+        }
     }
 
 }
