@@ -175,6 +175,17 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.FIND_ALL);
             });
         }
+
+        @Test
+        @DisplayName("should define DEFAULT_METHOD where there predicate at method name")
+        void shouldDefineDefaultMethodWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("defaultMethod")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DEFAULT_METHOD);
+            });
+        }
     }
 
 }

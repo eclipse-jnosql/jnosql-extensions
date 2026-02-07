@@ -25,4 +25,8 @@ public interface Garage {
     long countAll();
 
     List<Garage> findAll();
+
+    default String defaultMethod() {
+        return "default";
+    }
 }
