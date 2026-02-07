@@ -22,6 +22,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.RepositoryAnnotation;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -43,6 +44,7 @@ public final class {{className}} implements RepositoryMethodLookup {
       this.selects = new ArrayList<>();
       this.sorts = new ArrayList<>();
       this.annotations = new ArrayList<>();
+      this.params = new ArrayList<>();
       {{#selects}}
       this.selects.add({{.}});
       {{/selects}}
