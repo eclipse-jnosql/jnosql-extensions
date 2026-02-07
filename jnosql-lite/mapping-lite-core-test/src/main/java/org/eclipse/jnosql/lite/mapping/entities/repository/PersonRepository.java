@@ -18,6 +18,17 @@ import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
+import java.util.List;
+
 @Repository
 public interface PersonRepository extends BasicRepository<Person, Long> {
+
+    List<Person> findByUsername(String username);
+
+    long countByUsername(String firstName);
+
+    boolean existByUsername(String firstName);
+
+    void deleteByUsername(String firstName);
+
 }

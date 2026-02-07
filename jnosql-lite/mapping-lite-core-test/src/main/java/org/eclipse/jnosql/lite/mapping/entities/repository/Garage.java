@@ -19,4 +19,6 @@ import jakarta.data.repository.Repository;
 
 @Repository
 public interface Garage {
+
+    long countAll();
 }
