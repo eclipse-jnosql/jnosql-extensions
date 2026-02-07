@@ -28,6 +28,8 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collections;
+import java.util.List;
 
 import static java.util.Optional.ofNullable;
 
@@ -76,8 +78,13 @@ final class RepositoryMethodIntrospector {
                 .orElse(OPTIONAL_EMPTY);
         String returnType = OPTIONAL_EMPTY;
         String elementType = OPTIONAL_EMPTY;
+        List<String> selects = Collections.emptyList();
+        List<String> sorts = Collections.emptyList();
+        List<String> annotations = Collections.emptyList();
+        List<String> params = Collections.emptyList();
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
-                methodType, query, find, first, returnType, elementType);
+                methodType, query, find, first, returnType, elementType,
+                selects, sorts, annotations, params);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {

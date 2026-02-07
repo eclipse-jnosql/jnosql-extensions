@@ -14,6 +14,8 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
+import java.util.List;
+
 public class RepositoryMethodModel extends BaseMappingModel {
 
     private final String packageName;
@@ -25,6 +27,10 @@ public class RepositoryMethodModel extends BaseMappingModel {
     private final String first;
     private final String returnType;
     private final String elementType;
+    private final List<String> selects;
+    private final List<String> sorts;
+    private final List<String> annotations;
+    private final List<String> params;
 
 
     public RepositoryMethodModel(String packageName,
@@ -34,7 +40,11 @@ public class RepositoryMethodModel extends BaseMappingModel {
                                  String find,
                                  String first,
                                  String returnType,
-                                 String elementType) {
+                                 String elementType,
+                                 List<String> selects,
+                                 List<String> sorts,
+                                 List<String> annotations,
+                                 List<String> params) {
         this.methodName = methodName;
         this.packageName = packageName;
         this.className = className;
@@ -44,6 +54,10 @@ public class RepositoryMethodModel extends BaseMappingModel {
         this.first = first;
         this.returnType = returnType;
         this.elementType = elementType;
+        this.selects = selects;
+        this.sorts = sorts;
+        this.annotations = annotations;
+        this.params = params;
     }
 
     public String getClassName() {
@@ -84,5 +98,21 @@ public class RepositoryMethodModel extends BaseMappingModel {
 
     public String getElementType() {
         return elementType;
+    }
+
+    public List<String> getSelects() {
+        return selects;
+    }
+
+    public List<String> getSorts() {
+        return sorts;
+    }
+
+    public List<String> getAnnotations() {
+        return annotations;
+    }
+
+    public List<String> getParams() {
+        return params;
     }
 }
