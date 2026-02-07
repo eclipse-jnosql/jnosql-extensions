@@ -328,6 +328,39 @@ class RepositoryMethodLookupTest {
             Assertions.assertThat(sorts).isEmpty();
         }
 
+        @Test
+        @DisplayName("should return sort value")
+        void shouldReadSelectAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopOne")).orElseThrow();
+            var selected = method.select();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(selected).hasSize(1);
+                soft.assertThat(selected).contains("email");
+            });
+        }
+
+        @Test
+        @DisplayName("should return sort values")
+        void shouldReadSelectAnnotations() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopTen")).orElseThrow();
+            var selected = method.select();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(selected).hasSize(2);
+                soft.assertThat(selected).contains("email", "username");
+            });
+        }
+
+        @Test
+        @DisplayName("should return empty when Sort annotation does not exist")
+        void shouldReturnEmptyWhenThereIsNotSelectAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("name")).orElseThrow();
+            var selected = method.select();
+            Assertions.assertThat(selected).isEmpty();
+        }
+
 
     }
 

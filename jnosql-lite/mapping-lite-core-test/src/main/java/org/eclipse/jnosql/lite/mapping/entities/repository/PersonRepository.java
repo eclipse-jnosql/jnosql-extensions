@@ -21,6 +21,7 @@ import jakarta.data.repository.First;
 import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Param;
 import jakarta.data.repository.Repository;
+import jakarta.data.repository.Select;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
 import java.awt.print.Pageable;
@@ -45,11 +46,14 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     @First(10)
     @OrderBy(value = "username", descending = true)
     @OrderBy(value = "email")
+    @Select("username")
+    @Select("email")
     List<Person> findTopTen(@Param("name") String name);
 
     @Find
     @First
     @OrderBy(value = "email")
+    @Select("email")
     List<Person> findTopOne(@Param("name") String name);
 
     @Find
