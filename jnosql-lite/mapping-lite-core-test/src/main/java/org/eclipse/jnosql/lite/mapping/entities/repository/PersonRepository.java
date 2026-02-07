@@ -17,6 +17,8 @@ package org.eclipse.jnosql.lite.mapping.entities.repository;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Find;
+import jakarta.data.repository.First;
+import jakarta.data.repository.Param;
 import jakarta.data.repository.Repository;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
@@ -37,4 +39,15 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     @Find
     CursoredPage<Person> cursor(String firstName, Pageable pageable);
 
+
+    @Find
+    @First(10)
+    List<Person> findTopTen(@Param("name") String name);
+
+    @Find
+    @First
+    List<Person> findTopOne(@Param("name") String name);
+
+    @Find
+    List<Person> name(@Param("name") String name);
 }

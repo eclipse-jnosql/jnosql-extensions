@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 
 class RepositoryMethodLookupTest {
 
@@ -228,13 +229,34 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should read First annotation")
         void shouldReadFirstAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopTen")).orElseThrow();
+            OptionalInt first = method.first();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(first).isNotEmpty();
+                soft.assertThat(first.orElseThrow()).isEqualTo(10);
+            });
+        }
 
+        @Test
+        @DisplayName("should read First annotation default value")
+        void shouldReadFirstDefaultAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopOne")).orElseThrow();
+            OptionalInt first = method.first();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(first).isNotEmpty();
+                soft.assertThat(first.orElseThrow()).isEqualTo(1);
+            });
         }
 
         @Test
         @DisplayName("should be empty when the First annotation does not have query annotation")
         void shouldReturnEmptyWhenThereIsNotFirstAnnotation() {
-
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("name")).orElseThrow();
+            OptionalInt first = method.first();
+            Assertions.assertThat(first).isEmpty();
         }
 
         @Test
