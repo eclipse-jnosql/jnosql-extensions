@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import jakarta.data.repository.Query;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -25,6 +26,8 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+
+import static java.util.Optional.ofNullable;
 
 final class RepositoryMethodIntrospector {
 
@@ -53,7 +56,11 @@ final class RepositoryMethodIntrospector {
         String methodName = method.getSimpleName().toString();
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         String methodType = MethodTypeUtils.INSTANCE.type(method, processingEnv).name();
-        String query = OPTIONAL_EMPTY;
+
+        String query = ofNullable(method.getAnnotation(Query.class))
+                .map(Query::value)
+                .map("Optional.of(\"%s\")"::formatted)
+                .orElse(OPTIONAL_EMPTY);
         String find = OPTIONAL_EMPTY;
         String first =  "OptionalInt.empty()";
         String returnType = OPTIONAL_EMPTY;
