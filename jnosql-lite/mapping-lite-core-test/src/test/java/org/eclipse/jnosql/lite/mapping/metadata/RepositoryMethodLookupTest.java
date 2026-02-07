@@ -298,7 +298,13 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should return sort value")
         void shouldReadSortAnnotation() {
-
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findTopOne")).orElseThrow();
+            List<Sort<?>> sorts = method.sorts();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(sorts).hasSize(1);
+                soft.assertThat(sorts).contains(Sort.asc("email"));
+            });
         }
 
         @Test
@@ -309,7 +315,7 @@ class RepositoryMethodLookupTest {
             List<Sort<?>> sorts = method.sorts();
             SoftAssertions.assertSoftly(soft -> {
                soft.assertThat(sorts).hasSize(2);
-               soft.assertThat(sorts).contains(Sort.desc("name"), Sort.asc("email"));
+               soft.assertThat(sorts).contains(Sort.desc("username"), Sort.asc("email"));
             });
         }
 
