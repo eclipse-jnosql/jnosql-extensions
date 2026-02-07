@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import jakarta.data.repository.First;
 import jakarta.data.repository.Query;
 
 import javax.annotation.processing.Filer;
@@ -61,8 +62,11 @@ final class RepositoryMethodIntrospector {
                 .map(Query::value)
                 .map("Optional.of(\"%s\")"::formatted)
                 .orElse(OPTIONAL_EMPTY);
+        String first =  ofNullable(method.getAnnotation(First.class))
+                .map(First::value)
+                .map("OptionalInt.of(%d)"::formatted)
+                .orElse("OptionalInt.empty()");
         String find = OPTIONAL_EMPTY;
-        String first =  "OptionalInt.empty()";
         String returnType = OPTIONAL_EMPTY;
         String elementType = OPTIONAL_EMPTY;
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
