@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ActorRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
+import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
@@ -150,6 +151,28 @@ class RepositoryMethodLookupTest {
             SoftAssertions.assertSoftly(soft ->{
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DELETE_BY);
+            });
+        }
+
+        @Test
+        @DisplayName("should define COUNT_ALL where there predicate at method name")
+        void shouldDefineCountAllWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("countAll")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.COUNT_ALL);
+            });
+        }
+
+        @Test
+        @DisplayName("should define FIND_ALL where there predicate at method name")
+        void shouldDefineFindAllWhenTheMethodNameHasFindPredicate() {
+            var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("findAll")).orElseThrow();
+            SoftAssertions.assertSoftly(soft ->{
+                soft.assertThat(method).isNotNull();
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.FIND_ALL);
             });
         }
     }
