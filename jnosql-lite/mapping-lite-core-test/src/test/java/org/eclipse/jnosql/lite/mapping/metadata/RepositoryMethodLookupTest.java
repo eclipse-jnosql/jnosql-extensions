@@ -316,7 +316,6 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should return empty when Sort annotation does not exist")
         void shouldReturnEmptyWhenSortDoesNotHaveFindAnnotation() {
-
         }
 
 
