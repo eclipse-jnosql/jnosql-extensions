@@ -14,28 +14,33 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-class RepositoryMethodAnnotationsModel extends BaseMappingModel {
+import java.util.List;
+
+class RepositoryMethodAnnotationModel extends BaseMappingModel {
 
     private final String packageName;
     private final String className;
     private final String annotation;
     private final String providerAnnotation;
     private final String provider;
+    private final List<String> attributes;
 
-    RepositoryMethodAnnotationsModel(String packageName,
-                                            String className,
-                                            String annotation,
-                                            String providerAnnotation,
-                                            String provider) {
+    RepositoryMethodAnnotationModel(String packageName,
+                                    String className,
+                                    String annotation,
+                                    String providerAnnotation,
+                                    String provider,
+                                    List<String> attributes) {
         this.packageName = packageName;
         this.className = className;
         this.annotation = annotation;
         this.providerAnnotation = providerAnnotation;
         this.provider = provider;
+        this.attributes = attributes;
     }
 
     public String getClassName() {
-        return className +"Annotations";
+        return className +"RepositoryAnnotation";
     }
 
     public String getQualified() {
