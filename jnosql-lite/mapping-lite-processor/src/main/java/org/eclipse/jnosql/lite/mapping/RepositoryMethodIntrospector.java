@@ -25,6 +25,7 @@ import jakarta.data.repository.Select;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -74,41 +75,21 @@ final class RepositoryMethodIntrospector {
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         String methodType = MethodTypeUtils.INSTANCE.type(method, processingEnv).name();
 
-        String query = ofNullable(method.getAnnotation(Query.class))
-                .map(Query::value)
-                .map("Optional.of(\"%s\")"::formatted)
-                .orElse(OPTIONAL_EMPTY);
-        String first =  ofNullable(method.getAnnotation(First.class))
-                .map(First::value)
-                .map("OptionalInt.of(%d)"::formatted)
-                .orElse("OptionalInt.empty()");
-        String find = ofNullable(method.getAnnotation(Find.class))
-                .map(Find::toString)
-                .map(s -> s.substring(FIND_INITIAL_SUBSTRING, s.lastIndexOf(FIND_LAST_SUBSTRING)))
-                .map("Optional.of(%s)"::formatted)
-                .orElse(OPTIONAL_EMPTY);
+        String query = getQuery();
+        String first = getFirst();
+        String find = getFind();
         ExecutableElement executableElement = (ExecutableElement) method;
-        TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
-        String returnType = ofNullable(returnElement)
-                .map(Object::toString)
-                .map(OPTIONAL_CLASS_MASK::formatted)
-                .orElse(OPTIONAL_CLASS_MASK.formatted(executableElement.getReturnType().toString()));
+        String returnType = getReturnType(executableElement);
+        String elementType = getElementType(executableElement);
 
-        String elementType = OPTIONAL_EMPTY;
-        if(executableElement.getReturnType() instanceof DeclaredType declaredType) {
-            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-            elementType = typeArguments.stream().map(TypeMirror::toString).findFirst().map(OPTIONAL_CLASS_MASK::formatted)
-                    .orElse(OPTIONAL_EMPTY);
-        } else if(executableElement.getReturnType() instanceof ArrayType arrayType) {
-            elementType = OPTIONAL_CLASS_MASK.formatted(arrayType.getComponentType().toString());
+        List<String> selects = getSelects();
+        List<String> sorts = getSorts();
+
+        List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
+        for (AnnotationMirror annotationMirror : annotationMirrors) {
+            System.out.println(annotationMirror.toString());
         }
 
-        List<String> selects = Arrays.stream(method.getAnnotationsByType(Select.class))
-                .map(Select::value)
-                .toList();
-        List<String> sorts = Arrays.stream(method.getAnnotationsByType(OrderBy.class))
-                .map(orderBy -> orderBy.descending() ? SORT_DESC_MASK.formatted(orderBy.value()) :
-                        SORT_ASC_MASK.formatted(orderBy.value())).toList();
         List<String> annotations = Collections.emptyList();
         List<String> params = Collections.emptyList();
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
@@ -120,6 +101,61 @@ final class RepositoryMethodIntrospector {
             error(exception);
         }
         return metadata.getQualified();
+    }
+
+    private String getFind() {
+        return ofNullable(method.getAnnotation(Find.class))
+                .map(Find::toString)
+                .map(s -> s.substring(FIND_INITIAL_SUBSTRING, s.lastIndexOf(FIND_LAST_SUBSTRING)))
+                .map("Optional.of(%s)"::formatted)
+                .orElse(OPTIONAL_EMPTY);
+    }
+
+    private String getFirst() {
+        return ofNullable(method.getAnnotation(First.class))
+                .map(First::value)
+                .map("OptionalInt.of(%d)"::formatted)
+                .orElse("OptionalInt.empty()");
+    }
+
+    private String getQuery() {
+        return ofNullable(method.getAnnotation(Query.class))
+                .map(Query::value)
+                .map("Optional.of(\"%s\")"::formatted)
+                .orElse(OPTIONAL_EMPTY);
+    }
+
+    private String getReturnType(ExecutableElement executableElement) {
+        TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
+        String returnType = ofNullable(returnElement)
+                .map(Object::toString)
+                .map(OPTIONAL_CLASS_MASK::formatted)
+                .orElse(OPTIONAL_CLASS_MASK.formatted(executableElement.getReturnType().toString()));
+        return returnType;
+    }
+
+    private List<String> getSorts() {
+        return Arrays.stream(method.getAnnotationsByType(OrderBy.class))
+                .map(orderBy -> orderBy.descending() ? SORT_DESC_MASK.formatted(orderBy.value()) :
+                        SORT_ASC_MASK.formatted(orderBy.value())).toList();
+    }
+
+    private List<String> getSelects() {
+        return Arrays.stream(method.getAnnotationsByType(Select.class))
+                .map(Select::value)
+                .toList();
+    }
+
+    private static String getElementType(ExecutableElement executableElement) {
+        String elementType = OPTIONAL_EMPTY;
+        if(executableElement.getReturnType() instanceof DeclaredType declaredType) {
+            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+            elementType = typeArguments.stream().map(TypeMirror::toString).findFirst().map(OPTIONAL_CLASS_MASK::formatted)
+                    .orElse(OPTIONAL_EMPTY);
+        } else if(executableElement.getReturnType() instanceof ArrayType arrayType) {
+            elementType = OPTIONAL_CLASS_MASK.formatted(arrayType.getComponentType().toString());
+        }
+        return elementType;
     }
 
 
