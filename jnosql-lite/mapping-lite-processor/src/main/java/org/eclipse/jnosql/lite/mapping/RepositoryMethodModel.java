@@ -16,7 +16,7 @@ package org.eclipse.jnosql.lite.mapping;
 
 import java.util.List;
 
-public class RepositoryMethodModel extends BaseMappingModel {
+class RepositoryMethodModel extends BaseMappingModel {
 
     private final String packageName;
     private final String methodName;

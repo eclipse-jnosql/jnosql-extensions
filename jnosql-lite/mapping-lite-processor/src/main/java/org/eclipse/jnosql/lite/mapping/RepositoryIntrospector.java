@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class RepositoryIntrospector implements Supplier<MappingResult> {
+class RepositoryIntrospector implements Supplier<MappingResult> {
 
     private static final String MUSTACHE_TEMPLATE = "repository_metadata.mustache";
 
