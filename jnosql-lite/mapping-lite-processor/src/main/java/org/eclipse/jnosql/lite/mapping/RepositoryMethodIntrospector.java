@@ -36,6 +36,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -85,12 +86,23 @@ final class RepositoryMethodIntrospector {
         List<String> selects = getSelects();
         List<String> sorts = getSorts();
 
+        List<String> annotations = new ArrayList<>();
+
         List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
+        List<DeclaredType> declaredTypes = new ArrayList<>();
         for (AnnotationMirror annotationMirror : annotationMirrors) {
-            System.out.println(annotationMirror.toString());
+            if(!declaredTypes.contains(annotationMirror.getAnnotationType())) {
+                RepositoryMethodAnnotationIntrospector repositoryMethodAnnotationIntrospector = new RepositoryMethodAnnotationIntrospector(className,
+                        packageName,
+                        processingEnv,
+                        annotationMirror,
+                        method);
+                annotations.add(repositoryMethodAnnotationIntrospector.createAnnotationClass());
+                declaredTypes.add(annotationMirror.getAnnotationType());
+            }
         }
 
-        List<String> annotations = Collections.emptyList();
+
         List<String> params = Collections.emptyList();
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, query, find, first, returnType, elementType,
