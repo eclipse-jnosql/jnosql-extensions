@@ -89,20 +89,19 @@ final class RepositoryMethodIntrospector {
         List<String> annotations = new ArrayList<>();
 
         List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
-        List<DeclaredType> declaredTypes = new ArrayList<>();
+        List<String> declaredTypes = new ArrayList<>();
         for (AnnotationMirror annotationMirror : annotationMirrors) {
-            if(!declaredTypes.contains(annotationMirror.getAnnotationType())) {
+            String annotationName = annotationMirror.getAnnotationType().toString();
+            if(!declaredTypes.contains(annotationName)) {
                 RepositoryMethodAnnotationIntrospector repositoryMethodAnnotationIntrospector = new RepositoryMethodAnnotationIntrospector(className,
                         packageName,
                         processingEnv,
                         annotationMirror,
                         method);
                 annotations.add(repositoryMethodAnnotationIntrospector.createAnnotationClass());
-                declaredTypes.add(annotationMirror.getAnnotationType());
+                declaredTypes.add(annotationName);
             }
         }
-
-
         List<String> params = Collections.emptyList();
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, query, find, first, returnType, elementType,

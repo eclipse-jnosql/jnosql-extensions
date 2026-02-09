@@ -21,16 +21,13 @@ import com.github.mustachejava.MustacheFactory;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 final class RepositoryMethodAnnotationIntrospector {
 
@@ -66,12 +63,6 @@ final class RepositoryMethodAnnotationIntrospector {
         String providerAnnotation = "false";
         String provider = "Optional.empty()";
         List<String> attributes = new ArrayList<>();
-        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-            var key = entry.getKey().getSimpleName().toString();
-            var value = entry.getValue().getValue() instanceof String ? "\"" + entry.getValue().getValue()+ "\"":
-                    entry.getValue().getValue();
-            attributes.add("this.attributes.put(" + key + ", " + value + ");");
-        }
         var metadata = new RepositoryMethodAnnotationModel(packageName,
                 className,
                 annotation,
