@@ -52,7 +52,7 @@ public final class {{className}} implements RepositoryMethodLookup {
       this.sorts.add({{{.}}});
       {{/sorts}}
       {{#annotations}}
-      this.annotations.add({{{.}}});
+      this.annotations.add(new {{{.}}}());
       {{/annotations}}
       {{#params}}
       this.params.add({{{.}}});
