@@ -67,7 +67,10 @@ final class RepositoryMethodAnnotationIntrospector {
         String provider = "Optional.empty()";
         List<String> attributes = new ArrayList<>();
         for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-            attributes.add(entry.getKey().getSimpleName().toString());
+            var key = entry.getKey().getSimpleName().toString();
+            var value = entry.getValue().getValue() instanceof String ? "\"" + entry.getValue().getValue()+ "\"":
+                    entry.getValue().getValue();
+            attributes.add("this.attributes.put(" + key + ", " + value + ");");
         }
         var metadata = new RepositoryMethodAnnotationModel(packageName,
                 className,
