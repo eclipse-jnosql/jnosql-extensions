@@ -62,6 +62,7 @@ final class RepositoryMethodAnnotationIntrospector {
         //TODO update those values in a next interaction
         String providerAnnotation = "false";
         String provider = "Optional.empty()";
+
         List<String> attributes = Collections.emptyList();
         var metadata = new RepositoryMethodAnnotationModel(packageName,
                 className,
