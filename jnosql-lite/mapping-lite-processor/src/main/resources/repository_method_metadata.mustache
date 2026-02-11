@@ -121,7 +121,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     @Override
     public List<RepositoryAnnotation> annotations() {
-        return this.annotations;
+         throw new UnsupportedOperationException("The implementation of RepositoryMethodLookup, does not support annotations");
     }
 
 }
