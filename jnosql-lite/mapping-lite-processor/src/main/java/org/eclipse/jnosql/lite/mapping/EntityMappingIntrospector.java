@@ -50,19 +50,21 @@ final class EntityMappingIntrospector {
     private static final String NEW_INSTANCE = "entity_metadata.mustache";
     private static final String INJECTABLE_CONSTRUCTOR = "constructor_metadata.mustache";
 
+    private static final Mustache ENTITY_TEMPLATE;
+    private static final Mustache CONSTRUCTOR_TEMPLATE;
+
+    static {
+        MustacheFactory factory = new DefaultMustacheFactory();
+        ENTITY_TEMPLATE = factory.compile(NEW_INSTANCE);
+        CONSTRUCTOR_TEMPLATE = factory.compile(INJECTABLE_CONSTRUCTOR);
+    }
     private final Element entity;
 
     private final ProcessingEnvironment processingEnv;
 
-    private final Mustache template;
-    private final Mustache constructorTemplate;
-
     EntityMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
-        MustacheFactory factory = new DefaultMustacheFactory();
-        this.template = factory.compile(NEW_INSTANCE);
-        this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
     }
 
     MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
@@ -147,7 +149,7 @@ final class EntityMappingIntrospector {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
-            constructorTemplate.execute(writer, metadata);
+            CONSTRUCTOR_TEMPLATE.execute(writer, metadata);
         }
     }
 
@@ -174,7 +176,7 @@ final class EntityMappingIntrospector {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
-            template.execute(writer, metadata);
+            ENTITY_TEMPLATE.execute(writer, metadata);
         }
     }
 }
