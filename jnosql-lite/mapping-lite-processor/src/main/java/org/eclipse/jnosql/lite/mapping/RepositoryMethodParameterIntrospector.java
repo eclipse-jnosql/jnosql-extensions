@@ -68,8 +68,10 @@ final class RepositoryMethodParameterIntrospector {
         String className = methodClassName.concat(name);
         String by = Optional.ofNullable(variableElement.getAnnotation(By.class))
                 .map(By::value).orElse(name);
-        String elementType = "Optional.of(%s)".formatted(variableElement.asType().toString());
-        var metadata = new RepositoryMethodParamModel(packageName, className, constraint, name, param, by, elementType);
+        String type = variableElement.asType().toString();
+        String elementType = "Optional.of(%s.class)".formatted(variableElement.asType().toString());
+        var metadata = new RepositoryMethodParamModel(packageName, className, constraint, name, param, by,type,
+                elementType);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {
