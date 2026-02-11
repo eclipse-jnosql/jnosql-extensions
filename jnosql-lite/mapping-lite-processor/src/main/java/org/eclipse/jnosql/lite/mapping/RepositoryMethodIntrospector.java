@@ -29,6 +29,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -89,7 +90,7 @@ final class RepositoryMethodIntrospector {
         List<String> selects = getSelects();
         List<String> sorts = getSorts();
         List<String> annotations = Collections.emptyList();
-        List<String> params = Collections.emptyList();
+        List<String> params = params(executableElement, className, packageName);
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, query, find, first, returnType, elementType,
                 selects, sorts, annotations, params);
@@ -99,6 +100,15 @@ final class RepositoryMethodIntrospector {
             error(exception);
         }
         return metadata.getQualified();
+    }
+
+    private List<String> params(ExecutableElement executableElement, String className, String packageName) {
+        List<String> params = new ArrayList<>();
+        for (VariableElement parameter : executableElement.getParameters()) {
+            var param = new RepositoryMethodParameterIntrospector(processingEnv, className, packageName, parameter, method);
+            params.add(param.createClass());
+        }
+        return params;
     }
 
 
