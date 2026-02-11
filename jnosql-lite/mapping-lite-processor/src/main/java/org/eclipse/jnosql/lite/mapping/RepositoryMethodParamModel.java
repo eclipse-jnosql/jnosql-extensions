@@ -22,6 +22,7 @@ class RepositoryMethodParamModel extends BaseMappingModel {
     private final String name;
     private final String param;
     private final String by;
+    private final String type;
     private final String elementType;
 
     RepositoryMethodParamModel(String packageName,
@@ -30,6 +31,7 @@ class RepositoryMethodParamModel extends BaseMappingModel {
                                String name,
                                String param,
                                String by,
+                               String type,
                                String elementType) {
 
         this.packageName = packageName;
@@ -38,6 +40,7 @@ class RepositoryMethodParamModel extends BaseMappingModel {
         this.name = name;
         this.param = param;
         this.by = by;
+        this.type = type;
         this.elementType = elementType;
     }
 
@@ -72,5 +75,9 @@ class RepositoryMethodParamModel extends BaseMappingModel {
 
     public String getElementType() {
         return elementType;
+    }
+
+    public String getType() {
+        return type;
     }
 }
