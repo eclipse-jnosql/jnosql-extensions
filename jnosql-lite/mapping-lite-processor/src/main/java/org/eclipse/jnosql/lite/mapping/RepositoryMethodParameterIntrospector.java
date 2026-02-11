@@ -18,6 +18,7 @@ import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import jakarta.data.repository.By;
+import jakarta.data.repository.Is;
 import jakarta.data.repository.Param;
 
 import javax.annotation.processing.Filer;
@@ -61,7 +62,10 @@ final class RepositoryMethodParameterIntrospector {
 
 
     String createClass() {
-        String constraint = null;
+
+        String constraint = Optional.ofNullable(variableElement.getAnnotation(Is.class))
+                .map(s -> s.toString())
+                .orElse("Optional.empty()");;
         String name = variableElement.getSimpleName().toString();
         String param = Optional.ofNullable(variableElement.getAnnotation(Param.class))
                 .map(Param::value).orElse(name);
