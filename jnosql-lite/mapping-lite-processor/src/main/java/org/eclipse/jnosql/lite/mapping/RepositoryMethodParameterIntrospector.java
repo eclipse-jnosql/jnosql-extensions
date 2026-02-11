@@ -25,11 +25,17 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 import java.util.Optional;
+
+import static java.util.stream.Collectors.joining;
 
 final class RepositoryMethodParameterIntrospector {
 
@@ -73,7 +79,7 @@ final class RepositoryMethodParameterIntrospector {
         String by = Optional.ofNullable(variableElement.getAnnotation(By.class))
                 .map(By::value).orElse(name);
         String type = variableElement.asType().toString();
-        String elementType = "Optional.of(%s.class)".formatted(variableElement.asType().toString());
+        String elementType = getElementType();
         var metadata = new RepositoryMethodParamModel(packageName, className, constraint, name, param, by,type,
                 elementType);
         try {
@@ -82,6 +88,20 @@ final class RepositoryMethodParameterIntrospector {
             error(exception);
         }
         return metadata.getQualified();
+    }
+
+    private String getElementType() {
+        TypeMirror typeMirror = variableElement.asType();
+        if (typeMirror instanceof DeclaredType declaredType) {
+            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+            var elementType = typeArguments.stream().map(TypeMirror::toString).collect(joining(","));
+            return "Optional.of(%s.class)".formatted(elementType);
+        }
+        if (typeMirror instanceof ArrayType) {
+            var elementType = typeMirror.toString();
+            return "Optional.of(%s.class)".formatted(elementType);
+        }
+        return "Optional.empty()";
     }
 
     private void createClass(Element entity, RepositoryMethodParamModel metadata) throws IOException {
