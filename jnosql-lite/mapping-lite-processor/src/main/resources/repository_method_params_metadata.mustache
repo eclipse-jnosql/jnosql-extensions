@@ -16,7 +16,7 @@ package {{packageName}};
 
 import java.util.Optional;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
-
+import jakarta.data.constraint.Constraint;
 
 import javax.annotation.processing.Generated;
 
@@ -32,17 +32,22 @@ public final class {{className}} implements RepositoryParam {
 
     @Override
     public String name() {
-        return {{{name}}};
+        return "{{{name}}}";
     }
 
     @Override
     public String param() {
-         return {{{param}}};
+         return "{{{param}}}";
     }
 
     @Override
     public String by() {
-        return {{{by}}};
+        return "{{{by}}}";
+    }
+
+    @Override
+    public Class<?> type() {
+        return {{{type}}}.class;
     }
 
     @Override
