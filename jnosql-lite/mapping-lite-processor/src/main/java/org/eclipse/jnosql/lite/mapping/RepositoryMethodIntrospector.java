@@ -86,6 +86,24 @@ final class RepositoryMethodIntrospector {
         List<String> selects = getSelects();
         List<String> sorts = getSorts();
 
+        List<String> annotations = Collections.emptyList();
+        List<String> params = Collections.emptyList();
+        var metadata = new RepositoryMethodModel(packageName, methodName, className,
+                methodType, query, find, first, returnType, elementType,
+                selects, sorts, annotations, params);
+        try {
+            createClass(method, metadata);
+        } catch (IOException exception) {
+            error(exception);
+        }
+        return metadata.getQualified();
+    }
+
+
+    /**
+     * This class will be implemented as a next step as in a new PR.
+     */
+    private List<String> annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
         List<String> annotations = new ArrayList<>();
 
         List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
@@ -102,16 +120,7 @@ final class RepositoryMethodIntrospector {
                 declaredTypes.add(annotationName);
             }
         }
-        List<String> params = Collections.emptyList();
-        var metadata = new RepositoryMethodModel(packageName, methodName, className,
-                methodType, query, find, first, returnType, elementType,
-                selects, sorts, annotations, params);
-        try {
-            createClass(method, metadata);
-        } catch (IOException exception) {
-            error(exception);
-        }
-        return metadata.getQualified();
+        return annotations;
     }
 
     private String getFind() {
