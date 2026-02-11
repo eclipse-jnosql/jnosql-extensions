@@ -71,7 +71,7 @@ final class RepositoryMethodParameterIntrospector {
 
         String constraint = Optional.ofNullable(variableElement.getAnnotation(Is.class))
                 .map(s -> s.toString())
-                .orElse("Optional.empty()");;
+                .orElse("Optional.empty()");
         String name = variableElement.getSimpleName().toString();
         String param = Optional.ofNullable(variableElement.getAnnotation(Param.class))
                 .map(Param::value).orElse(name);
