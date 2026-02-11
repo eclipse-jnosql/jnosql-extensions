@@ -21,17 +21,17 @@ import com.github.mustachejava.MustacheFactory;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+/**
+ * TODO: update this method interceptor to work, but as a next step
+ */
 final class RepositoryMethodAnnotationIntrospector {
 
     private static final String MUSTACHE_TEMPLATE = "repository_method_annotations_metadata.mustache";
@@ -66,13 +66,6 @@ final class RepositoryMethodAnnotationIntrospector {
         String providerAnnotation = "false";
         String provider = "Optional.empty()";
         List<String> attributes = new ArrayList<>();
-        for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : annotationMirror.getElementValues().entrySet()) {
-            var key = entry.getKey().getSimpleName().toString();
-            AnnotationValue entryValue = entry.getValue();
-            var value = entryValue.getValue() instanceof String ? "\"" + entryValue.getValue()+ "\"":
-                    entryValue.getValue();
-            attributes.add("this.attributes.put(" + key + ", " + value + ")");
-        }
         var metadata = new RepositoryMethodAnnotationModel(packageName,
                 className,
                 annotation,
