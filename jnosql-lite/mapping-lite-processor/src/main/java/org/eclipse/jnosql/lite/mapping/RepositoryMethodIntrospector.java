@@ -52,18 +52,21 @@ final class RepositoryMethodIntrospector {
     private static final String SORT_DESC_MASK = "Sort.desc(\"%s\")";
     private static final String SORT_ASC_MASK = "Sort.asc(\"%s\")";
     private static final String OPTIONAL_CLASS_MASK = "Optional.of(%s.class)";
+    private static final Mustache TEMPLATE;
+
+    static {
+        MustacheFactory factory = new DefaultMustacheFactory();
+        TEMPLATE = factory.compile(MUSTACHE_TEMPLATE);
+    }
 
     private final Element method;
     private final String repository;
     private final ProcessingEnvironment processingEnv;
-    private final Mustache template;
 
     RepositoryMethodIntrospector(Element method, String repository, ProcessingEnvironment processingEnv) {
         this.method = method;
         this.repository = repository;
         this.processingEnv = processingEnv;
-        MustacheFactory factory = new DefaultMustacheFactory();
-        this.template = factory.compile(MUSTACHE_TEMPLATE);
     }
 
     public static RepositoryMethodIntrospector of(Element method, String type, ProcessingEnvironment processingEnv) {
@@ -182,7 +185,7 @@ final class RepositoryMethodIntrospector {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
-            template.execute(writer, metadata);
+            TEMPLATE.execute(writer, metadata);
         }
     }
 
