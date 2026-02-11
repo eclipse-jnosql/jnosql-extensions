@@ -62,4 +62,8 @@ class RepositoryMethodAnnotationModel extends BaseMappingModel {
     public String getProvider() {
         return provider;
     }
+
+    public List<String> getAttributes() {
+        return attributes;
+    }
 }
