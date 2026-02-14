@@ -16,6 +16,7 @@ package org.eclipse.jnosql.lite.mapping.entities.repository;
 
 import jakarta.data.page.CursoredPage;
 import jakarta.data.repository.BasicRepository;
+import jakarta.data.repository.By;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
 import jakarta.data.repository.OrderBy;
@@ -67,7 +68,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     Optional<Person> optional(Long id);
 
     @Find
-    List<Person> list(String name);
+    List<Person> list(@By("isAnnotation") String name);
 
     @Find
     Person[] array(String name);

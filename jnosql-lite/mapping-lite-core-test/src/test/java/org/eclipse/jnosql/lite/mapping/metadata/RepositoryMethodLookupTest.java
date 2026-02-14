@@ -507,6 +507,21 @@ class RepositoryMethodLookupTest {
             });
         }
 
+        @Test
+        @DisplayName("should load by annotation")
+        void shouldLoadByAnnotation(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new MethodSignatureKey("list", List.of(String.class)))
+                    .orElseThrow();
+            List<RepositoryParam> params = method.params();
+            RepositoryParam repositoryParam = params.getFirst();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryParam.name()).isEqualTo("name");
+                soft.assertThat(repositoryParam.by()).isEqualTo("isAnnotation");
+            });
+        }
+
 
     }
 
