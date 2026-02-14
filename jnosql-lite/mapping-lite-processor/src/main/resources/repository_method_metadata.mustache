@@ -34,6 +34,7 @@ import javax.annotation.processing.Generated;
 public final class {{className}} implements RepositoryMethodLookup {
 
    private final NameKey byName;
+   private final MethodSignatureKey bySignature;
    private final List<String> selects;
    private final List<Sort<?>> sorts;
    private final List<RepositoryAnnotation> annotations;
@@ -41,6 +42,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     public {{className}}() {
       this.byName = new NameKey("{{methodName}}");
+      this.bySignature = new MethodSignatureKey("{{methodName}}", , new Class[]{{{paramSignature}}});
       this.selects = new ArrayList<>();
       this.sorts = new ArrayList<>();
       this.annotations = new ArrayList<>();
