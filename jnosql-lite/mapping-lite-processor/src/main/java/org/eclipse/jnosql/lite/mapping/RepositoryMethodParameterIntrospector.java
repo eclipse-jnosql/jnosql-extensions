@@ -70,7 +70,7 @@ final class RepositoryMethodParameterIntrospector {
     ParamResult createClass() {
 
         String constraint = Optional.ofNullable(variableElement.getAnnotation(Is.class))
-                .map(s -> s.toString())
+                .map(Object::toString)
                 .orElse("Optional.empty()");
         String name = variableElement.getSimpleName().toString();
         String param = Optional.ofNullable(variableElement.getAnnotation(Param.class))
