@@ -42,7 +42,7 @@ public final class {{className}} implements RepositoryMethodLookup {
 
     public {{className}}() {
       this.byName = new NameKey("{{methodName}}");
-      this.bySignature = new MethodSignatureKey("{{methodName}}", new Class[]{ {{{paramSignature}}} });
+      this.bySignature = new MethodSignatureKey("{{methodName}}", List.of({{{paramSignature}}}));
       this.selects = new ArrayList<>();
       this.sorts = new ArrayList<>();
       this.annotations = new ArrayList<>();
