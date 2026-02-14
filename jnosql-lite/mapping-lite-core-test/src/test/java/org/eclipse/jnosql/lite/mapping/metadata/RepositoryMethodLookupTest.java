@@ -22,6 +22,7 @@ import org.eclipse.jnosql.lite.mapping.entities.Person;
 import org.eclipse.jnosql.lite.mapping.entities.repository.ComputerRepository;
 import org.eclipse.jnosql.lite.mapping.entities.repository.Garage;
 import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
+import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
@@ -435,6 +436,29 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(method.returnType()).isPresent().get().isEqualTo(Person[].class);
                 soft.assertThat(method.elementType()).isPresent().get().isEqualTo(Person.class);
             });
+        }
+    }
+
+    @DisplayName("should find by class")
+    @Nested
+    class WhenFindClass {
+
+        @Test
+        @DisplayName("should find by class")
+        void shouldFindByName() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("optional")).orElseThrow();
+            Assertions.assertThat(method.find()).isPresent();
+        }
+
+        @Test
+        @DisplayName("should find by param signature")
+        void shouldFindByParamSignature(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new MethodSignatureKey("optional", new Class[]{Long.class}))
+                    .orElseThrow();
+            Assertions.assertThat(method.find()).isPresent();
         }
     }
 
