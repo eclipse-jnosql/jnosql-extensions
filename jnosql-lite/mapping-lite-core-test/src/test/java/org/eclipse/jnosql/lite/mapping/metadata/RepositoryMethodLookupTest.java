@@ -530,7 +530,7 @@ class RepositoryMethodLookupTest {
             RepositoryParam repositoryParam = params.getFirst();
             SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(repositoryParam.type()).isEqualTo(List.class);
-                soft.assertThat(repositoryParam.elementType()).isEqualTo(Person.class);
+                soft.assertThat(repositoryParam.elementType()).get().isEqualTo(Person.class);
             });
         }
 
@@ -539,13 +539,13 @@ class RepositoryMethodLookupTest {
         void shouldLoadStructureAsArray() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
-                    .find(new MethodSignatureKey("saveArray", List.of(List.class)))
+                    .find(new MethodSignatureKey("saveArray", List.of(Person[].class)))
                     .orElseThrow();
             List<RepositoryParam> params = method.params();
             RepositoryParam repositoryParam = params.getFirst();
             SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(repositoryParam.type()).isEqualTo(Person[].class);
-                soft.assertThat(repositoryParam.elementType()).isEqualTo(Person.class);
+                soft.assertThat(repositoryParam.elementType()).get().isEqualTo(Person.class);
             });
         }
 

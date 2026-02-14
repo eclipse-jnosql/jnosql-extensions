@@ -24,12 +24,10 @@ import jakarta.data.repository.Param;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -83,9 +81,8 @@ final class RepositoryMethodParameterIntrospector {
         var className = methodClassName.concat(simpleName);
         var by = Optional.ofNullable(variableElement.getAnnotation(By.class))
                 .map(By::value).orElse(name);
-
-        var types = processingEnv.getTypeUtils();
-        var type = getRawType(variableElement, types);
+        var typeUtils = processingEnv.getTypeUtils();
+        var type = typeUtils.erasure(variableElement.asType()).toString();
         var elementType = getElementType();
         var metadata = new RepositoryMethodParamModel(packageName, className, constraint, name, param, by,type,
                 elementType);
@@ -95,28 +92,6 @@ final class RepositoryMethodParameterIntrospector {
             error(exception);
         }
         return new ParamResult(type, metadata.getQualified());
-    }
-
-    private static String getRawType(VariableElement variableElement, Types types) {
-        return getRawType(variableElement.asType(), types);
-    }
-
-    private static String getRawType(TypeMirror type, Types types) {
-        TypeMirror erased = types.erasure(type);
-        switch (erased.getKind()) {
-            case ARRAY -> {
-                ArrayType arrayType = (ArrayType) erased;
-                TypeMirror component = arrayType.getComponentType();
-                return getRawType(component, types);
-            }
-            case DECLARED -> {
-                TypeElement element = (TypeElement) types.asElement(erased);
-                return element.getQualifiedName().toString();
-            }
-            default -> {
-                return erased.toString();
-            }
-        }
     }
 
     private String getElementType() {
@@ -129,8 +104,9 @@ final class RepositoryMethodParameterIntrospector {
             var elementType = typeArguments.stream().map(TypeMirror::toString).collect(joining(","));
             return "Optional.of(%s.class)".formatted(elementType);
         }
-        if (typeMirror instanceof ArrayType) {
-            var elementType = typeMirror.toString();
+        if (typeMirror instanceof ArrayType arrayType) {
+            TypeMirror component = arrayType.getComponentType();
+            String elementType = component.toString();
             return "Optional.of(%s.class)".formatted(elementType);
         }
         return "Optional.empty()";
