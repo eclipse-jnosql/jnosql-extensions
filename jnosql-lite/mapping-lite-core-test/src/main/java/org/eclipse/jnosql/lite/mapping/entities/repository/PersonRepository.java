@@ -58,7 +58,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     List<Person> findTopOne(@Param("name") String name);
 
     @Find
-    List<Person> name(@Param("name") String name);
+    List<Person> name(@Param("paramAnnotation") String name);
 
     @Find
     Person id(Long id);

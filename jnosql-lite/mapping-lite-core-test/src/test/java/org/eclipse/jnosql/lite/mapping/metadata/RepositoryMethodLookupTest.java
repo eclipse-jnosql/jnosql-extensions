@@ -466,7 +466,6 @@ class RepositoryMethodLookupTest {
     @DisplayName("should load parameters")
     @Nested
     class WhenLoadParameters{
-        //should load when method as entity
         //should load when the List or structure
         //should load when array of structure
         //should load is
@@ -487,9 +486,24 @@ class RepositoryMethodLookupTest {
             SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(repositoryParam.name()).isEqualTo("username");
                 soft.assertThat(repositoryParam.param()).isEqualTo("username");
-                soft.assertThat(repositoryParam.is()).isEqualTo("username");
+                soft.assertThat(repositoryParam.is()).isEmpty();
                 soft.assertThat(repositoryParam.type()).isEqualTo(String.class);
                 soft.assertThat(repositoryParam.elementType()).isEmpty();
+            });
+        }
+
+        @DisplayName("should load Param annotation")
+        @Test
+        void shouldLoadParamAnnotation(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new MethodSignatureKey("name", List.of(String.class)))
+                    .orElseThrow();
+            List<RepositoryParam> params = method.params();
+            RepositoryParam repositoryParam = params.getFirst();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryParam.name()).isEqualTo("name");
+                soft.assertThat(repositoryParam.param()).isEqualTo("paramAnnotation");
             });
         }
 
