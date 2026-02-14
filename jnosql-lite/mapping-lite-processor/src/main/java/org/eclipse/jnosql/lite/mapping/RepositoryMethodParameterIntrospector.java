@@ -72,15 +72,16 @@ final class RepositoryMethodParameterIntrospector {
         String constraint = Optional.ofNullable(variableElement.getAnnotation(Is.class))
                 .map(Object::toString)
                 .orElse("Optional.empty()");
-        String name = variableElement.getSimpleName().toString();
-        String param = Optional.ofNullable(variableElement.getAnnotation(Param.class))
-                .map(Param::value).orElse(name.substring(0, 1).toUpperCase()
-                        .concat(name.substring(1)));
-        String className = methodClassName.concat(name);
-        String by = Optional.ofNullable(variableElement.getAnnotation(By.class))
+        var name = variableElement.getSimpleName().toString();
+        var param = Optional.ofNullable(variableElement.getAnnotation(Param.class))
+                .map(Param::value).orElse(name);
+        var className = methodClassName.concat(variableElement.getSimpleName().toString().substring(0, 1).toUpperCase()
+                .concat(variableElement.getSimpleName().toString()
+                        .substring(1)));
+        var by = Optional.ofNullable(variableElement.getAnnotation(By.class))
                 .map(By::value).orElse(name);
-        String type = variableElement.asType().toString();
-        String elementType = getElementType();
+        var type = variableElement.asType().toString();
+        var elementType = getElementType();
         var metadata = new RepositoryMethodParamModel(packageName, className, constraint, name, param, by,type,
                 elementType);
         try {
