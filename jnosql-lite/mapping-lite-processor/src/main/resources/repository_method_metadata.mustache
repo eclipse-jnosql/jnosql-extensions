@@ -55,7 +55,7 @@ public final class {{className}} implements RepositoryMethodLookup {
       this.annotations.add(new {{{.}}}());
       {{/annotations}}
       {{#params}}
-      this.params.add({{{.}}});
+      this.params.add(new {{{.}}}());
       {{/params}}
     }
 
