@@ -94,6 +94,9 @@ final class RepositoryMethodParameterIntrospector {
         TypeMirror typeMirror = variableElement.asType();
         if (typeMirror instanceof DeclaredType declaredType) {
             List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+            if(typeArguments.isEmpty()) {
+                return "Optional.empty()";
+            }
             var elementType = typeArguments.stream().map(TypeMirror::toString).collect(joining(","));
             return "Optional.of(%s.class)".formatted(elementType);
         }
