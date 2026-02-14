@@ -75,9 +75,10 @@ final class RepositoryMethodParameterIntrospector {
         var name = variableElement.getSimpleName().toString();
         var param = Optional.ofNullable(variableElement.getAnnotation(Param.class))
                 .map(Param::value).orElse(name);
-        var className = methodClassName.concat(variableElement.getSimpleName().toString().substring(0, 1).toUpperCase()
+        var simpleName = variableElement.getSimpleName().toString().substring(0, 1).toUpperCase()
                 .concat(variableElement.getSimpleName().toString()
-                        .substring(1)));
+                        .substring(1));
+        var className = methodClassName.concat(simpleName);
         var by = Optional.ofNullable(variableElement.getAnnotation(By.class))
                 .map(By::value).orElse(name);
         var type = variableElement.asType().toString();
