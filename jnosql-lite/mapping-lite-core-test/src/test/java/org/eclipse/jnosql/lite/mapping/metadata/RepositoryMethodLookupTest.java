@@ -519,6 +519,21 @@ class RepositoryMethodLookupTest {
             });
         }
 
+        @Test
+        @DisplayName("should load when method as List or structure")
+        void shouldLoadStructureAsList() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new MethodSignatureKey("saveList", List.of(List.class)))
+                    .orElseThrow();
+            List<RepositoryParam> params = method.params();
+            RepositoryParam repositoryParam = params.getFirst();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryParam.name()).isEqualTo("name");
+                soft.assertThat(repositoryParam.by()).isEqualTo("isAnnotation");
+            });
+        }
+
 
     }
 

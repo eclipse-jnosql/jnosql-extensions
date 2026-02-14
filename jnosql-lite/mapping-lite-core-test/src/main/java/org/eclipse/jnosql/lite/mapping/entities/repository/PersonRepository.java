@@ -22,6 +22,7 @@ import jakarta.data.repository.First;
 import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Param;
 import jakarta.data.repository.Repository;
+import jakarta.data.repository.Save;
 import jakarta.data.repository.Select;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
 
@@ -72,4 +73,10 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Find
     Person[] array(String name);
+
+    @Save
+    void saveList(List<Person> people);
+
+    @Save
+    void saveArray(Person[] people);
 }
