@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
@@ -90,10 +91,16 @@ final class RepositoryMethodIntrospector {
         List<String> selects = getSelects();
         List<String> sorts = getSorts();
         List<String> annotations = Collections.emptyList();
-        List<String> params = params(executableElement, className, packageName);
+        List<RepositoryMethodParameterIntrospector.ParamResult> paramResults = params(executableElement, className, packageName);
+        List<String> params = new ArrayList<>();
+        var paramSignature = paramResults.stream().map(RepositoryMethodParameterIntrospector.ParamResult::type)
+                .map(s-> s.concat(".class")).collect(Collectors.joining(","));
+        for (RepositoryMethodParameterIntrospector.ParamResult paramResult : paramResults) {
+            params.add(paramResult.qualified());
+        }
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, query, find, first, returnType, elementType,
-                selects, sorts, annotations, params);
+                selects, sorts, annotations, params, paramSignature);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {
@@ -102,8 +109,8 @@ final class RepositoryMethodIntrospector {
         return metadata.getQualified();
     }
 
-    private List<String> params(ExecutableElement executableElement, String className, String packageName) {
-        List<String> params = new ArrayList<>();
+    private List<RepositoryMethodParameterIntrospector.ParamResult> params(ExecutableElement executableElement, String className, String packageName) {
+        List<RepositoryMethodParameterIntrospector.ParamResult> params = new ArrayList<>();
         for (VariableElement parameter : executableElement.getParameters()) {
             var param = new RepositoryMethodParameterIntrospector(processingEnv, className, packageName, parameter, method);
             params.add(param.createClass());

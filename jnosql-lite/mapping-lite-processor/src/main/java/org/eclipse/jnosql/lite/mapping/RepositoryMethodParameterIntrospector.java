@@ -67,7 +67,7 @@ final class RepositoryMethodParameterIntrospector {
     }
 
 
-    String createClass() {
+    ParamResult createClass() {
 
         String constraint = Optional.ofNullable(variableElement.getAnnotation(Is.class))
                 .map(s -> s.toString())
@@ -87,7 +87,7 @@ final class RepositoryMethodParameterIntrospector {
         } catch (IOException exception) {
             error(exception);
         }
-        return metadata.getQualified();
+        return new ParamResult(type, metadata.getQualified());
     }
 
     private String getElementType() {
@@ -119,4 +119,6 @@ final class RepositoryMethodParameterIntrospector {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
                 + exception.getMessage());
     }
+
+    record ParamResult(String type, String qualified) {}
 }

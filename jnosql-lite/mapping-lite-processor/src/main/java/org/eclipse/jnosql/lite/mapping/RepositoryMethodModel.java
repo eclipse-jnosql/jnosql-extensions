@@ -31,6 +31,7 @@ class RepositoryMethodModel extends BaseMappingModel {
     private final List<String> sorts;
     private final List<String> annotations;
     private final List<String> params;
+    private final String paramSignature;
 
 
     public RepositoryMethodModel(String packageName,
@@ -44,7 +45,8 @@ class RepositoryMethodModel extends BaseMappingModel {
                                  List<String> selects,
                                  List<String> sorts,
                                  List<String> annotations,
-                                 List<String> params) {
+                                 List<String> params,
+                                 String paramSignature) {
         this.methodName = methodName;
         this.packageName = packageName;
         this.className = className;
@@ -58,6 +60,7 @@ class RepositoryMethodModel extends BaseMappingModel {
         this.sorts = sorts;
         this.annotations = annotations;
         this.params = params;
+        this.paramSignature = paramSignature;
     }
 
     public String getClassName() {
@@ -114,5 +117,9 @@ class RepositoryMethodModel extends BaseMappingModel {
 
     public List<String> getParams() {
         return params;
+    }
+
+    public String getParamSignature() {
+        return paramSignature;
     }
 }
