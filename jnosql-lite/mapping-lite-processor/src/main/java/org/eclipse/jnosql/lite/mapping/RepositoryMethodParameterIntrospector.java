@@ -81,7 +81,9 @@ final class RepositoryMethodParameterIntrospector {
         var className = methodClassName.concat(simpleName);
         var by = Optional.ofNullable(variableElement.getAnnotation(By.class))
                 .map(By::value).orElse(name);
-        var type = variableElement.asType().toString();
+
+        var types = processingEnv.getTypeUtils();
+        var type = types.erasure(variableElement.asType()).toString();
         var elementType = getElementType();
         var metadata = new RepositoryMethodParamModel(packageName, className, constraint, name, param, by,type,
                 elementType);
