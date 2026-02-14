@@ -456,7 +456,7 @@ class RepositoryMethodLookupTest {
         void shouldFindByParamSignature(){
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
-                    .find(new MethodSignatureKey("optional", new Class[]{Long.class}))
+                    .find(new MethodSignatureKey("optional", List.of(Long.class)))
                     .orElseThrow();
             Assertions.assertThat(method.find()).isPresent();
         }
