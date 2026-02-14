@@ -27,6 +27,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -460,6 +461,39 @@ class RepositoryMethodLookupTest {
                     .orElseThrow();
             Assertions.assertThat(method.find()).isPresent();
         }
+    }
+
+    @DisplayName("should load parameters")
+    @Nested
+    class WhenLoadParameters{
+        //should load when method as entity
+        //should load when the List or structure
+        //should load when array of structure
+        //should load is
+        //should load param annotation
+        //should load by
+        //should load type
+        //should load element type
+
+        @DisplayName("should load when method as entity")
+        @Test
+        void shouldLoadWhenMethodAsEntity(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new MethodSignatureKey("findByUsername", List.of(String.class)))
+                    .orElseThrow();
+            List<RepositoryParam> params = method.params();
+            RepositoryParam repositoryParam = params.getFirst();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryParam.name()).isEqualTo("username");
+                soft.assertThat(repositoryParam.param()).isEqualTo("username");
+                soft.assertThat(repositoryParam.is()).isEqualTo("username");
+                soft.assertThat(repositoryParam.type()).isEqualTo(String.class);
+                soft.assertThat(repositoryParam.elementType()).isEmpty();
+            });
+        }
+
+
     }
 
 }
