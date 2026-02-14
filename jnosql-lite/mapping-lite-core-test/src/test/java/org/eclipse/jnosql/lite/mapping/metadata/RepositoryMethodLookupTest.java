@@ -468,10 +468,7 @@ class RepositoryMethodLookupTest {
     class WhenLoadParameters{
         //should load when the List or structure
         //should load when array of structure
-        //should load is
-        //should load param annotation
         //should load by
-        //should load type
         //should load element type
 
         @DisplayName("should load when method as entity")
@@ -509,7 +506,7 @@ class RepositoryMethodLookupTest {
 
         @Test
         @DisplayName("should load by annotation")
-        void shouldLoadByAnnotation(){
+        void shouldLoadByAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("list", List.of(String.class)))
