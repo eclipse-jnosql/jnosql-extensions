@@ -28,9 +28,9 @@ public final class {{className}} implements RepositoryParam {
 
 
     @Override
-    public Optional<Class<? extends Constraint<?>>> is() {
-        Supplier<Class<? extends Constraint<?>>> supplier = () -> (Class<? extends Constraint<?>>) {{{constraint}}};
-        return Optional.ofNullable(supplier.get());
+    @SuppressWarnings("rawtypes")
+    public Optional<Class<? extends Constraint>> is() {
+        return {{{constraint}}};
     }
 
     @Override
