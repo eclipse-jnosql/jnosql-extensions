@@ -17,6 +17,7 @@ package org.eclipse.jnosql.lite.mapping.metadata;
 import jakarta.data.Sort;
 import jakarta.data.constraint.Constraint;
 import jakarta.data.constraint.EqualTo;
+import jakarta.data.constraint.LessThan;
 import jakarta.data.repository.Query;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
@@ -557,6 +558,18 @@ class RepositoryMethodLookupTest {
             List<RepositoryParam> params = method.params();
             RepositoryParam repositoryParam = params.getFirst();
             Assertions.assertThat(repositoryParam.is()).get().isEqualTo(EqualTo.class);
+        }
+
+        @Test
+        @DisplayName("should load from Is annotation")
+        void shouldLoadFromIsAnnotation() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new NameKey("findLesserThan"))
+                    .orElseThrow();
+            List<RepositoryParam> params = method.params();
+            RepositoryParam repositoryParam = params.getFirst();
+            Assertions.assertThat(repositoryParam.is()).get().isEqualTo(LessThan.class);
         }
 
     }

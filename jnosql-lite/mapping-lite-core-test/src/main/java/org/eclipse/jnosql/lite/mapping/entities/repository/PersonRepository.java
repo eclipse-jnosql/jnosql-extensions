@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.repository;
 
+import jakarta.data.constraint.LessThan;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.By;
@@ -80,4 +81,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Save
     void saveArray(Person[] people);
+
+    @Find
+    List<Person> findLesserThan(@Is(LessThan.class) Long id, @Param("paramAnnotation") String name);
 }
