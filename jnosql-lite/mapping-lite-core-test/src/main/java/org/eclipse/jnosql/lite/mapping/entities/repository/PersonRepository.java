@@ -19,6 +19,7 @@ import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
+import jakarta.data.repository.Is;
 import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Param;
 import jakarta.data.repository.Repository;
@@ -72,7 +73,7 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
     List<Person> list(@By("isAnnotation") String name);
 
     @Find
-    Person[] array(String name);
+    Person[] array(@Is String name);
 
     @Save
     void saveList(List<Person> people);

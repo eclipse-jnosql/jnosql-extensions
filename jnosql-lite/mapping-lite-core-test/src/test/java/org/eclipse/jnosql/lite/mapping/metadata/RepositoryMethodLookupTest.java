@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import jakarta.data.Sort;
+import jakarta.data.constraint.EqualTo;
 import jakarta.data.repository.Query;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
@@ -545,6 +546,17 @@ class RepositoryMethodLookupTest {
             });
         }
 
+        @Test
+        @DisplayName("should load default is")
+        void shouldLoadDefaultIs(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata
+                    .find(new MethodSignatureKey("array", List.of(String.class)))
+                    .orElseThrow();
+            List<RepositoryParam> params = method.params();
+            RepositoryParam repositoryParam = params.getFirst();
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(repositoryParam.is()).isEqualTo(EqualTo.class));
+        }
 
     }
 
