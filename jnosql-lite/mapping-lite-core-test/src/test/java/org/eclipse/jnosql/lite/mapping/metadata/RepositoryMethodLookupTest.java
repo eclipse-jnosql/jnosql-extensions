@@ -550,16 +550,13 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should load default is")
         void shouldLoadDefaultIs(){
-            Class<? extends Constraint<?>> constraint = (Class<? extends Constraint<?>>) jakarta.data.constraint.EqualTo.class;
-            Optional<? extends Class<? extends Constraint<?>>> constraint1 = Optional.ofNullable(constraint);
-
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("array", List.of(String.class)))
                     .orElseThrow();
             List<RepositoryParam> params = method.params();
             RepositoryParam repositoryParam = params.getFirst();
-            SoftAssertions.assertSoftly(soft -> soft.assertThat(repositoryParam.is()).isEqualTo(EqualTo.class));
+            Assertions.assertThat(repositoryParam.is()).get().isEqualTo(EqualTo.class);
         }
 
     }
