@@ -55,6 +55,7 @@ final class RepositoryMethodIntrospector {
     private static final String SORT_ASC_MASK = "Sort.asc(\"%s\")";
     private static final String OPTIONAL_CLASS_MASK = "Optional.of(%s.class)";
     private static final Mustache TEMPLATE;
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     static {
         MustacheFactory factory = new DefaultMustacheFactory();
@@ -76,7 +77,15 @@ final class RepositoryMethodIntrospector {
     }
 
     String generateMethodClass() {
-        String className = ProcessorUtil.generateClassName(repository, method.getSimpleName().toString());
+
+        ExecutableElement executableElement = (ExecutableElement) method;
+        List<String> nameElements = new ArrayList<>();
+        nameElements.add(repository);
+        nameElements.add(method.getSimpleName().toString());
+        executableElement.getParameters().stream()
+                .map(v -> v.getSimpleName().toString())
+                .forEach(nameElements::add);
+        String className = ProcessorUtil.generateClassName(nameElements.toArray(EMPTY_STRING_ARRAY));
         String methodName = method.getSimpleName().toString();
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         String methodType = MethodTypeUtils.INSTANCE.type(method, processingEnv).name();
@@ -84,7 +93,6 @@ final class RepositoryMethodIntrospector {
         String query = getQuery();
         String first = getFirst();
         String find = getFind();
-        ExecutableElement executableElement = (ExecutableElement) method;
         String returnType = getReturnType(executableElement);
         String elementType = getElementType(executableElement);
 
