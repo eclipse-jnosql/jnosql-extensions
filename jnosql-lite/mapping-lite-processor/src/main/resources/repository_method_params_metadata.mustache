@@ -15,6 +15,8 @@
 package {{packageName}};
 
 import java.util.Optional;
+import java.util.function.Supplier;
+
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
 import jakarta.data.constraint.Constraint;
 
@@ -27,7 +29,8 @@ public final class {{className}} implements RepositoryParam {
 
     @Override
     public Optional<Class<? extends Constraint<?>>> is() {
-        return {{{constraint}}};
+        Supplier<Class<? extends Constraint<?>>> supplier = () -> (Class<? extends Constraint<?>>) {{{constraint}}};
+        return Optional.ofNullable(supplier.get());
     }
 
     @Override
@@ -42,8 +45,7 @@ public final class {{className}} implements RepositoryParam {
 
     @Override
     public String by() {
-        Class<? extends Constraint<?>> constraint = (Class<? extends Constraint<?>>) {{{by}}};
-        return Optional.ofNullable(constraint);
+        return "{{{by}}}";
     }
 
     @Override
