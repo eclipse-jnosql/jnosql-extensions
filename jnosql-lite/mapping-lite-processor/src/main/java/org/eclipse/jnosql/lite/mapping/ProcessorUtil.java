@@ -74,4 +74,18 @@ public final class ProcessorUtil {
             return returnType;
         }
     }
+
+    public static String generateClassName(String... components) {
+        StringBuilder sb = new StringBuilder();
+        for (int index = 0; index < components.length; index++) {
+            if (index == 0) {
+                sb.append(components[index]);
+            } else {
+                var capitalized = components[index].substring(0, 1).toUpperCase(ENGLISH);
+                sb.append(capitalized).append(components[index].substring(1));
+            }
+
+        }
+        return sb.toString();
+    }
 }

@@ -15,9 +15,35 @@
 package org.eclipse.jnosql.lite.mapping.entities.repository;
 
 import jakarta.data.repository.DataRepository;
+import jakarta.data.repository.Delete;
+import jakarta.data.repository.Find;
+import jakarta.data.repository.Insert;
+import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
+import jakarta.data.repository.Save;
+import jakarta.data.repository.Update;
 import org.eclipse.jnosql.lite.mapping.entities.Computer;
+
+import java.util.List;
 
 @Repository
 public interface ComputerRepository extends DataRepository<Computer, String> {
+
+    @Insert
+    void insert(Computer computer);
+
+    @Update
+    void update(Computer computer);
+
+    @Delete
+    void delete(Computer computer);
+
+    @Save
+    void save(Computer computer);
+
+    @Query("FROM Computer")
+    List<Computer> query(String name);
+
+    @Find
+    List<Computer> find(String name, String type);
 }

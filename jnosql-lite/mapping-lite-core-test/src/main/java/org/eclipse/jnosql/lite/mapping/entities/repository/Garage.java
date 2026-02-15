@@ -17,6 +17,16 @@ package org.eclipse.jnosql.lite.mapping.entities.repository;
 
 import jakarta.data.repository.Repository;
 
+import java.util.List;
+
 @Repository
 public interface Garage {
+
+    long countAll();
+
+    List<Garage> findAll();
+
+    default String defaultMethod() {
+        return "default";
+    }
 }

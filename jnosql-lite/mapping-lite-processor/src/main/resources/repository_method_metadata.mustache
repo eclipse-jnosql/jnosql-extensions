@@ -1,0 +1,129 @@
+/*
+*   Copyright (c) {{currentYear}} Otávio Santana and others
+*   All rights reserved. This program and the accompanying materials
+*   are made available under the terms of the Eclipse Public License v1.0
+*   and Apache License v2.0 which accompanies this distribution.
+*   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+*   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+*
+*   You may elect to redistribute this code under either of these licenses.
+*
+*   Contributors:
+*
+*   Otavio Santana
+*/
+package {{packageName}};
+
+import jakarta.data.Sort;
+import org.eclipse.jnosql.lite.mapping.metadata.RepositoryMethodLookup;
+import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
+import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryAnnotation;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
+
+import javax.annotation.processing.Generated;
+
+
+@Generated(value= "JNoSQL Lite RepositoryMetadata Generator", date = "{{now}}")
+public final class {{className}} implements RepositoryMethodLookup {
+
+   private final NameKey byName;
+   private final MethodSignatureKey bySignature;
+   private final List<String> selects;
+   private final List<Sort<?>> sorts;
+   private final List<RepositoryAnnotation> annotations;
+   private final List<RepositoryParam> params;
+
+    public {{className}}() {
+      this.byName = new NameKey("{{methodName}}");
+      this.bySignature = new MethodSignatureKey("{{methodName}}", List.of({{{paramSignature}}}));
+      this.selects = new ArrayList<>();
+      this.sorts = new ArrayList<>();
+      this.annotations = new ArrayList<>();
+      this.params = new ArrayList<>();
+      {{#selects}}
+      this.selects.add("{{{.}}}");
+      {{/selects}}
+      {{#sorts}}
+      this.sorts.add({{{.}}});
+      {{/sorts}}
+      {{#annotations}}
+      this.annotations.add(new {{{.}}}());
+      {{/annotations}}
+      {{#params}}
+      this.params.add(new {{{.}}}());
+      {{/params}}
+    }
+
+    @Override
+    public MethodSignatureKey bySignature() {
+        return bySignature;
+    }
+
+    @Override
+    public NameKey byName() {
+        return byName;
+    }
+
+    @Override
+    public Optional<String> query() {
+        return {{{query}}};
+    }
+
+    @Override
+    public OptionalInt first() {
+        return {{{first}}};
+    }
+
+    @Override
+    public List<Sort<?>> sorts() {
+        return this.sorts;
+    }
+
+    @Override
+    public String name() {
+        return "{{methodName}}";
+    }
+
+    @Override
+    public RepositoryMethodType type() {
+        return RepositoryMethodType.{{methodType}};
+    }
+
+    @Override
+    public List<RepositoryParam> params() {
+        return this.params;
+    }
+
+    @Override
+    public Optional<Class<?>> returnType() {
+        return {{{returnType}}};
+    }
+
+    @Override
+    public Optional<Class<?>> elementType() {
+        return {{{elementType}}};
+    }
+
+    @Override
+    public List<String> select() {
+        return this.selects;
+    }
+
+    @Override
+    public Optional<Class<?>> find() {
+        return {{{find}}};
+    }
+
+    @Override
+    public List<RepositoryAnnotation> annotations() {
+         throw new UnsupportedOperationException("The implementation of RepositoryMethodLookup, does not support annotations");
+    }
+
+}

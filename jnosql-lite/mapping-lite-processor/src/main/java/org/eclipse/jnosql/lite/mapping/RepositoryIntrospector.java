@@ -28,14 +28,15 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-public class RepositoryIntrospector implements Supplier<MappingResult> {
+class RepositoryIntrospector implements Supplier<MappingResult> {
 
-    private static final String NEW_INSTANCE = "repository_metadata.mustache";
+    private static final String MUSTACHE_TEMPLATE = "repository_metadata.mustache";
 
     private static final Set<String> JAKARTA_DATA_REPOSITORIES = Set.of(
             "jakarta.data.repository.DataRepository",
@@ -54,7 +55,7 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         this.element = element;
         this.processingEnv = processingEnv;
         MustacheFactory factory = new DefaultMustacheFactory();
-        this.template = factory.compile(NEW_INSTANCE);
+        this.template = factory.compile(MUSTACHE_TEMPLATE);
 
     }
 
@@ -71,7 +72,12 @@ public class RepositoryIntrospector implements Supplier<MappingResult> {
         String packageName = ProcessorUtil.getPackageName(repository);
         String entity = entityOptionalLiteral(repository);
         String type = ProcessorUtil.getSimpleNameAsString(repository);
-        var metadata = new RepositoryMetaModel(packageName, entity, type, Collections.emptyList());
+        List<String> methods = repository.getEnclosedElements()
+                .stream()
+                .map(e -> RepositoryMethodIntrospector.of(e, type, processingEnv))
+                .map(RepositoryMethodIntrospector::generateMethodClass)
+                .collect(Collectors.toList());
+        var metadata = new RepositoryMetaModel(packageName, entity, type, methods);
         try {
             createClass(element, metadata);
         } catch (IOException exception) {

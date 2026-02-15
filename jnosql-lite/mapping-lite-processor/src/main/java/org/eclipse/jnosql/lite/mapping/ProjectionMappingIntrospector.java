@@ -34,20 +34,22 @@ final class ProjectionMappingIntrospector  {
     private static final Logger LOGGER = Logger.getLogger(ProjectionMappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "projector_metadata.mustache";
     private static final String INJECTABLE_CONSTRUCTOR = "projector_constructor_metadata.mustache";
+    private static final Mustache PROJECTOR_TEMPLATE;
+    private static final Mustache CONSTRUCTOR_TEMPLATE;
+
+    static {
+        MustacheFactory factory = new DefaultMustacheFactory();
+        PROJECTOR_TEMPLATE = factory.compile(NEW_INSTANCE);
+        CONSTRUCTOR_TEMPLATE = factory.compile(INJECTABLE_CONSTRUCTOR);
+    }
 
     private final Element entity;
-
     private final ProcessingEnvironment processingEnv;
-
-    private final Mustache template;
-    private final Mustache constructorTemplate;
 
     ProjectionMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
-        MustacheFactory factory = new DefaultMustacheFactory();
-        this.template = factory.compile(NEW_INSTANCE);
-        this.constructorTemplate = factory.compile(INJECTABLE_CONSTRUCTOR);
+
     }
 
     MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
@@ -86,7 +88,7 @@ final class ProjectionMappingIntrospector  {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
-            template.execute(writer, metadata);
+            PROJECTOR_TEMPLATE.execute(writer, metadata);
         }
     }
 
@@ -94,7 +96,7 @@ final class ProjectionMappingIntrospector  {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
-            constructorTemplate.execute(writer, metadata);
+            CONSTRUCTOR_TEMPLATE.execute(writer, metadata);
         }
     }
 

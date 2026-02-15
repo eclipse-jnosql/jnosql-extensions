@@ -14,10 +14,74 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.repository;
 
+import jakarta.data.constraint.LessThan;
+import jakarta.data.page.CursoredPage;
 import jakarta.data.repository.BasicRepository;
+import jakarta.data.repository.By;
+import jakarta.data.repository.Find;
+import jakarta.data.repository.First;
+import jakarta.data.repository.Is;
+import jakarta.data.repository.OrderBy;
+import jakarta.data.repository.Param;
 import jakarta.data.repository.Repository;
+import jakarta.data.repository.Save;
+import jakarta.data.repository.Select;
 import org.eclipse.jnosql.lite.mapping.entities.Person;
+
+import java.awt.print.Pageable;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PersonRepository extends BasicRepository<Person, Long> {
+
+    List<Person> findByUsername(String username);
+
+    long countByUsername(String firstName);
+
+    boolean existsByUsername(String firstName);
+
+    void deleteByUsername(String firstName);
+
+    @Find
+    CursoredPage<Person> cursor(String firstName, Pageable pageable);
+
+
+    @Find
+    @First(10)
+    @OrderBy(value = "username", descending = true)
+    @OrderBy(value = "email")
+    @Select("username")
+    @Select("email")
+    List<Person> findTopTen(@Param("name") String name);
+
+    @Find
+    @First
+    @OrderBy(value = "email")
+    @Select("email")
+    List<Person> findTopOne(@Param("name") String name);
+
+    @Find
+    List<Person> name(@Param("paramAnnotation") String name);
+
+    @Find
+    Person id(Long id);
+
+    @Find
+    Optional<Person> optional(Long id);
+
+    @Find
+    List<Person> list(@By("isAnnotation") String name);
+
+    @Find
+    Person[] array(@Is String name);
+
+    @Save
+    void saveList(List<Person> people);
+
+    @Save
+    void saveArray(Person[] people);
+
+    @Find
+    List<Person> findLesserThan(@Is(LessThan.class) Long id, @Param("paramAnnotation") String name);
 }
