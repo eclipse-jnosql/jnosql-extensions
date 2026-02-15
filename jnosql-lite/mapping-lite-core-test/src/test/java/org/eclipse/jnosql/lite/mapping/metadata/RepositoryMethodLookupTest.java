@@ -466,10 +466,6 @@ class RepositoryMethodLookupTest {
     @DisplayName("should load parameters")
     @Nested
     class WhenLoadParameters{
-        //should load when the List or structure
-        //should load when array of structure
-        //should load by
-        //should load element type
 
         @DisplayName("should load when method as entity")
         @Test
