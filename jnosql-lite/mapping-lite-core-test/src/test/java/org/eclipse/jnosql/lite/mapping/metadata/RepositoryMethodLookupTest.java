@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import jakarta.data.Sort;
+import jakarta.data.constraint.Constraint;
 import jakarta.data.constraint.EqualTo;
 import jakarta.data.repository.Query;
 import org.assertj.core.api.Assertions;
@@ -549,6 +550,9 @@ class RepositoryMethodLookupTest {
         @Test
         @DisplayName("should load default is")
         void shouldLoadDefaultIs(){
+            Class<? extends Constraint<?>> constraint = (Class<? extends Constraint<?>>) jakarta.data.constraint.EqualTo.class;
+            Optional<? extends Class<? extends Constraint<?>>> constraint1 = Optional.ofNullable(constraint);
+
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("array", List.of(String.class)))
