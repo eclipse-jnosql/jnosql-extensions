@@ -42,7 +42,8 @@ public final class {{className}} implements RepositoryParam {
 
     @Override
     public String by() {
-        return "{{{by}}}";
+        Class<? extends Constraint<?>> constraint = (Class<? extends Constraint<?>>) {{{by}}};
+        return Optional.ofNullable(constraint);
     }
 
     @Override
