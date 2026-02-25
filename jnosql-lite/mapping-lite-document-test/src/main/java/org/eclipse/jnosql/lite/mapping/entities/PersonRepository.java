@@ -36,7 +36,7 @@ public interface PersonRepository extends NoSQLRepository<Person, Long> {
 
     Page<Person> findByName(String name, PageRequest pageRequest);
 
-    @Query("select * from Person where name = @name")
+    @Query("from Person where name = :name")
     List<Person> query(@Param("name") String name);
 
     boolean existsByName(String name);
@@ -186,4 +186,7 @@ public interface PersonRepository extends NoSQLRepository<Person, Long> {
 
     @Delete
     long deletePersonLong(Person person);
+
+    @Query("where name = :name")
+    List<Person> query2(@Param("name") String name);
 }

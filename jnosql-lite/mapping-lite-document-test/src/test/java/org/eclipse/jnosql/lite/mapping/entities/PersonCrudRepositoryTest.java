@@ -197,6 +197,17 @@ class PersonCrudRepositoryTest {
 
 
     @Test
+    void shouldQuery2() {
+        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
+        this.personRepository.query2("Ada");
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
+        String value = captor.getValue();
+        assertThat(value).isEqualTo("where name = :name");
+    }
+
+
+    @Test
     void shouldExistByName() {
         when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
         boolean result = this.personRepository.existsByName("Ada");

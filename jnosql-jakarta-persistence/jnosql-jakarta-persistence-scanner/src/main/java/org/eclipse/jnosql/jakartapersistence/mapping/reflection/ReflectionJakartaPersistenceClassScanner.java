@@ -12,13 +12,16 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.communication;
+package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
 
 import jakarta.data.repository.DataRepository;
-import java.util.Set;
-import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 
-public class PersistenceClassScanner implements ClassScanner {
+import java.util.Set;
+
+import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
+
+
+public class ReflectionJakartaPersistenceClassScanner implements JakartaPersistenceClassScanner {
 
     @Override
     public Set<Class<?>> entities() {

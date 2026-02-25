@@ -16,6 +16,10 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 - Update Meta processor to use Java to SourceVersion.RELEASE_21
 
+== [1.1.12] - 2026-01-05
+
+== [1.1.11] - 2024-11-16
+
 == [1.1.10] - 2025-08-19
 
 === Added

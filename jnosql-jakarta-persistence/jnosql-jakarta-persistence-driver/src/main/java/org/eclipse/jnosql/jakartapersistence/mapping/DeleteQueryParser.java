@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -15,15 +15,21 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import java.util.function.Function;
+
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-class DeleteQueryParser extends BaseQueryParser {
-
+class DeleteQueryParser extends BaseUpdateQueryParser {
 
     public DeleteQueryParser(PersistenceDatabaseManager manager) {
         super(manager);
@@ -45,5 +51,49 @@ class DeleteQueryParser extends BaseQueryParser {
         return entityIdName;
     }
 
+    <T> long deleteAll(Class<T> type) {
+        CriteriaBuilder criteriaBuilder = entityManager().getCriteriaBuilder();
+        CriteriaDelete<T> deleteCriteria = criteriaBuilder.createCriteriaDelete(type);
+        long entries = entityManager().createQuery(deleteCriteria).executeUpdate();
+        return entries;
+    }
+
+    long delete(DeleteQuery deleteQuery) {
+        final Class<?> type = entityClassFromEntityName(deleteQuery.name());
+        if (deleteQuery.condition().isEmpty()) {
+            return deleteAll(type);
+        } else {
+            final CriteriaCondition criteria = deleteQuery.condition().get();
+            Query query = buildQuery(type, ctx -> {
+                return ctx.query().where(parseCriteria(criteria, ctx.queryContext()));
+            });
+            return query.executeUpdate();
+        }
+    }
+
+    private <FROM> Query buildQuery(Class<FROM> fromType,
+            Function<DeleteQueryContext<FROM>, CriteriaDelete<FROM>> queryModifier) {
+        EntityManager em = entityManager();
+        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaDelete<FROM> criteriaQuery = criteriaBuilder.createCriteriaDelete(fromType);
+        Root<FROM> from = criteriaQuery.from(fromType);
+        criteriaQuery = queryModifier.apply(
+                new DeleteQueryContext(criteriaQuery,
+                        new QueryContext(from, criteriaBuilder)));
+        return em.createQuery(criteriaQuery);
+    }
+
+    record DeleteQueryContext<FROM>(CriteriaDelete<FROM> query, QueryContext<FROM> queryContext) {
+
+        public Root<FROM> root() {
+            return queryContext.root();
+        }
+
+        public CriteriaBuilder builder() {
+            return queryContext.builder();
+        }
+
+    }
 
 }
+

@@ -32,4 +32,16 @@ public class EntityManagerProducer {
     public void closeEntityManager(@Disposes EntityManager entityManager) {
         entityManager.close();
     }
+
+    @Produces
+    @SpecialEntityManager
+    @ApplicationScoped
+    public EntityManager createSpecialEntityManager() {
+        return Persistence.createEntityManagerFactory("testPersistenceUnit")
+                .createEntityManager();
+    }
+
+    public void closeSpecialEntityManager(@Disposes @SpecialEntityManager EntityManager entityManager) {
+        entityManager.close();
+    }
 }

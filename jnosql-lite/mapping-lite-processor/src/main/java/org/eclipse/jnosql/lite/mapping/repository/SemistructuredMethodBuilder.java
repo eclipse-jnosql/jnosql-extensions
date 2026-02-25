@@ -1,4 +1,5 @@
 /*
+ *  Copyright (c) 2025 Contributors to the Eclipse Foundation
  *  Copyright (c) 2021 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
@@ -155,7 +156,7 @@ enum SemiStructuredMethodBuilder implements Function<MethodMetadata, List<String
 
     private static void feedSelectQuery(MethodMetadata metadata, List<String> lines) {
         lines.add("org.eclipse.jnosql.communication.query.method.SelectMethodProvider supplierJNoSQL = " + SPACE +
-                " org.eclipse.jnosql.communication.query.method.SelectMethodProvider.INSTANCE");
+                "org.eclipse.jnosql.communication.query.method.SelectMethodProvider.INSTANCE");
         lines.add("org.eclipse.jnosql.communication.query.SelectQuery selectQueryJNoSQL = " + SPACE +
                 "supplierJNoSQL.apply(\"" + metadata.getMethodName() + "\", metadata.name())");
         lines.add("org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser parserJNoSQL = " + SPACE +
