@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2023,2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2023,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
+import org.eclipse.jnosql.mapping.core.repository.ParamValue;
+
 
 /**
  * The ColumnParameterBasedQuery class is responsible for generating Column queries based on a set of parameters.
@@ -46,11 +48,11 @@ public enum JakartaPersistenceParameterBasedQuery {
      * @param entityMetadata  Metadata describing the structure of the entity.
      * @return                 A ColumnQuery instance tailored for the specified entity.
      */
-    public org.eclipse.jnosql.communication.semistructured.SelectQuery toQuery(Map<String, Object> params,
+    public org.eclipse.jnosql.communication.semistructured.SelectQuery toQuery(Map<String, ParamValue> params,
                                                                                List<Sort<?>> sorts,
                                                                                EntityMetadata entityMetadata) {
         List<CriteriaCondition> conditions = new ArrayList<>();
-        for (Map.Entry<String, Object> entry : params.entrySet()) {
+        for (Map.Entry<String, ParamValue> entry : params.entrySet()) {
             conditions.add(condition(entityMetadata, entry));
         }
 
@@ -70,7 +72,7 @@ public enum JakartaPersistenceParameterBasedQuery {
         return CriteriaCondition.and(conditions.toArray(TO_ARRAY));
     }
 
-    private CriteriaCondition condition( EntityMetadata entityMetadata, Map.Entry<String, Object> entry) {
+    private CriteriaCondition condition( EntityMetadata entityMetadata, Map.Entry<String, ParamValue> entry) {
         var name = entityMetadata.fieldMapping(entry.getKey())
                 .map(FieldMetadata::name)
                 .orElse(entry.getKey());

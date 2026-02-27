@@ -1,6 +1,6 @@
 /*
- *   Copyright (c) 2024, 2025 Contributors to the Eclipse Foundation.
- *   
+ *   Copyright (c) 2024, 2026 Contributors to the Eclipse Foundation.
+ *
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -22,14 +22,18 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.nosql.Query;
 import jakarta.nosql.QueryMapper;
+import jakarta.nosql.TypedQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitUtil;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,6 +41,7 @@ import java.util.stream.StreamSupport;
 
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
@@ -76,28 +81,6 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     @Override
     public <T> Stream<T> findAll(Class<T> type) {
         return selectParser.findAll(type);
-    }
-
-    @Override
-    public <T> Stream<T> query(String query) {
-        final BaseQueryParser queryParser = getParserForQuery(query);
-        return queryParser.query(query);
-    }
-
-    @Override
-    public <T> Stream<T> query(String query, String entity) {
-        final BaseQueryParser queryParser = getParserForQuery(query);
-        return queryParser.query(query, entity);
-    }
-
-    @Override
-    public <T> Optional<T> singleResult(String query) {
-        return selectParser.singleResult(query);
-    }
-
-    @Override
-    public <T> Optional<T> singleResult(String query, String entity) {
-        return selectParser.singleResult(query, entity);
     }
 
     @Override
@@ -271,11 +254,117 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     @Override
     public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr) {
-        return selectParser.selectOffset(sq, pr);
+        return selectParser.selectOffset(sq, pr, null);
+    }
+
+    public <T> Page<T> selectOffSet(SelectQuery sq, PageRequest pr, Function<Object, T> mapper) {
+        return selectParser.selectOffset(sq, pr, mapper);
     }
 
     public PersistenceUnitUtil getPersistenceUnitUtil() {
         return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+    }
+
+    @Override
+    public void update(UpdateQuery query) {
+        updateParser.update(query);
+    }
+
+    @Override
+    public <T> void delete(T entity) {
+        entityManager().remove(entity);
+    }
+
+    @Override
+    public <T> void delete(Iterable<? extends T> entities) {
+        entities.forEach(this::delete);
+    }
+
+    @Override
+    public <T> QueryMapper.MapperUpdateFrom update(Class<T> type) {
+        throw new UnsupportedOperationException("'update(Class<T> type)' not supported yet.");
+    }
+
+    @Override
+    public Query query(String queryString) {
+        final jakarta.persistence.Query jpaQuery = entityManager().createQuery(queryString);
+        return new PersistenceDocumentQuery(jpaQuery);
+    }
+
+    @Override
+    public <T> TypedQuery<T> typedQuery(String queryString, Class<T> type) {
+        final jakarta.persistence.TypedQuery<T> jpaQuery = entityManager().createQuery(queryString, type);
+        return new PersistenceDocumentTypedQuery(jpaQuery);
+    }
+
+    private record PersistenceDocumentQuery(jakarta.persistence.Query jpaQuery) implements Query {
+
+        @Override
+        public void executeUpdate() {
+            jpaQuery.executeUpdate();
+        }
+
+        @Override
+        public <T> List<T> result() {
+            return jpaQuery.getResultList();
+        }
+
+        @Override
+        public <T> Stream<T> stream() {
+            return jpaQuery.getResultStream();
+        }
+
+        @Override
+        public <T> Optional<T> singleResult() {
+            return Optional.ofNullable((T)jpaQuery.getSingleResultOrNull());
+        }
+
+        @Override
+        public Query bind(String name, Object value) {
+            jpaQuery.setParameter(name, value);
+            return this;
+        }
+
+        @Override
+        public Query bind(int position, Object value) {
+            jpaQuery.setParameter(position, value);
+            return this;
+        }
+    }
+
+    private record PersistenceDocumentTypedQuery<T>(jakarta.persistence.TypedQuery<T> jpaQuery) implements TypedQuery<T> {
+
+        @Override
+        public void executeUpdate() {
+            jpaQuery.executeUpdate();
+        }
+
+        @Override
+        public List<T> result() {
+            return jpaQuery.getResultList();
+        }
+
+        @Override
+        public Stream<T> stream() {
+            return jpaQuery.getResultStream();
+        }
+
+        @Override
+        public Optional<T> singleResult() {
+            return Optional.ofNullable((T)jpaQuery.getSingleResultOrNull());
+        }
+
+        @Override
+        public TypedQuery<T> bind(String name, Object value) {
+            jpaQuery.setParameter(name, value);
+            return this;
+        }
+
+        @Override
+        public TypedQuery<T> bind(int position, Object value) {
+            jpaQuery.setParameter(position, value);
+            return this;
+        }
     }
 
 }

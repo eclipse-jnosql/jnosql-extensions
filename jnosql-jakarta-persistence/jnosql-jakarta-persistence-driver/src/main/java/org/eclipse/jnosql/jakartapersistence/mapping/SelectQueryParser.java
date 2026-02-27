@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -361,7 +361,10 @@ class SelectQueryParser extends BaseQueryParser {
                         new QueryContext(from, criteriaBuilder)));
     }
 
-    public <T> Page<T> selectOffset(SelectQuery selectQuery, PageRequest pageRequest) {
+    /**
+     @param entityMapper Maps entities to expected types. Can be null, then entities are returned as they are
+    */
+    public <T> Page<T> selectOffset(SelectQuery selectQuery, PageRequest pageRequest, Function<Object, T> entityMapper) {
         if (PageRequest.Mode.OFFSET.equals(pageRequest.mode())) {
             final TypedQuery<T> query = getSelectTypedQuery(selectQuery);
             try {
@@ -371,7 +374,7 @@ class SelectQueryParser extends BaseQueryParser {
             }
             query.setMaxResults(Math.min(query.getMaxResults(), pageRequest.size()));
             Supplier<TypedQuery<Long>> countQuerySupplier = pageRequest.requestTotal() ? () -> getCountQuery(selectQuery) : null;
-            return new PersistencePage(query, countQuerySupplier, pageRequest);
+            return new PersistencePage(query, countQuerySupplier, pageRequest, entityMapper);
         } else {
             throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported on CURSOR modes");
         }
@@ -393,7 +396,7 @@ class SelectQueryParser extends BaseQueryParser {
             Supplier<TypedQuery<Long>> countQuerySupplier = pageRequest.requestTotal()
                     ? () -> getCountQuery(queryString, entity, sorts, countQueryModifier)
                     : null;
-            return new PersistencePage(query, countQuerySupplier, pageRequest);
+            return new PersistencePage(query, countQuerySupplier, pageRequest, null);
         } else {
             throw new UnsupportedOperationException("'selectOffSet(SelectQuery sq, PageRequest pr)' not supported on CURSOR modes");
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -45,6 +46,8 @@ public class PersistencePage<T> implements Page<T> {
 
     private final PageRequest pageRequest;
 
+    private Function<Object, T> entityMapper;
+
     private List<T> entities;
 
     private Long totalElements;
@@ -56,8 +59,9 @@ public class PersistencePage<T> implements Page<T> {
      * {@code null} value means {@link #totalElements()} method is not supported.
      * Must be non-null if {@code pageRequest.requestTotal()} returns {@code true}.
      * @param pageRequest Defines which page to retrieve from the entities defined by {@code query}
+     * @param entityMapper Maps returned entities to a different value. If null, entities are returned directly.
      */
-    public PersistencePage(Query query, Supplier<TypedQuery<Long>> countQuerySupplier, PageRequest pageRequest) {
+    public PersistencePage(Query query, Supplier<TypedQuery<Long>> countQuerySupplier, PageRequest pageRequest, Function<Object, T> entityMapper) {
         Objects.requireNonNull(query, "query is required");
         Objects.requireNonNull(pageRequest, "pageRequest is required");
         if (pageRequest.requestTotal()) {
@@ -66,6 +70,7 @@ public class PersistencePage<T> implements Page<T> {
         this.query = query;
         this.countQuerySupplier = countQuerySupplier;
         this.pageRequest = pageRequest;
+        this.entityMapper = entityMapper;
     }
 
     @Override
@@ -84,7 +89,13 @@ public class PersistencePage<T> implements Page<T> {
 
     private List<T> entities() {
         if (entities == null) {
-            entities = query.getResultList();
+            if (entityMapper == null) {
+                entities = query.getResultList();
+            } else {
+                entities = query.getResultStream()
+                        .map(entityMapper)
+                        .toList();
+            }
         }
         return entities;
     }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022,2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2022,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -46,7 +46,7 @@ public enum JakartaPersistenceDynamicReturnConverter {
     public Object convert(DynamicReturn<?> dynamic) {
 
         Class<?> typeClass = dynamic.typeClass();
-        Class<?> returnType = dynamic.getMethod().getReturnType();
+        Class<?> returnType = dynamic.returnType();
 
         RepositoryReturn repositoryReturn = ServiceLoader.load(RepositoryReturn.class)
                 .stream()
@@ -94,7 +94,8 @@ public enum JakartaPersistenceDynamicReturnConverter {
 
         DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
                 .classSource(typeClass)
-                .methodSource(method)
+                .methodName(method.getName())
+                .returnType(method.getReturnType())
                 .result(() -> prepare.result())
                 .singleResult(() -> prepare.singleResult())
                 .pagination(pageRequest)

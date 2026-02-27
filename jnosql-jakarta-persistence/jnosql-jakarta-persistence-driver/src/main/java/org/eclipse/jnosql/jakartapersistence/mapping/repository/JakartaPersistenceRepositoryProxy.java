@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -22,6 +22,7 @@ import jakarta.data.Sort;
 import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.data.repository.First;
 import jakarta.data.repository.Query;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
@@ -32,11 +33,13 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
+import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
-import org.eclipse.jnosql.communication.semistructured.QueryType;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
@@ -45,6 +48,7 @@ import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
+import org.eclipse.jnosql.mapping.core.repository.ParamValue;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -65,6 +69,8 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     private final JakartaPersistenceStructuredRepository<T, K> repository;
 
+    private final EntitiesMetadata entitiesMetadata;
+
     private final EntityMetadata entityMetadata;
 
     private final Converters converters;
@@ -75,14 +81,16 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         this.template = template;
         Class<T> typeClass = (Class) ((ParameterizedType) repositoryType.getGenericInterfaces()[0])
                 .getActualTypeArguments()[0];
+        this.entitiesMetadata = entities;
         this.entityMetadata = entities.get(typeClass);
         this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
         this.converters = converters;
         this.repositoryType = repositoryType;
     }
 
-    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntityMetadata entity, Class<?> repositoryType, Converters converters) {
+    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntityMetadata entity, Class<?> repositoryType, Converters converters, EntitiesMetadata entities) {
         this.template = template;
+        this.entitiesMetadata = entities;
         this.entityMetadata = entity;
         this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
         this.converters = converters;
@@ -134,6 +142,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         var queryValue = method.getAnnotation(Query.class).value();
         var queryType = QueryType.parse(queryValue);
         var returnType = method.getReturnType();
+        var first = method.getAnnotation(First.class);
         LOGGER.finest(() -> "Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
 
@@ -144,7 +153,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .pageRequest(pageRequest)
                 .prepareConverter(textQuery -> {
                     var prepare = template().prepare(textQuery, entity);
-                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query));
+                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query, first));
                     setProjections(prepare, params);
                     return prepare;
                 }).build();
@@ -152,18 +161,27 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, SelectQuery query) {
         // TODO: Perform type check on return type during deployment and fail deployment if not supported.
         // Currently, different types are supported by implementations of RepositoryReturn via service loader
         DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
                 .classSource(typeClass)
-                .methodSource(method)
-                .result(() -> template().select(query))
-                .singleResult(() -> template().singleResult(query))
+                .methodName(method.getName())
+                .returnType(method.getReturnType())
+
+                .result(() -> {
+                    Stream<Object> select = template().select(query);
+                    return select.map(mapper(method));
+                })
+                .singleResult(() -> {
+                    Optional<Object> object = template().singleResult(query);
+                    return object.map(mapper(method));
+                })
                 .pagination(DynamicReturn.findPageRequest(args))
-                .streamPagination(streamPagination(query))
-                .singleResultPagination(getSingleResult(query))
-                .page(getPage(query))
+                .streamPagination(streamPagination(query, method))
+                .singleResultPagination(getSingleResult(query, method))
+                .page(getPage(query, method))
                 .build();
         Object result = dynamicReturn.execute();
         if (result != null) {
@@ -198,13 +216,13 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @Override
-    protected SelectQuery toQuery(Map<String, Object> parameters, Method method) {
+    protected SelectQuery toQuery(Map<String, ParamValue> parameters, Method method) {
         return JakartaPersistenceParameterBasedQuery.INSTANCE.toQuery(parameters, getSorts(method, entityMetadata()), entityMetadata());
     }
 
     @Override
-    protected Function<PageRequest, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query) {
-        return p -> template().selectOffSet(query, p);
+    protected Function<PageRequest, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query, Method method) {
+        return p -> template().selectOffSet(query, p, mapper(method));
     }
 
     @Override
@@ -244,6 +262,11 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .orElse(null);
         prepare.setLimit(limit);
         prepare.setSorts(special.sorts());
+    }
+
+    @Override
+    protected EntitiesMetadata entitiesMetadata() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     /**

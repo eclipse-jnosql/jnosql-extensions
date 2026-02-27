@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022,2024 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2022,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -29,8 +29,7 @@ class JakartaPersistenceDefaultRepositoryReturn implements RepositoryReturn {
 
     @Override
     public <T> Object convert(DynamicReturn<T> dynamicReturn) {
-        final Class<?> returnType = dynamicReturn.getMethod().getReturnType();
-        if (isNumberType(returnType)) {
+        if (isNumberType(dynamicReturn.returnType())) {
             return dynamicReturn.singleResult().get();
         }
         return dynamicReturn.result();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -64,17 +64,18 @@ class DeleteQueryParser extends BaseUpdateQueryParser {
             return deleteAll(type);
         } else {
             final CriteriaCondition criteria = deleteQuery.condition().get();
-            Query query = buildQuery(type, ctx -> {
+            Query query = buildDeleteQuery(type, ctx -> {
                 return ctx.query().where(parseCriteria(criteria, ctx.queryContext()));
             });
             return query.executeUpdate();
         }
     }
 
-    private <FROM> Query buildQuery(Class<FROM> fromType,
+    private <FROM> Query buildDeleteQuery(Class<FROM> fromType,
             Function<DeleteQueryContext<FROM>, CriteriaDelete<FROM>> queryModifier) {
         EntityManager em = entityManager();
         CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        // TODO - cache using PersistenceUnitCache as in SelectQueryParser
         CriteriaDelete<FROM> criteriaQuery = criteriaBuilder.createCriteriaDelete(fromType);
         Root<FROM> from = criteriaQuery.from(fromType);
         criteriaQuery = queryModifier.apply(
