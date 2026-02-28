@@ -126,11 +126,7 @@ final class RepositoryMethodIntrospector {
         return params;
     }
 
-
-    /**
-     * This class will be implemented as a next step as in a new PR.
-     */
-    private List<String> annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
+    List<String> annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
         List<String> annotations = new ArrayList<>();
 
         List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
