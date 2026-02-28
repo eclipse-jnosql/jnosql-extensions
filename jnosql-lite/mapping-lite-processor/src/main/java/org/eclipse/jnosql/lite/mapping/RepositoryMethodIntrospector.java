@@ -98,7 +98,7 @@ final class RepositoryMethodIntrospector {
 
         List<String> selects = getSelects();
         List<String> sorts = getSorts();
-        List<String> annotations = Collections.emptyList();
+        List<String> annotations = annotationsClasses(executableElement, className, packageName);
         List<RepositoryMethodParameterIntrospector.ParamResult> paramResults = params(executableElement, className, packageName);
         List<String> params = new ArrayList<>();
         var paramSignature = paramResults.stream().map(RepositoryMethodParameterIntrospector.ParamResult::type)
