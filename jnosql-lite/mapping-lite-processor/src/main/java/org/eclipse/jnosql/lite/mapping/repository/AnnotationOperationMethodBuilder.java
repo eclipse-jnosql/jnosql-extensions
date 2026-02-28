@@ -214,7 +214,7 @@ enum AnnotationOperationMethodBuilder implements Function<MethodMetadata, List<S
         if (parameters.size() != 1) {
             throw new IllegalStateException(s);
         }
-        return parameters.get(0);
+        return parameters.getFirst();
     }
 
     private static boolean isInt(String returnType) {
