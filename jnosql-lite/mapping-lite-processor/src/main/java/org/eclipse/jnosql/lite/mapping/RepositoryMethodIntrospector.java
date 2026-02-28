@@ -174,11 +174,10 @@ final class RepositoryMethodIntrospector {
 
     private String getReturnType(ExecutableElement executableElement) {
         TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
-        String returnType = ofNullable(returnElement)
+        return ofNullable(returnElement)
                 .map(Object::toString)
                 .map(OPTIONAL_CLASS_MASK::formatted)
                 .orElse(OPTIONAL_CLASS_MASK.formatted(executableElement.getReturnType().toString()));
-        return returnType;
     }
 
     private List<String> getSorts() {
