@@ -26,6 +26,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -76,7 +78,7 @@ final class RepositoryMethodAnnotationIntrospector {
                 ? "Optional.empty()"
                 : "Optional.of(\"" + escape(providerInfo.value()) + "\")";
 
-        List<String> attributes = new ArrayList<>();
+        List<String> attributes = resolveAttributes(annotationType);
 
         var metadata = new RepositoryMethodAnnotationModel(
                 packageName,
@@ -96,6 +98,81 @@ final class RepositoryMethodAnnotationIntrospector {
         return metadata.getQualified();
     }
 
+    private List<String> resolveAttributes(TypeElement annotationType) {
+        List<String> attributes = new ArrayList<>();
+
+        for (Element enclosed : annotationType.getEnclosedElements()) {
+            if (enclosed.getKind() != ElementKind.METHOD) {
+                continue;
+            }
+
+            ExecutableElement methodElement = (ExecutableElement) enclosed;
+            String attributeName = methodElement.getSimpleName().toString();
+
+            Object value = resolveAnnotationValue(methodElement);
+
+            if (value == null) {
+                continue;
+            }
+
+            String literal = toJavaLiteral(value, methodElement.getReturnType());
+
+            attributes.add("this.attributes.put(\"" + attributeName + "\", " + literal + ")");
+        }
+
+        return attributes;
+    }
+
+    private Object resolveAnnotationValue(ExecutableElement attributeMethod) {
+
+        for (var entry : annotationMirror.getElementValues().entrySet()) {
+            if (entry.getKey().equals(attributeMethod)) {
+                return entry.getValue().getValue();
+            }
+        }
+
+        AnnotationValue defaultValue = attributeMethod.getDefaultValue();
+        return defaultValue != null ? defaultValue.getValue() : null;
+    }
+
+    private String toJavaLiteral(Object value, TypeMirror returnType) {
+
+        if (value instanceof String s) {
+            return "\"" + escape(s) + "\"";
+        }
+
+        if (value instanceof Character c) {
+            return "'" + escape(c.toString()) + "'";
+        }
+
+        if (value instanceof Boolean
+                || value instanceof Integer
+                || value instanceof Long
+                || value instanceof Double
+                || value instanceof Float
+                || value instanceof Short
+                || value instanceof Byte) {
+            return value.toString();
+        }
+
+        if (value instanceof VariableElement enumConstant) {
+            TypeElement enumType = (TypeElement) enumConstant.getEnclosingElement();
+            return enumType.getQualifiedName() + "." + enumConstant.getSimpleName();
+        }
+
+        if (value instanceof List<?> list) {
+            List<String> values = new ArrayList<>();
+            for (Object v : list) {
+                if (v instanceof AnnotationValue av) {
+                    values.add(toJavaLiteral(av.getValue(), returnType));
+                }
+            }
+            return "java.util.List.of(" + String.join(", ", values) + ")";
+        }
+
+        return "\"" + escape(value.toString()) + "\"";
+    }
+
     private ProviderQueryInfo resolveProviderQuery(TypeElement annotationType) {
         for (AnnotationMirror mirror : annotationType.getAnnotationMirrors()) {
             Element element = mirror.getAnnotationType().asElement();
@@ -106,37 +183,17 @@ final class RepositoryMethodAnnotationIntrospector {
             String fqcn = typeElement.getQualifiedName().toString();
 
             if (PROVIDER_QUERY_FQCN.equals(fqcn)) {
-                String value = extractValue(mirror, "value");
+                String value = extractValue(mirror);
                 return new ProviderQueryInfo(true, value);
             }
         }
         return new ProviderQueryInfo(false, null);
     }
 
-    private String extractValue(AnnotationMirror mirror, String attributeName) {
+    private String extractValue(AnnotationMirror mirror) {
         for (var entry : mirror.getElementValues().entrySet()) {
-            String name = entry.getKey().getSimpleName().toString();
-            if (attributeName.equals(name)) {
+            if (entry.getKey().getSimpleName().contentEquals("value")) {
                 Object v = entry.getValue().getValue();
-                return v == null ? null : v.toString();
-            }
-        }
-
-        TypeElement annotationElement =
-                (TypeElement) mirror.getAnnotationType().asElement();
-
-        for (Element e : annotationElement.getEnclosedElements()) {
-            if (e.getKind() == ElementKind.METHOD
-                    && e.getSimpleName().contentEquals(attributeName)) {
-
-                AnnotationValue defaultValue =
-                        ((ExecutableElement) e).getDefaultValue();
-
-                if (defaultValue == null) {
-                    return null;
-                }
-
-                Object v = defaultValue.getValue();
                 return v == null ? null : v.toString();
             }
         }
