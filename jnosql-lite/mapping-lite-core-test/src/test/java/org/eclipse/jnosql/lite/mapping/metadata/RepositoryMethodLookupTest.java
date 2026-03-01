@@ -40,6 +40,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -398,6 +399,22 @@ class RepositoryMethodLookupTest {
                 soft.assertThat(first.isProviderAnnotation()).isTrue();
                 soft.assertThat(first.annotation()).isEqualTo(ExampleQuery.class);
                 soft.assertThat(first.provider()).isNotEmpty().get().isEqualTo("example");
+                soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.PROVIDER_OPERATION);
+            });
+        }
+
+        @Test
+        @DisplayName("should define provider as true")
+        void shouldGetQueryFromProvider(){
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("providerSampleQuery")).orElseThrow();
+            List<RepositoryAnnotation> annotations = method.annotations();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(annotations).hasSize(1);
+                RepositoryAnnotation first = annotations.getFirst();
+                Map<String, Object> attributes = first.attributes();
+                soft.assertThat(attributes).isNotNull();
+                soft.assertThat(attributes).containsEntry("value", "sampleQuery");
             });
         }
     }
