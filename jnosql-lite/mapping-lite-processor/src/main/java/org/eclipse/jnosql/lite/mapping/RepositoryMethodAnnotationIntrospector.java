@@ -61,7 +61,7 @@ final class RepositoryMethodAnnotationIntrospector {
         this.template = factory.compile(MUSTACHE_TEMPLATE);
     }
 
-    public String createAnnotationClass() {
+    public RepositoryMethodAnnotationResult createAnnotationClass() {
         TypeElement annotationType =
                 (TypeElement) annotationMirror.getAnnotationType().asElement();
 
@@ -94,8 +94,7 @@ final class RepositoryMethodAnnotationIntrospector {
         } catch (IOException exception) {
             error(exception);
         }
-
-        return metadata.getQualified();
+        return new RepositoryMethodAnnotationResult(metadata.getQualified(), providerInfo.present());;
     }
 
     private List<String> resolveAttributes(TypeElement annotationType) {
@@ -224,5 +223,8 @@ final class RepositoryMethodAnnotationIntrospector {
     }
 
     private record ProviderQueryInfo(boolean present, String value) {
+    }
+
+    record RepositoryMethodAnnotationResult(String qualified, boolean provider) {
     }
 }
