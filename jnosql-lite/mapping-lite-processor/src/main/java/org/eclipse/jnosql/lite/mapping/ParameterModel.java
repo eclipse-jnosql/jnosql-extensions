@@ -259,7 +259,7 @@ final class ParameterModel extends BaseMappingModel {
         }
 
 
-        public ParameterModel build() {
+        ParameterModel build() {
            return fieldModel;
         }
     }

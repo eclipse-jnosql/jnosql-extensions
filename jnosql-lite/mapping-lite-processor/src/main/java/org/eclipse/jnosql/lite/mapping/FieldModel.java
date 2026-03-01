@@ -294,7 +294,7 @@ final class FieldModel extends BaseMappingModel {
         }
 
 
-        public FieldModel build() {
+        FieldModel build() {
            return fieldModel;
         }
     }
