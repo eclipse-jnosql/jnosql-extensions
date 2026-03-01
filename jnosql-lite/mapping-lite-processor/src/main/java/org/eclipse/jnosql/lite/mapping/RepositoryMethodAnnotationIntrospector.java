@@ -61,7 +61,9 @@ final class RepositoryMethodAnnotationIntrospector {
     public String createAnnotationClass() {
         Element element = annotationMirror.getAnnotationType().asElement();
         String annotation = element.toString();
-        String className = methodClassName.concat(element.getSimpleName().toString());
+        String className = methodClassName.
+                concat(element.getSimpleName().toString()
+                .concat(Integer.toHexString(element.toString().hashCode())));
         //TODO update those values in a next interaction
         String providerAnnotation = "false";
         String provider = "Optional.empty()";
