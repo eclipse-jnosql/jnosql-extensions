@@ -58,7 +58,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineInsertTypeWhenThereIsInsertAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("insert")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.INSERT);
             });
@@ -69,7 +69,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineUpdateTypeWhenThereIsUpdateAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("update")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.UPDATE);
             });
@@ -81,7 +81,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineDeleteTypeWhenThereIsDeleteAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("delete")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DELETE);
             });
@@ -92,7 +92,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineSaveTypeWhenThereIsSaveAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("save")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.SAVE);
             });
@@ -104,7 +104,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineInsertTypeWhenThereIsDeleteAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("query")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.QUERY);
             });
@@ -115,7 +115,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineFindTypeWhenThereIsFindAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
             RepositoryMethod method = repositoryMetadata.find(new NameKey("find")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.PARAMETER_BASED);
             });
@@ -126,7 +126,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineFindByWhenTheMethodNameHasFindPredicate() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("findByUsername")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.FIND_BY);
             });
@@ -137,7 +137,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineCountByWhenTheMethodNameHasFindPredicate() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("countByUsername")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.COUNT_BY);
             });
@@ -148,7 +148,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineExistByWhenTheMethodNameHasFindPredicate() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("existsByUsername")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.EXISTS_BY);
             });
@@ -159,7 +159,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineDeleteByWhenTheMethodNameHasFindPredicate() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("deleteByUsername")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DELETE_BY);
             });
@@ -170,7 +170,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineCountAllWhenTheMethodNameHasFindPredicate() {
             var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("countAll")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.COUNT_ALL);
             });
@@ -181,7 +181,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineFindAllWhenTheMethodNameHasFindPredicate() {
             var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("findAll")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.FIND_ALL);
             });
@@ -192,7 +192,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineDefaultMethodWhenTheMethodIsDefault() {
             var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("defaultMethod")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.DEFAULT_METHOD);
             });
@@ -203,7 +203,7 @@ class RepositoryMethodLookupTest {
         void shouldDefineCursorPaginationWhenTheReturnIsCursor() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("cursor")).orElseThrow();
-            SoftAssertions.assertSoftly(soft ->{
+            SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(method).isNotNull();
                 soft.assertThat(method.type()).isEqualTo(RepositoryMethodType.CURSOR_PAGINATION);
             });
@@ -319,8 +319,8 @@ class RepositoryMethodLookupTest {
             var method = repositoryMetadata.find(new NameKey("findTopTen")).orElseThrow();
             List<Sort<?>> sorts = method.sorts();
             SoftAssertions.assertSoftly(soft -> {
-               soft.assertThat(sorts).hasSize(2);
-               soft.assertThat(sorts).contains(Sort.desc("username"), Sort.asc("email"));
+                soft.assertThat(sorts).hasSize(2);
+                soft.assertThat(sorts).contains(Sort.desc("username"), Sort.asc("email"));
             });
         }
 
@@ -369,7 +369,7 @@ class RepositoryMethodLookupTest {
 
 
     @Nested
-    class WhenTheReturnMethod{
+    class WhenTheReturnMethod {
         //should return just the entity type
         //should return void
         //should return primitive
@@ -382,7 +382,7 @@ class RepositoryMethodLookupTest {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("deleteByUsername")).orElseThrow();
             SoftAssertions.assertSoftly(soft -> {
-               soft.assertThat(method.returnType()).isPresent().get().isEqualTo(void.class);
+                soft.assertThat(method.returnType()).isPresent().get().isEqualTo(void.class);
                 soft.assertThat(method.elementType()).isEmpty();
             });
         }
@@ -422,7 +422,7 @@ class RepositoryMethodLookupTest {
 
         @Test
         @DisplayName("should return the structure and element type")
-        void shouldReturnTheStructureAndElementType(){
+        void shouldReturnTheStructureAndElementType() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("optional")).orElseThrow();
             SoftAssertions.assertSoftly(soft -> {
@@ -433,7 +433,7 @@ class RepositoryMethodLookupTest {
 
         @Test
         @DisplayName("should return the structure and element type as iterable")
-        void shouldReturnTheStructureAndElementTypeAsIterable(){
+        void shouldReturnTheStructureAndElementTypeAsIterable() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("array")).orElseThrow();
             SoftAssertions.assertSoftly(soft -> {
@@ -457,7 +457,7 @@ class RepositoryMethodLookupTest {
 
         @Test
         @DisplayName("should find by param signature")
-        void shouldFindByParamSignature(){
+        void shouldFindByParamSignature() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("optional", List.of(Long.class)))
@@ -468,11 +468,11 @@ class RepositoryMethodLookupTest {
 
     @DisplayName("should load parameters")
     @Nested
-    class WhenLoadParameters{
+    class WhenLoadParameters {
 
         @DisplayName("should load when method as entity")
         @Test
-        void shouldLoadWhenMethodAsEntity(){
+        void shouldLoadWhenMethodAsEntity() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("findByUsername", List.of(String.class)))
@@ -490,7 +490,7 @@ class RepositoryMethodLookupTest {
 
         @DisplayName("should load Param annotation")
         @Test
-        void shouldLoadParamAnnotation(){
+        void shouldLoadParamAnnotation() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("name", List.of(String.class)))
@@ -550,7 +550,7 @@ class RepositoryMethodLookupTest {
 
         @Test
         @DisplayName("should load default is")
-        void shouldLoadDefaultIs(){
+        void shouldLoadDefaultIs() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata
                     .find(new MethodSignatureKey("array", List.of(String.class)))
