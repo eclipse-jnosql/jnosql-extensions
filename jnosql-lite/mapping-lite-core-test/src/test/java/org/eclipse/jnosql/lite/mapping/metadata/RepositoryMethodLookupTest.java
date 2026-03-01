@@ -18,6 +18,7 @@ import jakarta.data.Sort;
 import jakarta.data.constraint.Constraint;
 import jakarta.data.constraint.EqualTo;
 import jakarta.data.constraint.LessThan;
+import jakarta.data.repository.Find;
 import jakarta.data.repository.Query;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
@@ -28,6 +29,7 @@ import org.eclipse.jnosql.lite.mapping.entities.repository.PersonRepository;
 import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryAnnotation;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
@@ -365,16 +367,27 @@ class RepositoryMethodLookupTest {
             var selected = method.select();
             Assertions.assertThat(selected).isEmpty();
         }
+
+        @Test
+        @DisplayName("should define provider as false")
+        void shouldDefineProviderAsFalse() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+            var method = repositoryMetadata.find(new NameKey("name")).orElseThrow();
+            List<RepositoryAnnotation> annotations = method.annotations();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(annotations).hasSize(1);
+                RepositoryAnnotation first = annotations.getFirst();
+                soft.assertThat(first).isNotNull();
+                soft.assertThat(first.isProviderAnnotation()).isFalse();
+                soft.assertThat(first.annotation()).isEqualTo(Find.class);
+                soft.assertThat(first.provider()).isEmpty();
+            });
+        }
     }
 
 
     @Nested
     class WhenTheReturnMethod {
-        //should return just the entity type
-        //should return void
-        //should return primitive
-        //should return Optional and the entity type
-        //should return array
 
         @Test
         @DisplayName("should return void on return type")
