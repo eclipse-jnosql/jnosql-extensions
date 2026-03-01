@@ -94,7 +94,7 @@ final class RepositoryMethodAnnotationIntrospector {
         } catch (IOException exception) {
             error(exception);
         }
-        return new RepositoryMethodAnnotationResult(metadata.getQualified(), providerInfo.present());;
+        return new RepositoryMethodAnnotationResult(metadata.getQualified(), providerInfo.present());
     }
 
     private List<String> resolveAttributes(TypeElement annotationType) {
