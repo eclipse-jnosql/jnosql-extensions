@@ -404,8 +404,8 @@ class RepositoryMethodLookupTest {
         }
 
         @Test
-        @DisplayName("should define provider as true")
-        void shouldGetQueryFromProvider(){
+        @DisplayName("should extract query attributes from provider annotation")
+        void shouldGetQueryFromProvider() {
             var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
             var method = repositoryMetadata.find(new NameKey("providerSampleQuery")).orElseThrow();
             List<RepositoryAnnotation> annotations = method.annotations();
