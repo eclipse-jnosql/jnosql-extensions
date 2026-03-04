@@ -14,17 +14,18 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
+import jakarta.nosql.Template;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 
-import javax.xml.transform.Templates;
 import java.util.Objects;
+
 
 public final class JNoSQLRepositoryProcessor {
 
-    private final Templates templates;
+    private final Template template;
 
     private final EntityMetadata entityMetadata;
 
@@ -32,10 +33,10 @@ public final class JNoSQLRepositoryProcessor {
 
     private final RepositoryOperationProvider repositoryOperationProvider;
 
-    private JNoSQLRepositoryProcessor(Templates templates, EntityMetadata entityMetadata,
+    private JNoSQLRepositoryProcessor(Template template, EntityMetadata entityMetadata,
                                 RepositoryMetadata repositoryMetadata,
                                      RepositoryOperationProvider repositoryOperationProvider) {
-        this.templates = templates;
+        this.template = template;
         this.entityMetadata = entityMetadata;
         this.repositoryMetadata = repositoryMetadata;
         this.repositoryOperationProvider = repositoryOperationProvider;
@@ -53,16 +54,16 @@ public final class JNoSQLRepositoryProcessor {
 
 
 
-    public static JNoSQLRepositoryProcessor of(Templates templates,
+    public static JNoSQLRepositoryProcessor of(Template template,
                                                EntityMetadata entityMetadata,
                                                RepositoryMetadata repositoryMetadata,
                                                RepositoryOperationProvider repositoryOperationProvider) {
 
-        Objects.requireNonNull(templates, "templates is required");
+        Objects.requireNonNull(template, "template is required");
         Objects.requireNonNull(entityMetadata, "entityMetadata is required");
         Objects.requireNonNull(repositoryMetadata, "repositoryMetadata is required");
         Objects.requireNonNull(repositoryOperationProvider, "repositoryOperationProvider is required");
 
-        return new JNoSQLRepositoryProcessor(templates, entityMetadata, repositoryMetadata, repositoryOperationProvider);
+        return new JNoSQLRepositoryProcessor(template, entityMetadata, repositoryMetadata, repositoryOperationProvider);
     }
 }
