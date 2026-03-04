@@ -118,17 +118,12 @@ public final class JNoSQLRepositoryProcessor {
             case EXISTS_BY -> {
                 return repositoryOperationProvider.existsByOperation().execute(context);
             }
-            case FIND_ALL -> {
-                return repositoryOperationProvider.findAllOperation().execute(context);
-            }
-            case QUERY -> {
-                return repositoryOperationProvider.queryOperation().execute(context);
-            } case PROVIDER_OPERATION -> {
-                return repositoryOperationProvider.providerOperation().execute(context);
-            }
+            case FIND_ALL -> repositoryOperationProvider.findAllOperation().execute(context);
+            case QUERY -> repositoryOperationProvider.queryOperation().execute(context);
+            case PROVIDER_OPERATION -> repositoryOperationProvider.providerOperation().execute(context);
+            default -> throw new IllegalArgumentException("Unsupported repository operation: " + repositoryMethod.type()
+                    + " for method: " + methodSignatureKey);
         }
-
-        return null;
     }
 
     private RepositoryInvocationContext repositoryInvocationContext(Object[] params, RepositoryMethod method) {
