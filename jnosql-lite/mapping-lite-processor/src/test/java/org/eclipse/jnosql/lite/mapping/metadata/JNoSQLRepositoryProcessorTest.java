@@ -21,6 +21,9 @@ import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.InsertOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryOperation;
 import org.junit.jupiter.api.DisplayName;
@@ -61,6 +64,15 @@ class JNoSQLRepositoryProcessorTest {
 
     @Mock
     private RepositoryOperation operation;
+
+    @Mock
+    private InsertOperation insertOperation;
+
+    @Mock
+    private FindByOperation findByOperation;
+    
+    @Mock
+    private DeleteOperation deleteOperation;
 
     @Nested
     @DisplayName("WhenCreateANewInstance")
