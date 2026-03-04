@@ -29,22 +29,23 @@ import java.util.logging.Logger;
  * Internal processor responsible for executing repository operations generated
  * by the JNoSQL annotation processor.
  *
- * <p>This class acts as a runtime delegate used by compile-time generated
- * repository implementations. Instead of relying on dynamic proxies and
- * {@link java.lang.reflect.InvocationHandler}, generated repositories invoke
- * this processor directly to execute repository methods.</p>
+ * <p>This processor serves as the runtime execution engine for repository
+ * implementations generated at compile time. Instead of relying on dynamic
+ * proxies and {@link java.lang.reflect.InvocationHandler}, the generated
+ * repository classes delegate method execution directly to this processor.</p>
  *
- * <p>The processor uses {@link RepositoryMetadata} and {@link EntityMetadata}
- * to resolve the repository method represented by a {@link MethodSignatureKey}.
- * Once resolved, the execution is delegated to the appropriate operation
- * provided by {@link RepositoryOperationProvider}.</p>
+ * <p>The processor resolves a repository method using a {@link MethodSignatureKey}
+ * and the available {@link RepositoryMetadata}. Once the corresponding
+ * {@link RepositoryMethod} is located, the invocation is translated into a
+ * {@link RepositoryInvocationContext} and delegated to the appropriate
+ * operation provided by {@link RepositoryOperationProvider}.</p>
  *
- * <p>The {@link Template} instance is used as the central infrastructure
- * component responsible for interacting with the underlying data store.</p>
+ * <p>The {@link Template} instance acts as the central infrastructure component
+ * responsible for communicating with the underlying NoSQL database.</p>
  *
- * <p>This class is part of the JNoSQL Lite infrastructure and is intended
- * for internal framework usage only. Application code should interact with
- * repositories rather than invoking this processor directly.</p>
+ * <p>This class is part of the JNoSQL Lite internal infrastructure and is not
+ * intended to be used directly by application code. Applications should
+ * interact with repository interfaces instead.</p>
  */
 public final class JNoSQLRepositoryProcessor {
 
@@ -67,18 +68,25 @@ public final class JNoSQLRepositoryProcessor {
         this.repositoryOperationProvider = repositoryOperationProvider;
     }
 
-
     /**
-     * Executes a repository method that returns a result.
+     * Executes a repository method that produces a result.
      *
-     * <p>The {@link MethodSignatureKey} identifies the repository method
-     * previously analyzed during metadata creation. The provided parameters
-     * correspond to the arguments supplied to the repository method call.</p>
+     * <p>The provided {@link MethodSignatureKey} uniquely identifies the repository
+     * method previously analyzed during metadata generation. The parameters
+     * correspond to the arguments supplied when invoking the generated
+     * repository method.</p>
+     *
+     * <p>The processor resolves the associated {@link RepositoryMethod},
+     * constructs a {@link RepositoryInvocationContext}, and delegates execution
+     * to the appropriate operation supplied by {@link RepositoryOperationProvider}.</p>
      *
      * @param methodSignatureKey the identifier representing the repository method
-     * @param params the parameters passed to the repository method
-     * @param <T> the return type of the repository method
-     * @return the result produced by the corresponding repository operation
+     * @param params the arguments passed to the repository method invocation
+     * @param <T> the expected return type of the repository method
+     * @return the result produced by the repository operation
+     * @throws NullPointerException if {@code methodSignatureKey} or {@code params} is {@code null}
+     * @throws IllegalArgumentException if the repository method cannot be found
+     *                                  or if the operation type is unsupported
      */
     public <T> T execute(MethodSignatureKey methodSignatureKey, Object[] params) {
         Objects.requireNonNull(methodSignatureKey, "methodSignatureKey is required");
@@ -108,22 +116,22 @@ public final class JNoSQLRepositoryProcessor {
         };
     }
 
-    private RepositoryInvocationContext repositoryInvocationContext(Object[] params, RepositoryMethod method) {
-        return new RepositoryInvocationContext(method, repositoryMetadata, entityMetadata, template, params);
-    }
-
     /**
-     * Executes a repository method that does not return a value.
+     * Executes a repository method that does not produce a return value.
+     *
+     * <p>This method delegates to {@link #execute(MethodSignatureKey, Object[])}
+     * and ignores the returned value.</p>
      *
      * @param methodSignatureKey the identifier representing the repository method
-     * @param params the parameters passed to the repository method
+     * @param params the arguments passed to the repository method invocation
      */
     public void executeVoid(MethodSignatureKey methodSignatureKey, Object[] params) {
         execute(methodSignatureKey, params);
     }
 
-
-
+    private RepositoryInvocationContext repositoryInvocationContext(Object[] params, RepositoryMethod method) {
+        return new RepositoryInvocationContext(method, repositoryMetadata, entityMetadata, template, params);
+    }
 
     /**
      * Creates a new {@link JNoSQLRepositoryProcessor}.
