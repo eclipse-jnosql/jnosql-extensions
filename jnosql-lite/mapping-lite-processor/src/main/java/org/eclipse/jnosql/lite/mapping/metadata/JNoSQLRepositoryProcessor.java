@@ -91,6 +91,19 @@ public final class JNoSQLRepositoryProcessor {
 
 
 
+    /**
+     * Creates a new {@link JNoSQLRepositoryProcessor}.
+     *
+     * <p>This factory method ensures that all required infrastructure
+     * components are provided before instantiating the processor.</p>
+     *
+     * @param template the template used to interact with the data store
+     * @param entityMetadata metadata describing the managed entity
+     * @param repositoryMetadata metadata describing the repository structure
+     * @param repositoryOperationProvider provider responsible for executing repository operations
+     * @return a new {@link JNoSQLRepositoryProcessor} instance
+     * @throws NullPointerException if any argument is {@code null}
+     */
     public static JNoSQLRepositoryProcessor of(Template template,
                                                EntityMetadata entityMetadata,
                                                RepositoryMetadata repositoryMetadata,
