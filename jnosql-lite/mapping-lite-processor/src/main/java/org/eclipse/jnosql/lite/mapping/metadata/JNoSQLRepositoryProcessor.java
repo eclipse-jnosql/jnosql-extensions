@@ -14,8 +14,44 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 
-@ApplicationScoped
-public class JNoSQLRepositoryProcessor {
+import javax.xml.transform.Templates;
+import java.util.Objects;
+
+public final class JNoSQLRepositoryProcessor {
+
+    private final Templates templates;
+
+    private final EntityMetadata entityMetadata;
+
+    private final RepositoryMetadata repositoryMetadata;
+
+    private final RepositoryOperationProvider repositoryOperationProvider;
+
+    private JNoSQLRepositoryProcessor(Templates templates, EntityMetadata entityMetadata,
+                                RepositoryMetadata repositoryMetadata,
+                                     RepositoryOperationProvider repositoryOperationProvider) {
+        this.templates = templates;
+        this.entityMetadata = entityMetadata;
+        this.repositoryMetadata = repositoryMetadata;
+        this.repositoryOperationProvider = repositoryOperationProvider;
+    }
+
+
+
+    public static JNoSQLRepositoryProcessor of(Templates templates,
+                                               EntityMetadata entityMetadata,
+                                               RepositoryMetadata repositoryMetadata,
+                                               RepositoryOperationProvider repositoryOperationProvider) {
+
+        Objects.requireNonNull(templates, "templates is required");
+        Objects.requireNonNull(entityMetadata, "entityMetadata is required");
+        Objects.requireNonNull(repositoryMetadata, "repositoryMetadata is required");
+        Objects.requireNonNull(repositoryOperationProvider, "repositoryOperationProvider is required");
+
+        return new JNoSQLRepositoryProcessor(templates, entityMetadata, repositoryMetadata, repositoryOperationProvider);
+    }
 }
