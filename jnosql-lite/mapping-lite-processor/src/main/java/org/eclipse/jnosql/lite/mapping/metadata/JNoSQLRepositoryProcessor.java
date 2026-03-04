@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 
@@ -39,6 +40,16 @@ public final class JNoSQLRepositoryProcessor {
         this.repositoryMetadata = repositoryMetadata;
         this.repositoryOperationProvider = repositoryOperationProvider;
     }
+
+
+    public <T> T execute(MethodSignatureKey methodSignatureKey, Object[] params) {
+        return null;
+    }
+
+
+    public void executeVoid(MethodSignatureKey methodSignatureKey, Object[] params) {
+    }
+
 
 
 
