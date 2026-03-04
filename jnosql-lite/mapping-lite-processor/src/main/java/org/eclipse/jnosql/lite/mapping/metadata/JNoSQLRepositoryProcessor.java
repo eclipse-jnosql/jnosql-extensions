@@ -19,6 +19,8 @@ import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 import java.util.Objects;
 
@@ -76,7 +78,61 @@ public final class JNoSQLRepositoryProcessor {
      * @return the result produced by the corresponding repository operation
      */
     public <T> T execute(MethodSignatureKey methodSignatureKey, Object[] params) {
+        Objects.requireNonNull(methodSignatureKey, "methodSignatureKey is required");
+        Objects.requireNonNull(params, "params is required");
+        var repositoryMethod = repositoryMetadata.find(methodSignatureKey).orElseThrow(() -> new IllegalArgumentException("Method not found:" +
+                " " + methodSignatureKey));
+
+        var context = repositoryInvocationContext(params, repositoryMethod);
+        switch (repositoryMethod.type()) {
+            case INSERT -> {
+                return repositoryOperationProvider.insertOperation().execute(context);
+            }
+            case UPDATE -> {
+                return repositoryOperationProvider.updateOperation().execute(context);
+            }
+            case DELETE -> {
+                return repositoryOperationProvider.deleteOperation().execute(context);
+            }
+            case SAVE -> {
+                return repositoryOperationProvider.saveOperation().execute(context);
+            }
+            case DELETE_BY -> {
+                return repositoryOperationProvider.deleteByOperation().execute(context);
+            }
+            case FIND_BY -> {
+                return repositoryOperationProvider.findByOperation().execute(context);
+            }
+            case COUNT_ALL -> {
+                return repositoryOperationProvider.countAllOperation().execute(context);
+            }
+            case COUNT_BY -> {
+                return repositoryOperationProvider.countByOperation().execute(context);
+            }
+            case CURSOR_PAGINATION -> {
+                return repositoryOperationProvider.cursorPaginationOperation().execute(context);
+            }
+            case PARAMETER_BASED -> {
+                return repositoryOperationProvider.parameterBasedOperation().execute(context);
+            }
+            case EXISTS_BY -> {
+                return repositoryOperationProvider.existsByOperation().execute(context);
+            }
+            case FIND_ALL -> {
+                return repositoryOperationProvider.findAllOperation().execute(context);
+            }
+            case QUERY -> {
+                return repositoryOperationProvider.queryOperation().execute(context);
+            } case PROVIDER_OPERATION -> {
+                return repositoryOperationProvider.providerOperation().execute(context);
+            }
+        }
+
         return null;
+    }
+
+    private RepositoryInvocationContext repositoryInvocationContext(Object[] params, RepositoryMethod method) {
+        return new RepositoryInvocationContext(method, repositoryMetadata, entityMetadata, template, params);
     }
 
     /**
