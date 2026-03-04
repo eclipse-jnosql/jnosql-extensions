@@ -84,46 +84,24 @@ public final class JNoSQLRepositoryProcessor {
                 " " + methodSignatureKey));
 
         var context = repositoryInvocationContext(params, repositoryMethod);
-        switch (repositoryMethod.type()) {
-            case INSERT -> {
-                return repositoryOperationProvider.insertOperation().execute(context);
-            }
-            case UPDATE -> {
-                return repositoryOperationProvider.updateOperation().execute(context);
-            }
-            case DELETE -> {
-                return repositoryOperationProvider.deleteOperation().execute(context);
-            }
-            case SAVE -> {
-                return repositoryOperationProvider.saveOperation().execute(context);
-            }
-            case DELETE_BY -> {
-                return repositoryOperationProvider.deleteByOperation().execute(context);
-            }
-            case FIND_BY -> {
-                return repositoryOperationProvider.findByOperation().execute(context);
-            }
-            case COUNT_ALL -> {
-                return repositoryOperationProvider.countAllOperation().execute(context);
-            }
-            case COUNT_BY -> {
-                return repositoryOperationProvider.countByOperation().execute(context);
-            }
-            case CURSOR_PAGINATION -> {
-                return repositoryOperationProvider.cursorPaginationOperation().execute(context);
-            }
-            case PARAMETER_BASED -> {
-                return repositoryOperationProvider.parameterBasedOperation().execute(context);
-            }
-            case EXISTS_BY -> {
-                return repositoryOperationProvider.existsByOperation().execute(context);
-            }
+        return switch (repositoryMethod.type()) {
+            case INSERT -> repositoryOperationProvider.insertOperation().execute(context);
+            case UPDATE -> repositoryOperationProvider.updateOperation().execute(context);
+            case DELETE -> repositoryOperationProvider.deleteOperation().execute(context);
+            case SAVE ->  repositoryOperationProvider.saveOperation().execute(context);
+            case DELETE_BY -> repositoryOperationProvider.deleteByOperation().execute(context);
+            case FIND_BY -> repositoryOperationProvider.findByOperation().execute(context);
+            case COUNT_ALL -> repositoryOperationProvider.countAllOperation().execute(context);
+            case COUNT_BY -> repositoryOperationProvider.countByOperation().execute(context);
+            case CURSOR_PAGINATION -> repositoryOperationProvider.cursorPaginationOperation().execute(context);
+            case PARAMETER_BASED -> repositoryOperationProvider.parameterBasedOperation().execute(context);
+            case EXISTS_BY -> repositoryOperationProvider.existsByOperation().execute(context);
             case FIND_ALL -> repositoryOperationProvider.findAllOperation().execute(context);
             case QUERY -> repositoryOperationProvider.queryOperation().execute(context);
             case PROVIDER_OPERATION -> repositoryOperationProvider.providerOperation().execute(context);
             default -> throw new IllegalArgumentException("Unsupported repository operation: " + repositoryMethod.type()
                     + " for method: " + methodSignatureKey);
-        }
+        };
     }
 
     private RepositoryInvocationContext repositoryInvocationContext(Object[] params, RepositoryMethod method) {
