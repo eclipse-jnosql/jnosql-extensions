@@ -23,6 +23,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 import java.util.Objects;
+import java.util.logging.Logger;
 
 /**
  * Internal processor responsible for executing repository operations generated
@@ -46,6 +47,8 @@ import java.util.Objects;
  * repositories rather than invoking this processor directly.</p>
  */
 public final class JNoSQLRepositoryProcessor {
+
+    private static final Logger LOGGER = Logger.getLogger(JNoSQLRepositoryProcessor.class.getName());
 
     private final Template template;
 
@@ -80,6 +83,7 @@ public final class JNoSQLRepositoryProcessor {
     public <T> T execute(MethodSignatureKey methodSignatureKey, Object[] params) {
         Objects.requireNonNull(methodSignatureKey, "methodSignatureKey is required");
         Objects.requireNonNull(params, "params is required");
+        LOGGER.finest(() -> "Executing repository method: " + methodSignatureKey);
         var repositoryMethod = repositoryMetadata.find(methodSignatureKey).orElseThrow(() -> new IllegalArgumentException("Method not found:" +
                 " " + methodSignatureKey));
 
@@ -115,6 +119,7 @@ public final class JNoSQLRepositoryProcessor {
      * @param params the parameters passed to the repository method
      */
     public void executeVoid(MethodSignatureKey methodSignatureKey, Object[] params) {
+        execute(methodSignatureKey, params);
     }
 
 
