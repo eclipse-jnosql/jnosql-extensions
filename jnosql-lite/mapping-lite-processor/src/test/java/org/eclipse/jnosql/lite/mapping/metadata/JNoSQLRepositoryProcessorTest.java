@@ -80,7 +80,7 @@ class JNoSQLRepositoryProcessorTest {
 
         @Test
         @DisplayName("Should throw error when template is null")
-        void shouldReturnErroWhenTemplateIsNull() {
+        void shouldReturnErrorWhenTemplateIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(null, entityMetadata, repositoryMetadata, repositoryOperationProvider))
@@ -90,7 +90,7 @@ class JNoSQLRepositoryProcessorTest {
 
         @Test
         @DisplayName("Should throw error when entity metadata is null")
-        void shouldReturnErroWhenEntityMetadataIsNull() {
+        void shouldReturnErrorWhenEntityMetadataIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(template, null, repositoryMetadata, repositoryOperationProvider))
@@ -100,7 +100,7 @@ class JNoSQLRepositoryProcessorTest {
 
         @Test
         @DisplayName("Should throw error when repository metadata is null")
-        void shouldReturnErroWhenRepositoryMetadataIsNull() {
+        void shouldReturnErrorWhenRepositoryMetadataIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(template, entityMetadata, null, repositoryOperationProvider))
@@ -110,7 +110,7 @@ class JNoSQLRepositoryProcessorTest {
 
         @Test
         @DisplayName("Should throw error when repository operation provider is null")
-        void shouldReturnErroWhenRepositoryOperationProviderIsNull() {
+        void shouldReturnErrorWhenRepositoryOperationProviderIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(template, entityMetadata, repositoryMetadata, null))
