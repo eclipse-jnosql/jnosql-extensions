@@ -88,7 +88,7 @@ public final class JNoSQLRepositoryProcessor {
      * @throws IllegalArgumentException if the repository method cannot be found
      *                                  or if the operation type is unsupported
      */
-    public <T> T execute(MethodSignatureKey methodSignatureKey, Object[] params) {
+    public <T> T invokeRepositoryMethod(MethodSignatureKey methodSignatureKey, Object[] params) {
         Objects.requireNonNull(methodSignatureKey, "methodSignatureKey is required");
         Objects.requireNonNull(params, "params is required");
         LOGGER.finest(() -> "Executing repository method: " + methodSignatureKey);
@@ -119,14 +119,14 @@ public final class JNoSQLRepositoryProcessor {
     /**
      * Executes a repository method that does not produce a return value.
      *
-     * <p>This method delegates to {@link #execute(MethodSignatureKey, Object[])}
+     * <p>This method delegates to {@link #invokeRepositoryMethod(MethodSignatureKey, Object[])}
      * and ignores the returned value.</p>
      *
      * @param methodSignatureKey the identifier representing the repository method
      * @param params the arguments passed to the repository method invocation
      */
-    public void executeVoid(MethodSignatureKey methodSignatureKey, Object[] params) {
-        execute(methodSignatureKey, params);
+    public void invokeRepositoryVoidMethod(MethodSignatureKey methodSignatureKey, Object[] params) {
+        invokeRepositoryMethod(methodSignatureKey, params);
     }
 
     private RepositoryInvocationContext repositoryInvocationContext(Object[] params, RepositoryMethod method) {
