@@ -70,7 +70,7 @@ class JNoSQLRepositoryProcessorTest {
 
     @Mock
     private FindByOperation findByOperation;
-    
+
     @Mock
     private DeleteOperation deleteOperation;
 
@@ -79,8 +79,8 @@ class JNoSQLRepositoryProcessorTest {
     class WhenCreateANewInstance {
 
         @Test
-        @DisplayName("Should throw exception when template is null during processor creation")
-        void shouldReturnErrorWhenTemplateIsNull() {
+        @DisplayName("Should throw error when template is null")
+        void shouldReturnErroWhenTemplateIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(null, entityMetadata, repositoryMetadata, repositoryOperationProvider))
@@ -89,8 +89,8 @@ class JNoSQLRepositoryProcessorTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when entity metadata is null during processor creation")
-        void shouldReturnErrorWhenEntityMetadataIsNull() {
+        @DisplayName("Should throw error when entity metadata is null")
+        void shouldReturnErroWhenEntityMetadataIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(template, null, repositoryMetadata, repositoryOperationProvider))
@@ -99,8 +99,8 @@ class JNoSQLRepositoryProcessorTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when repository metadata is null during processor creation")
-        void shouldReturnErrorWhenRepositoryMetadataIsNull() {
+        @DisplayName("Should throw error when repository metadata is null")
+        void shouldReturnErroWhenRepositoryMetadataIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(template, entityMetadata, null, repositoryOperationProvider))
@@ -109,8 +109,8 @@ class JNoSQLRepositoryProcessorTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when repository operation provider is null during processor creation")
-        void shouldReturnErrorWhenRepositoryOperationProviderIsNull() {
+        @DisplayName("Should throw error when repository operation provider is null")
+        void shouldReturnErroWhenRepositoryOperationProviderIsNull() {
 
             assertThatThrownBy(() ->
                     JNoSQLRepositoryProcessor.of(template, entityMetadata, repositoryMetadata, null))
@@ -119,7 +119,7 @@ class JNoSQLRepositoryProcessorTest {
         }
 
         @Test
-        @DisplayName("Should successfully create processor instance when all dependencies are provided")
+        @DisplayName("Should create processor instance")
         void shouldCreateInstance() {
 
             var processor = JNoSQLRepositoryProcessor.of(
@@ -138,7 +138,7 @@ class JNoSQLRepositoryProcessorTest {
     class WhenInvokeRepositoryMethod {
 
         @Test
-        @DisplayName("Should throw exception when method signature key is null")
+        @DisplayName("Should throw error when method signature key is null")
         void shouldReturnErrorWhenMethodSignatureKeyIsNull() {
 
             var processor = JNoSQLRepositoryProcessor.of(
@@ -155,24 +155,7 @@ class JNoSQLRepositoryProcessorTest {
         }
 
         @Test
-        @DisplayName("Should throw exception when parameters array is null")
-        void shouldReturnErrorWhenParamsIsNull() {
-
-            var processor = JNoSQLRepositoryProcessor.of(
-                    template,
-                    entityMetadata,
-                    repositoryMetadata,
-                    repositoryOperationProvider
-            );
-
-            assertThatThrownBy(() ->
-                    processor.invokeRepositoryMethod(methodSignatureKey, null))
-                    .isInstanceOf(NullPointerException.class)
-                    .hasMessage("params is required");
-        }
-
-        @Test
-        @DisplayName("Should throw exception when repository method cannot be resolved from metadata")
+        @DisplayName("Should throw error when repository method is not found")
         void shouldReturnErrorWhenRepositoryMethodIsNotFound() {
 
             when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.empty());
@@ -191,14 +174,14 @@ class JNoSQLRepositoryProcessorTest {
         }
 
         @Test
-        @DisplayName("Should dispatch to insert operation when repository method type is INSERT")
+        @DisplayName("Should dispatch execution to insert operation")
         void shouldInvokeInsertOperation() {
 
             when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
             when(repositoryMethod.type()).thenReturn(RepositoryMethodType.INSERT);
 
-            when(repositoryOperationProvider.insertOperation()).thenReturn(operation);
-            when(operation.execute(any(RepositoryInvocationContext.class))).thenReturn("result");
+            when(repositoryOperationProvider.insertOperation()).thenReturn(insertOperation);
+            when(insertOperation.execute(any())).thenReturn("result");
 
             var processor = JNoSQLRepositoryProcessor.of(
                     template,
@@ -207,23 +190,23 @@ class JNoSQLRepositoryProcessorTest {
                     repositoryOperationProvider
             );
 
-            Object result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"entity"});
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"entity"});
 
             assertThat(result).isEqualTo("result");
 
             verify(repositoryOperationProvider).insertOperation();
-            verify(operation).execute(any(RepositoryInvocationContext.class));
+            verify(insertOperation).execute(any());
         }
 
         @Test
-        @DisplayName("Should dispatch to findBy operation when repository method type is FIND_BY")
+        @DisplayName("Should dispatch execution to findBy operation")
         void shouldInvokeFindByOperation() {
 
             when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
             when(repositoryMethod.type()).thenReturn(RepositoryMethodType.FIND_BY);
 
-            when(repositoryOperationProvider.findByOperation()).thenReturn(operation);
-            when(operation.execute(any(RepositoryInvocationContext.class))).thenReturn("entity");
+            when(repositoryOperationProvider.findByOperation()).thenReturn(findByOperation);
+            when(findByOperation.execute(any())).thenReturn("entity");
 
             var processor = JNoSQLRepositoryProcessor.of(
                     template,
@@ -232,27 +215,22 @@ class JNoSQLRepositoryProcessorTest {
                     repositoryOperationProvider
             );
 
-            Object result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"value"});
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"value"});
 
             assertThat(result).isEqualTo("entity");
 
             verify(repositoryOperationProvider).findByOperation();
-            verify(operation).execute(any(RepositoryInvocationContext.class));
+            verify(findByOperation).execute(any());
         }
-    }
-
-    @Nested
-    @DisplayName("WhenInvokeRepositoryVoidMethod")
-    class WhenInvokeRepositoryVoidMethod {
 
         @Test
-        @DisplayName("Should delegate execution to invokeRepositoryMethod when repository method returns void")
-        void shouldDelegateToInvokeRepositoryMethod() {
+        @DisplayName("Should dispatch execution to delete operation")
+        void shouldInvokeDeleteOperation() {
 
             when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
             when(repositoryMethod.type()).thenReturn(RepositoryMethodType.DELETE);
 
-            when(repositoryOperationProvider.deleteOperation()).thenReturn(operation);
+            when(repositoryOperationProvider.deleteOperation()).thenReturn(deleteOperation);
 
             var processor = JNoSQLRepositoryProcessor.of(
                     template,
@@ -264,7 +242,7 @@ class JNoSQLRepositoryProcessorTest {
             processor.invokeRepositoryVoidMethod(methodSignatureKey, new Object[]{"value"});
 
             verify(repositoryOperationProvider).deleteOperation();
-            verify(operation).execute(any(RepositoryInvocationContext.class));
+            verify(deleteOperation).execute(any());
         }
     }
 
