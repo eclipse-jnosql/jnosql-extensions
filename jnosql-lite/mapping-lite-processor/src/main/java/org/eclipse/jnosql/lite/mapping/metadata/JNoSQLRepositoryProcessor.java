@@ -22,7 +22,27 @@ import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 
 import java.util.Objects;
 
-
+/**
+ * Internal processor responsible for executing repository operations generated
+ * by the JNoSQL annotation processor.
+ *
+ * <p>This class acts as a runtime delegate used by compile-time generated
+ * repository implementations. Instead of relying on dynamic proxies and
+ * {@link java.lang.reflect.InvocationHandler}, generated repositories invoke
+ * this processor directly to execute repository methods.</p>
+ *
+ * <p>The processor uses {@link RepositoryMetadata} and {@link EntityMetadata}
+ * to resolve the repository method represented by a {@link MethodSignatureKey}.
+ * Once resolved, the execution is delegated to the appropriate operation
+ * provided by {@link RepositoryOperationProvider}.</p>
+ *
+ * <p>The {@link Template} instance is used as the central infrastructure
+ * component responsible for interacting with the underlying data store.</p>
+ *
+ * <p>This class is part of the JNoSQL Lite infrastructure and is intended
+ * for internal framework usage only. Application code should interact with
+ * repositories rather than invoking this processor directly.</p>
+ */
 public final class JNoSQLRepositoryProcessor {
 
     private final Template template;
@@ -43,11 +63,28 @@ public final class JNoSQLRepositoryProcessor {
     }
 
 
+    /**
+     * Executes a repository method that returns a result.
+     *
+     * <p>The {@link MethodSignatureKey} identifies the repository method
+     * previously analyzed during metadata creation. The provided parameters
+     * correspond to the arguments supplied to the repository method call.</p>
+     *
+     * @param methodSignatureKey the identifier representing the repository method
+     * @param params the parameters passed to the repository method
+     * @param <T> the return type of the repository method
+     * @return the result produced by the corresponding repository operation
+     */
     public <T> T execute(MethodSignatureKey methodSignatureKey, Object[] params) {
         return null;
     }
 
-
+    /**
+     * Executes a repository method that does not return a value.
+     *
+     * @param methodSignatureKey the identifier representing the repository method
+     * @param params the parameters passed to the repository method
+     */
     public void executeVoid(MethodSignatureKey methodSignatureKey, Object[] params) {
     }
 
