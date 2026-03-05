@@ -59,9 +59,10 @@ public final class JNoSQLRepositoryProcessor {
 
     private final RepositoryOperationProvider repositoryOperationProvider;
 
-    private JNoSQLRepositoryProcessor(Template template, EntityMetadata entityMetadata,
-                                RepositoryMetadata repositoryMetadata,
-                                     RepositoryOperationProvider repositoryOperationProvider) {
+    private JNoSQLRepositoryProcessor(Template template,
+                                      EntityMetadata entityMetadata,
+                                      RepositoryMetadata repositoryMetadata,
+                                      RepositoryOperationProvider repositoryOperationProvider) {
         this.template = template;
         this.entityMetadata = entityMetadata;
         this.repositoryMetadata = repositoryMetadata;
