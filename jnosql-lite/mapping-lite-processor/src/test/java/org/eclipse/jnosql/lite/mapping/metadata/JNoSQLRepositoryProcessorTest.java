@@ -22,10 +22,17 @@ import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
-import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
-import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
-import org.eclipse.jnosql.mapping.metadata.repository.spi.InsertOperation;
-import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ExistsByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.FindAllOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ProviderOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.SaveOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -61,16 +68,37 @@ class JNoSQLRepositoryProcessorTest {
     private RepositoryMethod repositoryMethod;
 
     @Mock
-    private RepositoryOperation operation;
+    private UpdateOperation updateOperation;
 
     @Mock
-    private InsertOperation insertOperation;
+    private SaveOperation saveOperation;
 
     @Mock
-    private FindByOperation findByOperation;
+    private DeleteByOperation deleteByOperation;
 
     @Mock
-    private DeleteOperation deleteOperation;
+    private FindAllOperation findAllOperation;
+
+    @Mock
+    private CountAllOperation countAllOperation;
+
+    @Mock
+    private CountByOperation countByOperation;
+
+    @Mock
+    private CursorPaginationOperation cursorPaginationOperation;
+
+    @Mock
+    private ParameterBasedOperation parameterBasedOperation;
+
+    @Mock
+    private ExistsByOperation existsByOperation;
+
+    @Mock
+    private QueryOperation queryOperation;
+
+    @Mock
+    private ProviderOperation providerOperation;
 
     @Nested
     @DisplayName("WhenCreateANewInstance")
@@ -136,50 +164,14 @@ class JNoSQLRepositoryProcessorTest {
     class WhenInvokeRepositoryMethod {
 
         @Test
-        @DisplayName("Should throw error when method signature key is null")
-        void shouldReturnErrorWhenMethodSignatureKeyIsNull() {
-
-            var processor = JNoSQLRepositoryProcessor.of(
-                    template,
-                    entityMetadata,
-                    repositoryMetadata,
-                    repositoryOperationProvider
-            );
-
-            Assertions.assertThatThrownBy(() ->
-                    processor.invokeRepositoryMethod(null, new Object[0]))
-                    .isInstanceOf(NullPointerException.class)
-                    .hasMessage("methodSignatureKey is required");
-        }
-
-        @Test
-        @DisplayName("Should throw error when repository method is not found")
-        void shouldReturnErrorWhenRepositoryMethodIsNotFound() {
-
-            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.empty());
-
-            var processor = JNoSQLRepositoryProcessor.of(
-                    template,
-                    entityMetadata,
-                    repositoryMetadata,
-                    repositoryOperationProvider
-            );
-
-            Assertions.assertThatThrownBy(() ->
-                    processor.invokeRepositoryMethod(methodSignatureKey, new Object[0]))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Method not found");
-        }
-
-        @Test
-        @DisplayName("Should dispatch execution to insert operation")
-        void shouldInvokeInsertOperation() {
+        @DisplayName("Should dispatch execution to update operation")
+        void shouldInvokeUpdateOperation() {
 
             Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
-            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.INSERT);
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.UPDATE);
 
-            Mockito.when(repositoryOperationProvider.insertOperation()).thenReturn(insertOperation);
-            Mockito.when(insertOperation.execute(ArgumentMatchers.any())).thenReturn("result");
+            Mockito.when(repositoryOperationProvider.updateOperation()).thenReturn(updateOperation);
+            Mockito.when(updateOperation.execute(ArgumentMatchers.any())).thenReturn("result");
 
             var processor = JNoSQLRepositoryProcessor.of(
                     template,
@@ -192,19 +184,94 @@ class JNoSQLRepositoryProcessorTest {
 
             Assertions.assertThat(result).isEqualTo("result");
 
-            Mockito.verify(repositoryOperationProvider).insertOperation();
-            Mockito.verify(insertOperation).execute(ArgumentMatchers.any());
+            Mockito.verify(repositoryOperationProvider).updateOperation();
+            Mockito.verify(updateOperation).execute(ArgumentMatchers.any());
         }
 
         @Test
-        @DisplayName("Should dispatch execution to findBy operation")
-        void shouldInvokeFindByOperation() {
+        @DisplayName("Should dispatch execution to save operation")
+        void shouldInvokeSaveOperation() {
 
             Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
-            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.FIND_BY);
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.SAVE);
 
-            Mockito.when(repositoryOperationProvider.findByOperation()).thenReturn(findByOperation);
-            Mockito.when(findByOperation.execute(ArgumentMatchers.any())).thenReturn("entity");
+            Mockito.when(repositoryOperationProvider.saveOperation()).thenReturn(saveOperation);
+            Mockito.when(saveOperation.execute(ArgumentMatchers.any())).thenReturn("result");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"entity"});
+
+            Assertions.assertThat(result).isEqualTo("result");
+
+            Mockito.verify(repositoryOperationProvider).saveOperation();
+            Mockito.verify(saveOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to deleteBy operation")
+        void shouldInvokeDeleteByOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.DELETE_BY);
+
+            Mockito.when(repositoryOperationProvider.deleteByOperation()).thenReturn(deleteByOperation);
+            Mockito.when(deleteByOperation.execute(ArgumentMatchers.any())).thenReturn("result");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"entity"});
+
+            Assertions.assertThat(result).isEqualTo("result");
+
+            Mockito.verify(repositoryOperationProvider).deleteByOperation();
+            Mockito.verify(deleteByOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to countAll operation")
+        void shouldInvokeCountAllOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.COUNT_ALL);
+
+            Mockito.when(repositoryOperationProvider.countAllOperation()).thenReturn(countAllOperation);
+            Mockito.when(countAllOperation.execute(ArgumentMatchers.any())).thenReturn(10L);
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{});
+
+            Assertions.assertThat(result).isEqualTo(10L);
+
+            Mockito.verify(repositoryOperationProvider).countAllOperation();
+            Mockito.verify(countAllOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to countBy operation")
+        void shouldInvokeCountByOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.COUNT_BY);
+
+            Mockito.when(repositoryOperationProvider.countByOperation()).thenReturn(countByOperation);
+            Mockito.when(countByOperation.execute(ArgumentMatchers.any())).thenReturn(5L);
 
             var processor = JNoSQLRepositoryProcessor.of(
                     template,
@@ -215,20 +282,21 @@ class JNoSQLRepositoryProcessorTest {
 
             var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"value"});
 
-            Assertions.assertThat(result).isEqualTo("entity");
+            Assertions.assertThat(result).isEqualTo(5L);
 
-            Mockito.verify(repositoryOperationProvider).findByOperation();
-            Mockito.verify(findByOperation).execute(ArgumentMatchers.any());
+            Mockito.verify(repositoryOperationProvider).countByOperation();
+            Mockito.verify(countByOperation).execute(ArgumentMatchers.any());
         }
 
         @Test
-        @DisplayName("Should dispatch execution to delete operation")
-        void shouldInvokeDeleteOperation() {
+        @DisplayName("Should dispatch execution to cursor pagination operation")
+        void shouldInvokeCursorPaginationOperation() {
 
             Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
-            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.DELETE);
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.CURSOR_PAGINATION);
 
-            Mockito.when(repositoryOperationProvider.deleteOperation()).thenReturn(deleteOperation);
+            Mockito.when(repositoryOperationProvider.cursorPaginationOperation()).thenReturn(cursorPaginationOperation);
+            Mockito.when(cursorPaginationOperation.execute(ArgumentMatchers.any())).thenReturn("cursor");
 
             var processor = JNoSQLRepositoryProcessor.of(
                     template,
@@ -237,10 +305,137 @@ class JNoSQLRepositoryProcessorTest {
                     repositoryOperationProvider
             );
 
-            processor.invokeRepositoryVoidMethod(methodSignatureKey, new Object[]{"value"});
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"cursor"});
 
-            Mockito.verify(repositoryOperationProvider).deleteOperation();
-            Mockito.verify(deleteOperation).execute(ArgumentMatchers.any());
+            Assertions.assertThat(result).isEqualTo("cursor");
+
+            Mockito.verify(repositoryOperationProvider).cursorPaginationOperation();
+            Mockito.verify(cursorPaginationOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to parameter based operation")
+        void shouldInvokeParameterBasedOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.PARAMETER_BASED);
+
+            Mockito.when(repositoryOperationProvider.parameterBasedOperation()).thenReturn(parameterBasedOperation);
+            Mockito.when(parameterBasedOperation.execute(ArgumentMatchers.any())).thenReturn("result");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"param"});
+
+            Assertions.assertThat(result).isEqualTo("result");
+
+            Mockito.verify(repositoryOperationProvider).parameterBasedOperation();
+            Mockito.verify(parameterBasedOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to existsBy operation")
+        void shouldInvokeExistsByOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.EXISTS_BY);
+
+            Mockito.when(repositoryOperationProvider.existsByOperation()).thenReturn(existsByOperation);
+            Mockito.when(existsByOperation.execute(ArgumentMatchers.any())).thenReturn(true);
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"value"});
+
+            Assertions.assertThat(result).isEqualTo(true);
+
+            Mockito.verify(repositoryOperationProvider).existsByOperation();
+            Mockito.verify(existsByOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to findAll operation")
+        void shouldInvokeFindAllOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.FIND_ALL);
+
+            Mockito.when(repositoryOperationProvider.findAllOperation()).thenReturn(findAllOperation);
+            Mockito.when(findAllOperation.execute(ArgumentMatchers.any())).thenReturn("all");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{});
+
+            Assertions.assertThat(result).isEqualTo("all");
+
+            Mockito.verify(repositoryOperationProvider).findAllOperation();
+            Mockito.verify(findAllOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to query operation")
+        void shouldInvokeQueryOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.QUERY);
+
+            Mockito.when(repositoryOperationProvider.queryOperation()).thenReturn(queryOperation);
+            Mockito.when(queryOperation.execute(ArgumentMatchers.any())).thenReturn("query");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"query"});
+
+            Assertions.assertThat(result).isEqualTo("query");
+
+            Mockito.verify(repositoryOperationProvider).queryOperation();
+            Mockito.verify(queryOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should dispatch execution to provider operation")
+        void shouldInvokeProviderOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.PROVIDER_OPERATION);
+
+            Mockito.when(repositoryOperationProvider.providerOperation()).thenReturn(providerOperation);
+            Mockito.when(providerOperation.execute(ArgumentMatchers.any())).thenReturn("provider");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"provider"});
+
+            Assertions.assertThat(result).isEqualTo("provider");
+
+            Mockito.verify(repositoryOperationProvider).providerOperation();
+            Mockito.verify(providerOperation).execute(ArgumentMatchers.any());
         }
     }
 
