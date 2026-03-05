@@ -27,7 +27,15 @@ final class MethodSignatureKeyConstant {
         this.parameterClassLiterals = parameterClassLiterals;
     }
 
-    public String getConstantName() { return constantName; }
-    public String getMethodName() { return methodName; }
-    public String getParameterClassLiterals() { return parameterClassLiterals; }
+    public String getConstantName() {
+        return constantName;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public String getParameterClassLiterals() {
+        return parameterClassLiterals;
+    }
 }
