@@ -112,6 +112,7 @@ class RepositoryElement {
         return methodSignatureKeys;
     }
 
+
     static RepositoryElement of(Element element, ProcessingEnvironment processingEnv, DatabaseType type) {
         if (isTypeElement(element)) {
             TypeElement typeElement = (TypeElement) element;
