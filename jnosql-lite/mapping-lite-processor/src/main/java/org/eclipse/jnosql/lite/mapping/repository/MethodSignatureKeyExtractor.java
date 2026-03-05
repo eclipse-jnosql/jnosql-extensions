@@ -46,18 +46,21 @@ final class MethodSignatureKeyExtractor {
 
         String parameterClassLiterals = method.getParameters().stream()
                 .map(p -> toClassLiteral(p.asType(), env))
-                .collect(Collectors.joining(", ")); // empty => ""
+                .collect(Collectors.joining(", "));
 
         return new MethodSignatureKeyConstant(constantName, methodName, parameterClassLiterals);
     }
 
     private static String buildConstantName(ExecutableElement method) {
-        // your requested shape: METHOD_NAME_PARANAME_NAME_PARANAME_
-        StringBuilder sb = new StringBuilder(method.getSimpleName().toString().toUpperCase()).append("_");
-        for (VariableElement p : method.getParameters()) {
-            sb.append(p.getSimpleName().toString().toUpperCase()).append("_");
-        }
-        return sb.toString();
+        String methodToken = method.getSimpleName().toString().toUpperCase();
+
+        String paramsToken = method.getParameters().stream()
+                .map(VariableElement::getSimpleName)
+                .map(Object::toString)
+                .map(String::toUpperCase)
+                .collect(Collectors.joining("_"));
+
+        return paramsToken.isEmpty() ? methodToken : methodToken + "_" + paramsToken;
     }
 
     private static String toClassLiteral(TypeMirror mirror, ProcessingEnvironment env) {
@@ -67,10 +70,7 @@ final class MethodSignatureKeyExtractor {
             return mirror.getKind().name().toLowerCase() + ".class";
         }
 
-        // erase generics: List<String> -> java.util.List
         TypeMirror erased = types.erasure(mirror);
-
-        // safest: FQCN.class (no import management required)
         return erased.toString() + ".class";
     }
 
