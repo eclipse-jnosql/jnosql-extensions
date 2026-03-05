@@ -51,9 +51,9 @@ import static org.eclipse.jnosql.mapping.IdNotFoundException.KEY_NOT_FOUND_EXCEP
 @Database(value = DatabaseType.{{providerType}})
 public class {{className}} implements {{repository}} {
 
-    {{#methodSignatureKeys}}
-        {{{.}}}
-    {{/methodSignatureKeys}}
+{{#element.methodSignatureKeys}}
+    static final MethodSignatureKey {{constantName}} = new MethodSignatureKey("{{methodName}}", List.of({{parameterClassLiterals}}));
+{{/element.methodSignatureKeys}}
 
     {{^methods.isEmpty}}
     private static final org.eclipse.jnosql.communication.semistructured.SelectQueryParser SELECT_PARSER =
