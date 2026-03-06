@@ -189,6 +189,17 @@ class MethodMetadata {
         return Objects.nonNull(find);
     }
 
+    public String getParametersAsObjectArray() {
+        if (parameters.isEmpty()) {
+            return "new Object[]{}";
+        }
+
+        String joined = parameters.stream()
+                .map(Parameter::name)
+                .collect(Collectors.joining(", "));
+        return "new Object[]{" + joined + "}";
+    }
+
     public OrderBy[] orders() {
         return orders;
     }
