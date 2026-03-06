@@ -66,6 +66,7 @@ class MethodMetadata {
     private final Query query;
     private final Find find;
     private final OrderBy[] orders;
+    private final String constantName;
 
     private final DatabaseType type;
 
@@ -75,7 +76,8 @@ class MethodMetadata {
 
     private MethodMetadata(String methodName, TypeElement returnElement, String returnType,
                            List<Parameter> parameters, DatabaseType type, String entityType,
-                           Query query, Insert insert, Update update, Delete delete, Save save, Find find, OrderBy[] orders) {
+                           Query query, Insert insert, Update update, Delete delete, Save save, Find find, OrderBy[] orders,
+                           String constantName) {
 
         this.methodName = methodName;
         this.returnElement = returnElement;
@@ -90,6 +92,7 @@ class MethodMetadata {
         this.save = save;
         this.find = find;
         this.orders = orders;
+        this.constantName = constantName;
     }
 
     public String getMethodName() {
@@ -189,6 +192,10 @@ class MethodMetadata {
         return Objects.nonNull(find);
     }
 
+    public String getConstantName() {
+        return constantName;
+    }
+
     public String getParametersAsObjectArray() {
         if (parameters.isEmpty()) {
             return "new Object[]{}";
@@ -223,9 +230,9 @@ class MethodMetadata {
             Save save = method.getAnnotation(Save.class);
             Find find = method.getAnnotation(Find.class);
             OrderBy[] orders = method.getAnnotationsByType(OrderBy.class);
-
+            String constantName = MethodSignatureKeyExtractor.buildConstantName(method);
             return new MethodMetadata(methodName, returnElement, returnType, parameters, type, entityType, query,
-                    insert, update, delete, save, find, orders);
+                    insert, update, delete, save, find, orders, constantName);
         }
         return null;
     }
@@ -233,4 +240,6 @@ class MethodMetadata {
     private static boolean isDefaultMethod(ExecutableElement methodElement) {
         return methodElement.getModifiers().contains(Modifier.DEFAULT);
     }
+
+
 }
