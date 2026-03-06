@@ -52,7 +52,9 @@ import static org.eclipse.jnosql.mapping.IdNotFoundException.KEY_NOT_FOUND_EXCEP
 public class {{className}} implements {{repository}} {
 
 {{#element.methodSignatureKeys}}
-    static final MethodSignatureKey {{constantName}} = new MethodSignatureKey("{{methodName}}", List.of({{parameterClassLiterals}}));
+    static final MethodSignatureKey {{constantName}} =
+    new MethodSignatureKey("{{methodName}}", List.of({{parameterClassLiterals}}));
+
 {{/element.methodSignatureKeys}}
 
     {{^methods.isEmpty}}
