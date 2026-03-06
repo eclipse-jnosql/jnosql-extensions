@@ -546,5 +546,99 @@ class JNoSQLRepositoryProcessorTest {
         }
     }
 
+    @Nested
+    @DisplayName("WhenInvokeRepositoryVoidMethod")
+    class WhenInvokeRepositoryVoidMethod {
+
+        @Test
+        @DisplayName("Should execute insert operation")
+        void shouldInvokeInsertOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.INSERT);
+
+            Mockito.when(repositoryOperationProvider.insertOperation()).thenReturn(insertOperation);
+            Mockito.when(insertOperation.execute(ArgumentMatchers.any())).thenReturn("ignored");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            processor.invokeRepositoryVoidMethod(methodSignatureKey, new Object[]{"entity"});
+
+            Mockito.verify(repositoryOperationProvider).insertOperation();
+            Mockito.verify(insertOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should execute delete operation")
+        void shouldInvokeDeleteOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.DELETE);
+
+            Mockito.when(repositoryOperationProvider.deleteOperation()).thenReturn(deleteOperation);
+            Mockito.when(deleteOperation.execute(ArgumentMatchers.any())).thenReturn("ignored");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            processor.invokeRepositoryVoidMethod(methodSignatureKey, new Object[]{"entity"});
+
+            Mockito.verify(repositoryOperationProvider).deleteOperation();
+            Mockito.verify(deleteOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should execute findBy operation")
+        void shouldInvokeFindByOperation() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.FIND_BY);
+
+            Mockito.when(repositoryOperationProvider.findByOperation()).thenReturn(findByOperation);
+            Mockito.when(findByOperation.execute(ArgumentMatchers.any())).thenReturn("ignored");
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            processor.invokeRepositoryVoidMethod(methodSignatureKey, new Object[]{"value"});
+
+            Mockito.verify(repositoryOperationProvider).findByOperation();
+            Mockito.verify(findByOperation).execute(ArgumentMatchers.any());
+        }
+
+        @Test
+        @DisplayName("Should throw error when operation type is unsupported")
+        void shouldThrowErrorWhenOperationIsUnsupported() {
+
+            Mockito.when(repositoryMetadata.find(methodSignatureKey)).thenReturn(Optional.of(repositoryMethod));
+            Mockito.when(repositoryMethod.type()).thenReturn(RepositoryMethodType.UNKNOWN);
+
+            var processor = JNoSQLRepositoryProcessor.of(
+                    template,
+                    entityMetadata,
+                    repositoryMetadata,
+                    repositoryOperationProvider
+            );
+
+            Assertions.assertThatThrownBy(() ->
+                            processor.invokeRepositoryVoidMethod(methodSignatureKey, new Object[]{}))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Unsupported repository operation");
+        }
+    }
+
 
 }
