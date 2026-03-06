@@ -74,8 +74,6 @@ public class {{className}} implements {{repository}} {
 
     private final JNoSQLRepositoryProcessor jnosqlRepositoryProcessor;
 
-    private final RepositoryOperationProvider repositoryOperationProvider;
-
     @jakarta.inject.Inject
     public {{className}}(@Database(value = DatabaseType.{{providerType}}) SemiStructuredTemplate template,
                          RepositoryOperationProvider repositoryOperationProvider) {
@@ -83,11 +81,16 @@ public class {{className}} implements {{repository}} {
         EntitiesMetadata entities = LiteEntitiesMetadata.INSTANCE;
         RepositoriesMetadata repositories = LiteRepositoriesMetadata.INSTANCE;
         this.metadata = entities.get({{entityType}}.class);
+        var repositoryMetadata = repositories.get({{repository}}.class)
+        .orElseThrow();
+        this.jnosqlRepositoryProcessor = JNoSQLRepositoryProcessor.of(template, metadata, repositoryMetadata,
+        repositoryOperationProvider);
     }
 
     public {{className}}() {
         this.template = null;
         this.metadata = null;
+        this.jnosqlRepositoryProcessor = null;
    }
 
    SemiStructuredTemplate template(){
