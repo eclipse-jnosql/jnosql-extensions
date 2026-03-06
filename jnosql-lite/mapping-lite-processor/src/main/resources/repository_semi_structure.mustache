@@ -19,14 +19,18 @@ import jakarta.data.Sort;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.lite.mapping.metadata.JNoSQLRepositoryProcessor;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteRepositoriesMetadata;
 import org.eclipse.jnosql.mapping.core.NoSQLPage;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 {{^methodSignatureKeys.isEmpty}}
 import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 {{/methodSignatureKeys.isEmpty}}
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
 import javax.annotation.processing.Generated;
@@ -67,6 +71,10 @@ public class {{className}} implements {{repository}} {
     private final SemiStructuredTemplate template;
 
     private final EntityMetadata metadata;
+
+    private final JNoSQLRepositoryProcessor jnosqlRepositoryProcessor;
+
+    private final RepositoryOperationProvider repositoryOperationProvider;
 
     @jakarta.inject.Inject
     public {{className}}(@Database(value = DatabaseType.{{providerType}}) SemiStructuredTemplate template) {
