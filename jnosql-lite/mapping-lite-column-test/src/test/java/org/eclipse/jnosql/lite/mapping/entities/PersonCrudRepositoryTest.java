@@ -21,6 +21,7 @@ import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.column.ColumnTemplate;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -43,6 +44,9 @@ import static org.mockito.Mockito.*;
 class PersonCrudRepositoryTest {
     @Mock
     private ColumnTemplate template;
+
+    @Mock
+    private RepositoryOperationProvider repositoryOperationProvider;
 
     @InjectMocks
     private PersonCrudRepositoryLiteColumn personRepository;
