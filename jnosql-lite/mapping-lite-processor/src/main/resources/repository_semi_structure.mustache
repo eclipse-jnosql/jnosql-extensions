@@ -77,9 +77,11 @@ public class {{className}} implements {{repository}} {
     private final RepositoryOperationProvider repositoryOperationProvider;
 
     @jakarta.inject.Inject
-    public {{className}}(@Database(value = DatabaseType.{{providerType}}) SemiStructuredTemplate template) {
+    public {{className}}(@Database(value = DatabaseType.{{providerType}}) SemiStructuredTemplate template,
+                         RepositoryOperationProvider repositoryOperationProvider) {
         this.template = Objects.requireNonNull(template, "template is required");
         EntitiesMetadata entities = LiteEntitiesMetadata.INSTANCE;
+        RepositoriesMetadata repositories = LiteRepositoriesMetadata.INSTANCE;
         this.metadata = entities.get({{entityType}}.class);
     }
 
