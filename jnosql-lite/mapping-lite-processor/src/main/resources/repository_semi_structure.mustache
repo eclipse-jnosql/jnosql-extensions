@@ -234,7 +234,14 @@ public class {{className}} implements {{repository}} {
        {{{.}}};
     {{/sourceCode}}
     {{#hasReturn}}
-       return {{{returnValue}}};
+       return jnosqlRepositoryProcessor.invokeRepositoryMethod({{constantName}},
+        new Object[]{ {{#parameters}}{{name}}{{^last}}, {{/last}}{{/parameters}} }
+        );
+    {{/hasReturn}}
+    {{^hasReturn}}
+       jnosqlRepositoryProcessor.invokeRepositoryVoidMethod({{constantName}},
+            new Object[]{ {{#parameters}}{{name}}{{^last}},  {{/last}}{{/parameters}} }
+            );
     {{/hasReturn}}
     }
 
