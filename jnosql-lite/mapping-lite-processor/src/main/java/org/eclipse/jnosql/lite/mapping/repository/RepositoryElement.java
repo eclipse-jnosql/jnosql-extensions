@@ -43,6 +43,7 @@ class RepositoryElement {
     private final boolean isNoSQLRepository;
     private final boolean isCrudRepository;
     private final List<MethodMetadata> methods;
+    private final List<MethodSignatureKeyConstant> methodSignatureKeys;
 
     public RepositoryElement(TypeElement element,
                              String entityType, String keyType,
@@ -50,7 +51,8 @@ class RepositoryElement {
                              DatabaseType type,
                              boolean isNoSQLRepository,
                              boolean isCrudRepository,
-                             List<MethodMetadata> methods) {
+                             List<MethodMetadata> methods,
+                             List<MethodSignatureKeyConstant> methodSignatureKeys) {
         this.element = element;
         this.entityType = entityType;
         this.keyType = keyType;
@@ -59,6 +61,7 @@ class RepositoryElement {
         this.isNoSQLRepository = isNoSQLRepository;
         this.isCrudRepository = isCrudRepository;
         this.methods = methods;
+        this.methodSignatureKeys = methodSignatureKeys;
     }
 
     public String getClassName() {
@@ -105,6 +108,11 @@ class RepositoryElement {
         return this.methods;
     }
 
+    public List<MethodSignatureKeyConstant> getMethodSignatureKeys() {
+        return methodSignatureKeys;
+    }
+
+
     static RepositoryElement of(Element element, ProcessingEnvironment processingEnv, DatabaseType type) {
         if (isTypeElement(element)) {
             TypeElement typeElement = (TypeElement) element;
@@ -116,6 +124,8 @@ class RepositoryElement {
 
                 TypeMirror typeMirror = mirror.get();
                 List<String> parameters = RepositoryUtil.findParameters(typeMirror);
+                List<MethodSignatureKeyConstant> methodSignatureKeys =
+                        MethodSignatureKeyExtractor.extract(typeElement.getEnclosedElements(), processingEnv);
                 String entityType = parameters.get(0);
                 String keyType = parameters.get(1);
                 String repositoryInterface = typeElement.getQualifiedName().toString();
@@ -125,7 +135,14 @@ class RepositoryElement {
                         .filter(Objects::nonNull)
                         .collect(Collectors.toList());
                 return new RepositoryElement(typeElement,
-                        entityType, keyType, repositoryInterface, type, isNoSQLRepository, isCrudRepository, methods);
+                        entityType,
+                        keyType,
+                        repositoryInterface,
+                        type,
+                        isNoSQLRepository,
+                        isCrudRepository,
+                        methods,
+                        methodSignatureKeys);
             }
         }
         throw new ValidationException("The interface %s must extends %s"

@@ -24,6 +24,7 @@ import org.eclipse.jnosql.communication.Condition;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.graph.GraphTemplate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +60,9 @@ import static org.mockito.Mockito.when;
 class PersonRepositoryTest {
     @Mock
     private GraphTemplate template;
+
+    @Mock
+    private RepositoryOperationProvider repositoryOperationProvider;
 
     @InjectMocks
     private PersonRepositoryLiteGraph personRepository;
