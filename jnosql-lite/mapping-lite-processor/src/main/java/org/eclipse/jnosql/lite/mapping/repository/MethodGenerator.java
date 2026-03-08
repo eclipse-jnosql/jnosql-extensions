@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping.repository;
 
+import java.util.Collections;
 import java.util.List;
 
 public class MethodGenerator {
@@ -25,8 +26,7 @@ public class MethodGenerator {
     }
 
     public List<String> getLines() {
-        var methodBuilder = SemiStructuredMethodBuilder.of(this.metadata);
-        return methodBuilder.apply(this.metadata);
+        return Collections.emptyList();
     }
 
     public boolean hasReturn() {
