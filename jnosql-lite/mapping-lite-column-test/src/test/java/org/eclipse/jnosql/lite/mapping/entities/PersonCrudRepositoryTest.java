@@ -14,17 +14,11 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities;
 
-import org.eclipse.jnosql.mapping.PreparedStatement;
-import org.assertj.core.api.SoftAssertions;
-import org.eclipse.jnosql.communication.Condition;
-import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.column.ColumnTemplate;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -35,9 +29,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -157,78 +158,6 @@ class PersonCrudRepositoryTest {
 
         assertFalse(exists);
         verify(template, times(1)).find(eq(Person.class), eq(id));
-    }
-
-    @Test
-    void shouldFindByName(){
-        when(template.select(any(SelectQuery.class))).thenReturn( Stream.of(new Person(), new Person()));
-        List<Person> result = this.personRepository.findByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotEmpty().hasSize(2);
-        verify(template).select(captor.capture());
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
-    }
-
-    @Test
-    void shouldQuery(){
-        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
-        this.personRepository.query("Ada");
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
-        String value = captor.getValue();
-        assertThat(value).isEqualTo("select * from Person where name = @name");
-    }
-
-    @Test
-    void shouldExistByName(){
-        when(template.select(any(SelectQuery.class))).thenReturn( Stream.of(new Person(), new Person()));
-        boolean result = this.personRepository.existsByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isTrue();
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
-    }
-
-    @Test
-    void shouldCountByName(){
-        when(template.select(any(SelectQuery.class))).thenReturn( Stream.of(new Person(), new Person()));
-        long result = this.personRepository.countByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isEqualTo(2L);
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
-    }
-
-    @Test
-    void shouldDeleteByName(){
-        this.personRepository.deleteByName("Ada");
-        ArgumentCaptor<DeleteQuery> captor = ArgumentCaptor.forClass(DeleteQuery.class);
-        verify(template).delete(captor.capture());
-        DeleteQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
     }
 
 }

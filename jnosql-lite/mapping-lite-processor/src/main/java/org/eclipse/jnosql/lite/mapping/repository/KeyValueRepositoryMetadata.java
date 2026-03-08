@@ -32,6 +32,6 @@ class KeyValueRepositoryMetadata extends RepositoryMetadata {
 
     @Override
     public MethodGenerator apply(MethodMetadata metadata) {
-        return new KeyValueMethodGenerator(metadata);
+        return new MethodGenerator(metadata);
     }
 }

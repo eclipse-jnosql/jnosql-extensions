@@ -51,7 +51,7 @@ final class MethodSignatureKeyExtractor {
         return new MethodSignatureKeyConstant(constantName, methodName, parameterClassLiterals);
     }
 
-    private static String buildConstantName(ExecutableElement method) {
+    static String buildConstantName(ExecutableElement method) {
         String methodToken = method.getSimpleName().toString().toUpperCase();
 
         String paramsToken = method.getParameters().stream()
