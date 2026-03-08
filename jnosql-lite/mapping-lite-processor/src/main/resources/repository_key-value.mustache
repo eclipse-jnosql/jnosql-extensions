@@ -14,8 +14,10 @@
 */
 package {{package}};
 
+import org.eclipse.jnosql.lite.mapping.metadata.JNoSQLRepositoryProcessor;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteRepositoriesMetadata;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
@@ -54,6 +56,8 @@ public class {{className}} implements {{repository}} {
     private final KeyValueTemplate template;
 
     private final EntityMetadata metadata;
+
+    private final JNoSQLRepositoryProcessor jnosqlRepositoryProcessor;
 
     @Inject
     public {{className}}(KeyValueTemplate template,
