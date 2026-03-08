@@ -15,9 +15,14 @@
 package {{package}};
 
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteRepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+{{^methodSignatureKeys.isEmpty}}
+import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
+{{/methodSignatureKeys.isEmpty}}
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 
 import jakarta.data.Order;
 import jakarta.data.page.Page;
