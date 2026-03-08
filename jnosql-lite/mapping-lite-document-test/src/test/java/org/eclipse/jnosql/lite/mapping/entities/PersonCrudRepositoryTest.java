@@ -14,21 +14,21 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities;
 
-import jakarta.data.Order;
-import jakarta.data.Sort;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
-import org.eclipse.jnosql.mapping.PreparedStatement;
-import org.assertj.core.api.SoftAssertions;
-import org.eclipse.jnosql.communication.Condition;
-import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ExistsByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -36,13 +36,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -165,14 +172,121 @@ class PersonCrudRepositoryTest {
     }
 
     @Test
+    @DisplayName("When invoking a derived findBy query the repository must delegate execution to FindByOperation")
     void shouldFindByName() {
 
+        FindByOperation operation = mock(FindByOperation.class);
+
+        when(repositoryOperationProvider.findByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Person()));
+
+        personRepository.findByName("Ada");
+
+        verify(repositoryOperationProvider).findByOperation();
+        verify(operation).execute(any());
     }
 
+    @Test
+    @DisplayName("When invoking a repository method annotated with @Query the repository must delegate to QueryOperation")
+    void shouldQuery() {
 
+        QueryOperation operation = mock(QueryOperation.class);
 
+        when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Person()));
 
+        personRepository.query("Ada");
 
+        verify(repositoryOperationProvider).queryOperation();
+        verify(operation).execute(any());
+    }
 
+    @Test
+    @DisplayName("When invoking another explicit @Query method the repository must also delegate to QueryOperation")
+    void shouldQuery2() {
 
+        QueryOperation operation = mock(QueryOperation.class);
+
+        when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Person()));
+
+        personRepository.query2("Ada");
+
+        verify(repositoryOperationProvider).queryOperation();
+        verify(operation).execute(any());
+    }
+
+    @Test
+    @DisplayName("When invoking existsBy derived query the repository must delegate to ExistsByOperation")
+    void shouldExistsByName() {
+
+        ExistsByOperation operation = mock(ExistsByOperation.class);
+
+        when(repositoryOperationProvider.existsByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(true);
+
+        personRepository.existsByName("Ada");
+
+        verify(repositoryOperationProvider).existsByOperation();
+        verify(operation).execute(any());
+    }
+
+    @Test
+    @DisplayName("When invoking countBy derived projection the repository must delegate to CountByOperation")
+    void shouldCountByName() {
+
+        CountByOperation operation = mock(CountByOperation.class);
+
+        when(repositoryOperationProvider.countByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(2L);
+
+        personRepository.countByName("Ada");
+
+        verify(repositoryOperationProvider).countByOperation();
+        verify(operation).execute(any());
+    }
+
+    @Test
+    @DisplayName("When invoking deleteBy derived query the repository must delegate to DeleteByOperation")
+    void shouldDeleteByName() {
+
+        DeleteByOperation operation = mock(DeleteByOperation.class);
+
+        when(repositoryOperationProvider.deleteByOperation()).thenReturn(operation);
+
+        personRepository.deleteByName("Ada");
+
+        verify(repositoryOperationProvider).deleteByOperation();
+        verify(operation).execute(any());
+    }
+
+    @Test
+    @DisplayName("When invoking parameter-based repository methods the repository must delegate to ParameterBasedOperation")
+    void shouldParameterBasedOperation() {
+
+        ParameterBasedOperation operation = mock(ParameterBasedOperation.class);
+
+        when(repositoryOperationProvider.parameterBasedOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of());
+
+        personRepository.age(10);
+
+        verify(repositoryOperationProvider).parameterBasedOperation();
+        verify(operation).execute(any());
+    }
+
+    @Test
+    @DisplayName("When invoking cursor pagination methods the repository must delegate to CursorPaginationOperation")
+    void shouldCursorPagination() {
+
+        CursorPaginationOperation operation = mock(CursorPaginationOperation.class);
+
+        when(repositoryOperationProvider.cursorPaginationOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(mock(CursoredPage.class));
+
+        personRepository.findByName("Ada", PageRequest.ofPage(1).size(2));
+
+        verify(repositoryOperationProvider).cursorPaginationOperation();
+        verify(operation).execute(any());
+    }
 }
