@@ -16,10 +16,21 @@ package org.eclipse.jnosql.lite.mapping.repository;
 
 import java.util.List;
 
-public interface MethodGenerator {
+public class MethodGenerator {
 
-    List<String> getLines();
+    private final MethodMetadata metadata;
 
-    boolean hasReturn();
+    MethodGenerator(MethodMetadata metadata) {
+        this.metadata = metadata;
+    }
+
+    public List<String> getLines() {
+        var methodBuilder = SemiStructuredMethodBuilder.of(this.metadata);
+        return methodBuilder.apply(this.metadata);
+    }
+
+    public boolean hasReturn() {
+        return !metadata.getReturnType().equals(Void.TYPE.getName());
+    }
 
 }
