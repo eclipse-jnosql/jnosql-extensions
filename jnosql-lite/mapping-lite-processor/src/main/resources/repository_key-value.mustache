@@ -51,10 +51,16 @@ public class {{className}} implements {{repository}} {
     private final EntityMetadata metadata;
 
     @Inject
-    public {{className}}(KeyValueTemplate template) {
+    public {{className}}(KeyValueTemplate template,
+                         RepositoryOperationProvider repositoryOperationProvider) {
         this.template = Objects.requireNonNull(template, "template is required");
         EntitiesMetadata entities = LiteEntitiesMetadata.INSTANCE;
+        RepositoriesMetadata repositories = LiteRepositoriesMetadata.INSTANCE;
         this.metadata = entities.get({{entityType}}.class);
+        var repositoryMetadata = repositories.get({{repository}}.class)
+        .orElseThrow();
+        this.jnosqlRepositoryProcessor = JNoSQLRepositoryProcessor.of(template, metadata, repositoryMetadata,
+        repositoryOperationProvider);
     }
 
     public {{className}}() {
