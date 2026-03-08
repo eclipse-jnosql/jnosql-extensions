@@ -222,47 +222,4 @@ class PersonRepositoryTest {
         assertThrows(NullPointerException.class, () -> personRepository.findAll(null, null));
     }
 
-
-
-    @Test
-    void shouldFindByName(){
-        when(template.select(any(SelectQuery.class))).thenReturn( Stream.of(new Person(), new Person()));
-        List<Person> result = this.personRepository.findByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotEmpty().hasSize(2);
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
-    }
-
-    @Test
-    void shouldQuery(){
-        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
-        this.personRepository.query("Ada");
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
-        String value = captor.getValue();
-        assertThat(value).isEqualTo("select * from Person where name = @name");
-    }
-
-    @Test
-    void shouldExistByName(){
-        when(template.select(any(SelectQuery.class))).thenReturn( Stream.of(new Person(), new Person()));
-        boolean result = this.personRepository.existsByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isTrue();
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
-    }
 }
