@@ -53,6 +53,12 @@ import static org.eclipse.jnosql.mapping.IdNotFoundException.KEY_NOT_FOUND_EXCEP
 @Generated(value = "JNoSQL Lite KeyValue Repository Generator", date = "{{now}}")
 public class {{className}} implements {{repository}} {
 
+    {{#element.methodSignatureKeys}}
+        static final MethodSignatureKey {{constantName}} =
+        new MethodSignatureKey("{{methodName}}", List.of({{parameterClassLiterals}}));
+
+    {{/element.methodSignatureKeys}}
+
     private final KeyValueTemplate template;
 
     private final EntityMetadata metadata;
