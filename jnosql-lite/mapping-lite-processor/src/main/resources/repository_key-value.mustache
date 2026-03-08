@@ -175,11 +175,13 @@ public class {{className}} implements {{repository}} {
     {{#parameters}}
        requireNonNull({{name}}, "{{name}} is required");
     {{/parameters}}
-    {{#sourceCode}}
-       {{{.}}};
-    {{/sourceCode}}
     {{#hasReturn}}
-       return {{{returnValue}}};
+        return jnosqlRepositoryProcessor.invokeRepositoryMethod({{constantName}},
+        {{{parametersAsObjectArray}}});
+    {{/hasReturn}}
+    {{^hasReturn}}
+        jnosqlRepositoryProcessor.invokeRepositoryVoidMethod({{constantName}},
+        {{{parametersAsObjectArray}}});
     {{/hasReturn}}
     }
 
