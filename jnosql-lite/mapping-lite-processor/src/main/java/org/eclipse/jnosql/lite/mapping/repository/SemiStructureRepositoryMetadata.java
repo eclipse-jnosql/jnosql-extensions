@@ -37,6 +37,6 @@ class SemiStructureRepositoryMetadata extends RepositoryMetadata {
 
     @Override
     public MethodGenerator apply(MethodMetadata metadata) {
-        return new SemiStructureMethodGenerator(metadata);
+        return new MethodGenerator(metadata);
     }
 }
