@@ -34,6 +34,7 @@ public class TestJakartaPersistenceClassScanner implements JakartaPersistenceCla
     static Map<Class<?>, Set<Class<?>>> repositoriesByClass = Map.of();
     static Set<Class<?>> standardRepositories = Set.of();
     static Set<Class<?>> customRepositories = Set.of();
+    static Set<Class<?>> projections = Set.of();
 
     @Override
     public Set<Class<?>> entities() {
@@ -62,6 +63,11 @@ public class TestJakartaPersistenceClassScanner implements JakartaPersistenceCla
     @Override
     public Set<Class<?>> customRepositories() {
         return customRepositories;
+    }
+
+    @Override
+    public Set<Class<?>> projections() {
+        return projections;
     }
 
 }
