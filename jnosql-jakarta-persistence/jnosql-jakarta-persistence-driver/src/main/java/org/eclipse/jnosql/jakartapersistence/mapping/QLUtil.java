@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -132,14 +132,15 @@ final class QLUtil {
             }
 
             boolean hasDistinct = selectMatcher.group(1) != null;
+            String selectFields = selectMatcher.group(2).trim();
 
             int fromIndex = selectMatcher.end(2);
             String fromAndAfter = jpql.substring(fromIndex);
 
             if (hasDistinct) {
-                result.append("SELECT COUNT(DISTINCT this)");
+                result.append("SELECT COUNT(DISTINCT ").append(selectFields).append(")");
             } else {
-                result.append("SELECT COUNT(this)");
+                result.append("SELECT COUNT(1)");
             }
 
             String fromWithConditions = removeOrderBy(fromAndAfter);
