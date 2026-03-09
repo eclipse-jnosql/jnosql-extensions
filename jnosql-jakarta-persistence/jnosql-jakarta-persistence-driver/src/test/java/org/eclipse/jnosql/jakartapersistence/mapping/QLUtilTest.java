@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -31,12 +31,13 @@ public class QLUtilTest {
             textBlock =
 """
 selectQuery                                                                                                | expectedCountQuery
-SELECT e FROM Employee e WHERE e.department = 'IT'                                                         | SELECT COUNT(this) FROM Employee e WHERE e.department = 'IT'
-SELECT DISTINCT e FROM Employee e WHERE e.salary > 50000"                                                  | SELECT COUNT(DISTINCT this) FROM Employee e WHERE e.salary > 50000"
-SELECT e.name, e.salary FROM Employee e JOIN e.department d WHERE d.name = 'IT' ORDER BY e.salary DESC     | SELECT COUNT(this) FROM Employee e JOIN e.department d WHERE d.name = 'IT'
-SELECT e FROM Employee e WHERE e.department = 'IT' GROUP BY e.department                                   | SELECT COUNT(this) FROM Employee e WHERE e.department = 'IT' GROUP BY e.department
-SELECT COUNT(e), e.department FROM Employee e GROUP BY e.department                                        | SELECT COUNT(this) FROM Employee e GROUP BY e.department
-SELECT id FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1 ORDER BY id ASC                   | SELECT COUNT(this) FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1
+SELECT e FROM Employee e WHERE e.department = 'IT'                                                         | SELECT COUNT(1) FROM Employee e WHERE e.department = 'IT'
+SELECT DISTINCT e FROM Employee e WHERE e.salary > 50000"                                                  | SELECT COUNT(DISTINCT e) FROM Employee e WHERE e.salary > 50000"
+SELECT e.name, e.salary FROM Employee e JOIN e.department d WHERE d.name = 'IT' ORDER BY e.salary DESC     | SELECT COUNT(1) FROM Employee e JOIN e.department d WHERE d.name = 'IT'
+SELECT e FROM Employee e WHERE e.department = 'IT' GROUP BY e.department                                   | SELECT COUNT(1) FROM Employee e WHERE e.department = 'IT' GROUP BY e.department
+SELECT COUNT(e), e.department FROM Employee e GROUP BY e.department                                        | SELECT COUNT(1) FROM Employee e GROUP BY e.department
+SELECT id FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1 ORDER BY id ASC                   | SELECT COUNT(1) FROM NaturalNumber WHERE isOdd = true AND id BETWEEN 21 AND ?1
+SELECT DISTINCT p.author, p.category FROM Post p                                                           | SELECT COUNT(DISTINCT p.author, p.category) FROM Post p
 """)
     @ParameterizedTest
         void convertToCount(String selectQuery, String expectedCountQuery) {
