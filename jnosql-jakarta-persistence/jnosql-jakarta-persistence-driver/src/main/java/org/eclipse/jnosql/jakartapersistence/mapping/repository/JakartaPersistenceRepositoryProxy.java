@@ -15,6 +15,8 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import jakarta.data.repository.Find;
+import jakarta.data.repository.OrderBy;
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
 import jakarta.data.Limit;
@@ -59,7 +61,6 @@ import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRep
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
-import static org.eclipse.jnosql.mapping.core.query.RepositoryType.ORDER_BY;
 
 public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
 
@@ -88,7 +89,8 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         this.repositoryType = repositoryType;
     }
 
-    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntityMetadata entity, Class<?> repositoryType, Converters converters, EntitiesMetadata entities) {
+    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntityMetadata entity, Class<?> repositoryType,
+                                             Converters converters, EntitiesMetadata entities) {
         this.template = template;
         this.entitiesMetadata = entities;
         this.entityMetadata = entity;
@@ -123,7 +125,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
             @Override
             protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
-                if (ORDER_BY == type) {
+                if (method.getAnnotationsByType(OrderBy.class).length > 0 && method.getAnnotation(Find.class) == null) {
                     return executeOrderByQuery(instance, method, params);
                 }
                 return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
