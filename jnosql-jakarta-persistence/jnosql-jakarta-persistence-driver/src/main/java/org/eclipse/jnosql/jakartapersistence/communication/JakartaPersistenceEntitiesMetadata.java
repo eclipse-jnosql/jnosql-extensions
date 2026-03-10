@@ -241,7 +241,7 @@ class JakartaPersistenceEntitiesMetadata implements EntitiesMetadata {
 
     @Override
     public Optional<ProjectionMetadata> projection(Class<?> projection) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+      return Optional.empty(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
 }
