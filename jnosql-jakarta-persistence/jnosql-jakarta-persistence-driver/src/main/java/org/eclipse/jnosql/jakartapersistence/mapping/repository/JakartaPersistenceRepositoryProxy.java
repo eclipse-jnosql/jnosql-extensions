@@ -252,6 +252,12 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         return repositoryType;
     }
 
+    @Override
+    protected EntitiesMetadata entitiesMetadata() {
+       return this.entitiesMetadata;
+        // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
     private void setProjections(PersistencePreparedStatement prepare, Object[] params) {
         SpecialParameters special = DynamicReturn.findSpecialParameters(params, sortParser());
         Limit limit = special.pageRequest()
@@ -264,11 +270,6 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                 .orElse(null);
         prepare.setLimit(limit);
         prepare.setSorts(special.sorts());
-    }
-
-    @Override
-    protected EntitiesMetadata entitiesMetadata() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
     /**
