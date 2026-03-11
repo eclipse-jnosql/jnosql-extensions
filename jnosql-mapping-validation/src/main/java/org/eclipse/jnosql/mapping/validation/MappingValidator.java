@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2022, 2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -11,6 +11,7 @@
  *   Contributors:
  *
  *   Otavio Santana
+ *   Maximillian Arruda
  */
 package org.eclipse.jnosql.mapping.validation;
 
@@ -45,6 +46,13 @@ public class MappingValidator {
     private Instance<Validator> validators;
 
     private Validator validator;
+
+    public MappingValidator() {
+    }
+
+    MappingValidator(Validator validator) {
+        this.validator = Objects.requireNonNull(validator, "validator is required");
+    }
 
     /**
      * Validate an entity using entity validation
@@ -91,9 +99,11 @@ public class MappingValidator {
      */
     @PostConstruct
     void postConstruct() {
-        var validator = ValidatorSupplier.get(validatorFactories, validators);
-        Objects.requireNonNull(validator, "validator is required");
-        this.validator = validator;
+        if (this.validator == null) {
+            var validator = ValidatorSupplier.get(validatorFactories, validators);
+            Objects.requireNonNull(validator, "validator is required");
+            this.validator = validator;
+        }
     }
 
     private static class ValidatorSupplier {
