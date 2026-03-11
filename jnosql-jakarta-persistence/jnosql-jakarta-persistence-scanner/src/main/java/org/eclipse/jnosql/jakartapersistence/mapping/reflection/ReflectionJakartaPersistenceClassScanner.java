@@ -53,4 +53,9 @@ public class ReflectionJakartaPersistenceClassScanner implements JakartaPersiste
         return PersistenceClassScannerSingleton.INSTANCE.customRepositories();
     }
 
+    @Override
+    public Set<Class<?>> projections() {
+        return Set.of();
+    }
+
 }
