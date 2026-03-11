@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -15,23 +15,336 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import java.lang.reflect.Method;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
-import org.eclipse.jnosql.mapping.semistructured.query.SemiStructuredRepositoryProxy;
+import jakarta.data.repository.Find;
+import jakarta.data.repository.OrderBy;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
-public class JakartaPersistenceRepositoryProxy<T,K> extends SemiStructuredRepositoryProxy<T,K> {
+import jakarta.data.Limit;
+import jakarta.data.Sort;
+import jakarta.data.exceptions.EmptyResultException;
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
+import jakarta.data.repository.First;
+import jakarta.data.repository.Query;
+import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.persistence.EntityManager;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
+
+import org.eclipse.jnosql.communication.query.data.QueryType;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
+import org.eclipse.jnosql.mapping.core.Converters;
+import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
+import org.eclipse.jnosql.mapping.core.query.RepositoryType;
+import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
+import org.eclipse.jnosql.mapping.core.repository.ParamValue;
+import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
+import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepository;
+import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
+
+import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
+
+
+public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructuredRepositoryProxy<T, K> {
+
+    private static final Logger LOGGER = Logger.getLogger(JakartaPersistenceRepositoryProxy.class.getName());
+
+    private final PersistenceDocumentTemplate template;
+
+    private final JakartaPersistenceStructuredRepository<T, K> repository;
+
+    private final EntitiesMetadata entitiesMetadata;
+
+    private final EntityMetadata entityMetadata;
+
+    private final Converters converters;
+
+    private final Class<?> repositoryType;
 
     public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntitiesMetadata entities, Class<?> repositoryType, Converters converters) {
-        super(template, entities, repositoryType, converters);
+        this.template = template;
+        Class<T> typeClass = (Class) ((ParameterizedType) repositoryType.getGenericInterfaces()[0])
+                .getActualTypeArguments()[0];
+        this.entitiesMetadata = entities;
+        this.entityMetadata = entities.get(typeClass);
+        this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
+        this.converters = converters;
+        this.repositoryType = repositoryType;
+    }
+
+    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntityMetadata entity, Class<?> repositoryType,
+                                             Converters converters, EntitiesMetadata entities) {
+        this.template = template;
+        this.entitiesMetadata = entities;
+        this.entityMetadata = entity;
+        this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
+        this.converters = converters;
+        this.repositoryType = repositoryType;
+    }
+
+    @Override
+    public Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+        try {
+            return super.invoke(instance, method, params);
+        } catch (UnsupportedOperationException e) {
+            // TODO Check if we can externalize reflection, e.g. using ClassGraph
+            if (EntityManager.class.isAssignableFrom(method.getReturnType()) && method.getReturnType().isInstance(template.entityManager())) {
+                return template.entityManager();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
+        Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), template.entityManager());
+        InterceptorInvocationContext context
+                = new InterceptorInvocationContext(instance, method, params, contextData) {
+            @Override
+            protected Instance<MethodInterceptor> selectInterceptor() {
+                return CDI.current().select(MethodInterceptor.class, MethodInterceptor.Repository.INSTANCE);
+            }
+
+            @Override
+            protected Object invoke(Object instance, Method method, Object[] params) throws Throwable {
+                if (method.getAnnotationsByType(OrderBy.class).length > 0 && method.getAnnotation(Find.class) == null) {
+                    return executeOrderByQuery(instance, method, params);
+                }
+                return JakartaPersistenceRepositoryProxy.super.invokeForMethodType(type, instance, method, params);
+            }
+
+        };
+        return DataExceptions.handlePersistenceException(context::execute);
+    }
+
+    @Override
+    protected Object executeQuery(Object instance, Method method, Object[] params) {
+        LOGGER.finest(() -> "Executing query on method: " + method);
+        Class<?> type = entityMetadata().type();
+        var entity = entityMetadata().name();
+        var pageRequest = DynamicReturn.findPageRequest(params);
+        var queryValue = method.getAnnotation(Query.class).value();
+        var queryType = QueryType.parse(queryValue);
+        var returnType = method.getReturnType();
+        var first = method.getAnnotation(First.class);
+        LOGGER.finest(() -> "Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
+        queryType.checkValidReturn(returnType, queryValue);
+
+        var methodReturn = JakartaPersistenceDynamicQueryMethodReturn.builder()
+                .args(params)
+                .method(method)
+                .typeClass(type)
+                .pageRequest(pageRequest)
+                .prepareConverter(textQuery -> {
+                    var prepare = template().prepare(textQuery, entity);
+                    prepare.setSelectMapper(query -> updateQueryDynamically(params, query, first));
+                    setProjections(prepare, params);
+                    return prepare;
+                }).build();
+        return methodReturn.execute();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Object executeFindByQuery(Method method, Object[] args, Class<?> typeClass, SelectQuery query) {
+        // TODO: Perform type check on return type during deployment and fail deployment if not supported.
+        // Currently, different types are supported by implementations of RepositoryReturn via service loader
+        DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
+                .classSource(typeClass)
+                .methodName(method.getName())
+                .returnType(method.getReturnType())
+
+                .result(() -> {
+                    Stream<Object> select = template().select(query);
+                    return select.map(mapper(method));
+                })
+                .singleResult(() -> {
+                    Optional<Object> object = template().singleResult(query);
+                    return object.map(mapper(method));
+                })
+                .pagination(DynamicReturn.findPageRequest(args))
+                .streamPagination(streamPagination(query, method))
+                .singleResultPagination(getSingleResult(query, method))
+                .page(getPage(query, method))
+                .build();
+        Object result = dynamicReturn.execute();
+        if (result != null) {
+            return result;
+        } else {
+            throw new EmptyResultException("Call to method " + method + " found no matching results.");
+        }
+    }
+
+    @Override
+    protected Object executeDeleteByAll(Object instance, Method method, Object[] params) {
+        DeleteQuery deleteQuery = deleteQuery(method, params);
+        return template().deleteWithCount(deleteQuery);
+    }
+
+    private Object executeOrderByQuery(Object instance, Method method, Object[] params) {
+        SelectQuery selectQuery = query(method, params);
+        final List<Sort<?>> sorts = getSorts(method, entityMetadata());
+        selectQuery = modifySelectQuery(sorts, selectQuery);
+        return template().select(selectQuery);
+    }
+
+    private static MappingQuery modifySelectQuery(List<Sort<?>> sorts, SelectQuery selectQuery) {
+        return new MappingQuery(sorts, selectQuery.limit(), selectQuery.skip(), selectQuery.condition().orElse(null), selectQuery.name(), selectQuery.columns());
     }
 
     @Override
     protected Object executeCursorPagination(Object instance, Method method, Object[] params) {
-        // We need to override this because SemiStructuredRepositoryProxy
-        // expects the semistructured.PreparedStatement template
+        /* TODO We need to override this because SemiStructuredRepositoryProxy
+         expects the semistructured.PreparedStatement template */
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    protected SelectQuery toQuery(Map<String, ParamValue> parameters, Method method) {
+        return JakartaPersistenceParameterBasedQuery.INSTANCE.toQuery(parameters, getSorts(method, entityMetadata()), entityMetadata());
+    }
+
+    @Override
+    protected Function<PageRequest, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query, Method method) {
+        return p -> template().selectOffSet(query, p, mapper(method));
+    }
+
+    @Override
+    protected PersistenceDocumentTemplate template() {
+        return template;
+    }
+
+    @Override
+    protected AbstractRepository<T, K> repository() {
+        return repository;
+    }
+
+    @Override
+    protected EntityMetadata entityMetadata() {
+        return entityMetadata;
+    }
+
+    @Override
+    protected Converters converters() {
+        return converters;
+    }
+
+    @Override
+    protected Class<?> repositoryType() {
+        return repositoryType;
+    }
+
+    @Override
+    protected EntitiesMetadata entitiesMetadata() {
+       return this.entitiesMetadata;
+        // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    private void setProjections(PersistencePreparedStatement prepare, Object[] params) {
+        SpecialParameters special = DynamicReturn.findSpecialParameters(params, sortParser());
+        Limit limit = special.pageRequest()
+                .map(pageRequest -> {
+                    long size = pageRequest.size();
+                    long startAt = pageRequest.size() * pageRequest.page();
+                    return new Limit(Math.toIntExact(size), startAt);
+                })
+                .or(() -> special.limit())
+                .orElse(null);
+        prepare.setLimit(limit);
+        prepare.setSorts(special.sorts());
+    }
+
+    /**
+     * Repository implementation for column-based repositories.
+     *
+     * @param <T> The entity type managed by the repository.
+     * @param <K> The key type used for column-based operations.
+     */
+    public static class JakartaPersistenceStructuredRepository<T, K> extends AbstractSemiStructuredRepository<T, K> {
+
+        private final PersistenceDocumentTemplate template;
+
+        private final EntityMetadata entityMetadata;
+
+        JakartaPersistenceStructuredRepository(PersistenceDocumentTemplate template, EntityMetadata entityMetadata) {
+            this.template = template;
+            this.entityMetadata = entityMetadata;
+        }
+
+        /**
+         * Creates a new instance of ColumnRepository.
+         *
+         * @param <T> The entity type managed by the repository.
+         * @param <K> The key type used for column-based operations.
+         * @param template The SemistructuredTemplate used for column database
+         * operations. Must not be {@code null}.
+         * @param metadata The metadata of the entity. Must not be {@code null}.
+         * @return A new instance of ColumnRepository.
+         * @throws NullPointerException If either the template or metadata is
+         * {@code null}.
+         */
+        public static <T, K> JakartaPersistenceStructuredRepository<T, K> of(PersistenceDocumentTemplate template, EntityMetadata metadata) {
+            Objects.requireNonNull(template, "template is required");
+            Objects.requireNonNull(metadata, "metadata is required");
+            return new JakartaPersistenceStructuredRepository<>(template, metadata);
+        }
+
+        @Override
+        protected PersistenceDocumentTemplate template() {
+            return template;
+        }
+
+        @Override
+        protected EntityMetadata entityMetadata() {
+            return entityMetadata;
+        }
+
+        @Override
+        public <S extends T> S save(S entity) {
+            requireNonNull(entity, "Entity is required");
+
+            K id = getEntityId(entity);
+            if (nonNull(id) && existsById(id)) {
+                return template().update(entity);
+            } else {
+                return template().insert(entity);
+            }
+        }
+
+        @Override
+        public boolean existsById(K id) {
+            return template().existsById(type(), id);
+        }
+
+        @Override
+        public void delete(T entity) {
+            requireNonNull(entity, "Entity is required");
+
+            K id = getEntityId(entity);
+            template().deleteEntity(entity);
+        }
+
+        private K getEntityId(T entity) {
+            return (K)template.getPersistenceUnitUtil().getIdentifier(entity);
+        }
+
+    }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~
-  ~  Copyright (c) 2024 Contributors to the Eclipse Foundation
+  ~  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
   ~   All rights reserved. This program and the accompanying materials
   ~   are made available under the terms of the Eclipse Public License v1.0
   ~   and Apache License v2.0 which accompanies this distribution.
@@ -13,32 +13,76 @@
   ~   Contributors:
   ~
   ~   Ondro Mihalyi
+  ~   Arjan Tijms
   ~
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.eclipse.jnosql.mapping</groupId>
         <artifactId>jnosql-jakarta-persistence-parent</artifactId>
-        <version>1.1.5--SNAPSHOT</version>
+        <version>1.2.0-SNAPSHOT</version>
     </parent>
+
     <artifactId>jnosql-jakarta-persistence</artifactId>
     <name>Eclipse JNoSQL Jakarta Persistence Driver</name>
     <packaging>jar</packaging>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.eclipse.jnosql.mapping</groupId>
             <artifactId>jnosql-mapping-document</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jnosql.databases</groupId>
-            <artifactId>jnosql-database-commons</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-semistructured</artifactId>
+            <version>${jnosql-mapping.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jnosql.communication</groupId>
+                    <artifactId>jnosql-communication-query</artifactId>
+                </exclusion>
+                <!-- <exclusion> <groupId>org.eclipse.jnosql.mapping</groupId>
+                    <artifactId>jnosql-mapping-reflection</artifactId> </exclusion> -->
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-reflection</artifactId>
+            <version>${jnosql-mapping.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-api-core</artifactId>
+            <version>${jnosql-mapping.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.communication</groupId>
+            <artifactId>jnosql-communication-semistructured</artifactId>
+            <version>${jnosql-communication-driver.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jnosql.communication</groupId>
+                    <artifactId>jnosql-communication-query</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jnosql.communication</groupId>
+            <artifactId>jnosql-communication-core</artifactId>
+            <version>${jnosql-communication-driver.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.persistence</groupId>
@@ -46,19 +90,13 @@
             <version>3.2.0</version>
         </dependency>
 
-        <!-- Required by JNoSQL - CDI and MP Config -->
+        <!-- CDI container required by JNoSQL at runtime (for tests) -->
         <dependency>
             <groupId>org.jboss.weld.se</groupId>
             <artifactId>weld-se-core</artifactId>
-            <version>6.0.0.Beta1</version>
+            <version>6.0.0.Final</version>
             <scope>test</scope>
         </dependency>
-        <!--        <dependency>
-            <groupId>io.helidon.microprofile.config</groupId>
-            <artifactId>helidon-microprofile-config</artifactId>
-            <version>3.2.8</version>
-            <scope>test</scope>
-        </dependency>-->
 
         <!-- Testing -->
         <dependency>
@@ -85,28 +123,38 @@
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derby</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbytools</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.derby</groupId>
             <artifactId>derbyclient</artifactId>
-            <version>10.17.1.0</version>
+            <version>${derby.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>eclipselink</artifactId>
-            <version>5.0.0-SNAPSHOT</version>
+            <version>5.0.0-B09</version>
             <scope>test</scope>
         </dependency>
-
+        <!-- Optional dependency, only needed at compile time-->
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>2.0.1</version>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -127,5 +175,23 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+
+            <!-- Check licenses of dependencies -->
+            <plugin>
+                <groupId>org.eclipse.dash</groupId>
+                <artifactId>license-tool-plugin</artifactId>
+            </plugin>
+
+            <!-- Generate a "consumer pom" for the generated jar -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 </project>

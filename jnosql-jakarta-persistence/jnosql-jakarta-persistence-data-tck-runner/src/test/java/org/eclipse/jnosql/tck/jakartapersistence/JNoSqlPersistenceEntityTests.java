@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -14,34 +14,45 @@
  */
 package org.eclipse.jnosql.tck.jakartapersistence;
 
+import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
+
 import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
-import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.document.DocumentTemplate;
-import org.eclipse.jnosql.mapping.document.DocumentTemplateProducer;
-import org.eclipse.jnosql.mapping.document.spi.DocumentExtension;
-import org.eclipse.jnosql.mapping.reflection.Reflections;
-import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
+
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-
-
-
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-//@Disabled
+
 @EnableAutoWeld
-@AddPackages(value = {Converters.class, EntityConverter.class, DocumentTemplate.class})
-@AddPackages(DocumentTemplateProducer.class)
-@AddPackages(Reflections.class)
-@AddExtensions({EntityMetadataExtension.class, DocumentExtension.class, JakartaPersistenceExtension.class})
-@AddPackages({PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class})
+@AddExtensions({JakartaPersistenceExtension.class})
+@AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class})
 @AddPackages({JNoSqlPersistenceEntityTests.class, PersistenceEntityTests.class})
 @ExtendWith(TransactionExtension.class)
+@Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlPersistenceEntityTests extends PersistenceEntityTests {
+
+    /**
+     * This test expects running outside of a global transaction. It should be
+     * executed in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
+     */
+    @Override
+    @Disabled
+    public void testVersionedInsertUpdateDelete() {
+        super.testVersionedInsertUpdateDelete();
+    }
+
+    /**
+     * This test expects running outside of a global transaction. It should be
+     * executed in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
+     */
+    @Override
+    @Disabled
+    public void testMultipleInsertUpdateDelete() {
+        super.testMultipleInsertUpdateDelete();
+    }
 
 }

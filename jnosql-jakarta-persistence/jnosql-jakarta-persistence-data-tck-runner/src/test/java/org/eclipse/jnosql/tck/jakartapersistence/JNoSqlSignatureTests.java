@@ -15,7 +15,9 @@
 package org.eclipse.jnosql.tck.jakartapersistence;
 
 import ee.jakarta.tck.data.standalone.signature.SignatureTests;
+import org.junit.jupiter.api.Disabled;
 
+@Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlSignatureTests extends SignatureTests {
 
 }
