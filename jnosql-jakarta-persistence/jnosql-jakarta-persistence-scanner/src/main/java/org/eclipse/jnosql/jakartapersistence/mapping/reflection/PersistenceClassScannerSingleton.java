@@ -27,6 +27,7 @@ import jakarta.data.repository.Repository;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,6 +117,11 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
     @Override
     public Set<Class<?>> customRepositories() {
         return customRepositories;
+    }
+
+    @Override
+    public Set<Class<?>> projections() {
+        return Collections.emptySet();
     }
 
 
