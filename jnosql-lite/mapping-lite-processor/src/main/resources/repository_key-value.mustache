@@ -14,10 +14,17 @@
 */
 package {{package}};
 
+import org.eclipse.jnosql.lite.mapping.metadata.JNoSQLRepositoryProcessor;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteRepositoriesMetadata;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+{{^methodSignatureKeys.isEmpty}}
+import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
+{{/methodSignatureKeys.isEmpty}}
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 
 import jakarta.data.Order;
 import jakarta.data.page.Page;
@@ -46,20 +53,35 @@ import static org.eclipse.jnosql.mapping.IdNotFoundException.KEY_NOT_FOUND_EXCEP
 @Generated(value = "JNoSQL Lite KeyValue Repository Generator", date = "{{now}}")
 public class {{className}} implements {{repository}} {
 
+    {{#element.methodSignatureKeys}}
+        static final MethodSignatureKey {{constantName}} =
+        new MethodSignatureKey("{{methodName}}", List.of({{parameterClassLiterals}}));
+
+    {{/element.methodSignatureKeys}}
+
     private final KeyValueTemplate template;
 
     private final EntityMetadata metadata;
 
+    private final JNoSQLRepositoryProcessor jnosqlRepositoryProcessor;
+
     @Inject
-    public {{className}}(KeyValueTemplate template) {
+    public {{className}}(KeyValueTemplate template,
+                         RepositoryOperationProvider repositoryOperationProvider) {
         this.template = Objects.requireNonNull(template, "template is required");
         EntitiesMetadata entities = LiteEntitiesMetadata.INSTANCE;
+        RepositoriesMetadata repositories = LiteRepositoriesMetadata.INSTANCE;
         this.metadata = entities.get({{entityType}}.class);
+        var repositoryMetadata = repositories.get({{repository}}.class)
+        .orElseThrow();
+        this.jnosqlRepositoryProcessor = JNoSQLRepositoryProcessor.of(template, metadata, repositoryMetadata,
+        repositoryOperationProvider);
     }
 
     public {{className}}() {
         this.template = null;
         this.metadata = null;
+        this.jnosqlRepositoryProcessor = null;
     }
 
     EntityMetadata entityMetadata(){
@@ -175,15 +197,15 @@ public class {{className}} implements {{repository}} {
     {{#parameters}}
        requireNonNull({{name}}, "{{name}} is required");
     {{/parameters}}
-    {{#sourceCode}}
-       {{{.}}};
-    {{/sourceCode}}
     {{#hasReturn}}
-       return {{{returnValue}}};
+        return jnosqlRepositoryProcessor.invokeRepositoryMethod({{constantName}},
+        {{{parametersAsObjectArray}}});
+    {{/hasReturn}}
+    {{^hasReturn}}
+        jnosqlRepositoryProcessor.invokeRepositoryVoidMethod({{constantName}},
+        {{{parametersAsObjectArray}}});
     {{/hasReturn}}
     }
-
     {{/methods}}
-
 
 }

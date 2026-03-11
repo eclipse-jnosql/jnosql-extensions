@@ -84,4 +84,8 @@ public interface PersonRepository extends BasicRepository<Person, Long> {
 
     @Find
     List<Person> findLesserThan(@Is(LessThan.class) Long id, @Param("paramAnnotation") String name);
+
+
+    @ExampleQuery("sampleQuery")
+    List<Person> providerSampleQuery();
 }

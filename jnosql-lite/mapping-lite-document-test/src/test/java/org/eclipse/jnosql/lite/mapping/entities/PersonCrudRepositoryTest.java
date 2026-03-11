@@ -14,20 +14,21 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities;
 
-import jakarta.data.Order;
-import jakarta.data.Sort;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
-import org.eclipse.jnosql.mapping.PreparedStatement;
-import org.assertj.core.api.SoftAssertions;
-import org.eclipse.jnosql.communication.Condition;
-import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ExistsByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -35,23 +36,33 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
 class PersonCrudRepositoryTest {
+
     @Mock
     private DocumentTemplate template;
 
+    @Mock
+    private RepositoryOperationProvider repositoryOperationProvider;
+
     @InjectMocks
     private PersonCrudRepositoryLiteDocument personRepository;
-
 
     @Test
     void shouldSaveEntity() {
@@ -161,247 +172,121 @@ class PersonCrudRepositoryTest {
     }
 
     @Test
+    @DisplayName("When invoking a derived findBy query the repository must delegate execution to FindByOperation")
     void shouldFindByName() {
-        when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
-        List<Person> result = this.personRepository.findByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotEmpty().hasSize(2);
-        verify(template).select(captor.capture());
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
 
+        FindByOperation operation = mock(FindByOperation.class);
+
+        when(repositoryOperationProvider.findByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Person()));
+
+        personRepository.findByName("Ada");
+
+        verify(repositoryOperationProvider).findByOperation();
+        verify(operation).execute(any());
     }
 
     @Test
+    @DisplayName("When invoking a repository method annotated with @Query the repository must delegate to QueryOperation")
     void shouldQuery() {
-        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
-        this.personRepository.query("Ada");
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
-        String value = captor.getValue();
-        assertThat(value).isEqualTo("from Person where name = :name");
+
+        QueryOperation operation = mock(QueryOperation.class);
+
+        when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Person()));
+
+        personRepository.query("Ada");
+
+        verify(repositoryOperationProvider).queryOperation();
+        verify(operation).execute(any());
     }
+
     @Test
+    @DisplayName("When invoking another explicit @Query method the repository must also delegate to QueryOperation")
     void shouldQuery2() {
-        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
-        this.personRepository.query2("Ada");
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
-        String value = captor.getValue();
-        assertThat(value).isEqualTo("where name = :name");
-    }
 
+        QueryOperation operation = mock(QueryOperation.class);
 
-    @Test
-    void shouldQuery2() {
-        when(template.prepare(anyString(), Mockito.eq("Person"))).thenReturn(Mockito.mock(PreparedStatement.class));
-        this.personRepository.query2("Ada");
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(template).prepare(captor.capture(), Mockito.eq("Person"));
-        String value = captor.getValue();
-        assertThat(value).isEqualTo("where name = :name");
-    }
+        when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Person()));
 
+        personRepository.query2("Ada");
 
-    @Test
-    void shouldExistByName() {
-        when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
-        boolean result = this.personRepository.existsByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isTrue();
-        verify(template).select(captor.capture());
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
+        verify(repositoryOperationProvider).queryOperation();
+        verify(operation).execute(any());
     }
 
     @Test
+    @DisplayName("When invoking existsBy derived query the repository must delegate to ExistsByOperation")
+    void shouldExistsByName() {
+
+        ExistsByOperation operation = mock(ExistsByOperation.class);
+
+        when(repositoryOperationProvider.existsByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(true);
+
+        personRepository.existsByName("Ada");
+
+        verify(repositoryOperationProvider).existsByOperation();
+        verify(operation).execute(any());
+    }
+
+    @Test
+    @DisplayName("When invoking countBy derived projection the repository must delegate to CountByOperation")
     void shouldCountByName() {
-        when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
-        long result = this.personRepository.countByName("Ada");
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isEqualTo(2L);
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
 
+        CountByOperation operation = mock(CountByOperation.class);
+
+        when(repositoryOperationProvider.countByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(2L);
+
+        personRepository.countByName("Ada");
+
+        verify(repositoryOperationProvider).countByOperation();
+        verify(operation).execute(any());
     }
 
     @Test
+    @DisplayName("When invoking deleteBy derived query the repository must delegate to DeleteByOperation")
     void shouldDeleteByName() {
-        this.personRepository.deleteByName("Ada");
-        ArgumentCaptor<DeleteQuery> captor = ArgumentCaptor.forClass(DeleteQuery.class);
-        verify(template).delete(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
+
+        DeleteByOperation operation = mock(DeleteByOperation.class);
+
+        when(repositoryOperationProvider.deleteByOperation()).thenReturn(operation);
+
+        personRepository.deleteByName("Ada");
+
+        verify(repositoryOperationProvider).deleteByOperation();
+        verify(operation).execute(any());
     }
 
     @Test
-    void shouldIgnoreDefaultMethod() {
-        Map<Boolean, List<Person>> result = this.personRepository.merge("Ada");
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(result).containsKeys(false);
-            soft.assertThat(result.get(false)).isEmpty();
-        });
+    @DisplayName("When invoking parameter-based repository methods the repository must delegate to ParameterBasedOperation")
+    void shouldParameterBasedOperation() {
+
+        ParameterBasedOperation operation = mock(ParameterBasedOperation.class);
+
+        when(repositoryOperationProvider.parameterBasedOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of());
+
+        personRepository.age(10);
+
+        verify(repositoryOperationProvider).parameterBasedOperation();
+        verify(operation).execute(any());
     }
 
     @Test
-    void shouldParamMatcher() {
-        this.personRepository.age(10);
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(int.class)).isEqualTo(10);
-        });
+    @DisplayName("When invoking cursor pagination methods the repository must delegate to CursorPaginationOperation")
+    void shouldCursorPagination() {
+
+        CursorPaginationOperation operation = mock(CursorPaginationOperation.class);
+
+        when(repositoryOperationProvider.cursorPaginationOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(mock(CursoredPage.class));
+
+        personRepository.findByName("Ada", PageRequest.ofPage(1).size(2));
+
+        verify(repositoryOperationProvider).cursorPaginationOperation();
+        verify(operation).execute(any());
     }
-
-    @Test
-    void shouldParamMatcherOrder() {
-        this.personRepository.ageOrderName(10);
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(int.class)).isEqualTo(10);
-            soft.assertThat(query.sorts()).contains(Sort.asc("name"));
-        });
-    }
-
-    @Test
-    void shouldParamMatcherOrderAgeName() {
-        this.personRepository.ageOrderNameId(10);
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        verify(template).select(captor.capture());
-        var query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(int.class)).isEqualTo(10);
-            soft.assertThat(query.sorts()).hasSize(2)
-                    .contains(Sort.asc("name"), Sort.desc("_id"));
-        });
-    }
-
-    @Test
-    void shouldFindByNamePagination() {
-        when(template.selectCursor(any(SelectQuery.class), any(PageRequest.class))).thenReturn(Mockito.mock(CursoredPage.class));
-        var result = this.personRepository.findByName("Ada", PageRequest.ofPage(1).size(2));
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotNull();
-        verify(template).selectCursor(captor.capture(), Mockito.eq(PageRequest.ofPage(1).size(2)));
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-
-    }
-
-    @Test
-    void shouldFindByNameCursorPagination() {
-        when(template.selectCursor(any(SelectQuery.class), any(PageRequest.class))).thenReturn(Mockito.mock(CursoredPage.class));
-        var result = this.personRepository.findCursor("Ada", PageRequest.ofPage(1).size(2));
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotNull();
-        verify(template).selectCursor(captor.capture(), Mockito.eq(PageRequest.ofPage(1).size(2)));
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-    }
-
-    @Test
-    void shouldFindByCursorPagination() {
-        try {
-            this.personRepository.cursor("Ada", PageRequest.ofPage(1).size(2));
-        } catch (NullPointerException ignored) {
-        }
-        Mockito.verify(template, Mockito.times(1)).prepare("select * from Person where name = @name", "Person");
-    }
-
-    @Test
-    void shouldQueryOffSetPagination() {
-        try {
-        var result = this.personRepository.offSet("Ada", PageRequest.ofPage(1).size(2));
-        } catch (NullPointerException ignored) {
-        }
-        Mockito.verify(template, Mockito.times(1)).prepare("select * from Person where name = @name", "Person");
-    }
-
-    @Test
-    void shouldFindByOffSetPagination() {
-        when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
-        var result = this.personRepository.findOffSet("Ada", PageRequest.ofPage(1).size(2));
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotNull();
-        verify(template).select(captor.capture());
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-        });
-    }
-
-    @Test
-    void shouldFindByOffSetPaginationSpecialParameter() {
-        when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
-        var result = this.personRepository.findOffSet("Ada", PageRequest.ofPage(1).size(2),
-                Sort.asc("age"));
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotNull();
-        verify(template).select(captor.capture());
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-            soft.assertThat(query.sorts()).hasSize(2);
-            soft.assertThat(query.sorts()).contains(Sort.asc("name"), Sort.asc("age"));
-        });
-    }
-
-    @Test
-    void shouldFindByOffSetPaginationSpecialParameter2() {
-        when(template.select(any(SelectQuery.class))).thenReturn(Stream.of(new Person(), new Person()));
-        var result = this.personRepository.findOffSet("Ada", PageRequest.ofPage(1).size(2),
-                Order.by(Sort.asc("age"), Sort.desc("name")));
-        ArgumentCaptor<SelectQuery> captor = ArgumentCaptor.forClass(SelectQuery.class);
-        assertThat(result).isNotNull();
-        verify(template).select(captor.capture());
-        SelectQuery query = captor.getValue();
-        CriteriaCondition condition = query.condition().orElseThrow();
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(condition.condition()).isEqualTo(Condition.EQUALS);
-            soft.assertThat(condition.element().get(String.class)).isEqualTo("Ada");
-            soft.assertThat(query.sorts()).hasSize(3);
-            soft.assertThat(query.sorts()).contains(Sort.asc("name"), Sort.asc("age"), Sort.desc("name"));
-        });
-    }
-
-
 }

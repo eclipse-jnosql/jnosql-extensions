@@ -36,7 +36,8 @@ class RepositoryMethodModel extends BaseMappingModel {
 
     public RepositoryMethodModel(String packageName,
                                  String methodName,
-                                 String className, String methodType,
+                                 String className,
+                                 String methodType,
                                  String query,
                                  String find,
                                  String first,

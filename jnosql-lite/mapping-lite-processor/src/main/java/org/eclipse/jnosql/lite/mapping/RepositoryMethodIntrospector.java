@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,8 +97,12 @@ final class RepositoryMethodIntrospector {
 
         List<String> selects = getSelects();
         List<String> sorts = getSorts();
-        List<String> annotations = Collections.emptyList();
-        List<RepositoryMethodParameterIntrospector.ParamResult> paramResults = params(executableElement, className, packageName);
+        var repositoryMethodResult = annotationsClasses(executableElement, className, packageName);
+        List<String> annotations = repositoryMethodResult.annotations();
+        if(repositoryMethodResult.isProvider()) {
+            methodType = "PROVIDER_OPERATION";
+        }
+        var paramResults = params(executableElement, className, packageName);
         List<String> params = new ArrayList<>();
         var paramSignature = paramResults.stream().map(RepositoryMethodParameterIntrospector.ParamResult::type)
                 .map(s-> s.concat(".class")).collect(Collectors.joining(","));
@@ -126,13 +129,9 @@ final class RepositoryMethodIntrospector {
         return params;
     }
 
-
-    /**
-     * This class will be implemented as a next step as in a new PR.
-     */
-    private List<String> annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
+    RepositoryMethodResult annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
         List<String> annotations = new ArrayList<>();
-
+        boolean isProvider = false;
         List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
         List<String> declaredTypes = new ArrayList<>();
         for (AnnotationMirror annotationMirror : annotationMirrors) {
@@ -143,11 +142,15 @@ final class RepositoryMethodIntrospector {
                         processingEnv,
                         annotationMirror,
                         method);
-                annotations.add(repositoryMethodAnnotationIntrospector.createAnnotationClass());
+                var annotationClass = repositoryMethodAnnotationIntrospector.createAnnotationClass();
+                if(annotationClass.provider()) {
+                    isProvider = true;
+                }
+                annotations.add(annotationClass.qualified());
                 declaredTypes.add(annotationName);
             }
         }
-        return annotations;
+        return new RepositoryMethodResult(annotations, isProvider);
     }
 
     private String getFind() {
@@ -174,11 +177,10 @@ final class RepositoryMethodIntrospector {
 
     private String getReturnType(ExecutableElement executableElement) {
         TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
-        String returnType = ofNullable(returnElement)
+        return ofNullable(returnElement)
                 .map(Object::toString)
                 .map(OPTIONAL_CLASS_MASK::formatted)
                 .orElse(OPTIONAL_CLASS_MASK.formatted(executableElement.getReturnType().toString()));
-        return returnType;
     }
 
     private List<String> getSorts() {
@@ -218,4 +220,6 @@ final class RepositoryMethodIntrospector {
         processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
                 + exception.getMessage());
     }
+
+    record RepositoryMethodResult(List<String> annotations, boolean isProvider) {}
 }

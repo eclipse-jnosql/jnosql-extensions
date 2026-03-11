@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.entities;
 
 import org.assertj.core.api.Assertions;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.keyvalue.KeyValueTemplate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +35,9 @@ public class UserRepositoryLiteKeyValueTest {
 
     @Mock
     private KeyValueTemplate template;
+
+    @Mock
+    private RepositoryOperationProvider repositoryOperationProvider;
 
     @InjectMocks
     private UserRepositoryLiteKeyValue userRepository;
@@ -154,9 +158,4 @@ public class UserRepositoryLiteKeyValueTest {
         assertThrows(UnsupportedOperationException.class, () -> userRepository.findAll());
     }
 
-    @Test
-    void shouldThrowExceptionOnFindByName() {
-        String name = "John";
-        assertThrows(UnsupportedOperationException.class, () -> userRepository.findByName(name));
-    }
 }

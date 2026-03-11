@@ -26,7 +26,7 @@ class SoccerTeamTest {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_SoccerTeam.id.name()).isEqualTo("_id");
             soft.assertThat(_SoccerTeam.id.declaringType()).isEqualTo(SoccerTeam.class);
-            soft.assertThat(_SoccerTeam.id.attributeType()).isEqualTo(String.class);
+            soft.assertThat(_SoccerTeam.id.type()).isEqualTo(String.class);
         });
     }
 
@@ -35,7 +35,7 @@ class SoccerTeamTest {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_SoccerTeam.players_name.name()).isEqualTo("players.name");
             soft.assertThat(_SoccerTeam.players_name.declaringType()).isEqualTo(SoccerPlayer.class);
-            soft.assertThat(_SoccerTeam.players_name.attributeType()).isEqualTo(String.class);
+            soft.assertThat(_SoccerTeam.players_name.type()).isEqualTo(String.class);
         });
     }
 
@@ -44,7 +44,7 @@ class SoccerTeamTest {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_SoccerTeam.players_score.name()).isEqualTo("players.score");
             soft.assertThat(_SoccerTeam.players_score.declaringType()).isEqualTo(SoccerPlayer.class);
-            soft.assertThat(_SoccerTeam.players_score.attributeType()).isEqualTo(int.class);
+            soft.assertThat(_SoccerTeam.players_score.type()).isEqualTo(int.class);
         });
     }
 
@@ -53,7 +53,7 @@ class SoccerTeamTest {
         SoftAssertions.assertSoftly(soft -> {
             soft.assertThat(_SoccerTeam.players.name()).isEqualTo("players");
             soft.assertThat(_SoccerTeam.players.declaringType()).isEqualTo(SoccerTeam.class);
-            soft.assertThat(_SoccerTeam.players.attributeType()).isEqualTo(SoccerPlayer.class);
+            soft.assertThat(_SoccerTeam.players.type()).isEqualTo(SoccerPlayer.class);
         });
     }
 }

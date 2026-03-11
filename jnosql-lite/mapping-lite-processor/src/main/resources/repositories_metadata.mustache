@@ -31,6 +31,8 @@ import java.util.Optional;
 @ApplicationScoped
 public final class LiteRepositoriesMetadata implements RepositoriesMetadata {
 
+    public static final LiteRepositoriesMetadata INSTANCE = new LiteRepositoriesMetadata();
+
     private final List<RepositoryMetadata> repositories;
     private final List<ProjectionMetadata> projections;
     private final Map<Class<?>, RepositoryMetadata> repositoryByType;

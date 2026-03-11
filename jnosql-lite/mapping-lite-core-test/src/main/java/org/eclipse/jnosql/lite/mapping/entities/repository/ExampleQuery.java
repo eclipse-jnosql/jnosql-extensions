@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2021 Otávio Santana and others
+ *  Copyright (c) 2026 Otávio Santana and others
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -12,25 +12,19 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping.repository;
+package org.eclipse.jnosql.lite.mapping.entities.repository;
 
-import java.util.Collections;
-import java.util.List;
+import org.eclipse.jnosql.mapping.ProviderQuery;
 
-public class MethodGenerator {
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
-    private final MethodMetadata metadata;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-    MethodGenerator(MethodMetadata metadata) {
-        this.metadata = metadata;
-    }
-
-    public List<String> getLines() {
-        return Collections.emptyList();
-    }
-
-    public boolean hasReturn() {
-        return !metadata.getReturnType().equals(Void.TYPE.getName());
-    }
-
-}
+@ProviderQuery("example")
+@Retention(RUNTIME)
+@Target(METHOD)
+ public @interface ExampleQuery {
+     String value();
+ }
