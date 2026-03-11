@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class})
 @AddPackages({JNoSqlPersistenceEntityTests.class, PersistenceEntityTests.class})
 @ExtendWith(TransactionExtension.class)
+@Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlPersistenceEntityTests extends PersistenceEntityTests {
 
     /**

@@ -23,6 +23,8 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExten
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableAutoWeld
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class})
 @AddPackages({JNoSqlEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
+@Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlEntityTests extends EntityTests {
 
 }

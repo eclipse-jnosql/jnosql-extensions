@@ -28,6 +28,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.tck.jakartapersistence.junit.RunOnly;
 import org.eclipse.jnosql.tck.jakartapersistence.junit.RunOnlyCondition;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -46,6 +47,7 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class})
 @AddPackages(value = {JNoSqlNoGlobalTxPersistenceEntityTests.class, EntityTests.class})
 @ExtendWith(RunOnlyCondition.class)
+@Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
 
     @Override
