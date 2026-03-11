@@ -24,7 +24,7 @@ import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableAutoWeld
