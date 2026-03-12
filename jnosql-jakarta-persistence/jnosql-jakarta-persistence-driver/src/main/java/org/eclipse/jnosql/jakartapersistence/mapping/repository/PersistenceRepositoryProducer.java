@@ -16,7 +16,24 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 
 @ApplicationScoped
 public class PersistenceRepositoryProducer {
+
+    @Inject
+    private EntitiesMetadata entities;
+
+    @Inject
+    private InfrastructureOperatorProvider infrastructureOperatorProvider;
+
+    @Inject
+    private RepositoryOperationProvider repositoryOperationProvider;
+
+    @Inject
+    private RepositoriesMetadata repositoriesMetadata;
 }
