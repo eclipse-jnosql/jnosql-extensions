@@ -17,6 +17,7 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
@@ -57,7 +58,7 @@ public class PersistenceRepositoryProducer {
      *         metadata cannot be resolved
      */
     @SuppressWarnings("unchecked")
-    public <R> R get(Class<?> repositoryClass, SemiStructuredTemplate template) {
+    public <R> R get(Class<?> repositoryClass, PersistenceDocumentTemplate template) {
         Objects.requireNonNull(repositoryClass, "repository class is required");
         Objects.requireNonNull(template, "template class is required");
         RepositoryMetadata repositoryMetadata = repositoriesMetadata.get(repositoryClass).orElseThrow();
