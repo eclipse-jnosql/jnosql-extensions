@@ -31,7 +31,7 @@ final class PersistenceEntityMetadata implements EntityMetadata {
 
     private final Class<?> entityClass;
 
-    PersistenceEntityMetadata(EntityType<?> entityType, Class<?> entityClass) {
+    private PersistenceEntityMetadata(EntityType<?> entityType, Class<?> entityClass) {
         this.entityType = entityType;
         this.entityClass = entityClass;
     }
@@ -128,5 +128,8 @@ final class PersistenceEntityMetadata implements EntityMetadata {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
+    static PersistenceEntityMetadata of(EntityType<?> entityType, Class<?> entityClass) {
+        return new PersistenceEntityMetadata(entityType, entityClass);
+    }
 
 }
