@@ -20,10 +20,15 @@ public class Computer {
     private String model;
 
     @Column
-    private long age;
+    private long year;
 
 
-    Computer() {
+    public Computer() {
+    }
+
+    private Computer(String model, long year) {
+        this.model = model;
+        this.year = year;
     }
 
     public long getId() {
@@ -34,8 +39,8 @@ public class Computer {
         return model;
     }
 
-    public long getAge() {
-        return age;
+    public long getYear() {
+        return year;
     }
 
     @Override
@@ -56,7 +61,11 @@ public class Computer {
         return "Computer{" +
                 "id=" + id +
                 ", model='" + model + '\'' +
-                ", age=" + age +
+                ", year=" + year +
                 '}';
+    }
+
+    public static Computer of(String model, long year) {
+        return new Computer(model, year);
     }
 }
