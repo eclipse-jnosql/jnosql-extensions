@@ -34,15 +34,15 @@ public class Computer {
     private String model;
 
     @Column
-    private long year;
+    private long release;
 
 
     public Computer() {
     }
 
-    private Computer(String model, long year) {
+    private Computer(String model, long release) {
         this.model = model;
-        this.year = year;
+        this.release = release;
     }
 
     public long getId() {
@@ -53,8 +53,8 @@ public class Computer {
         return model;
     }
 
-    public long getYear() {
-        return year;
+    public long getRelease() {
+        return release;
     }
 
     @Override
@@ -75,11 +75,11 @@ public class Computer {
         return "Computer{" +
                 "id=" + id +
                 ", model='" + model + '\'' +
-                ", year=" + year +
+                ", release=" + release +
                 '}';
     }
 
-    public static Computer of(String model, long year) {
-        return new Computer(model, year);
+    public static Computer of(String model, long release) {
+        return new Computer(model, release);
     }
 }
