@@ -14,15 +14,12 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import ee.omnifish.jnosql.jakartapersistence.Person;
 import ee.omnifish.jnosql.jakartapersistence.TestJakartaPersistenceClassScanner;
-import ee.omnifish.jnosql.jakartapersistence.TestSupport;
 import jakarta.enterprise.inject.se.SeContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Set;
 
 
@@ -30,9 +27,8 @@ class PersistenceRepositoryProducerTest {
 
     private SeContainer cdiContainer;
 
-    private ComputerRepository computerRepository;
 
-    private Computers computers;
+    private PersistenceRepositoryProducer producer;
 
     @BeforeEach
     void init() {
@@ -40,8 +36,8 @@ class PersistenceRepositoryProducerTest {
         TestJakartaPersistenceClassScanner.standardRepositories = Set.of(ComputerRepository.class);
         cdiContainer = RepositorySupport.cdiInitializerWithDefaultEmProducer()
                 .initialize();
-        this.computerRepository = cdiContainer.select(ComputerRepository.class).get();
-        this.computers = cdiContainer.select(Computers.class).get();
+
+        producer = cdiContainer.select(PersistenceRepositoryProducer.class).get();
     }
 
     @AfterEach
@@ -52,8 +48,12 @@ class PersistenceRepositoryProducerTest {
     }
 
     @Test
-    void findAll() {
-        var computers = computerRepository.findAll().toList();
+   void shouldCreteStandardRepository() {
 
-    }
+   }
+
+   @Test
+   void shouldCreteCustomRepository() {
+
+   }
 }
