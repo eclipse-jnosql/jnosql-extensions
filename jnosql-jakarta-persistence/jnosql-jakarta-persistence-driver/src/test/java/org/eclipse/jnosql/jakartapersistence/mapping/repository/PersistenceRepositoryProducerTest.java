@@ -16,8 +16,12 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import ee.omnifish.jnosql.jakartapersistence.TestJakartaPersistenceClassScanner;
 import jakarta.enterprise.inject.se.SeContainer;
+
+import org.assertj.core.api.Assertions;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -30,6 +34,10 @@ class PersistenceRepositoryProducerTest {
 
     private PersistenceRepositoryProducer producer;
 
+    private PersistenceDatabaseManager persistenceDatabaseManager;
+
+
+
     @BeforeEach
     void init() {
         TestJakartaPersistenceClassScanner.customRepositories = Set.of(Computers.class);
@@ -38,6 +46,8 @@ class PersistenceRepositoryProducerTest {
                 .initialize();
 
         producer = cdiContainer.select(PersistenceRepositoryProducer.class).get();
+        persistenceDatabaseManager = cdiContainer.select(PersistenceDatabaseManager.class).get();
+
     }
 
     @AfterEach
@@ -48,12 +58,18 @@ class PersistenceRepositoryProducerTest {
     }
 
     @Test
-   void shouldCreteStandardRepository() {
+    @DisplayName("should create standard repository")
+    void shouldCreateStandardRepository() {
+        ComputerRepository repository = producer.get(ComputerRepository.class, persistenceDatabaseManager);
+        Assertions.assertThat(repository).isNotNull();
+    }
 
-   }
 
-   @Test
-   void shouldCreteCustomRepository() {
+    @Test
+    @DisplayName("should create custom repository")
+     void shouldCreateCustomRepository() {
+        Computers repository = producer.get(Computers.class, persistenceDatabaseManager);
+        Assertions.assertThat(repository).isNotNull();
+     }
 
-   }
 }
