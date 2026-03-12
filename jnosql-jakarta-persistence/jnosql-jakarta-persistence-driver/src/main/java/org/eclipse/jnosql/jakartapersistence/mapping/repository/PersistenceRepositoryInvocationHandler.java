@@ -23,8 +23,6 @@ import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 
-import java.util.Objects;
-
 class PersistenceRepositoryInvocationHandler<T, K>  extends CoreRepositoryInvocationHandler<T, K> {
 
     private PersistenceRepositoryInvocationHandler(
