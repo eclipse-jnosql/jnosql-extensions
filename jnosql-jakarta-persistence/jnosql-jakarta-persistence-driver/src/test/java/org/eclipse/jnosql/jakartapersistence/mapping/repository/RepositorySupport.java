@@ -21,6 +21,8 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
+import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
+import org.eclipse.jnosql.mapping.semistructured.repository.SemistructuredRepositoryProducer;
 
 /**
  *
@@ -30,10 +32,21 @@ public class RepositorySupport {
 
     private RepositorySupport() {}
 
+    @SuppressWarnings("unchecked")
     public static SeContainerInitializer cdiInitializerWithDefaultEmProducer() {
+        try {
+            Class.forName("org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositoriesMetadata");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         return SeContainerInitializer.newInstance()
                 .disableDiscovery()
                 .addExtensions(JakartaPersistenceExtension.class)
+                .addPackages(true, PersistenceRepositoryProducer.class)
+                .addPackages(true, CoreDeleteOperation.class)
+                .addPackages(ClassLoader.getSystemClassLoader()
+                        .getDefinedPackage("org.eclipse.jnosql.mapping.reflection.repository"))
                 .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
                 .addBeanClasses(EntityManagerProducer.class, PersistenceUnitCacheProvider.class);
     }

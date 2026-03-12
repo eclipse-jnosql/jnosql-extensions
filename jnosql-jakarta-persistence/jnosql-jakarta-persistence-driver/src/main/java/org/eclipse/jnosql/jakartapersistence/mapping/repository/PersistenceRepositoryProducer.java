@@ -17,13 +17,12 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
-import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.core.repository.operations.CoreBaseRepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
-import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import org.eclipse.jnosql.mapping.semistructured.repository.SemistructuredRepository;
 
 import java.lang.reflect.Proxy;
@@ -33,35 +32,23 @@ import java.util.Objects;
 public class PersistenceRepositoryProducer {
 
     @Inject
-    private EntitiesMetadata entities;
-
-    @Inject
     private InfrastructureOperatorProvider infrastructureOperatorProvider;
 
     @Inject
-    private RepositoryOperationProvider repositoryOperationProvider;
+    private CoreBaseRepositoryOperationProvider repositoryOperationProvider;
 
     @Inject
     private RepositoriesMetadata repositoriesMetadata;
 
 
-    /**
-     * Returns a fully functional repository implementation for the given
-     * repository interface.
-     *
-     * @param repositoryClass the repository interface to implement
-     * @param template the semistructured template used by the repository
-     * @param <R> the repository type
-     * @return an instance implementing the given repository interface
-     * @throws NullPointerException if any argument is {@code null}
-     * @throws java.util.NoSuchElementException if required repository or entity
-     *         metadata cannot be resolved
-     */
+
     @SuppressWarnings("unchecked")
-    public <R> R get(Class<?> repositoryClass, PersistenceDocumentTemplate template) {
+    public <R> R get(Class<?> repositoryClass, PersistenceDatabaseManager manager) {
         Objects.requireNonNull(repositoryClass, "repository class is required");
-        Objects.requireNonNull(template, "template class is required");
+        Objects.requireNonNull(manager, "manager class is required");
         RepositoryMetadata repositoryMetadata = repositoriesMetadata.get(repositoryClass).orElseThrow();
+        var entities = manager.getEntitiesMetadata();
+        var template = new PersistenceDocumentTemplate(manager);
         var entityMetadata = entities.get(repositoryMetadata.entity().orElseThrow());
 
         var executor = SemistructuredRepository.of(template, entityMetadata);
