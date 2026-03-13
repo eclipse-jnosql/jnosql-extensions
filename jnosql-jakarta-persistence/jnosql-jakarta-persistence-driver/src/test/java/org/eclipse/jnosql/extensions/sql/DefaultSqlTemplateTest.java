@@ -15,15 +15,12 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
-import ee.omnifish.jnosql.jakartapersistence.EntityManagerProducer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
 import org.jboss.weld.junit5.WeldSetup;
@@ -43,7 +40,6 @@ class DefaultSqlTemplateTest {
 
     @WeldSetup
     WeldInitiator weld = WeldInitiator.from(
-                    PersistenceUnitCacheProvider.class,
                     DefaultSqlTemplateTest.class
             )
             .build();
