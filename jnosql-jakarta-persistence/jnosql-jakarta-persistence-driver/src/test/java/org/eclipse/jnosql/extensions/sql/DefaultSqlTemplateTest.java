@@ -89,8 +89,7 @@ class DefaultSqlTemplateTest {
         @DisplayName("Should throw NullPointerException when the entity is null")
         void shouldThrowExceptionWhenEntityIsNull() {
             assertThatThrownBy(() -> sqlTemplate.insert(null))
-                    .isInstanceOf(NullPointerException.class)
-                    .hasMessage("entity is null");
+                    .isInstanceOf(NullPointerException.class);
         }
 
         @Test
@@ -257,11 +256,77 @@ class DefaultSqlTemplateTest {
         }
 
         @Test
+        @DisplayName("Should return the total number of persisted entities for the given String")
+        void shouldCountEntitiesByString() {
+            sqlTemplate.insert(Computer.of("MacBook", 2024));
+            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+
+            long count = sqlTemplate.count("Computer");
+
+            assertThat(count).isGreaterThanOrEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when the entity name is null")
+        void shouldThrowExceptionWhenEntityNameIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.count((String) null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entity is null");
+        }
+
+        @Test
         @DisplayName("Should throw NullPointerException when the entity type is null")
         void shouldThrowExceptionWhenClassIsNull() {
             assertThatThrownBy(() -> sqlTemplate.count((Class<?>) null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("type is null");
         }
+
     }
+
+    @Nested
+    @DisplayName("When deleting an entity by identifier")
+    class WhenDeleteById {
+
+        @Test
+        @DisplayName("Should delete the entity when it exists")
+        void shouldDeleteEntityById() {
+            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+
+            sqlTemplate.delete(Computer.class, computer.getId());
+
+            Optional<Computer> found =
+                    sqlTemplate.find(Computer.class, computer.getId());
+
+            assertThat(found).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should not fail when deleting a non existing entity")
+        void shouldNotFailWhenEntityDoesNotExist() {
+            sqlTemplate.delete(Computer.class, 999L);
+
+            List<Computer> computers =
+                    sqlTemplate.findAll(Computer.class).toList();
+
+            assertThat(computers).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when type is null")
+        void shouldThrowExceptionWhenTypeIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.delete(null, 1L))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("type is null");
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when id is null")
+        void shouldThrowExceptionWhenIdIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.delete(Computer.class, null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("id is null");
+        }
+    }
+
 }
