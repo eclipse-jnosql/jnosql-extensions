@@ -12,15 +12,12 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.extensions.sql;
+package org.eclipse.jnosql.extensions.sql.model;
 
-
-import jakarta.data.repository.Insert;
+import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
 
 @Repository
-public interface Computers {
+public interface ComputerRepository extends BasicRepository<Computer, Long> {
 
-    @Insert
-    Computer insert(Computer computer);
 }

@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.extensions.sql;
+package org.eclipse.jnosql.extensions.sql.infrastructure;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -27,16 +27,23 @@ public class PersistenceDatabaseManagerProducer {
 
     private final  PersistenceDatabaseManager persistenceDatabaseManager;
 
+    private EntityManager entityManager;
+
     @Inject
     public PersistenceDatabaseManagerProducer(EntityManagerProvider entityManagerProvider,
                                               PersistenceDatabaseManagerProvider persistenceDatabaseManagerProvider) {
 
-        EntityManager entityManager = entityManagerProvider.produceMatchingEntityManager(null, null).orElseThrow();
+        this.entityManager = entityManagerProvider.produceMatchingEntityManager(null, null).orElseThrow();
         this.persistenceDatabaseManager = persistenceDatabaseManagerProvider.getManager(entityManager);
     }
 
     @Produces
     public PersistenceDatabaseManager getPersistenceDatabaseManager() {
         return persistenceDatabaseManager;
+    }
+
+    @Produces
+    public EntityManager getEntityManager() {
+        return entityManager;
     }
 }

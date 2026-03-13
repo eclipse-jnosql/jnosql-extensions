@@ -18,6 +18,9 @@ import ee.omnifish.jnosql.jakartapersistence.TestJakartaPersistenceClassScanner;
 import jakarta.enterprise.inject.se.SeContainer;
 
 import org.assertj.core.api.Assertions;
+import org.eclipse.jnosql.extensions.sql.infrastructure.RepositorySupport;
+import org.eclipse.jnosql.extensions.sql.model.ComputerRepository;
+import org.eclipse.jnosql.extensions.sql.model.Computers;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.repository.PersistenceRepositoryProducer;
 import org.junit.jupiter.api.AfterEach;

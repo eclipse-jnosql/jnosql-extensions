@@ -13,7 +13,7 @@
  *
  *  Ondro Mihalyi
  */
-package org.eclipse.jnosql.extensions.sql;
+package org.eclipse.jnosql.extensions.sql.infrastructure;
 
 import ee.omnifish.jnosql.jakartapersistence.EntityManagerProducer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
