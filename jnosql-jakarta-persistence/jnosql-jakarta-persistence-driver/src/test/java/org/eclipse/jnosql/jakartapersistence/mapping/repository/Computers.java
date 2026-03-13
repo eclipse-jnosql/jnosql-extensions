@@ -15,8 +15,12 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 
+import jakarta.data.repository.Insert;
 import jakarta.data.repository.Repository;
 
 @Repository
 public interface Computers {
+
+    @Insert
+    Computer insert(Computer computer);
 }
