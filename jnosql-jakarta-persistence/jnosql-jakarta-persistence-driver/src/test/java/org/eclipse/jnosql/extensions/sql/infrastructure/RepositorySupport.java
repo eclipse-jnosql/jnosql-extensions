@@ -45,7 +45,6 @@ public class RepositorySupport {
                 .addExtensions(JakartaPersistenceExtension.class)
                 .addPackages(true, PersistenceRepositoryProducer.class)
                 .addPackages(true, CoreDeleteOperation.class)
-                .addBeanClasses(PersistenceDatabaseManagerProducer.class)
                 .addPackages(ClassLoader.getSystemClassLoader()
                         .getDefinedPackage("org.eclipse.jnosql.mapping.reflection.repository"))
                 .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
