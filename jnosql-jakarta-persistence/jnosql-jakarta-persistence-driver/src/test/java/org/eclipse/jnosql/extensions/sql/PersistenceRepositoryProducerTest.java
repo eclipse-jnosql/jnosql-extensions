@@ -12,13 +12,14 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.repository;
+package org.eclipse.jnosql.extensions.sql;
 
 import ee.omnifish.jnosql.jakartapersistence.TestJakartaPersistenceClassScanner;
 import jakarta.enterprise.inject.se.SeContainer;
 
 import org.assertj.core.api.Assertions;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.jakartapersistence.mapping.repository.PersistenceRepositoryProducer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

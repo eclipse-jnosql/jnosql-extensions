@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.repository;
+package org.eclipse.jnosql.extensions.sql;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

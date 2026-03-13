@@ -13,16 +13,16 @@
  *
  *  Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.repository;
+package org.eclipse.jnosql.extensions.sql;
 
 import ee.omnifish.jnosql.jakartapersistence.EntityManagerProducer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
+import org.eclipse.jnosql.jakartapersistence.mapping.repository.PersistenceRepositoryProducer;
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
-import org.eclipse.jnosql.mapping.semistructured.repository.SemistructuredRepositoryProducer;
 
 /**
  *

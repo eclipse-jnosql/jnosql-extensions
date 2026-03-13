@@ -19,7 +19,7 @@
   <persistence-unit name="testPersistenceUnit" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <class>ee.omnifish.jnosql.jakartapersistence.Person</class>
-    <class>org.eclipse.jnosql.jakartapersistence.mapping.repository.Computer</class>
+    <class>org.eclipse.jnosql.extensions.sql.Computer</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <!-- Common properties -->
