@@ -40,9 +40,38 @@ import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
  */
 public interface SqlTemplate extends SemiStructuredTemplate {
 
+    /**
+     * Returns the {@link EntityManager} associated with the current persistence context.
+     *
+     * <p>This method exposes the underlying Jakarta Persistence infrastructure,
+     * allowing advanced persistence operations, query execution, and access
+     * to the persistence context when required.</p>
+     *
+     * @return the {@link EntityManager} used by the template
+     */
     EntityManager entityManager();
 
+    /**
+     * Returns the {@link PersistenceUnitUtil} associated with the persistence unit.
+     *
+     * <p>This utility can be used to inspect persistence-related metadata,
+     * such as checking whether an entity is loaded or retrieving identifier
+     * values.</p>
+     *
+     * @return the {@link PersistenceUnitUtil} of the persistence unit
+     */
     PersistenceUnitUtil persistenceUnitUtil();
 
+    /**
+     * Deletes entities that match the provided {@link DeleteQuery} and returns
+     * the number of affected entities.
+     *
+     * <p>Unlike {@link #delete(DeleteQuery)}, this method reports the number of
+     * entities removed from the datastore.</p>
+     *
+     * @param query the delete query
+     * @return the number of deleted entities
+     * @throws NullPointerException if the query is {@code null}
+     */
     long deleteWithCount(DeleteQuery query);
 }
