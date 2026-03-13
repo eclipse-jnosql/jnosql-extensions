@@ -22,6 +22,7 @@ import jakarta.nosql.Query;
 import jakarta.nosql.QueryMapper;
 import jakarta.nosql.TypedQuery;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.PersistenceUnitUtil;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 class DefaultSqlTemplate implements SqlTemplate {
@@ -62,32 +64,36 @@ class DefaultSqlTemplate implements SqlTemplate {
     public long count(String entity) {
         Objects.requireNonNull(entity, "entity is null");
 
-        String jpql = "SELECT COUNT(e) FROM " + entity + " e";
-        return entityManager.createQuery(jpql, Long.class)
-                .getSingleResult();
+        return executeInTransaction(() -> {
+            String jpql = "SELECT COUNT(e) FROM " + entity + " e";
+            return entityManager.createQuery(jpql, Long.class)
+                    .getSingleResult();
+        });
     }
 
     @Override
     public <T> long count(Class<T> type) {
         Objects.requireNonNull(type, "type is null");
 
-        var entityName = entityManager.getMetamodel()
-                .entity(type)
-                .getName();
+        return executeInTransaction(() -> {
+            var entityName = entityManager.getMetamodel()
+                    .entity(type)
+                    .getName();
 
-        var jpql = "SELECT COUNT(e) FROM " + entityName + " e";
-        return entityManager.createQuery(jpql, Long.class)
-                .getSingleResult();
+            var jpql = "SELECT COUNT(e) FROM " + entityName + " e";
+            return entityManager.createQuery(jpql, Long.class)
+                    .getSingleResult();
+        });
     }
 
     @Override
     public PreparedStatement prepare(String query) {
-        return null;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public PreparedStatement prepare(String query, String entity) {
-        return null;
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -117,35 +123,38 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public <T> Optional<T> singleResult(SelectQuery query) {
-        return Optional.empty();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public <T> Stream<T> findAll(Class<T> type) {
         Objects.requireNonNull(type, "type is null");
+        return executeInTransaction(() -> {
+            String entityName = entityManager
+                    .getMetamodel()
+                    .entity(type)
+                    .getName();
 
-        String entityName = entityManager
-                .getMetamodel()
-                .entity(type)
-                .getName();
-
-        return entityManager
-                .createQuery("SELECT e FROM " + entityName + " e", type)
-                .getResultStream();
+            return entityManager
+                    .createQuery("SELECT e FROM " + entityName + " e", type)
+                    .getResultStream();
+        });
     }
 
     @Override
     public <T> void deleteAll(Class<T> type) {
         Objects.requireNonNull(type, "type is null");
+        executeInTransaction(() -> {
+            String entityName = entityManager
+                    .getMetamodel()
+                    .entity(type)
+                    .getName();
 
-        String entityName = entityManager
-                .getMetamodel()
-                .entity(type)
-                .getName();
-
-        entityManager
-                .createQuery("DELETE FROM " + entityName)
-                .executeUpdate();
+            entityManager
+                    .createQuery("DELETE FROM " + entityName)
+                    .executeUpdate();
+            return void.class;
+        });
     }
 
     @Override
@@ -161,73 +170,79 @@ class DefaultSqlTemplate implements SqlTemplate {
     @Override
     public <T> T insert(T entity) {
         Objects.requireNonNull(entity, "entity is null");
-
-        entityManager.persist(entity);
-        return entity;
+        return executeInTransaction(() -> {
+            entityManager.persist(entity);
+            return entity;
+        });
     }
 
     @Override
     public <T> Iterable<T> insert(Iterable<T> entities) {
         Objects.requireNonNull(entities, "entities is null");
-
-        for (T entity : entities) {
-            Objects.requireNonNull(entity, "entity element is null");
-            entityManager.persist(entity);
-        }
-
-        return entities;
+        return executeInTransaction(() -> {
+            for (T entity : entities) {
+                Objects.requireNonNull(entity, "entity element is null");
+                entityManager.persist(entity);
+            }
+            return entities;
+        });
     }
 
 
     @Override
     public <T> T update(T entity) {
         Objects.requireNonNull(entity, "entity is null");
-
-        return entityManager.merge(entity);
+        return executeInTransaction(() -> entityManager.merge(entity));
     }
 
     @Override
     public <T> Iterable<T> update(Iterable<T> entities) {
         Objects.requireNonNull(entities, "entities is null");
-        List<T> merged = new ArrayList<>();
-        for (T entity : entities) {
-            Objects.requireNonNull(entity, "entity element is null");
-            merged.add(entityManager.merge(entity));
-        }
+        return executeInTransaction(() -> {
+            List<T> merged = new ArrayList<>();
+            for (T entity : entities) {
+                Objects.requireNonNull(entity, "entity element is null");
+                merged.add(entityManager.merge(entity));
+            }
 
-        return merged;
+            return merged;
+        });
     }
 
     @Override
     public <T> void delete(T entity) {
         Objects.requireNonNull(entity, "entity is null");
-
-        T managed = entityManager.contains(entity)
-                ? entity
-                : entityManager.merge(entity);
-
-        entityManager.remove(managed);
-    }
-
-    @Override
-    public <T> void delete(Iterable<? extends T> entities) {
-        Objects.requireNonNull(entities, "entities is null");
-
-        for (T entity : entities) {
-            Objects.requireNonNull(entity, "entity element is null");
-
+        executeInTransaction(() -> {
             T managed = entityManager.contains(entity)
                     ? entity
                     : entityManager.merge(entity);
 
             entityManager.remove(managed);
-        }
+            return void.class;
+        });
+    }
+
+    @Override
+    public <T> void delete(Iterable<? extends T> entities) {
+        Objects.requireNonNull(entities, "entities is null");
+        executeInTransaction(() -> {
+            for (T entity : entities) {
+                Objects.requireNonNull(entity, "entity element is null");
+
+                T managed = entityManager.contains(entity)
+                        ? entity
+                        : entityManager.merge(entity);
+
+                entityManager.remove(managed);
+            }
+            return void.class;
+        });
     }
 
 
     @Override
     public <T> T insert(T entity, Duration ttl) {
-       throw new UnsupportedOperationException("SQL does not support TTL.");
+        throw new UnsupportedOperationException("SQL does not support TTL.");
     }
 
     @Override
@@ -240,21 +255,24 @@ class DefaultSqlTemplate implements SqlTemplate {
     public <T, K> Optional<T> find(Class<T> type, K id) {
         Objects.requireNonNull(type, "type is null");
         Objects.requireNonNull(id, "id is null");
-
-        T entity = entityManager.find(type, id);
-        return Optional.ofNullable(entity);
+        return executeInTransaction(() -> {
+            T entity = entityManager.find(type, id);
+            return Optional.ofNullable(entity);
+        });
     }
 
     @Override
     public <T, K> void delete(Class<T> type, K id) {
         Objects.requireNonNull(type, "type is null");
         Objects.requireNonNull(id, "id is null");
+        executeInTransaction(() -> {
+            T entity = entityManager.find(type, id);
 
-        T entity = entityManager.find(type, id);
-
-        if (entity != null) {
-            entityManager.remove(entity);
-        }
+            if (entity != null) {
+                entityManager.remove(entity);
+            }
+            return void.class;
+        });
     }
 
     @Override
@@ -282,7 +300,37 @@ class DefaultSqlTemplate implements SqlTemplate {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    static SqlTemplate create(EntityManager entityManager) {
+    private <T> T executeInTransaction(Supplier<T> operation) {
+
+        EntityTransaction tx = entityManager.getTransaction();
+
+        boolean started = false;
+
+        if (!tx.isActive()) {
+            tx.begin();
+            started = true;
+        }
+
+        try {
+            T result = operation.get();
+
+            if (started) {
+                tx.commit();
+            }
+
+            return result;
+
+        } catch (RuntimeException e) {
+
+            if (started && tx.isActive()) {
+                tx.rollback();
+            }
+
+            throw e;
+        }
+    }
+
+    static SqlTemplate of(EntityManager entityManager) {
         return new DefaultSqlTemplate(entityManager);
     }
 }
