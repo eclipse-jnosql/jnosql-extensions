@@ -54,8 +54,6 @@
                     <groupId>org.eclipse.jnosql.communication</groupId>
                     <artifactId>jnosql-communication-query</artifactId>
                 </exclusion>
-                <!-- <exclusion> <groupId>org.eclipse.jnosql.mapping</groupId>
-                    <artifactId>jnosql-mapping-reflection</artifactId> </exclusion> -->
             </exclusions>
         </dependency>
         <dependency>

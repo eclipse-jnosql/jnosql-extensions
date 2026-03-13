@@ -32,8 +32,8 @@ public class TestJakartaPersistenceClassScanner implements JakartaPersistenceCla
     static Set<Class<?>> repositories = Set.of();
     static Set<Class<?>> embeddables = Set.of();
     static Map<Class<?>, Set<Class<?>>> repositoriesByClass = Map.of();
-    static Set<Class<?>> standardRepositories = Set.of();
-    static Set<Class<?>> customRepositories = Set.of();
+    public static Set<Class<?>> standardRepositories = Set.of();
+    public static Set<Class<?>> customRepositories = Set.of();
     static Set<Class<?>> projections = Set.of();
 
     @Override
