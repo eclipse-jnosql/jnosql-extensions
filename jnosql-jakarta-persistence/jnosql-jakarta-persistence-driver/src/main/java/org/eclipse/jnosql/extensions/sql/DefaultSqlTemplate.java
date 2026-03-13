@@ -39,7 +39,7 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     private final EntityManager entityManager;
 
-    DefaultSqlTemplate(EntityManager entityManager) {
+    private DefaultSqlTemplate(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
@@ -280,5 +280,9 @@ class DefaultSqlTemplate implements SqlTemplate {
     @Override
     public <T> TypedQuery<T> typedQuery(String query, Class<T> type) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    static SqlTemplate create(EntityManager entityManager) {
+        return new DefaultSqlTemplate(entityManager);
     }
 }
