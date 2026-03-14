@@ -74,4 +74,9 @@ public interface SqlTemplate extends SemiStructuredTemplate {
      * @throws NullPointerException if the query is {@code null}
      */
     long deleteWithCount(DeleteQuery query);
+
+    /**
+     *
+     */
+    <T, K> boolean existsById(Class<T> type, K k);
 }
