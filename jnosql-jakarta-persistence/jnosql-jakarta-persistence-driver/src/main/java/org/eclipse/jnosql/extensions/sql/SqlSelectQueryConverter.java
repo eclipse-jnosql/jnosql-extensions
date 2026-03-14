@@ -26,6 +26,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import org.eclipse.jnosql.communication.Condition;
+import org.eclipse.jnosql.communication.TypeReference;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
@@ -112,6 +113,7 @@ class SqlSelectQueryConverter {
                         new IllegalArgumentException("Entity not found: " + name));
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Predicate toPredicate(CriteriaCondition condition,
                                   CriteriaBuilder cb,
                                   Root<?> root) {
@@ -124,21 +126,27 @@ class SqlSelectQueryConverter {
         Path<?> path = resolvePath(root, property);
 
         switch (condition.condition()) {
-
             case EQUALS:
                 return cb.equal(path, value);
-
             case GREATER_THAN:
-                return cb.gt(path.as(Number.class), (Number) value);
+                return cb.greaterThan(
+                        path.as(Comparable.class),
+                        (Comparable) value);
 
             case GREATER_EQUALS_THAN:
-                return cb.ge(path.as(Number.class), (Number) value);
+                return cb.greaterThanOrEqualTo(
+                        path.as(Comparable.class),
+                        (Comparable) value);
 
             case LESSER_THAN:
-                return cb.lt(path.as(Number.class), (Number) value);
+                return cb.lessThan(
+                        path.as(Comparable.class),
+                        (Comparable) value);
 
             case LESSER_EQUALS_THAN:
-                return cb.le(path.as(Number.class), (Number) value);
+                return cb.lessThanOrEqualTo(
+                        path.as(Comparable.class),
+                        (Comparable) value);
 
             case LIKE:
                 return cb.like(path.as(String.class), value.toString());
@@ -158,29 +166,37 @@ class SqlSelectQueryConverter {
                 return in;
 
             case BETWEEN:
-                Object[] values = (Object[]) value;
+                var values = (List<?>) value;
                 return cb.between(
                         path.as(Comparable.class),
-                        (Comparable) values[0],
-                        (Comparable) values[1]);
+                        (Comparable) values.get(0),
+                        (Comparable) values.get(1));
 
             case AND:
-                return cb.and(
-                        toPredicate(condition.left(), cb, root),
-                        toPredicate(condition.right(), cb, root)
-                );
+                List<CriteriaCondition> andConditions =
+                        condition.element().value().get(new TypeReference<>() {});
+
+                List<Predicate> andPredicates = andConditions.stream()
+                        .map(c -> toPredicate(c, cb, root))
+                        .toList();
+
+                return cb.and(andPredicates.toArray(new Predicate[0]));
 
             case OR:
-                return cb.or(
-                        toPredicate(condition.left(), cb, root),
-                        toPredicate(condition.right(), cb, root)
-                );
+                List<CriteriaCondition> orConditions =
+                        condition.element().value().get(new TypeReference<>() {});
+
+                List<Predicate> orPredicates = orConditions.stream()
+                        .map(c -> toPredicate(c, cb, root))
+                        .toList();
+
+                return cb.or(orPredicates.toArray(new Predicate[0]));
 
             case NOT:
+                var criteriaCondition = element.get(CriteriaCondition.class);
                 return cb.not(
-                        toPredicate(condition.left(), cb, root)
+                        toPredicate(criteriaCondition, cb, root)
                 );
-
             case IGNORE_CASE:
                 return cb.equal(
                         cb.lower(path.as(String.class)),
