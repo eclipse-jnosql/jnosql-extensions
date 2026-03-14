@@ -57,7 +57,14 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public long deleteWithCount(DeleteQuery query) {
-        return 0;
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <T, K> boolean existsById(Class<T> type, K id) {
+        Objects.requireNonNull(type, "type is required");
+        Objects.requireNonNull(id, "id is required");
+        return executeInTransaction(() -> entityManager().find(type, id) != null);
     }
 
     @Override
