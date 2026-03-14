@@ -15,12 +15,18 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.Sort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.eclipse.jnosql.communication.Condition;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.Element;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+
+import java.util.List;
 
 class SqlSelectQueryConverter {
 
@@ -30,6 +36,7 @@ class SqlSelectQueryConverter {
         this.manager = manager;
     }
 
+    @SuppressWarnings("unchecked")
     <T> T getSelectTypedQuery(SelectQuery query) {
         Class<T> type = resolveEntity(query.name());
 
@@ -38,15 +45,33 @@ class SqlSelectQueryConverter {
 
         Root<T> root = criteriaQuery.from(type);
 
-        applyColumns(query, root, criteriaQuery);
-        applyCondition(query, criteriaBuilder, root, criteriaQuery);
-        applySort(query, criteriaBuilder, root, criteriaQuery);
+        applyColumns(query.columns(), root, criteriaQuery);
+        applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaQuery);
+        applySort(query.sorts(), criteriaBuilder, root, criteriaQuery);
         TypedQuery<T> typed = manager.createQuery(criteriaQuery);
-        applyPagination(query, typed);
-        return typed;
+        return (T) typed;
     }
 
-    private <T> void applyColumns(SelectQuery query, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+    private <T> void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+        if (criteriaCondition != null) {
+            Element element = criteriaCondition.element();
+            String property = element.name();
+            Object value = element.get();
+            switch (criteriaCondition.condition()) {
+
+            }
+        }
+    }
+
+    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+        for (Sort<?> sort : sorts) {
+            String property = sort.property();
+            boolean ascending = sort.isAscending();
+
+        }
+    }
+
+    private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
 
     }
 
