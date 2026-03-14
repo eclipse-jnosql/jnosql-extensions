@@ -81,9 +81,9 @@ public interface SqlTemplate extends SemiStructuredTemplate {
      * @param <T>  the entity type
      * @param <K>  the identifier type
      * @param type the entity class
-     * @param k    the entity identifier
+     * @param id    the entity identifier
      * @return {@code true} if an entity with the given identifier exists, {@code false} otherwise
      * @throws NullPointerException if {@code type} or {@code k} is {@code null}
      */
-    <T, K> boolean existsById(Class<T> type, K k);
+    <T, K> boolean existsById(Class<T> type, K id);
 }
