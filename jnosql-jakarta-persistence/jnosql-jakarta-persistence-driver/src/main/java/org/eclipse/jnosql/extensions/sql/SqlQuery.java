@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.nosql.Query;
 
 import java.util.List;
@@ -60,7 +61,7 @@ final class SqlQuery implements Query {
         }
 
         if (results.size() > 1) {
-            throw new IllegalStateException(
+            throw new NonUniqueResultException(
                     "Query returned more than one result: " + results.size());
         }
 
