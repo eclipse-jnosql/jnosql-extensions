@@ -18,6 +18,7 @@ package org.eclipse.jnosql.extensions.sql;
 import jakarta.nosql.Query;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -64,12 +65,19 @@ final class SqlQuery implements Query {
 
     @Override
     public Query bind(String name, Object value) {
+         Objects.requireNonNull(name, "name is required");
+         Objects.requireNonNull(value, "value is required");
         query.setParameter(name, value);
         return this;
     }
 
     @Override
     public Query bind(int position, Object value) {
+         if(position <= 0) {
+             throw new IllegalArgumentException("position must be greater than 0");
+         }
+         Objects.requireNonNull(value, "value is required");
+
         query.setParameter(position, value);
         return this;
     }
