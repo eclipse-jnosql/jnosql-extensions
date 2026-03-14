@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 final class SqlTypedQuery<T> implements TypedQuery<T> {
 
-    private final jakarta.persistence.Query query;
+    private final jakarta.persistence.TypedQuery<T> query;
 
     private final DefaultSqlTemplate template;
 
