@@ -18,6 +18,7 @@ package org.eclipse.jnosql.extensions.sql;
 import jakarta.nosql.TypedQuery;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -32,33 +33,58 @@ final class SqlTypedQuery<T> implements TypedQuery<T> {
         this.query = query;
     }
 
+
     @Override
     public List<T> result() {
-        return List.of();
+        return query.getResultList();
     }
 
     @Override
     public Stream<T> stream() {
-        return Stream.empty();
+        return query.getResultStream();
     }
 
     @Override
     public Optional<T> singleResult() {
-        return Optional.empty();
+
+        List<T> results = query.getResultList();
+
+        if (results.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (results.size() > 1) {
+            throw new IllegalStateException(
+                    "Query returned more than one result: " + results.size());
+        }
+
+        return Optional.of(results.get(0));
     }
 
     @Override
     public void executeUpdate() {
-
+        template.executeInTransaction(query::executeUpdate);
     }
 
     @Override
     public TypedQuery<T> bind(String name, Object value) {
-        return null;
+        Objects.requireNonNull(name, "name is required");
+        Objects.requireNonNull(value, "value is required");
+
+        query.setParameter(name, value);
+        return this;
     }
 
     @Override
     public TypedQuery<T> bind(int position, Object value) {
-        return null;
+
+        if (position <= 0) {
+            throw new IllegalArgumentException("position must be greater than 0");
+        }
+
+        Objects.requireNonNull(value, "value is required");
+
+        query.setParameter(position, value);
+        return this;
     }
 }
