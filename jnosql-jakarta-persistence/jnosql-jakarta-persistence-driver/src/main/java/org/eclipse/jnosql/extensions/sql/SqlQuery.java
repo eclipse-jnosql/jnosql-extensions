@@ -32,13 +32,9 @@ final class SqlQuery implements Query {
         this.template = template;
         this.query = query;
     }
-
     @Override
     public void executeUpdate() {
-        template.executeInTransaction(() -> {
-            query.executeUpdate();
-            return null;
-        });
+        template.executeInTransaction(query::executeUpdate);
     }
 
     @Override
@@ -50,33 +46,44 @@ final class SqlQuery implements Query {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Stream<T> stream() {
-        return query.getResultStream();
+        return (Stream<T>) query.getResultStream();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <T> Optional<T> singleResult() {
-        var result = query.getResultList();
-        if (result.isEmpty()) {
+
+        var results = query.getResultList();
+
+        if (results.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of((T) result.get(0));
+
+        if (results.size() > 1) {
+            throw new IllegalStateException(
+                    "Query returned more than one result: " + results.size());
+        }
+
+        return Optional.of((T) results.get(0));
     }
 
     @Override
     public Query bind(String name, Object value) {
-         Objects.requireNonNull(name, "name is required");
-         Objects.requireNonNull(value, "value is required");
+        Objects.requireNonNull(name, "name is required");
+        Objects.requireNonNull(value, "value is required");
+
         query.setParameter(name, value);
         return this;
     }
 
     @Override
     public Query bind(int position, Object value) {
-         if(position <= 0) {
-             throw new IllegalArgumentException("position must be greater than 0");
-         }
-         Objects.requireNonNull(value, "value is required");
+
+        if (position <= 0) {
+            throw new IllegalArgumentException("position must be greater than 0");
+        }
+
+        Objects.requireNonNull(value, "value is required");
 
         query.setParameter(position, value);
         return this;
