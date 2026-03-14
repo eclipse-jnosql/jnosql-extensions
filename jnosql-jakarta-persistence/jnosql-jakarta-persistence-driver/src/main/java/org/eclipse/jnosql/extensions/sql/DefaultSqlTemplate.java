@@ -305,7 +305,9 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public <T> TypedQuery<T> typedQuery(String query, Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(type, "type is null");
+        return new SqlTypedQuery<>(this, entityManager.createQuery(query, type));
     }
 
     <T> T executeInTransaction(Supplier<T> operation) {
