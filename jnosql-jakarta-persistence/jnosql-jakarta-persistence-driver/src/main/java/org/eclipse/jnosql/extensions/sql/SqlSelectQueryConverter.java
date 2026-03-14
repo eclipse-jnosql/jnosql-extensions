@@ -115,7 +115,7 @@ class SqlSelectQueryConverter {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Predicate toPredicate(CriteriaCondition condition,
-                                  CriteriaBuilder cb,
+                                  CriteriaBuilder criteriaBuilder,
                                   Root<?> root) {
 
         Element element = condition.element();
@@ -125,88 +125,92 @@ class SqlSelectQueryConverter {
 
         Path<?> path = resolvePath(root, property);
 
-        switch (condition.condition()) {
-            case EQUALS:
-                return cb.equal(path, value);
-            case GREATER_THAN:
-                return cb.greaterThan(
-                        path.as(Comparable.class),
-                        (Comparable) value);
+        return switch (condition.condition()) {
 
-            case GREATER_EQUALS_THAN:
-                return cb.greaterThanOrEqualTo(
-                        path.as(Comparable.class),
-                        (Comparable) value);
+            case EQUALS ->
+                    criteriaBuilder.equal(path, value);
 
-            case LESSER_THAN:
-                return cb.lessThan(
-                        path.as(Comparable.class),
-                        (Comparable) value);
+            case GREATER_THAN ->
+                    criteriaBuilder.greaterThan(
+                            path.as(Comparable.class),
+                            (Comparable) value);
 
-            case LESSER_EQUALS_THAN:
-                return cb.lessThanOrEqualTo(
-                        path.as(Comparable.class),
-                        (Comparable) value);
+            case GREATER_EQUALS_THAN ->
+                    criteriaBuilder.greaterThanOrEqualTo(
+                            path.as(Comparable.class),
+                            (Comparable) value);
 
-            case LIKE:
-                return cb.like(path.as(String.class), value.toString());
+            case LESSER_THAN ->
+                    criteriaBuilder.lessThan(
+                            path.as(Comparable.class),
+                            (Comparable) value);
 
-            case CONTAINS:
-                return cb.like(path.as(String.class), "%" + value + "%");
+            case LESSER_EQUALS_THAN ->
+                    criteriaBuilder.lessThanOrEqualTo(
+                            path.as(Comparable.class),
+                            (Comparable) value);
 
-            case STARTS_WITH:
-                return cb.like(path.as(String.class), value + "%");
+            case LIKE ->
+                    criteriaBuilder.like(path.as(String.class), value.toString());
 
-            case ENDS_WITH:
-                return cb.like(path.as(String.class), "%" + value);
+            case CONTAINS ->
+                    criteriaBuilder.like(path.as(String.class), "%" + value + "%");
 
-            case IN:
-                CriteriaBuilder.In<Object> in = cb.in(path);
+            case STARTS_WITH ->
+                    criteriaBuilder.like(path.as(String.class), value + "%");
+
+            case ENDS_WITH ->
+                    criteriaBuilder.like(path.as(String.class), "%" + value);
+
+            case IN -> {
+                CriteriaBuilder.In<Object> in = criteriaBuilder.in(path);
                 ((Iterable<?>) value).forEach(in::value);
-                return in;
+                yield in;
+            }
 
-            case BETWEEN:
+            case BETWEEN -> {
                 var values = (List<?>) value;
-                return cb.between(
+                yield criteriaBuilder.between(
                         path.as(Comparable.class),
                         (Comparable) values.get(0),
                         (Comparable) values.get(1));
+            }
 
-            case AND:
+            case AND -> {
                 List<CriteriaCondition> andConditions =
                         condition.element().value().get(new TypeReference<>() {});
 
                 List<Predicate> andPredicates = andConditions.stream()
-                        .map(c -> toPredicate(c, cb, root))
+                        .map(c -> toPredicate(c, criteriaBuilder, root))
                         .toList();
 
-                return cb.and(andPredicates.toArray(new Predicate[0]));
+                yield criteriaBuilder.and(andPredicates.toArray(new Predicate[0]));
+            }
 
-            case OR:
+            case OR -> {
                 List<CriteriaCondition> orConditions =
                         condition.element().value().get(new TypeReference<>() {});
 
                 List<Predicate> orPredicates = orConditions.stream()
-                        .map(c -> toPredicate(c, cb, root))
+                        .map(c -> toPredicate(c, criteriaBuilder, root))
                         .toList();
 
-                return cb.or(orPredicates.toArray(new Predicate[0]));
+                yield criteriaBuilder.or(orPredicates.toArray(new Predicate[0]));
+            }
 
-            case NOT:
-                var criteriaCondition = element.get(CriteriaCondition.class);
-                return cb.not(
-                        toPredicate(criteriaCondition, cb, root)
+            case NOT -> {
+                var inner = element.get(CriteriaCondition.class);
+                yield criteriaBuilder.not(
+                        toPredicate(inner, criteriaBuilder, root)
                 );
-            case IGNORE_CASE:
-                return cb.equal(
-                        cb.lower(path.as(String.class)),
-                        value.toString().toLowerCase()
-                );
+            }
 
-            default:
-                throw new UnsupportedOperationException(
-                        "Unsupported condition: " + condition.condition());
-        }
+            case IGNORE_CASE ->
+                    criteriaBuilder.equal(
+                            criteriaBuilder.lower(path.as(String.class)),
+                            value.toString().toLowerCase()
+                    );
+        };
     }
 
     private Path<?> resolvePath(Path<?> root, String property) {
