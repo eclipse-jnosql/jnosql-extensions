@@ -335,4 +335,44 @@ class DefaultSqlTemplateTest {
         }
     }
 
+    @Nested
+    @DisplayName("When verifying the existence of an entity by identifier")
+    class WhenExistsById {
+
+        @Test
+        @DisplayName("Should return true when the entity exists")
+        void shouldReturnTrueWhenEntityExists() {
+            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+
+            boolean exists = sqlTemplate.existsById(Computer.class, computer.getId());
+
+            assertThat(exists).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return false when the entity does not exist")
+        void shouldReturnFalseWhenEntityDoesNotExist() {
+            boolean exists = sqlTemplate.existsById(Computer.class, 999L);
+
+            assertThat(exists).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when type is null")
+        void shouldThrowExceptionWhenTypeIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.existsById(null, 1L))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("type is required");
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when id is null")
+        void shouldThrowExceptionWhenIdIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.existsById(Computer.class, null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("id is required");
+        }
+    }
+
+
 }
