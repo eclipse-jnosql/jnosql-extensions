@@ -90,13 +90,11 @@ class SqlSelectQueryConverter {
             return;
         }
 
-        List<Selection<?>> selections = new ArrayList<>();
-
-        for (String column : columns) {
-            selections.add(resolvePath(root, column));
-        }
-
-        criteriaQuery.multiselect(selections);
+        criteriaQuery.multiselect(
+                columns.stream()
+                        .map(c -> resolvePath(root, c))
+                        .toArray(Selection[]::new)
+        );
     }
 
     @SuppressWarnings("unchecked")
