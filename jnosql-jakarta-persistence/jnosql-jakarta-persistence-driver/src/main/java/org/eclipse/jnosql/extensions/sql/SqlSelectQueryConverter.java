@@ -90,11 +90,11 @@ class SqlSelectQueryConverter {
             return;
         }
 
-        criteriaQuery.multiselect(
-                columns.stream()
-                        .map(c -> resolvePath(root, c))
-                        .toArray(Selection[]::new)
-        );
+        Selection<?>[] selections = columns.stream()
+                .map(column -> resolvePath(root, column))
+                .toArray(Selection[]::new);
+
+        criteriaQuery.multiselect(selections);
     }
 
     @SuppressWarnings("unchecked")
