@@ -439,5 +439,78 @@ class DefaultSqlTemplateTest {
         }
     }
 
+    @Nested
+    @DisplayName("When executing typed queries using SqlTemplate")
+    class WhenTypedQuery {
+
+        @Test
+        @DisplayName("Should return results when executing a typed JPQL select query")
+        void shouldReturnResultsFromTypedQuery() {
+            sqlTemplate.insert(Computer.of("MacBook", 2024));
+            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+
+            List<Computer> result = sqlTemplate
+                    .typedQuery("SELECT c FROM Computer c", Computer.class)
+                    .result();
+
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Should return a stream when executing a typed JPQL select query")
+        void shouldReturnStreamFromTypedQuery() {
+            sqlTemplate.insert(Computer.of("MacBook", 2024));
+            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+
+            List<Computer> result = sqlTemplate
+                    .typedQuery("SELECT c FROM Computer c", Computer.class)
+                    .stream()
+                    .toList();
+
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Should return a single result when exactly one entity matches")
+        void shouldReturnSingleResultFromTypedQuery() {
+            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+
+            Optional<Computer> result = sqlTemplate
+                    .typedQuery("SELECT c FROM Computer c WHERE c.id = :id", Computer.class)
+                    .bind("id", computer.getId())
+                    .singleResult();
+
+            assertThat(result).isPresent();
+            assertThat(result.get().getId()).isEqualTo(computer.getId());
+        }
+
+        @Test
+        @DisplayName("Should return empty when the typed query matches no entity")
+        void shouldReturnEmptyWhenTypedQueryReturnsNoResult() {
+            Optional<Computer> result = sqlTemplate
+                    .typedQuery("SELECT c FROM Computer c WHERE c.id = :id", Computer.class)
+                    .bind("id", 999L)
+                    .singleResult();
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when query string is null")
+        void shouldThrowExceptionWhenQueryIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.typedQuery(null, Computer.class))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("query is null");
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when type is null")
+        void shouldThrowExceptionWhenTypeIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.typedQuery("SELECT c FROM Computer c", null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("type is null");
+        }
+    }
+
 
 }
