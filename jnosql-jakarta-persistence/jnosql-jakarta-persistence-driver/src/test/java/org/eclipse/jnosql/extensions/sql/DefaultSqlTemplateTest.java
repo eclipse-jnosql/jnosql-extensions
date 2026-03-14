@@ -374,5 +374,70 @@ class DefaultSqlTemplateTest {
         }
     }
 
+    @Nested
+    @DisplayName("When executing queries using SqlTemplate query method")
+    class WhenQuery {
+
+        @Test
+        @DisplayName("Should return results when executing a JPQL select query")
+        void shouldReturnResultsFromQuery() {
+            sqlTemplate.insert(Computer.of("MacBook", 2024));
+            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+
+            List<Computer> result = sqlTemplate
+                    .query("SELECT c FROM Computer c")
+                    .result();
+
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Should return a stream when executing a JPQL select query")
+        void shouldReturnStreamFromQuery() {
+            sqlTemplate.insert(Computer.of("MacBook", 2024));
+            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+
+            List<Computer> result = sqlTemplate
+                    .query("SELECT c FROM Computer c")
+                    .<Computer>stream()
+                    .toList();
+
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Should return single result when query matches exactly one entity")
+        void shouldReturnSingleResult() {
+            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+
+            Optional<Computer> result = sqlTemplate
+                    .query("SELECT c FROM Computer c WHERE c.id = :id")
+                    .bind("id", computer.getId())
+                    .singleResult();
+
+            assertThat(result).isPresent();
+            assertThat(result.get().getId()).isEqualTo(computer.getId());
+        }
+
+        @Test
+        @DisplayName("Should return empty when single result query returns no entity")
+        void shouldReturnEmptyWhenSingleResultDoesNotExist() {
+            Optional<Computer> result = sqlTemplate
+                    .query("SELECT c FROM Computer c WHERE c.id = :id")
+                    .bind("id", 999L)
+                    .singleResult();
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should throw exception when query string is null")
+        void shouldThrowExceptionWhenQueryIsNull() {
+            assertThatThrownBy(() -> sqlTemplate.query(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("query is null");
+        }
+    }
+
 
 }
