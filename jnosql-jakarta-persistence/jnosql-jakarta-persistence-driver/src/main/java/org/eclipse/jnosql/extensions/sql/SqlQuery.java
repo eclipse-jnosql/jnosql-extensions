@@ -34,31 +34,43 @@ final class SqlQuery implements Query {
 
     @Override
     public void executeUpdate() {
-
+        template.executeInTransaction(() -> {
+            query.executeUpdate();
+            return null;
+        });
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> List<T> result() {
-        return List.of();
+        return query.getResultList();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> Stream<T> stream() {
-        return Stream.empty();
+        return query.getResultStream();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> Optional<T> singleResult() {
-        return Optional.empty();
+        var result = query.getResultList();
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of((T) result.get(0));
     }
 
     @Override
     public Query bind(String name, Object value) {
-        return null;
+        query.setParameter(name, value);
+        return this;
     }
 
     @Override
     public Query bind(int position, Object value) {
-        return null;
+        query.setParameter(position, value);
+        return this;
     }
 }
