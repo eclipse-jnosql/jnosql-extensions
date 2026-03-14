@@ -307,7 +307,7 @@ class DefaultSqlTemplate implements SqlTemplate {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    private <T> T executeInTransaction(Supplier<T> operation) {
+    <T> T executeInTransaction(Supplier<T> operation) {
 
         EntityTransaction tx = entityManager.getTransaction();
 
