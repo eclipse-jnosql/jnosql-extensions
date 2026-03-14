@@ -11,7 +11,7 @@
  *
  *   Contributors:
  *
- *   Ondro Mihalyi
+ *   Otavio Santana
  */
 package org.eclipse.jnosql.extensions.sql;
 
