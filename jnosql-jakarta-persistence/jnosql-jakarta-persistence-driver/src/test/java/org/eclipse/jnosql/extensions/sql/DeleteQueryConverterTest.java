@@ -15,8 +15,33 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
-import static org.junit.jupiter.api.Assertions.*;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Persistence;
+import org.jboss.weld.junit5.EnableWeld;
+import org.jboss.weld.junit5.WeldInitiator;
+import org.jboss.weld.junit5.WeldSetup;
 
+
+@EnableWeld
 class DeleteQueryConverterTest {
 
+    @WeldSetup
+    WeldInitiator weld = WeldInitiator.from(
+                    DefaultSqlTemplateTest.class
+            )
+            .build();
+
+    @Produces
+    @ApplicationScoped
+    public EntityManager createEntityManager() {
+        return Persistence.createEntityManagerFactory("testPersistenceUnit")
+                .createEntityManager();
+    }
+
+
+    @Inject
+    private EntityManager entityManager;
 }
