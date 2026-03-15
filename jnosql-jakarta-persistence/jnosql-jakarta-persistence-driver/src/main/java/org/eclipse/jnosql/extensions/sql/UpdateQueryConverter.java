@@ -39,9 +39,9 @@ class UpdateQueryConverter extends QueryConverterSupport {
         Class<T> type = resolveEntity(query.name());
 
         CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
-        CriteriaUpdate<?> criteriaUpdate = criteriaBuilder.createCriteriaUpdate(type);
+        CriteriaUpdate<T> criteriaUpdate = criteriaBuilder.createCriteriaUpdate(type);
 
-        Root<?> root = criteriaUpdate.from(type);
+        Root<T> root = criteriaUpdate.from(type);
 
         applySets(query.sets(), root, criteriaUpdate);
 
@@ -52,6 +52,7 @@ class UpdateQueryConverter extends QueryConverterSupport {
         return manager.createQuery(criteriaUpdate);
     }
 
+    @SuppressWarnings("unchecked")
     private void applySets(
             List<Element> sets,
             Root<?> root,
@@ -64,7 +65,7 @@ class UpdateQueryConverter extends QueryConverterSupport {
 
             Path<?> path = resolvePath(root, property);
 
-            criteriaUpdate.set(path, value);
+            criteriaUpdate.set((Path<Object>) path, value);
         }
     }
 
