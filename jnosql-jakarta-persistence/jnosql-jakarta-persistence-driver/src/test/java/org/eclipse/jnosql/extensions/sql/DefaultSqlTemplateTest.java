@@ -15,11 +15,14 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
+import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
@@ -509,6 +512,129 @@ class DefaultSqlTemplateTest {
             assertThatThrownBy(() -> sqlTemplate.typedQuery("SELECT c FROM Computer c", null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("type is null");
+        }
+    }
+
+    @Nested
+    @DisplayName("When executing SelectQuery aggregate and existence operations")
+    class WhenSelectQueryAggregateOperations {
+
+        @BeforeEach
+        void insertData() {
+            sqlTemplate.insert(Computer.of("MacBook Pro", 2021));
+            sqlTemplate.insert(Computer.of("ThinkPad", 2020));
+            sqlTemplate.insert(Computer.of("XPS", 2019));
+        }
+
+        @Test
+        @DisplayName("Should return the number of entities matching the query")
+        void shouldCountResultsFromQuery() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .gte(2020)
+                    .build();
+
+            long count = sqlTemplate.count(select);
+
+            assertThat(count).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("Should return true when at least one entity matches the query")
+        void shouldReturnTrueWhenQueryMatchesEntities() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .eq(2021)
+                    .build();
+
+            boolean exists = sqlTemplate.exists(select);
+
+            assertThat(exists).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return false when no entity matches the query")
+        void shouldReturnFalseWhenQueryMatchesNoEntities() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .eq(1990)
+                    .build();
+
+            boolean exists = sqlTemplate.exists(select);
+
+            assertThat(exists).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return the single matching entity when exactly one result exists")
+        void shouldReturnSingleResult() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("model")
+                    .eq("ThinkPad")
+                    .build();
+
+            Optional<Computer> result = sqlTemplate.singleResult(select);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).isPresent();
+                soft.assertThat(result.get().getModel()).isEqualTo("ThinkPad");
+            });
+        }
+
+        @Test
+        @DisplayName("Should return empty when the query matches no entities")
+        void shouldReturnEmptyWhenNoResultExists() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("model")
+                    .eq("NonExisting")
+                    .build();
+
+            Optional<Computer> result = sqlTemplate.singleResult(select);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should throw NonUniqueResultException when more than one entity matches the query")
+        void shouldThrowWhenMultipleResultsExist() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .gte(2020)
+                    .build();
+
+            assertThatThrownBy(() -> sqlTemplate.singleResult(select))
+                    .isInstanceOf(NonUniqueResultException.class);
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when query is null")
+        void shouldThrowExceptionWhenQueryIsNull() {
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThatThrownBy(() -> sqlTemplate.count((SelectQuery) null))
+                        .isInstanceOf(NullPointerException.class)
+                        .hasMessage("query is null");
+
+                soft.assertThatThrownBy(() -> sqlTemplate.exists(null))
+                        .isInstanceOf(NullPointerException.class)
+                        .hasMessage("query is null");
+
+                soft.assertThatThrownBy(() -> sqlTemplate.singleResult(null))
+                        .isInstanceOf(NullPointerException.class)
+                        .hasMessage("query is null");
+            });
         }
     }
 
