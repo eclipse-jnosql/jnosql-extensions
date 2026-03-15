@@ -32,6 +32,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
+
 
 @EnableWeld
 class DeleteQueryConverterTest {
@@ -203,5 +205,109 @@ class DeleteQueryConverterTest {
             });
         }
     }
+
+    @Nested
+    @DisplayName("WhenDeletingWithLogicalConditions")
+    class WhenDeletingWithLogicalConditions {
+
+        @Test
+        @DisplayName("Should delete entities matching AND condition")
+        void shouldDeleteEntitiesMatchingAndCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("MacBook", 2023));
+            template.insert(Computer.of("ThinkPad", 2023));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("release")
+                    .eq(2023)
+                    .and("model")
+                    .eq("MacBook")
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(
+                    SelectQuery.select().from("Computer").build()
+            ).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getModel, Computer::getRelease)
+                        .containsExactlyInAnyOrder(
+                                tuple("MacBook", 2024L),
+                                tuple("ThinkPad", 2023L)
+                        );
+            });
+        }
+
+        @Test
+        @DisplayName("Should delete entities matching OR condition")
+        void shouldDeleteEntitiesMatchingOrCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("XPS", 2022));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("model")
+                    .eq("MacBook")
+                    .or("model")
+                    .eq("ThinkPad")
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(
+                    SelectQuery.select().from("Computer").build()
+            ).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getModel)
+                        .containsExactly("XPS");
+            });
+        }
+
+        @Test
+        @DisplayName("Should delete entities matching NOT condition")
+        void shouldDeleteEntitiesMatchingNotCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("XPS", 2022));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("release")
+                    .not()
+                    .eq(2024)
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(
+                    SelectQuery.select().from("Computer").build()
+            ).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getRelease)
+                        .containsExactly(2024L);
+            });
+        }
+    }
+
 
 }
