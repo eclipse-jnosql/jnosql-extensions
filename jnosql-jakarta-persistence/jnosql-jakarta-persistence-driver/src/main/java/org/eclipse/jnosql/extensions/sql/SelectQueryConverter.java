@@ -303,34 +303,19 @@ class SelectQueryConverter {
                 ? results.subList(0, size)
                 : results;
 
-        T first = content.getFirst();
         T last = content.getLast();
-
-        PageRequest.Cursor startCursor =
-                SelectQueryConverter.buildCursor(query.sorts(), first);
-
-        PageRequest.Cursor endCursor =
-                SelectQueryConverter.buildCursor(query.sorts(), last);
-
-        boolean firstPage = pageRequest.cursor().isEmpty();
-
+        PageRequest.Cursor nextCursor = SelectQueryConverter.buildCursor(query.sorts(), last);
         PageRequest next = null;
         PageRequest previous = null;
-
-        if (hasNext) {
-            next = PageRequest.ofSize(size).afterCursor(endCursor);
+        if (!content.isEmpty()) {
+            next = PageRequest.ofSize(size).afterCursor(nextCursor);
+            if (pageRequest.mode() != PageRequest.Mode.OFFSET) {
+                previous = PageRequest.ofSize(size).beforeCursor(nextCursor);
+            }
         }
-
-        if (!firstPage) {
-            previous = PageRequest.ofSize(size).beforeCursor(startCursor);
-        }
-
-        List<PageRequest.Cursor> cursors =
-                firstPage ? List.of(endCursor) : List.of(startCursor, endCursor);
-
         return new CursoredPageRecord<>(
                 content,
-                cursors,
+                List.of(nextCursor),
                 -1,
                 pageRequest,
                 next,
