@@ -33,7 +33,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -60,6 +59,7 @@ class SelectQueryConverterTest {
 
     @BeforeEach
     void setUp() {
+
         this.template.deleteAll(Computer.class);
     }
 
@@ -170,6 +170,152 @@ class SelectQueryConverterTest {
             Assertions.assertThat(result).hasSize(2);
         }
     }
+
+    @Nested
+    @DisplayName("When filtering computers using SelectQuery comparison conditions")
+    class WhenFilteringComputersByConditions {
+
+        @BeforeEach
+        void insertData() {
+            template.insert(Computer.of("MacBook Pro", 2021));
+            template.insert(Computer.of("ThinkPad", 2020));
+            template.insert(Computer.of("XPS", 2019));
+            template.insert(Computer.of("EliteBook", 2018));
+        }
+
+        @Test
+        @DisplayName("Should return computers that match the exact release year")
+        void shouldFilterByEquals() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .eq(2020)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(1);
+                soft.assertThat(result.getFirst().getRelease()).isEqualTo(2020);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers released after the specified year")
+        void shouldFilterByGreaterThan() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .gt(2020)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(1);
+                soft.assertThat(result.getFirst().getRelease()).isGreaterThan(2020);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers released on or after the specified year")
+        void shouldFilterByGreaterOrEquals() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .gte(2020)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(2);
+                soft.assertThat(result)
+                        .allMatch(c -> c.getRelease() >= 2020);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers released before the specified year")
+        void shouldFilterByLessThan() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .lt(2020)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(2);
+                soft.assertThat(result)
+                        .allMatch(c -> c.getRelease() < 2020);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers released on or before the specified year")
+        void shouldFilterByLessOrEquals() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .lte(2020)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(3);
+                soft.assertThat(result)
+                        .allMatch(c -> c.getRelease() <= 2020);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers whose model matches the provided pattern")
+        void shouldFilterByLike() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("model")
+                    .like("Mac%")
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(1);
+                soft.assertThat(result.getFirst().getModel())
+                        .startsWith("Mac");
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers whose release year is inside the provided range")
+        void shouldFilterByBetween() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .between(2019, 2021)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(3);
+                soft.assertThat(result)
+                        .allMatch(c -> c.getRelease() >= 2019 && c.getRelease() <= 2021);
+            });
+        }
+    }
+
+
 
 
 }
