@@ -19,6 +19,7 @@ import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.data.page.impl.PageRecord;
 import jakarta.nosql.Query;
 import jakarta.nosql.QueryMapper;
 import jakarta.nosql.TypedQuery;
@@ -164,6 +165,36 @@ class DefaultSqlTemplate implements SqlTemplate {
     }
 
     @Override
+    public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
+
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <T> Page<T> selectOffSet(SelectQuery query, PageRequest pageRequest) {
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(pageRequest, "pageRequest is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.<T>getSelectTypedQuery(query);
+            int size = pageRequest.size();
+            long page = pageRequest.page();
+            int offset = Math.toIntExact((page - 1) * size);
+            typedQuery.setFirstResult(offset);
+            typedQuery.setMaxResults(size + 1);
+            List<T> results = typedQuery.getResultList();
+            boolean hasNext = results.size() > size;
+            List<T> content = hasNext
+                    ? results.subList(0, size)
+                    : results;
+            long totalElements = -1;
+            if (pageRequest.requestTotal()) {
+                totalElements = count(query);
+            }
+            return new PageRecord<>(pageRequest, content, totalElements, hasNext);
+        });
+    }
+
+    @Override
     public <T> Stream<T> findAll(Class<T> type) {
         Objects.requireNonNull(type, "type is null");
         return executeInTransaction(() -> {
@@ -192,16 +223,6 @@ class DefaultSqlTemplate implements SqlTemplate {
                     .executeUpdate();
             return void.class;
         });
-    }
-
-    @Override
-    public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public <T> Page<T> selectOffSet(SelectQuery query, PageRequest pageRequest) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
