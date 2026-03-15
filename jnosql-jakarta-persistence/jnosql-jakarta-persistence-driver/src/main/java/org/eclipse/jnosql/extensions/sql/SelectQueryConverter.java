@@ -279,35 +279,58 @@ class SelectQueryConverter {
 
         if (pageRequest.mode() != PageRequest.Mode.OFFSET) {
             var cursor = pageRequest.cursor().orElseThrow();
-            cursorCondition = SelectQueryConverter.buildCursorCondition(query, cursor, pageRequest.mode());
+            cursorCondition =
+                    SelectQueryConverter.buildCursorCondition(query, cursor, pageRequest.mode());
         }
 
-        SelectQuery effectiveQuery = SelectQueryConverter.updateQuery(size, query, cursorCondition);
+        SelectQuery effectiveQuery =
+                SelectQueryConverter.updateQuery(size + 1, query, cursorCondition);
 
         var typedQuery = this.<T>getSelectTypedQuery(effectiveQuery);
-        typedQuery.setMaxResults(size);
 
-        List<T> content = typedQuery.getResultList();
+        // Important: apply the same limit on the JPA query
+        typedQuery.setMaxResults(size + 1);
 
-        if (content.isEmpty()) {
-            return new CursoredPageRecord<>(content, List.of(), -1, pageRequest, null, null);
+        List<T> results = typedQuery.getResultList();
+
+        if (results.isEmpty()) {
+            return new CursoredPageRecord<>(results, List.of(), -1, pageRequest, null, null);
         }
 
+        boolean hasNext = results.size() > size;
+
+        List<T> content = hasNext
+                ? results.subList(0, size)
+                : results;
+
+        T first = content.getFirst();
         T last = content.getLast();
-        PageRequest.Cursor nextCursor = SelectQueryConverter.buildCursor(query.sorts(), last);
+
+        PageRequest.Cursor startCursor =
+                SelectQueryConverter.buildCursor(query.sorts(), first);
+
+        PageRequest.Cursor endCursor =
+                SelectQueryConverter.buildCursor(query.sorts(), last);
+
+        boolean firstPage = pageRequest.cursor().isEmpty();
 
         PageRequest next = null;
         PageRequest previous = null;
 
-        if (pageRequest.mode() == PageRequest.Mode.CURSOR_PREVIOUS) {
-            previous = PageRequest.ofSize(size).beforeCursor(nextCursor);
-        } else {
-            next = PageRequest.ofSize(size).afterCursor(nextCursor);
+        if (hasNext) {
+            next = PageRequest.ofSize(size).afterCursor(endCursor);
         }
+
+        if (!firstPage) {
+            previous = PageRequest.ofSize(size).beforeCursor(startCursor);
+        }
+
+        List<PageRequest.Cursor> cursors =
+                firstPage ? List.of(endCursor) : List.of(startCursor, endCursor);
 
         return new CursoredPageRecord<>(
                 content,
-                List.of(nextCursor),
+                cursors,
                 -1,
                 pageRequest,
                 next,

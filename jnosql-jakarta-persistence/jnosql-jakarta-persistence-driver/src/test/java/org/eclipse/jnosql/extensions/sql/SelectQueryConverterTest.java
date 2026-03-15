@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -516,6 +517,140 @@ class SelectQueryConverterTest {
                     .build();
 
             assertThatThrownBy(() -> template.selectOffSet(select, null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("pageRequest is null");
+        }
+    }
+
+    @Nested
+    @DisplayName("When retrieving results using cursor pagination")
+    class WhenCursorPagination {
+
+        @BeforeEach
+        void insertData() {
+            template.insert(List.of(
+                    Computer.of("MacBook", 2024),
+                    Computer.of("ThinkPad", 2023),
+                    Computer.of("XPS", 2022),
+                    Computer.of("EliteBook", 2021),
+                    Computer.of("Surface", 2020)
+            ));
+        }
+
+        @Test
+        @DisplayName("Should return the first cursored page when requesting using offset mode")
+        void shouldReturnFirstCursorPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest request = PageRequest.ofSize(2);
+
+            CursoredPage<Computer> page = template.selectCursor(select, request);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(page.content()).hasSize(2);
+                soft.assertThat(page.hasNext()).isTrue();
+                soft.assertThat(page.hasPrevious()).isFalse();
+                soft.assertThat(page.pageRequest()).isEqualTo(request);
+            });
+        }
+
+        @Test
+        @DisplayName("Should navigate to the next page using afterCursor")
+        void shouldNavigateToNextCursorPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest firstRequest = PageRequest.ofSize(2);
+
+            CursoredPage<Computer> firstPage = template.selectCursor(select, firstRequest);
+
+            PageRequest nextRequest = firstPage.nextPageRequest();
+
+            CursoredPage<Computer> secondPage = template.selectCursor(select, nextRequest);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(firstPage.content()).hasSize(2);
+                soft.assertThat(secondPage.content()).hasSize(2);
+                soft.assertThat(secondPage.hasPrevious()).isTrue();
+            });
+        }
+
+        @Test
+        @DisplayName("Should navigate to the previous page using beforeCursor")
+        void shouldNavigateToPreviousCursorPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest firstRequest = PageRequest.ofSize(2);
+
+            CursoredPage<Computer> firstPage = template.selectCursor(select, firstRequest);
+
+            CursoredPage<Computer> secondPage =
+                    template.selectCursor(select, firstPage.nextPageRequest());
+
+            PageRequest previousRequest = secondPage.previousPageRequest();
+
+            CursoredPage<Computer> previousPage =
+                    template.selectCursor(select, previousRequest);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(previousPage.content()).isEqualTo(firstPage.content());
+                soft.assertThat(previousPage.hasNext()).isTrue();
+            });
+        }
+
+        @Test
+        @DisplayName("Should return empty cursored page when query returns no results")
+        void shouldReturnEmptyCursorPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release").eq(1990)
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest request = PageRequest.ofSize(2);
+
+            CursoredPage<Computer> page = template.selectCursor(select, request);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(page.content()).isEmpty();
+                soft.assertThat(page.hasNext()).isFalse();
+                soft.assertThat(page.hasPrevious()).isFalse();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when query is null")
+        void shouldThrowExceptionWhenQueryIsNull() {
+
+            PageRequest request = PageRequest.ofSize(2);
+
+            assertThatThrownBy(() -> template.selectCursor(null, request))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("query is null");
+        }
+
+        @Test
+        @DisplayName("Should throw exception when pageRequest is null")
+        void shouldThrowExceptionWhenPageRequestIsNull() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            assertThatThrownBy(() -> template.selectCursor(select, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("pageRequest is null");
         }
