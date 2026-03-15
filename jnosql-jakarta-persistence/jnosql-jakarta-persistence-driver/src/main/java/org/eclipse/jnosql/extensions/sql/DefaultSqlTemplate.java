@@ -335,17 +335,17 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public <T> QueryMapper.MapperFrom select(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'select(Class<T> type)' not supported yet.");
     }
 
     @Override
     public <T> QueryMapper.MapperDeleteFrom delete(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'delete(Class<T> type)' not supported yet.");
     }
 
     @Override
     public <T> QueryMapper.MapperUpdateFrom update(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'update(Class<T> type)' not supported yet.");
     }
 
     @Override
