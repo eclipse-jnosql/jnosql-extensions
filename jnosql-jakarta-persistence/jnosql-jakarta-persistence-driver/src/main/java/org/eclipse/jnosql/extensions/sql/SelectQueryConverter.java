@@ -33,11 +33,11 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import java.util.ArrayList;
 import java.util.List;
 
-class SqlSelectQueryConverter {
+class SelectQueryConverter {
 
     private final EntityManager manager;
 
-    SqlSelectQueryConverter(EntityManager manager) {
+    SelectQueryConverter(EntityManager manager) {
         this.manager = manager;
     }
 
