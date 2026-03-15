@@ -315,7 +315,81 @@ class SelectQueryConverterTest {
         }
     }
 
+    @Nested
+    @DisplayName("When combining SelectQuery conditions using logical operators")
+    class WhenFilteringComputersWithLogicalOperators {
 
+        @BeforeEach
+        void insertData() {
+            template.insert(Computer.of("MacBook Pro", 2021));
+            template.insert(Computer.of("ThinkPad", 2020));
+            template.insert(Computer.of("XPS", 2019));
+            template.insert(Computer.of("EliteBook", 2018));
+        }
+
+        @Test
+        @DisplayName("Should return computers that satisfy both conditions when using logical AND")
+        void shouldFilterUsingAnd() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .between(2019, 2021)
+                    .and("model")
+                    .eq("ThinkPad")
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(1);
+                soft.assertThat(result.getFirst().getModel()).isEqualTo("ThinkPad");
+                soft.assertThat(result.getFirst().getRelease()).isBetween(2019L, 2021L);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return computers that satisfy at least one condition when using logical OR")
+        void shouldFilterUsingOr() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .between(2019, 2021)
+                    .or("model")
+                    .eq("EliteBook")
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(4);
+                soft.assertThat(result)
+                        .anyMatch(c -> "EliteBook".equals(c.getModel()));
+                soft.assertThat(result)
+                        .anyMatch(c -> c.getRelease() >= 2019 && c.getRelease() <= 2021);
+            });
+        }
+
+        @Test
+        @DisplayName("Should exclude computers within the specified range when using logical NOT")
+        void shouldFilterUsingNot() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .where("release")
+                    .not()
+                    .between(2019, 2021)
+                    .build();
+
+            var result = template.<Computer>select(select).toList();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(result).hasSize(1);
+                soft.assertThat(result.getFirst().getRelease()).isLessThan(2019);
+            });
+        }
+    }
 
 
 }
