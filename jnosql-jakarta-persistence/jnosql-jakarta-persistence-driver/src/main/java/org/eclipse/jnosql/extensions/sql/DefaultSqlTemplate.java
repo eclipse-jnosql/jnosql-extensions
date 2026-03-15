@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -40,9 +41,11 @@ import java.util.stream.Stream;
 class DefaultSqlTemplate implements SqlTemplate {
 
     private final EntityManager entityManager;
+    private final SelectQueryConverter selectQueryConverter;
 
     private DefaultSqlTemplate(EntityManager entityManager) {
         this.entityManager = entityManager;
+        this.selectQueryConverter = new SelectQueryConverter(entityManager);
     }
 
     @Override
@@ -115,22 +118,49 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public <T> Stream<T> select(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            jakarta.persistence.TypedQuery<T> typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            return typedQuery.getResultStream();
+        });
+
     }
 
     @Override
     public long count(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            return (long) typedQuery.getResultList().size();
+        });
     }
 
     @Override
     public boolean exists(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            typedQuery.setMaxResults(1);
+            return !typedQuery.getResultList().isEmpty();
+        });
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> Optional<T> singleResult(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            typedQuery.setMaxResults(2);
+            var results = typedQuery.getResultList();
+            if (results.isEmpty()) {
+                return Optional.empty();
+            }
+            if (results.size() > 1) {
+                throw new NonUniqueResultException("Expected a single result but found " + results.size());
+            }
+            return Optional.of((T) results.get(0));
+        });
     }
 
     @Override
