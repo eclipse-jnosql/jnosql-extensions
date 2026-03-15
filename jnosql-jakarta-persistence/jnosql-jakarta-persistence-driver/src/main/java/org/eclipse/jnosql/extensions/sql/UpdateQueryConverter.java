@@ -28,13 +28,13 @@ import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 
 import java.util.List;
 
-class UpdateQueryConverter extends QueryConverterSupport {
+final class UpdateQueryConverter extends QueryConverterSupport {
 
     UpdateQueryConverter(EntityManager manager) {
         super(manager);
     }
 
-    <T> Query getUpdateQuery(UpdateQuery query) {
+    <T> Query convert(UpdateQuery query) {
 
         Class<T> type = resolveEntity(query.name());
 

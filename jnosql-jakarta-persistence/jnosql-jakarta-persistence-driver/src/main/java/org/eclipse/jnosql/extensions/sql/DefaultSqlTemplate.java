@@ -43,11 +43,13 @@ class DefaultSqlTemplate implements SqlTemplate {
     private final EntityManager entityManager;
     private final SelectQueryConverter selectQueryConverter;
     private final DeleteQueryConverter deleteQueryConverter;
+    private final UpdateQueryConverter updateQueryConverter;
 
     private DefaultSqlTemplate(EntityManager entityManager) {
         this.entityManager = entityManager;
         this.selectQueryConverter = new SelectQueryConverter(entityManager);
         this.deleteQueryConverter = new DeleteQueryConverter(entityManager);
+        this.updateQueryConverter = new UpdateQueryConverter(entityManager);
     }
 
     @Override
@@ -116,7 +118,8 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public void update(UpdateQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        executeInTransaction(() -> updateQueryConverter.convert(query).executeUpdate());
     }
 
     @Override
