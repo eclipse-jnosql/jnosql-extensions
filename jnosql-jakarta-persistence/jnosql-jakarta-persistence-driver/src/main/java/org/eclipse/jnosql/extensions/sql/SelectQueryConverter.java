@@ -42,7 +42,7 @@ class SelectQueryConverter {
     }
 
     @SuppressWarnings("unchecked")
-    <T> T getSelectTypedQuery(SelectQuery query) {
+    <T> TypedQuery<T> getSelectTypedQuery(SelectQuery query) {
         Class<T> type = resolveEntity(query.name());
 
         CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
@@ -53,8 +53,7 @@ class SelectQueryConverter {
         applyColumns(query.columns(), root, criteriaQuery);
         applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaQuery);
         applySort(query.sorts(), criteriaBuilder, root, criteriaQuery);
-        TypedQuery<T> typed = manager.createQuery(criteriaQuery);
-        return (T) typed;
+        return manager.createQuery(criteriaQuery);
     }
 
     private <T> void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
