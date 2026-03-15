@@ -20,9 +20,17 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Persistence;
+import org.assertj.core.api.SoftAssertions;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
 import org.jboss.weld.junit5.WeldSetup;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 
 @EnableWeld
@@ -41,7 +49,159 @@ class DeleteQueryConverterTest {
                 .createEntityManager();
     }
 
-
     @Inject
     private EntityManager entityManager;
+
+    private SqlTemplate template;
+
+    @BeforeEach
+    void setUp() {
+        this.template = DefaultSqlTemplate.of(entityManager);
+        this.template.deleteAll(Computer.class);
+    }
+
+    @Nested
+    @DisplayName("WhenDeletingWithoutCondition")
+    class WhenDeletingWithoutCondition {
+
+        @Test
+        @DisplayName("Should delete all entities when no condition is provided")
+        void shouldDeleteAllEntitiesWhenNoConditionIsProvided() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.select(SelectQuery.select().from("Computer").build()).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining).isEmpty();
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("WhenDeletingWithConditions")
+    class WhenDeletingWithConditions {
+
+        @Test
+        @DisplayName("Should delete entities matching equals condition")
+        void shouldDeleteEntitiesMatchingEqualsCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("release")
+                    .eq(2024)
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getRelease)
+                        .containsExactly(2023L);
+            });
+        }
+
+        @Test
+        @DisplayName("Should delete entities matching greater than condition")
+        void shouldDeleteEntitiesMatchingGreaterThanCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("XPS", 2022));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("release")
+                    .gt(2022)
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getRelease)
+                        .containsExactly(2022L);
+            });
+        }
+
+        @Test
+        @DisplayName("Should delete entities matching between condition")
+        void shouldDeleteEntitiesMatchingBetweenCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("XPS", 2022));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("release")
+                    .between(2023, 2024)
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getRelease)
+                        .containsExactly(2022L);
+            });
+        }
+
+        @Test
+        @DisplayName("Should delete entities matching like condition")
+        void shouldDeleteEntitiesMatchingLikeCondition() {
+
+            // given
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("XPS", 2022));
+
+            var query = DeleteQuery.delete()
+                    .from("Computer")
+                    .where("model")
+                    .like("Mac%")
+                    .build();
+
+            // when
+            template.delete(query);
+
+            var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
+
+            // then
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(remaining)
+                        .extracting(Computer::getModel)
+                        .containsExactlyInAnyOrder("ThinkPad", "XPS");
+            });
+        }
+    }
+
 }
