@@ -120,7 +120,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     public <T> Stream<T> select(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
-            jakarta.persistence.TypedQuery<T> typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            jakarta.persistence.TypedQuery<T> typedQuery = selectQueryConverter.convert(query);
             return typedQuery.getResultStream();
         });
 
@@ -130,7 +130,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     public long count(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            var typedQuery = selectQueryConverter.convert(query);
             return (long) typedQuery.getResultList().size();
         });
     }
@@ -139,7 +139,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     public boolean exists(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            var typedQuery = selectQueryConverter.convert(query);
             typedQuery.setMaxResults(1);
             return !typedQuery.getResultList().isEmpty();
         });
@@ -150,7 +150,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     public <T> Optional<T> singleResult(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.getSelectTypedQuery(query);
+            var typedQuery = selectQueryConverter.convert(query);
             typedQuery.setMaxResults(2);
             var results = typedQuery.getResultList();
             if (results.isEmpty()) {

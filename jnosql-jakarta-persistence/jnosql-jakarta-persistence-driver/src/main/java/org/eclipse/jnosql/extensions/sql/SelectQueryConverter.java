@@ -42,7 +42,7 @@ final class SelectQueryConverter extends QueryConverterSupport{
     }
 
     @SuppressWarnings("unchecked")
-    <T> TypedQuery<T> getSelectTypedQuery(SelectQuery query) {
+    <T> TypedQuery<T> convert(SelectQuery query) {
         Class<T> type = resolveEntity(query.name());
 
         CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
@@ -116,7 +116,7 @@ final class SelectQueryConverter extends QueryConverterSupport{
     }
 
     <T> PageRecord<T> executePagination(SelectQuery query, PageRequest pageRequest, DefaultSqlTemplate template) {
-        var typedQuery = this.<T>getSelectTypedQuery(query);
+        var typedQuery = this.<T>convert(query);
         int size = pageRequest.size();
         long page = pageRequest.page();
         int offset = Math.toIntExact((page - 1) * size);
@@ -153,7 +153,7 @@ final class SelectQueryConverter extends QueryConverterSupport{
         SelectQuery effectiveQuery =
                 SelectQueryConverter.updateQuery(size + 1, query, cursorCondition);
 
-        var typedQuery = this.<T>getSelectTypedQuery(effectiveQuery);
+        var typedQuery = this.<T>convert(effectiveQuery);
 
         // Important: apply the same limit on the JPA query
         typedQuery.setMaxResults(size + 1);

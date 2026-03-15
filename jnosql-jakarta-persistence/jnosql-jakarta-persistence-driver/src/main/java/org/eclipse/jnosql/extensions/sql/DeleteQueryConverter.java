@@ -15,5 +15,64 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
-final class DeleteQueryConverter {
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+
+
+class DeleteQueryConverter extends QueryConverterSupport {
+
+    DeleteQueryConverter(EntityManager manager) {
+        super(manager);
+    }
+
+    <T> Query convert(DeleteQuery query) {
+
+        Class<T> type = resolveEntity(query.name());
+
+        CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
+        CriteriaDelete<T> criteriaDelete = criteriaBuilder.createCriteriaDelete(type);
+
+        Root<T> root = criteriaDelete.from(type);
+
+        applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaDelete);
+
+        return manager.createQuery(criteriaDelete);
+    }
+
+    protected <T> void applyCondition(
+            CriteriaCondition criteriaCondition,
+            CriteriaBuilder criteriaBuilder,
+            Root<T> root,
+            CriteriaDelete<T> criteriaDelete) {
+
+        if (criteriaCondition == null) {
+            return;
+        }
+
+        Predicate predicate = toPredicate(criteriaCondition, criteriaBuilder, root);
+
+        if (predicate != null) {
+            criteriaDelete.where(predicate);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Class<T> resolveEntity(String name) {
+        return manager.getMetamodel()
+                .getEntities()
+                .stream()
+                .filter(entity ->
+                        entity.getName().equals(name) ||
+                                entity.getJavaType().getSimpleName().equals(name))
+                .map(entity -> (Class<T>) entity.getJavaType())
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Entity not found: " + name));
+    }
 }
