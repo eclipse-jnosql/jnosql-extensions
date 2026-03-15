@@ -19,6 +19,7 @@ import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.data.page.impl.CursoredPageRecord;
 import jakarta.data.page.impl.PageRecord;
 import jakarta.nosql.Query;
 import jakarta.nosql.QueryMapper;
@@ -26,6 +27,7 @@ import jakarta.nosql.TypedQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.PersistenceUnitUtil;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
@@ -166,9 +168,12 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
-
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(pageRequest, "pageRequest is null");
+        return executeInTransaction(() -> selectQueryConverter.executeQueryWithPagination(query, pageRequest));
     }
+
+
 
     @Override
     public <T> Page<T> selectOffSet(SelectQuery query, PageRequest pageRequest) {
