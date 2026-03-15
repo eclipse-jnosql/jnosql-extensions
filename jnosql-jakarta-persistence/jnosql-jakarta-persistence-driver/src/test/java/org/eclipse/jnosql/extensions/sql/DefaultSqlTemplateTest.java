@@ -58,12 +58,12 @@ class DefaultSqlTemplateTest {
     @Inject
     private EntityManager entityManager;
 
-    private SqlTemplate sqlTemplate;
+    private SqlTemplate template;
 
     @BeforeEach
     void setUp() {
-        this.sqlTemplate = DefaultSqlTemplate.of(entityManager);
-        this.sqlTemplate.deleteAll(Computer.class);
+        this.template = DefaultSqlTemplate.of(entityManager);
+        this.template.deleteAll(Computer.class);
     }
 
 
@@ -76,7 +76,7 @@ class DefaultSqlTemplateTest {
         void shouldInsertEntity() {
             Computer computer = Computer.of("MacBook", 2024);
 
-            Computer inserted = sqlTemplate.insert(computer);
+            Computer inserted = template.insert(computer);
 
             assertThat(inserted.getId()).isNotZero();
         }
@@ -89,7 +89,7 @@ class DefaultSqlTemplateTest {
                     Computer.of("ThinkPad", 2023)
             );
 
-            Iterable<Computer> inserted = sqlTemplate.insert(computers);
+            Iterable<Computer> inserted = template.insert(computers);
 
             assertThat(inserted).hasSize(2);
         }
@@ -97,14 +97,14 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when the entity is null")
         void shouldThrowExceptionWhenEntityIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.insert(null))
+            assertThatThrownBy(() -> template.insert(null))
                     .isInstanceOf(NullPointerException.class);
         }
 
         @Test
         @DisplayName("Should throw NullPointerException when the entities collection is null")
         void shouldThrowExceptionWhenEntitiesIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.insert((Iterable<Computer>) null))
+            assertThatThrownBy(() -> template.insert((Iterable<Computer>) null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("entities is null");
         }
@@ -117,9 +117,9 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should merge the entity state into the persistence context")
         void shouldUpdateEntity() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
-            Computer updated = sqlTemplate.update(computer);
+            Computer updated = template.update(computer);
 
             assertThat(updated).isNotNull();
         }
@@ -128,11 +128,11 @@ class DefaultSqlTemplateTest {
         @DisplayName("Should merge all entities from a collection")
         void shouldUpdateEntities() {
             List<Computer> computers = List.of(
-                    sqlTemplate.insert(Computer.of("MacBook", 2024)),
-                    sqlTemplate.insert(Computer.of("ThinkPad", 2023))
+                    template.insert(Computer.of("MacBook", 2024)),
+                    template.insert(Computer.of("ThinkPad", 2023))
             );
 
-            Iterable<Computer> updated = sqlTemplate.update(computers);
+            Iterable<Computer> updated = template.update(computers);
 
             assertThat(updated).hasSize(2);
         }
@@ -140,7 +140,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when the entity is null")
         void shouldThrowExceptionWhenEntityIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.update((Object) null))
+            assertThatThrownBy(() -> template.update((Object) null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("entity is null");
         }
@@ -153,12 +153,12 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should remove a managed entity from the database")
         void shouldDeleteEntity() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
-            sqlTemplate.delete(computer);
+            template.delete(computer);
 
             Optional<Computer> found =
-                    sqlTemplate.find(Computer.class, computer.getId());
+                    template.find(Computer.class, computer.getId());
 
             assertThat(found).isEmpty();
         }
@@ -167,14 +167,14 @@ class DefaultSqlTemplateTest {
         @DisplayName("Should remove all entities from the provided collection")
         void shouldDeleteEntities() {
             List<Computer> computers = List.of(
-                    sqlTemplate.insert(Computer.of("MacBook", 2024)),
-                    sqlTemplate.insert(Computer.of("ThinkPad", 2023))
+                    template.insert(Computer.of("MacBook", 2024)),
+                    template.insert(Computer.of("ThinkPad", 2023))
             );
 
-            sqlTemplate.delete(computers);
+            template.delete(computers);
 
             List<Computer> remaining =
-                    sqlTemplate.findAll(Computer.class).toList();
+                    template.findAll(Computer.class).toList();
 
             assertThat(remaining).isEmpty();
         }
@@ -182,7 +182,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when the entity is null")
         void shouldThrowExceptionWhenEntityIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.delete((Computer) null))
+            assertThatThrownBy(() -> template.delete((Computer) null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("entity is null");
         }
@@ -195,10 +195,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return the entity when it exists in the database")
         void shouldFindEntityById() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
             Optional<Computer> found =
-                    sqlTemplate.find(Computer.class, computer.getId());
+                    template.find(Computer.class, computer.getId());
 
             assertThat(found).isPresent();
         }
@@ -207,7 +207,7 @@ class DefaultSqlTemplateTest {
         @DisplayName("Should return an empty result when the entity does not exist")
         void shouldReturnEmptyWhenEntityNotFound() {
             Optional<Computer> found =
-                    sqlTemplate.find(Computer.class, 999L);
+                    template.find(Computer.class, 999L);
 
             assertThat(found).isEmpty();
         }
@@ -220,11 +220,11 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return all persisted entities of the specified type")
         void shouldReturnAllEntities() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
             List<Computer> computers =
-                    sqlTemplate.findAll(Computer.class).toList();
+                    template.findAll(Computer.class).toList();
 
             assertThat(computers).hasSize(2);
         }
@@ -237,13 +237,13 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should delete all entities from the database for the given type")
         void shouldDeleteAllEntities() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            sqlTemplate.deleteAll(Computer.class);
+            template.deleteAll(Computer.class);
 
             List<Computer> remaining =
-                    sqlTemplate.findAll(Computer.class).toList();
+                    template.findAll(Computer.class).toList();
 
             assertThat(remaining).isEmpty();
         }
@@ -256,10 +256,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return the total number of persisted entities for the given type")
         void shouldCountEntitiesByClass() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            long count = sqlTemplate.count(Computer.class);
+            long count = template.count(Computer.class);
 
             assertThat(count).isGreaterThanOrEqualTo(2);
         }
@@ -267,10 +267,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return the total number of persisted entities for the given String")
         void shouldCountEntitiesByString() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            long count = sqlTemplate.count("Computer");
+            long count = template.count("Computer");
 
             assertThat(count).isGreaterThanOrEqualTo(2);
         }
@@ -278,7 +278,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when the entity name is null")
         void shouldThrowExceptionWhenEntityNameIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.count((String) null))
+            assertThatThrownBy(() -> template.count((String) null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("entity is null");
         }
@@ -286,7 +286,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when the entity type is null")
         void shouldThrowExceptionWhenClassIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.count((Class<?>) null))
+            assertThatThrownBy(() -> template.count((Class<?>) null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("type is null");
         }
@@ -300,12 +300,12 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should delete the entity when it exists")
         void shouldDeleteEntityById() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
-            sqlTemplate.delete(Computer.class, computer.getId());
+            template.delete(Computer.class, computer.getId());
 
             Optional<Computer> found =
-                    sqlTemplate.find(Computer.class, computer.getId());
+                    template.find(Computer.class, computer.getId());
 
             assertThat(found).isEmpty();
         }
@@ -313,10 +313,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should not fail when deleting a non existing entity")
         void shouldNotFailWhenEntityDoesNotExist() {
-            sqlTemplate.delete(Computer.class, 999L);
+            template.delete(Computer.class, 999L);
 
             List<Computer> computers =
-                    sqlTemplate.findAll(Computer.class).toList();
+                    template.findAll(Computer.class).toList();
 
             assertThat(computers).isEmpty();
         }
@@ -324,7 +324,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when type is null")
         void shouldThrowExceptionWhenTypeIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.delete(null, 1L))
+            assertThatThrownBy(() -> template.delete(null, 1L))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("type is null");
         }
@@ -332,7 +332,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when id is null")
         void shouldThrowExceptionWhenIdIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.delete(Computer.class, null))
+            assertThatThrownBy(() -> template.delete(Computer.class, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("id is null");
         }
@@ -345,9 +345,9 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return true when the entity exists")
         void shouldReturnTrueWhenEntityExists() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
-            boolean exists = sqlTemplate.existsById(Computer.class, computer.getId());
+            boolean exists = template.existsById(Computer.class, computer.getId());
 
             assertThat(exists).isTrue();
         }
@@ -355,7 +355,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return false when the entity does not exist")
         void shouldReturnFalseWhenEntityDoesNotExist() {
-            boolean exists = sqlTemplate.existsById(Computer.class, 999L);
+            boolean exists = template.existsById(Computer.class, 999L);
 
             assertThat(exists).isFalse();
         }
@@ -363,7 +363,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when type is null")
         void shouldThrowExceptionWhenTypeIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.existsById(null, 1L))
+            assertThatThrownBy(() -> template.existsById(null, 1L))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("type is required");
         }
@@ -371,7 +371,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when id is null")
         void shouldThrowExceptionWhenIdIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.existsById(Computer.class, null))
+            assertThatThrownBy(() -> template.existsById(Computer.class, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("id is required");
         }
@@ -384,10 +384,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return results when executing a JPQL select query")
         void shouldReturnResultsFromQuery() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            List<Computer> result = sqlTemplate
+            List<Computer> result = template
                     .query("SELECT c FROM Computer c")
                     .result();
 
@@ -397,10 +397,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return a stream when executing a JPQL select query")
         void shouldReturnStreamFromQuery() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            List<Computer> result = sqlTemplate
+            List<Computer> result = template
                     .query("SELECT c FROM Computer c")
                     .<Computer>stream()
                     .toList();
@@ -411,9 +411,9 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return single result when query matches exactly one entity")
         void shouldReturnSingleResult() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
-            Optional<Computer> result = sqlTemplate
+            Optional<Computer> result = template
                     .query("SELECT c FROM Computer c WHERE c.id = :id")
                     .bind("id", computer.getId())
                     .singleResult();
@@ -425,7 +425,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return empty when single result query returns no entity")
         void shouldReturnEmptyWhenSingleResultDoesNotExist() {
-            Optional<Computer> result = sqlTemplate
+            Optional<Computer> result = template
                     .query("SELECT c FROM Computer c WHERE c.id = :id")
                     .bind("id", 999L)
                     .singleResult();
@@ -436,7 +436,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw exception when query string is null")
         void shouldThrowExceptionWhenQueryIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.query(null))
+            assertThatThrownBy(() -> template.query(null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("query is null");
         }
@@ -449,10 +449,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return results when executing a typed JPQL select query")
         void shouldReturnResultsFromTypedQuery() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            List<Computer> result = sqlTemplate
+            List<Computer> result = template
                     .typedQuery("SELECT c FROM Computer c", Computer.class)
                     .result();
 
@@ -462,10 +462,10 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return a stream when executing a typed JPQL select query")
         void shouldReturnStreamFromTypedQuery() {
-            sqlTemplate.insert(Computer.of("MacBook", 2024));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2023));
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
 
-            List<Computer> result = sqlTemplate
+            List<Computer> result = template
                     .typedQuery("SELECT c FROM Computer c", Computer.class)
                     .stream()
                     .toList();
@@ -476,9 +476,9 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return a single result when exactly one entity matches")
         void shouldReturnSingleResultFromTypedQuery() {
-            Computer computer = sqlTemplate.insert(Computer.of("MacBook", 2024));
+            Computer computer = template.insert(Computer.of("MacBook", 2024));
 
-            Optional<Computer> result = sqlTemplate
+            Optional<Computer> result = template
                     .typedQuery("SELECT c FROM Computer c WHERE c.id = :id", Computer.class)
                     .bind("id", computer.getId())
                     .singleResult();
@@ -490,7 +490,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should return empty when the typed query matches no entity")
         void shouldReturnEmptyWhenTypedQueryReturnsNoResult() {
-            Optional<Computer> result = sqlTemplate
+            Optional<Computer> result = template
                     .typedQuery("SELECT c FROM Computer c WHERE c.id = :id", Computer.class)
                     .bind("id", 999L)
                     .singleResult();
@@ -501,7 +501,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when query string is null")
         void shouldThrowExceptionWhenQueryIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.typedQuery(null, Computer.class))
+            assertThatThrownBy(() -> template.typedQuery(null, Computer.class))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("query is null");
         }
@@ -509,7 +509,7 @@ class DefaultSqlTemplateTest {
         @Test
         @DisplayName("Should throw NullPointerException when type is null")
         void shouldThrowExceptionWhenTypeIsNull() {
-            assertThatThrownBy(() -> sqlTemplate.typedQuery("SELECT c FROM Computer c", null))
+            assertThatThrownBy(() -> template.typedQuery("SELECT c FROM Computer c", null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("type is null");
         }
@@ -521,9 +521,9 @@ class DefaultSqlTemplateTest {
 
         @BeforeEach
         void insertData() {
-            sqlTemplate.insert(Computer.of("MacBook Pro", 2021));
-            sqlTemplate.insert(Computer.of("ThinkPad", 2020));
-            sqlTemplate.insert(Computer.of("XPS", 2019));
+            template.insert(Computer.of("MacBook Pro", 2021));
+            template.insert(Computer.of("ThinkPad", 2020));
+            template.insert(Computer.of("XPS", 2019));
         }
 
         @Test
@@ -536,7 +536,7 @@ class DefaultSqlTemplateTest {
                     .gte(2020)
                     .build();
 
-            long count = sqlTemplate.count(select);
+            long count = template.count(select);
 
             assertThat(count).isEqualTo(2);
         }
@@ -551,7 +551,7 @@ class DefaultSqlTemplateTest {
                     .eq(2021)
                     .build();
 
-            boolean exists = sqlTemplate.exists(select);
+            boolean exists = template.exists(select);
 
             assertThat(exists).isTrue();
         }
@@ -566,7 +566,7 @@ class DefaultSqlTemplateTest {
                     .eq(1990)
                     .build();
 
-            boolean exists = sqlTemplate.exists(select);
+            boolean exists = template.exists(select);
 
             assertThat(exists).isFalse();
         }
@@ -581,7 +581,7 @@ class DefaultSqlTemplateTest {
                     .eq("ThinkPad")
                     .build();
 
-            Optional<Computer> result = sqlTemplate.singleResult(select);
+            Optional<Computer> result = template.singleResult(select);
 
             SoftAssertions.assertSoftly(soft -> {
                 soft.assertThat(result).isPresent();
@@ -599,7 +599,7 @@ class DefaultSqlTemplateTest {
                     .eq("NonExisting")
                     .build();
 
-            Optional<Computer> result = sqlTemplate.singleResult(select);
+            Optional<Computer> result = template.singleResult(select);
 
             assertThat(result).isEmpty();
         }
@@ -614,7 +614,7 @@ class DefaultSqlTemplateTest {
                     .gte(2020)
                     .build();
 
-            assertThatThrownBy(() -> sqlTemplate.singleResult(select))
+            assertThatThrownBy(() -> template.singleResult(select))
                     .isInstanceOf(NonUniqueResultException.class);
         }
 
@@ -623,15 +623,15 @@ class DefaultSqlTemplateTest {
         void shouldThrowExceptionWhenQueryIsNull() {
 
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThatThrownBy(() -> sqlTemplate.count((SelectQuery) null))
+                soft.assertThatThrownBy(() -> template.count((SelectQuery) null))
                         .isInstanceOf(NullPointerException.class)
                         .hasMessage("query is null");
 
-                soft.assertThatThrownBy(() -> sqlTemplate.exists(null))
+                soft.assertThatThrownBy(() -> template.exists(null))
                         .isInstanceOf(NullPointerException.class)
                         .hasMessage("query is null");
 
-                soft.assertThatThrownBy(() -> sqlTemplate.singleResult(null))
+                soft.assertThatThrownBy(() -> template.singleResult(null))
                         .isInstanceOf(NullPointerException.class)
                         .hasMessage("query is null");
             });
