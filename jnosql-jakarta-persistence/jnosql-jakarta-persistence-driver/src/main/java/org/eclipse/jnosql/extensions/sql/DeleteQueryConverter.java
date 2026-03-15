@@ -61,18 +61,4 @@ final class DeleteQueryConverter extends QueryConverterSupport {
             criteriaDelete.where(predicate);
         }
     }
-
-    @SuppressWarnings("unchecked")
-    private <T> Class<T> resolveEntity(String name) {
-        return manager.getMetamodel()
-                .getEntities()
-                .stream()
-                .filter(entity ->
-                        entity.getName().equals(name) ||
-                                entity.getJavaType().getSimpleName().equals(name))
-                .map(entity -> (Class<T>) entity.getJavaType())
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Entity not found: " + name));
-    }
 }
