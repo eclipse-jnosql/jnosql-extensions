@@ -25,7 +25,7 @@ import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 
 
-class DeleteQueryConverter extends QueryConverterSupport {
+final class DeleteQueryConverter extends QueryConverterSupport {
 
     DeleteQueryConverter(EntityManager manager) {
         super(manager);
