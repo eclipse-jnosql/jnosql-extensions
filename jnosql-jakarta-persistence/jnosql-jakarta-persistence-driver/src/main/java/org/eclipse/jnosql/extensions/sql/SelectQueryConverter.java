@@ -16,6 +16,8 @@
 package org.eclipse.jnosql.extensions.sql;
 
 import jakarta.data.Sort;
+import jakarta.data.page.PageRequest;
+import jakarta.data.page.impl.CursoredPageRecord;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -243,6 +245,141 @@ class SelectQueryConverter {
         }
 
         return path;
+    }
+
+    <T> CursoredPageRecord<T> executeQueryWithPagination(SelectQuery query, PageRequest pageRequest) {
+        if (query.sorts().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Cursor pagination requires at least one sort field");
+        }
+
+        int size = pageRequest.size();
+
+        CriteriaCondition cursorCondition = null;
+
+        if (pageRequest.mode() != PageRequest.Mode.OFFSET) {
+            var cursor = pageRequest.cursor().orElseThrow();
+            cursorCondition = SelectQueryConverter.buildCursorCondition(query, cursor, pageRequest.mode());
+        }
+
+        SelectQuery effectiveQuery = SelectQueryConverter.updateQuery(size, query, cursorCondition);
+
+        var typedQuery = this.<T>getSelectTypedQuery(effectiveQuery);
+        typedQuery.setMaxResults(size);
+
+        List<T> content = typedQuery.getResultList();
+
+        if (content.isEmpty()) {
+            return new CursoredPageRecord<>(content, List.of(), -1, pageRequest, null, null);
+        }
+
+        T last = content.getLast();
+        PageRequest.Cursor nextCursor = SelectQueryConverter.buildCursor(query.sorts(), last);
+
+        PageRequest next = null;
+        PageRequest previous = null;
+
+        if (pageRequest.mode() == PageRequest.Mode.CURSOR_PREVIOUS) {
+            previous = PageRequest.ofSize(size).beforeCursor(nextCursor);
+        } else {
+            next = PageRequest.ofSize(size).afterCursor(nextCursor);
+        }
+
+        return new CursoredPageRecord<>(
+                content,
+                List.of(nextCursor),
+                -1,
+                pageRequest,
+                next,
+                previous
+        );
+    }
+
+    static CriteriaCondition buildCursorCondition(
+            SelectQuery query,
+            PageRequest.Cursor cursor,
+            PageRequest.Mode mode) {
+
+        List<Sort<?>> sorts = query.sorts();
+        checkCursorKeySizes(cursor, sorts);
+
+        CriteriaCondition condition = null;
+        CriteriaCondition previous = null;
+
+        for (int i = 0; i < sorts.size(); i++) {
+
+            Sort<?> sort = sorts.get(i);
+            Object key = cursor.get(i);
+
+            CriteriaCondition compare =
+                    mode == PageRequest.Mode.CURSOR_PREVIOUS
+                            ? CriteriaCondition.lt(sort.property(), key)
+                            : CriteriaCondition.gt(sort.property(), key);
+
+            if (condition == null) {
+                condition = compare;
+                previous = CriteriaCondition.eq(sort.property(), key);
+            } else {
+                condition = condition.or(previous.and(compare));
+                previous = previous.and(CriteriaCondition.eq(sort.property(), key));
+            }
+        }
+
+        return condition;
+    }
+
+    static SelectQuery updateQuery(
+            int limit,
+            SelectQuery query,
+            CriteriaCondition condition) {
+
+        SelectQuery.QueryBuilder builder = query.columns().isEmpty()
+                ? SelectQuery.builder()
+                : SelectQuery.builder(query.columns().toArray(String[]::new));
+
+        builder.from(query.name());
+
+        query.sorts().forEach(builder::sort);
+
+        if (condition != null) {
+            CriteriaCondition merged = query.condition()
+                    .map(existing -> CriteriaCondition.and(existing, condition))
+                    .orElse(condition);
+            builder.where(merged);
+        } else {
+            query.condition().ifPresent(builder::where);
+        }
+
+        builder.limit(limit);
+
+        return builder.build();
+    }
+
+    private static void checkCursorKeySizes(PageRequest.Cursor cursor, List<Sort<?>> sorts) {
+        if (cursor.size() != sorts.size()) {
+            throw new IllegalArgumentException(
+                    "Cursor size differs from sort size. Cursor: "
+                            + cursor.size() + " Sort: " + sorts.size());
+        }
+    }
+
+    static PageRequest.Cursor buildCursor(List<Sort<?>> sorts, Object entity) {
+        List<Object> keys = new ArrayList<>(sorts.size());
+        for (Sort<?> sort : sorts) {
+            keys.add(readProperty(entity, sort.property()));
+        }
+        return PageRequest.Cursor.forKey(keys.toArray());
+    }
+
+    private static Object readProperty(Object entity, String property) {
+        try {
+            var field = entity.getClass().getDeclaredField(property);
+            field.setAccessible(true);
+            return field.get(entity);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Cannot read property '" + property + "' from entity", e);
+        }
     }
 
 }
