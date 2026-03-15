@@ -344,27 +344,47 @@ class SelectQueryConverter {
             PageRequest.Mode mode) {
 
         List<Sort<?>> sorts = query.sorts();
-        checkCursorKeySizes(cursor, sorts);
+
+        if (cursor.size() != sorts.size()) {
+            throw new IllegalArgumentException(
+                    "The cursor size is different from the sort size. Cursor: "
+                            + cursor.size() + " Sort: " + sorts.size());
+        }
 
         CriteriaCondition condition = null;
-        CriteriaCondition previous = null;
+        CriteriaCondition previousCondition = null;
 
-        for (int i = 0; i < sorts.size(); i++) {
+        for (int index = 0; index < sorts.size(); index++) {
 
-            Sort<?> sort = sorts.get(i);
-            Object key = cursor.get(i);
+            Sort<?> sort = sorts.get(index);
+            Object key = cursor.get(index);
 
-            CriteriaCondition compare =
-                    mode == PageRequest.Mode.CURSOR_PREVIOUS
-                            ? CriteriaCondition.lt(sort.property(), key)
-                            : CriteriaCondition.gt(sort.property(), key);
+            boolean ascending = sort.isAscending();
+            boolean nextPage = mode == PageRequest.Mode.CURSOR_NEXT;
+
+            boolean useGreater =
+                    (ascending && nextPage) ||
+                            (!ascending && !nextPage);
+
+            CriteriaCondition comparison =
+                    useGreater
+                            ? CriteriaCondition.gt(sort.property(), key)
+                            : CriteriaCondition.lt(sort.property(), key);
 
             if (condition == null) {
-                condition = compare;
-                previous = CriteriaCondition.eq(sort.property(), key);
+
+                condition = comparison;
+                previousCondition = CriteriaCondition.eq(sort.property(), key);
+
             } else {
-                condition = condition.or(previous.and(compare));
-                previous = previous.and(CriteriaCondition.eq(sort.property(), key));
+
+                condition = condition.or(
+                        previousCondition.and(comparison)
+                );
+
+                previousCondition = previousCondition.and(
+                        CriteriaCondition.eq(sort.property(), key)
+                );
             }
         }
 
