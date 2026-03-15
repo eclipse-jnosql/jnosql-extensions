@@ -25,7 +25,6 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
@@ -34,7 +33,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import java.util.ArrayList;
 import java.util.List;
 
-class SelectQueryConverter extends QueryConverterSupport{
+final class SelectQueryConverter extends QueryConverterSupport{
 
     private static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
 
