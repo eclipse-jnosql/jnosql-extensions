@@ -53,7 +53,23 @@ class SelectQueryConverter {
         applyColumns(query.columns(), root, criteriaQuery);
         applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaQuery);
         applySort(query.sorts(), criteriaBuilder, root, criteriaQuery);
-        return manager.createQuery(criteriaQuery);
+        long limit = query.limit();
+        TypedQuery<T> typedQuery = manager.createQuery(criteriaQuery);
+        applySkip(query.skip(), typedQuery);
+        applyLimit(limit, typedQuery);
+        return typedQuery;
+    }
+
+    private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
+        if (limit > 0) {
+            typedQuery.setMaxResults((int) limit);
+        }
+    }
+
+    private static <T> void applySkip(long skip, TypedQuery<T> typedQuery) {
+        if (skip > 0) {
+            typedQuery.setFirstResult((int) skip);
+        }
     }
 
     private <T> void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
