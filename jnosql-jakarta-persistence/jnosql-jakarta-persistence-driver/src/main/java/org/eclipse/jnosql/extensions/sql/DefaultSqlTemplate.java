@@ -173,30 +173,11 @@ class DefaultSqlTemplate implements SqlTemplate {
         return executeInTransaction(() -> selectQueryConverter.executeQueryWithPagination(query, pageRequest));
     }
 
-
-
     @Override
     public <T> Page<T> selectOffSet(SelectQuery query, PageRequest pageRequest) {
         Objects.requireNonNull(query, "query is null");
         Objects.requireNonNull(pageRequest, "pageRequest is null");
-        return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.<T>getSelectTypedQuery(query);
-            int size = pageRequest.size();
-            long page = pageRequest.page();
-            int offset = Math.toIntExact((page - 1) * size);
-            typedQuery.setFirstResult(offset);
-            typedQuery.setMaxResults(size + 1);
-            List<T> results = typedQuery.getResultList();
-            boolean hasNext = results.size() > size;
-            List<T> content = hasNext
-                    ? results.subList(0, size)
-                    : results;
-            long totalElements = -1;
-            if (pageRequest.requestTotal()) {
-                totalElements = count(query);
-            }
-            return new PageRecord<>(pageRequest, content, totalElements, hasNext);
-        });
+        return executeInTransaction(() -> selectQueryConverter.executePagination(query, pageRequest, this));
     }
 
     @Override
