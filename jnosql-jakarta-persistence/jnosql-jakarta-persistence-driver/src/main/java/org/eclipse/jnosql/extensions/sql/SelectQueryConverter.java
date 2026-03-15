@@ -101,20 +101,6 @@ final class SelectQueryConverter extends QueryConverterSupport{
         criteriaQuery.multiselect(selections);
     }
 
-    @SuppressWarnings("unchecked")
-    private <FROM> Class<FROM> resolveEntity(String name) {
-        return manager.getMetamodel()
-                .getEntities()
-                .stream()
-                .filter(entity ->
-                        entity.getName().equals(name) ||
-                                entity.getJavaType().getSimpleName().equals(name))
-                .map(entity -> (Class<FROM>) entity.getJavaType())
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Entity not found: " + name));
-    }
-
     <T> PageRecord<T> executePagination(SelectQuery query, PageRequest pageRequest, DefaultSqlTemplate template) {
         var typedQuery = this.<T>convert(query);
         int size = pageRequest.size();
