@@ -74,4 +74,16 @@ public interface SqlTemplate extends SemiStructuredTemplate {
      * @throws NullPointerException if the query is {@code null}
      */
     long deleteWithCount(DeleteQuery query);
+
+    /**
+     * Checks whether an entity of the specified type exists with the given identifier.
+     *
+     * @param <T>  the entity type
+     * @param <K>  the identifier type
+     * @param type the entity class
+     * @param id    the entity identifier
+     * @return {@code true} if an entity with the given identifier exists, {@code false} otherwise
+     * @throws NullPointerException if {@code type} or {@code k} is {@code null}
+     */
+    <T, K> boolean existsById(Class<T> type, K id);
 }

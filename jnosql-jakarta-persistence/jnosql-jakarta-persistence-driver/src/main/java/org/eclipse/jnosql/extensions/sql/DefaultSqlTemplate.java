@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -40,9 +41,15 @@ import java.util.stream.Stream;
 class DefaultSqlTemplate implements SqlTemplate {
 
     private final EntityManager entityManager;
+    private final SelectQueryConverter selectQueryConverter;
+    private final DeleteQueryConverter deleteQueryConverter;
+    private final UpdateQueryConverter updateQueryConverter;
 
     private DefaultSqlTemplate(EntityManager entityManager) {
         this.entityManager = entityManager;
+        this.selectQueryConverter = new SelectQueryConverter(entityManager);
+        this.deleteQueryConverter = new DeleteQueryConverter(entityManager);
+        this.updateQueryConverter = new UpdateQueryConverter(entityManager);
     }
 
     @Override
@@ -57,7 +64,14 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public long deleteWithCount(DeleteQuery query) {
-        return 0;
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public <T, K> boolean existsById(Class<T> type, K id) {
+        Objects.requireNonNull(type, "type is required");
+        Objects.requireNonNull(id, "id is required");
+        return executeInTransaction(() -> entityManager().find(type, id) != null);
     }
 
     @Override
@@ -98,32 +112,79 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public void delete(DeleteQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        executeInTransaction(() -> deleteQueryConverter.convert(query).executeUpdate());
     }
 
     @Override
     public void update(UpdateQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        executeInTransaction(() -> {
+            updateQueryConverter.convert(query).executeUpdate();
+            entityManager.clear();
+            return void.class;
+        });
     }
 
     @Override
     public <T> Stream<T> select(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            jakarta.persistence.TypedQuery<T> typedQuery = selectQueryConverter.convert(query);
+            return typedQuery.getResultStream();
+        });
+
     }
 
     @Override
     public long count(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.convert(query);
+            return (long) typedQuery.getResultList().size();
+        });
     }
 
     @Override
     public boolean exists(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.convert(query);
+            typedQuery.setMaxResults(1);
+            return !typedQuery.getResultList().isEmpty();
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> Optional<T> singleResult(SelectQuery query) {
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> {
+            var typedQuery = selectQueryConverter.convert(query);
+            typedQuery.setMaxResults(2);
+            var results = typedQuery.getResultList();
+            if (results.isEmpty()) {
+                return Optional.empty();
+            }
+            if (results.size() > 1) {
+                throw new NonUniqueResultException("Expected a single result but found " + results.size());
+            }
+            return Optional.of((T) results.get(0));
+        });
     }
 
     @Override
-    public <T> Optional<T> singleResult(SelectQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(pageRequest, "pageRequest is null");
+        return executeInTransaction(() -> selectQueryConverter.executeQueryWithPagination(query, pageRequest));
+    }
+
+    @Override
+    public <T> Page<T> selectOffSet(SelectQuery query, PageRequest pageRequest) {
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(pageRequest, "pageRequest is null");
+        return executeInTransaction(() -> selectQueryConverter.executePagination(query, pageRequest, this));
     }
 
     @Override
@@ -155,16 +216,6 @@ class DefaultSqlTemplate implements SqlTemplate {
                     .executeUpdate();
             return void.class;
         });
-    }
-
-    @Override
-    public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public <T> Page<T> selectOffSet(SelectQuery query, PageRequest pageRequest) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -277,30 +328,33 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public <T> QueryMapper.MapperFrom select(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'select(Class<T> type)' not supported yet.");
     }
 
     @Override
     public <T> QueryMapper.MapperDeleteFrom delete(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'delete(Class<T> type)' not supported yet.");
     }
 
     @Override
     public <T> QueryMapper.MapperUpdateFrom update(Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("'update(Class<T> type)' not supported yet.");
     }
 
     @Override
     public Query query(String query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return new SqlQuery(this, entityManager.createQuery(query));
     }
 
     @Override
     public <T> TypedQuery<T> typedQuery(String query, Class<T> type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(type, "type is null");
+        return new SqlTypedQuery<>(this, entityManager.createQuery(query, type));
     }
 
-    private <T> T executeInTransaction(Supplier<T> operation) {
+    <T> T executeInTransaction(Supplier<T> operation) {
 
         EntityTransaction tx = entityManager.getTransaction();
 
