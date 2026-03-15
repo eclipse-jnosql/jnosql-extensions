@@ -189,10 +189,10 @@ class SelectQueryConverter {
             }
 
             case AND -> {
-                List<CriteriaCondition> andConditions =
+                List<CriteriaCondition> conditions =
                         condition.element().value().get(new TypeReference<>() {});
 
-                List<Predicate> andPredicates = andConditions.stream()
+                List<Predicate> andPredicates = conditions.stream()
                         .map(c -> toPredicate(c, criteriaBuilder, root))
                         .toList();
 
@@ -200,10 +200,10 @@ class SelectQueryConverter {
             }
 
             case OR -> {
-                List<CriteriaCondition> orConditions =
+                List<CriteriaCondition> conditions =
                         condition.element().value().get(new TypeReference<>() {});
 
-                List<Predicate> orPredicates = orConditions.stream()
+                List<Predicate> orPredicates = conditions.stream()
                         .map(c -> toPredicate(c, criteriaBuilder, root))
                         .toList();
 
