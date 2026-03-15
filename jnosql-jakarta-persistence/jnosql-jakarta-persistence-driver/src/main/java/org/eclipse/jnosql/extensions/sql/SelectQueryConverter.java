@@ -18,6 +18,7 @@ package org.eclipse.jnosql.extensions.sql;
 import jakarta.data.Sort;
 import jakarta.data.page.PageRequest;
 import jakarta.data.page.impl.CursoredPageRecord;
+import jakarta.data.page.impl.PageRecord;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -245,6 +246,25 @@ class SelectQueryConverter {
         }
 
         return path;
+    }
+
+    <T> PageRecord<T> executePagination(SelectQuery query, PageRequest pageRequest, DefaultSqlTemplate template) {
+        var typedQuery = this.<T>getSelectTypedQuery(query);
+        int size = pageRequest.size();
+        long page = pageRequest.page();
+        int offset = Math.toIntExact((page - 1) * size);
+        typedQuery.setFirstResult(offset);
+        typedQuery.setMaxResults(size + 1);
+        List<T> results = typedQuery.getResultList();
+        boolean hasNext = results.size() > size;
+        List<T> content = hasNext
+                ? results.subList(0, size)
+                : results;
+        long totalElements = -1;
+        if (pageRequest.requestTotal()) {
+            totalElements = template.count(query);
+        }
+        return new PageRecord<>(pageRequest, content, totalElements, hasNext);
     }
 
     <T> CursoredPageRecord<T> executeQueryWithPagination(SelectQuery query, PageRequest pageRequest) {
