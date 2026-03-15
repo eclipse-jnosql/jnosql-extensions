@@ -15,6 +15,8 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
@@ -34,6 +36,9 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnableWeld
@@ -388,6 +393,131 @@ class SelectQueryConverterTest {
                 soft.assertThat(result).hasSize(1);
                 soft.assertThat(result.getFirst().getRelease()).isLessThan(2019);
             });
+        }
+    }
+
+    @Nested
+    @DisplayName("When retrieving paginated results using SelectQuery and PageRequest")
+    class WhenPagination {
+
+        @BeforeEach
+        void insertData() {
+            template.insert(List.of(
+                    Computer.of("MacBook", 2024),
+                    Computer.of("ThinkPad", 2023),
+                    Computer.of("XPS", 2022),
+                    Computer.of("EliteBook", 2021),
+                    Computer.of("Surface", 2020)
+            ));
+        }
+
+        @Test
+        @DisplayName("Should return the first page when requesting a page by size")
+        void shouldReturnFirstPageUsingOfSize() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest pageRequest = PageRequest.ofSize(2);
+
+            Page<Computer> page = template.selectOffSet(select, pageRequest);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(page.content()).hasSize(2);
+                soft.assertThat(page.hasNext()).isTrue();
+                soft.assertThat(page.hasPrevious()).isFalse();
+                soft.assertThat(page.numberOfElements()).isEqualTo(2);
+            });
+        }
+
+        @Test
+        @DisplayName("Should return the first page when explicitly requesting page number one")
+        void shouldReturnFirstPageUsingOfPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest pageRequest = PageRequest.ofPage(1).size(2);
+
+            Page<Computer> page = template.selectOffSet(select, pageRequest);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(page.content()).hasSize(2);
+                soft.assertThat(page.hasPrevious()).isFalse();
+                soft.assertThat(page.hasNext()).isTrue();
+            });
+        }
+
+        @Test
+        @DisplayName("Should return the second page when requesting page two with a custom size")
+        void shouldReturnSecondPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest pageRequest = PageRequest.ofPage(2).size(3);
+
+            Page<Computer> page = template.selectOffSet(select, pageRequest);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(page.content()).hasSize(2);
+                soft.assertThat(page.hasPrevious()).isTrue();
+                soft.assertThat(page.hasNext()).isFalse();
+                soft.assertThat(page.numberOfElements()).isEqualTo(2);
+            });
+        }
+
+        @Test
+        @DisplayName("Should navigate to the next page using nextPageRequest")
+        void shouldNavigateToNextPage() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .orderBy("release").desc()
+                    .build();
+
+            PageRequest pageRequest = PageRequest.ofSize(2);
+
+            Page<Computer> firstPage = template.selectOffSet(select, pageRequest);
+
+            Page<Computer> secondPage =
+                    template.selectOffSet(select, firstPage.nextPageRequest());
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(firstPage.content()).hasSize(2);
+                soft.assertThat(secondPage.content()).hasSize(2);
+                soft.assertThat(secondPage.hasPrevious()).isTrue();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when query is null")
+        void shouldThrowExceptionWhenQueryIsNull() {
+
+            PageRequest pageRequest = PageRequest.ofSize(2);
+
+            assertThatThrownBy(() -> template.selectOffSet(null, pageRequest))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("query is null");
+        }
+
+        @Test
+        @DisplayName("Should throw NullPointerException when pageRequest is null")
+        void shouldThrowExceptionWhenPageRequestIsNull() {
+
+            var select = SelectQuery.select()
+                    .from("Computer")
+                    .build();
+
+            assertThatThrownBy(() -> template.selectOffSet(select, null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("pageRequest is null");
         }
     }
 
