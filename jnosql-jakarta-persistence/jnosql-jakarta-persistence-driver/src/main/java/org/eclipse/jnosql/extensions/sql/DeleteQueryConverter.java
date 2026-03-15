@@ -45,7 +45,7 @@ final class DeleteQueryConverter extends QueryConverterSupport {
         return manager.createQuery(criteriaDelete);
     }
 
-    protected <T> void applyCondition(
+    private  <T> void applyCondition(
             CriteriaCondition criteriaCondition,
             CriteriaBuilder criteriaBuilder,
             Root<T> root,
