@@ -227,6 +227,9 @@ class SelectQueryConverter {
 
     private Path<?> resolvePath(Path<?> root, String property) {
 
+        if("_AND".equals(property) || "_OR".equals(property) || "_NOT".equals(property)) {
+            return null;
+        }
         if (!property.contains(".")) {
             return root.get(property);
         }
