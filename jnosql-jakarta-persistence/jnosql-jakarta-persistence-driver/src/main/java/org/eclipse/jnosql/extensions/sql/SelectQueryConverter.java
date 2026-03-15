@@ -35,6 +35,8 @@ import java.util.List;
 
 class SelectQueryConverter {
 
+    private static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
+
     private final EntityManager manager;
 
     SelectQueryConverter(EntityManager manager) {
@@ -227,7 +229,7 @@ class SelectQueryConverter {
 
     private Path<?> resolvePath(Path<?> root, String property) {
 
-        if("_AND".equals(property) || "_OR".equals(property) || "_NOT".equals(property)) {
+        if(RESERVED_PROPERTIES.contains(property)) {
             return null;
         }
         if (!property.contains(".")) {
