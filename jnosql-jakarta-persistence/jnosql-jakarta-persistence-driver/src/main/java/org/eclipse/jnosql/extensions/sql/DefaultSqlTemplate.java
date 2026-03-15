@@ -119,7 +119,11 @@ class DefaultSqlTemplate implements SqlTemplate {
     @Override
     public void update(UpdateQuery query) {
         Objects.requireNonNull(query, "query is null");
-        executeInTransaction(() -> updateQueryConverter.convert(query).executeUpdate());
+        executeInTransaction(() -> {
+            updateQueryConverter.convert(query).executeUpdate();
+            entityManager.clear();
+            return void.class;
+        });
     }
 
     @Override
