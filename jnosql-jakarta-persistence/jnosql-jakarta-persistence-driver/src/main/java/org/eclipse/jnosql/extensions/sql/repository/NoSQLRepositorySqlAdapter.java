@@ -185,16 +185,24 @@ public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     @Override
     public void deleteById(K id) {
-
+        Objects.requireNonNull(id, "id is required");
+        sqlTemplate.delete(entityType, id);
     }
 
     @Override
     public void delete(T entity) {
-
+        Objects.requireNonNull(entity, "entity is required");
+        sqlTemplate.delete(entity);
     }
 
     @Override
     public void deleteAll(List<? extends T> entities) {
+        Objects.requireNonNull(entities, "entities are required");
 
+        if (entities.isEmpty()) {
+            return;
+        }
+
+        sqlTemplate.delete(entities);
     }
 }
