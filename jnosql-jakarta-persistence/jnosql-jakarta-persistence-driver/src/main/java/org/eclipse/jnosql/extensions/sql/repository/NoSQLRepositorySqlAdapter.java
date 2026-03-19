@@ -159,12 +159,13 @@ public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     @Override
     public Optional<T> findById(K id) {
-        return Optional.empty();
+        Objects.requireNonNull(id, "id is required");
+        return sqlTemplate.find(entityType, id);
     }
 
     @Override
     public Stream<T> findAll() {
-        return Stream.empty();
+        return sqlTemplate.findAll(entityType);
     }
 
     @Override
