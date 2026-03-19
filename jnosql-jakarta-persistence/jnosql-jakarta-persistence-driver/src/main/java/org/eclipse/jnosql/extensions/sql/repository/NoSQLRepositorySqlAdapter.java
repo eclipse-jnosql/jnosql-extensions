@@ -18,10 +18,13 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -38,27 +41,64 @@ public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     @Override
     public void deleteAll() {
-
+        sqlTemplate.deleteAll(entityType);
     }
 
     @Override
     public long countBy() {
-        return 0;
+        return sqlTemplate.count(entityType);
     }
 
     @Override
     public boolean existsById(K id) {
-        return false;
+        Objects.requireNonNull(id, "id is required");
+        return sqlTemplate.existsById(entityType, id);
     }
 
     @Override
     public Stream<T> findByIdIn(Iterable<K> ids) {
-        return Stream.empty();
+        Objects.requireNonNull(ids, "ids is required");
+
+        if (!ids.iterator().hasNext()) {
+            return Stream.empty();
+        }
+
+        var entityManager = sqlTemplate.entityManager();
+        var metamodel = entityManager.getMetamodel().entity(entityType);
+
+        var entityName = metamodel.getName();
+        var idAttribute = metamodel.getId(metamodel.getIdType().getJavaType());
+        var idFieldName = idAttribute.getName();
+
+        var query = SelectQuery.select()
+                .from(entityName)
+                .where(idFieldName)
+                .in(ids).build();
+
+        return sqlTemplate.select(query);
     }
 
     @Override
     public void deleteByIdIn(Iterable<K> ids) {
+        Objects.requireNonNull(ids, "ids is required");
 
+        if (!ids.iterator().hasNext()) {
+            return;
+        }
+
+        var entityManager = sqlTemplate.entityManager();
+        var metamodel = entityManager.getMetamodel().entity(entityType);
+
+        var entityName = metamodel.getName();
+        var idAttribute = metamodel.getId(metamodel.getIdType().getJavaType());
+        var idFieldName = idAttribute.getName();
+
+        var query = DeleteQuery.delete()
+                .from(entityName)
+                .where(idFieldName)
+                .in(ids).build();
+
+        sqlTemplate.delete(query);
     }
 
     @Override
