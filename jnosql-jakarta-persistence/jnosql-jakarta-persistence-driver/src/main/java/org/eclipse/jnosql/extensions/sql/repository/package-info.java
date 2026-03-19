@@ -13,4 +13,13 @@
  *
  *  Otavio Santana
  */
+
+/**
+ * Provides SQL-based repository support for Eclipse JNoSQL.
+ *
+ * <p>This package contains the infrastructure required to integrate relational databases
+ * (SQL) with the JNoSQL repository abstraction. It enables developers to define repository
+ * interfaces that interact with relational data stores while preserving a domain-oriented model.</p>
+ *
+ */
 package org.eclipse.jnosql.extensions.sql.repository;
