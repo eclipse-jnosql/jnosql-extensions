@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
@@ -103,22 +104,37 @@ public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     @Override
     public <S extends T> S insert(S entity) {
-        return null;
+        Objects.requireNonNull(entity, "entity is required");
+        return (S) sqlTemplate.insert(entity);
     }
 
     @Override
     public <S extends T> List<S> insertAll(List<S> entities) {
-        return List.of();
+        Objects.requireNonNull(entities, "entities are required");
+
+        var result = sqlTemplate.insert(entities);
+        return (result instanceof List)
+                ? (List<S>) result
+                : StreamSupport.stream(result.spliterator(), false)
+                .toList();
     }
 
     @Override
     public <S extends T> S update(S entity) {
-        return null;
+        Objects.requireNonNull(entity, "entity is required");
+        return sqlTemplate.update(entity);
     }
 
     @Override
     public <S extends T> List<S> updateAll(List<S> entities) {
-        return List.of();
+        Objects.requireNonNull(entities, "entities are required");
+
+        var result = sqlTemplate.update(entities);
+
+        return (result instanceof List)
+                ? (List<S>) result
+                : StreamSupport.stream(result.spliterator(), false)
+                .toList();
     }
 
     @Override
