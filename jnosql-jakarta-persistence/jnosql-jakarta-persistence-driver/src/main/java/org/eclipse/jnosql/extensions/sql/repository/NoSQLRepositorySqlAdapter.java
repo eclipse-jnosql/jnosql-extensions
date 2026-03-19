@@ -139,12 +139,22 @@ public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     @Override
     public <S extends T> S save(S entity) {
-        return null;
+        Objects.requireNonNull(entity, "entity is required");
+        return sqlTemplate.update(entity);
     }
 
     @Override
     public <S extends T> List<S> saveAll(List<S> entities) {
-        return List.of();
+        Objects.requireNonNull(entities, "entities are required");
+        if (entities.isEmpty()) {
+            return List.of();
+        }
+        var result = sqlTemplate.update(entities);
+
+        return (result instanceof List)
+                ? (List<S>) result
+                : StreamSupport.stream(result.spliterator(), false)
+                .toList();
     }
 
     @Override
