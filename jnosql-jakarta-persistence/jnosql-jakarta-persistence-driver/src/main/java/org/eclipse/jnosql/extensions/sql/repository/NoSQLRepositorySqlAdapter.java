@@ -170,7 +170,17 @@ public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     @Override
     public Page<T> findAll(PageRequest pageRequest, Order<T> sortBy) {
-        return null;
+        Objects.requireNonNull(pageRequest, "pageRequest is required");
+        Objects.requireNonNull(sortBy, "sortBy is required");
+
+        var entityManager = sqlTemplate.entityManager();
+        var metamodel = entityManager.getMetamodel().entity(entityType);
+        var entityName = metamodel.getName();
+
+        SelectQuery selectQuery = SelectQuery.builder().from(entityName)
+                .sort(sortBy.sorts().toArray(new jakarta.data.Sort[0]))
+                .build();
+        return sqlTemplate.selectOffSet(selectQuery, pageRequest);
     }
 
     @Override
