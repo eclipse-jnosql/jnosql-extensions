@@ -18,7 +18,6 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
@@ -41,7 +40,7 @@ class NoSQLRepositorySqlAdapterTest {
             .build();
 
     @Inject
-    private SqlTemplateFactory sqlTemplateFactory;
+    private SqlTemplate template;
 
     private NoSQLRepository<Computer, Long> repository;
 
@@ -50,13 +49,13 @@ class NoSQLRepositorySqlAdapterTest {
     public SqlTemplate createEntityManager() {
         EntityManagerFactory persistenceUnit = Persistence.createEntityManagerFactory("testPersistenceUnit");
         var entityManager = persistenceUnit.createEntityManager();
+        var sqlTemplateFactory = new SqlTemplateFactory();
         return sqlTemplateFactory.create(entityManager);
     }
 
     @BeforeEach
-    void setUP() {
-        repository = new NoSQLRepository<Computer, Long>() {
-        }
+    void setUp() {
+        repository = new NoSQLRepositorySqlAdapter<> (Computer.class, template);
     }
 
 }
