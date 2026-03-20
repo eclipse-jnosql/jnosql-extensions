@@ -36,7 +36,7 @@ import java.util.function.Function;
  * @see SqlTemplate
  * @see EntityManager
  */
-public class SqlTemplateFactory implements Function<EntityManager, SqlTemplate> {
+public class SqlTemplateFactory {
 
     /**
      * Creates a {@link SqlTemplate} backed by the provided {@link EntityManager}.
@@ -48,8 +48,7 @@ public class SqlTemplateFactory implements Function<EntityManager, SqlTemplate> 
      * @return a {@link SqlTemplate} instance associated with the provided entity manager
      * @throws NullPointerException if {@code entityManager} is {@code null}
      */
-    @Override
-    public SqlTemplate apply(EntityManager entityManager) {
+    public SqlTemplate create(EntityManager entityManager) {
         Objects.requireNonNull(entityManager, "entityManager is required");
         return DefaultSqlTemplate.of(entityManager);
     }
