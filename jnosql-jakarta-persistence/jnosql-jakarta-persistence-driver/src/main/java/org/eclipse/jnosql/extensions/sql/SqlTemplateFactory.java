@@ -20,6 +20,22 @@ import jakarta.persistence.EntityManager;
 import java.util.Objects;
 import java.util.function.Function;
 
+/**
+ * Factory responsible for creating {@link SqlTemplate} instances from a given {@link EntityManager}.
+ *
+ * <p>This class acts as an integration point between the Jakarta Persistence API and
+ * the JNoSQL SQL extension, adapting a JPA {@link EntityManager} into a {@link SqlTemplate}
+ * that follows the JNoSQL {@code SemiStructuredTemplate} model.</p>
+ *
+ * <p>The produced {@link SqlTemplate} enables repository-style operations and query execution
+ * using JNoSQL abstractions while delegating persistence operations to the underlying
+ * Jakarta Persistence provider (e.g., Hibernate or EclipseLink).</p>
+ *
+ * <p>This factory is stateless and thread-safe, and can be reused across multiple invocations.</p>
+ *
+ * @see SqlTemplate
+ * @see EntityManager
+ */
 public class SqlTemplateFactory implements Function<EntityManager, SqlTemplate> {
 
     @Override
