@@ -28,7 +28,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class SqlTemplateFactoryTest {
 
-    
+
     private SqlTemplateFactory sqlTemplateFactory;
 
     @BeforeEach
