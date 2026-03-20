@@ -36,6 +36,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @EnableWeld
@@ -140,6 +142,98 @@ class NoSQLRepositorySqlAdapterTest {
             assertThatThrownBy(() -> repository.findAll(pageRequest, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("sortBy is required");
+        }
+    }
+
+    @Nested
+    @DisplayName("WhenExistsAndFindByIdIn")
+    class WhenExistsAndFindByIdIn {
+
+        @BeforeEach
+        void clean() {
+            repository.deleteAll();
+        }
+
+        @Test
+        @DisplayName("Should return true when entity exists by id")
+        void shouldReturnTrueWhenEntityExists() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            var exists = repository.existsById(computer.getId());
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(exists).isTrue();
+            });
+        }
+
+        @Test
+        @DisplayName("Should return false when entity does not exist by id")
+        void shouldReturnFalseWhenEntityDoesNotExist() {
+
+            // when
+            var exists = repository.existsById(999L);
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(exists).isFalse();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when id is null in existsById")
+        void shouldThrowExceptionWhenIdIsNull() {
+
+            assertThatThrownBy(() -> repository.existsById(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("id is required");
+        }
+
+        @Test
+        @DisplayName("Should return entities when ids are provided")
+        void shouldReturnEntitiesWhenIdsProvided() {
+
+            // given
+            var computer1 = repository.insert(Computer.of("MacBook Pro", 2023));
+            var computer2 = repository.insert(Computer.of("ThinkPad", 2022));
+
+            var ids = List.of(computer1.getId(), computer2.getId());
+
+            // when
+            var result = repository.findByIdIn(ids).toList();
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getId)
+                        .containsExactlyInAnyOrder(computer1.getId(), computer2.getId());
+            });
+        }
+
+        @Test
+        @DisplayName("Should return empty when ids iterable is empty")
+        void shouldReturnEmptyWhenIdsIsEmpty() {
+
+            // when
+            var result = repository.findByIdIn(List.<Long>of()).toList();
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when ids is null")
+        void shouldThrowExceptionWhenIdsIsNull() {
+
+            assertThatThrownBy(() -> repository.findByIdIn(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("ids is required");
         }
     }
 }
