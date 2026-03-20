@@ -20,7 +20,7 @@ import jakarta.persistence.EntityManager;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class SqlTemplateSupplier implements Function<EntityManager, SqlTemplate> {
+public class SqlTemplateFactory implements Function<EntityManager, SqlTemplate> {
 
     @Override
     public SqlTemplate apply(EntityManager entityManager) {
