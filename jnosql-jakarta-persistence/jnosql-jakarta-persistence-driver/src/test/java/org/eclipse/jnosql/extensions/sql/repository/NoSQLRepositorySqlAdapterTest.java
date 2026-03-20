@@ -15,8 +15,48 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-import static org.junit.jupiter.api.Assertions.*;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.extensions.sql.SqlTemplateFactory;
+import org.eclipse.jnosql.extensions.sql.model.Computer;
+import org.eclipse.jnosql.mapping.NoSQLRepository;
+import org.jboss.weld.junit5.EnableWeld;
+import org.jboss.weld.junit5.WeldInitiator;
+import org.jboss.weld.junit5.WeldSetup;
+import org.junit.jupiter.api.BeforeEach;
 
+@EnableWeld
 class NoSQLRepositorySqlAdapterTest {
+
+    @WeldSetup
+    WeldInitiator weld = WeldInitiator.from(
+                    SqlTemplateFactory.class,
+                    NoSQLRepositorySqlAdapterTest.class
+            )
+            .build();
+
+    @Inject
+    private SqlTemplateFactory sqlTemplateFactory;
+
+    private NoSQLRepository<Computer, Long> repository;
+
+    @Produces
+    @ApplicationScoped
+    public SqlTemplate createEntityManager() {
+        EntityManagerFactory persistenceUnit = Persistence.createEntityManagerFactory("testPersistenceUnit");
+        var entityManager = persistenceUnit.createEntityManager();
+        return sqlTemplateFactory.create(entityManager);
+    }
+
+    @BeforeEach
+    void setUP() {
+        repository = new NoSQLRepository<Computer, Long>() {
+        }
+    }
 
 }
