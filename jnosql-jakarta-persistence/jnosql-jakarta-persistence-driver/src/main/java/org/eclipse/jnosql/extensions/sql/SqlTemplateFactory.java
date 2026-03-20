@@ -38,6 +38,16 @@ import java.util.function.Function;
  */
 public class SqlTemplateFactory implements Function<EntityManager, SqlTemplate> {
 
+    /**
+     * Creates a {@link SqlTemplate} backed by the provided {@link EntityManager}.
+     *
+     * <p>The returned template delegates persistence operations to the given
+     * {@link EntityManager}, allowing JNoSQL-style interactions with relational databases.</p>
+     *
+     * @param entityManager the JPA {@link EntityManager} used for persistence operations
+     * @return a {@link SqlTemplate} instance associated with the provided entity manager
+     * @throws NullPointerException if {@code entityManager} is {@code null}
+     */
     @Override
     public SqlTemplate apply(EntityManager entityManager) {
         Objects.requireNonNull(entityManager, "entityManager is required");
