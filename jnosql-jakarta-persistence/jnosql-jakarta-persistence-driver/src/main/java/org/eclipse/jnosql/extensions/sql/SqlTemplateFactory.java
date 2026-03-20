@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 
 import java.util.Objects;
@@ -36,6 +37,7 @@ import java.util.function.Function;
  * @see SqlTemplate
  * @see EntityManager
  */
+@ApplicationScoped
 public class SqlTemplateFactory {
 
     /**
