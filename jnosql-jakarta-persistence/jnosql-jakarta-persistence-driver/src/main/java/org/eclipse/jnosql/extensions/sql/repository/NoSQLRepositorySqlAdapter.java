@@ -59,16 +59,11 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
             return Stream.empty();
         }
 
-        var entityManager = sqlTemplate.entityManager();
-        var metamodel = entityManager.getMetamodel().entity(entityType);
-
-        var entityName = metamodel.getName();
-        var idAttribute = metamodel.getId(metamodel.getIdType().getJavaType());
-        var idFieldName = idAttribute.getName();
+        var metadata = resolveMetadata();
 
         var query = SelectQuery.select()
-                .from(entityName)
-                .where(idFieldName)
+                .from(metadata.name())
+                .where(metadata.idName())
                 .in(ids).build();
 
         return sqlTemplate.select(query);
@@ -82,16 +77,11 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
             return;
         }
 
-        var entityManager = sqlTemplate.entityManager();
-        var metamodel = entityManager.getMetamodel().entity(entityType);
-
-        var entityName = metamodel.getName();
-        var idAttribute = metamodel.getId(metamodel.getIdType().getJavaType());
-        var idFieldName = idAttribute.getName();
+        var metadata = resolveMetadata();
 
         var query = DeleteQuery.delete()
-                .from(entityName)
-                .where(idFieldName)
+                .from(metadata.name())
+                .where(metadata.idName())
                 .in(ids).build();
 
         sqlTemplate.delete(query);
@@ -196,13 +186,62 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
         Objects.requireNonNull(pageRequest, "pageRequest is required");
         Objects.requireNonNull(sortBy, "sortBy is required");
 
-        var entityManager = sqlTemplate.entityManager();
-        var metamodel = entityManager.getMetamodel().entity(entityType);
-        var entityName = metamodel.getName();
+        var metadata = resolveMetadata();
 
-        SelectQuery selectQuery = SelectQuery.builder().from(entityName)
+        SelectQuery selectQuery = SelectQuery.builder().from(metadata.name())
                 .sort(sortBy.sorts().toArray(new jakarta.data.Sort[0]))
                 .build();
         return sqlTemplate.selectOffSet(selectQuery, pageRequest);
+    }
+
+
+    private EntityMetadata resolveMetadata() {
+
+        var entityManager = sqlTemplate.entityManager();
+        var metamodel = entityManager.getMetamodel().entity(entityType);
+
+        Class<?> idType = metamodel.getIdType().getJavaType();
+
+        if (idType.isPrimitive()) {
+            idType = wrapPrimitive(idType);
+        }
+
+        var idAttribute = metamodel.getId(idType);
+
+        return new EntityMetadata(
+                metamodel.getName(),
+                idAttribute.getName()
+        );
+    }
+
+    private Class<?> wrapPrimitive(Class<?> type) {
+        if (type == long.class) {
+            return Long.class;
+        }
+        if (type == int.class) {
+            return Integer.class;
+        }
+        if (type == boolean.class) {
+            return Boolean.class;
+        }
+        if (type == double.class) {
+            return Double.class;
+        }
+        if (type == float.class) {
+            return Float.class;
+        }
+        if (type == short.class) {
+            return Short.class;
+        }
+        if (type == byte.class) {
+            return Byte.class;
+        }
+        if (type == char.class) {
+            return Character.class;
+        }
+        return type;
+    }
+
+    private record EntityMetadata(String name, String idName) {
     }
 }
