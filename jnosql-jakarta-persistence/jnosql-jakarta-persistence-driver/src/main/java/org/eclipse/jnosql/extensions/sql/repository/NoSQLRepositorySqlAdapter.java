@@ -41,11 +41,6 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
     }
 
     @Override
-    public void deleteAll() {
-        sqlTemplate.deleteAll(entityType);
-    }
-
-    @Override
     public long countBy() {
         return sqlTemplate.count(entityType);
     }
@@ -100,6 +95,34 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
                 .in(ids).build();
 
         sqlTemplate.delete(query);
+    }
+
+    @Override
+    public void deleteAll() {
+        sqlTemplate.deleteAll(entityType);
+    }
+
+    @Override
+    public void deleteById(K id) {
+        Objects.requireNonNull(id, "id is required");
+        sqlTemplate.delete(entityType, id);
+    }
+
+    @Override
+    public void delete(T entity) {
+        Objects.requireNonNull(entity, "entity is required");
+        sqlTemplate.delete(entity);
+    }
+
+    @Override
+    public void deleteAll(List<? extends T> entities) {
+        Objects.requireNonNull(entities, "entities are required");
+
+        if (entities.isEmpty()) {
+            return;
+        }
+
+        sqlTemplate.delete(entities);
     }
 
     @Override
@@ -181,28 +204,5 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
                 .sort(sortBy.sorts().toArray(new jakarta.data.Sort[0]))
                 .build();
         return sqlTemplate.selectOffSet(selectQuery, pageRequest);
-    }
-
-    @Override
-    public void deleteById(K id) {
-        Objects.requireNonNull(id, "id is required");
-        sqlTemplate.delete(entityType, id);
-    }
-
-    @Override
-    public void delete(T entity) {
-        Objects.requireNonNull(entity, "entity is required");
-        sqlTemplate.delete(entity);
-    }
-
-    @Override
-    public void deleteAll(List<? extends T> entities) {
-        Objects.requireNonNull(entities, "entities are required");
-
-        if (entities.isEmpty()) {
-            return;
-        }
-
-        sqlTemplate.delete(entities);
     }
 }
