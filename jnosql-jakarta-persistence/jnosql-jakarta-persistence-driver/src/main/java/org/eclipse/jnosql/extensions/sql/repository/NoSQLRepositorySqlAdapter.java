@@ -23,6 +23,8 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,9 +37,12 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     private final SqlTemplate sqlTemplate;
 
+    private final EntityMetadata metadata;
+
     NoSQLRepositorySqlAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
         this.entityType = entityType;
         this.sqlTemplate = sqlTemplate;
+        this.metadata = resolveMetadata();
     }
 
     @Override
@@ -59,8 +64,6 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
             return Stream.empty();
         }
 
-        var metadata = resolveMetadata();
-
         var query = SelectQuery.select()
                 .from(metadata.name())
                 .where(metadata.idName())
@@ -76,8 +79,6 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
         if (!ids.iterator().hasNext()) {
             return;
         }
-
-        var metadata = resolveMetadata();
 
         var query = DeleteQuery.delete()
                 .from(metadata.name())
@@ -118,7 +119,7 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
     @Override
     public <S extends T> S insert(S entity) {
         Objects.requireNonNull(entity, "entity is required");
-        return (S) sqlTemplate.insert(entity);
+        return sqlTemplate.insert(entity);
     }
 
     @Override
@@ -186,8 +187,6 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
         Objects.requireNonNull(pageRequest, "pageRequest is required");
         Objects.requireNonNull(sortBy, "sortBy is required");
 
-        var metadata = resolveMetadata();
-
         SelectQuery selectQuery = SelectQuery.builder().from(metadata.name())
                 .sort(sortBy.sorts().toArray(new jakarta.data.Sort[0]))
                 .build();
@@ -200,46 +199,18 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
         var entityManager = sqlTemplate.entityManager();
         var metamodel = entityManager.getMetamodel().entity(entityType);
 
-        Class<?> idType = metamodel.getIdType().getJavaType();
+        String entityName = metamodel.getName();
 
-        if (idType.isPrimitive()) {
-            idType = wrapPrimitive(idType);
-        }
+        // Find the @Id field manually (provider-safe)
+        String idFieldName = Arrays.stream(entityType.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(jakarta.persistence.Id.class))
+                .findFirst()
+                .map(Field::getName)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No @Id field found on entity " + entityType.getName()
+                ));
 
-        var idAttribute = metamodel.getId(idType);
-
-        return new EntityMetadata(
-                metamodel.getName(),
-                idAttribute.getName()
-        );
-    }
-
-    private Class<?> wrapPrimitive(Class<?> type) {
-        if (type == long.class) {
-            return Long.class;
-        }
-        if (type == int.class) {
-            return Integer.class;
-        }
-        if (type == boolean.class) {
-            return Boolean.class;
-        }
-        if (type == double.class) {
-            return Double.class;
-        }
-        if (type == float.class) {
-            return Float.class;
-        }
-        if (type == short.class) {
-            return Short.class;
-        }
-        if (type == byte.class) {
-            return Byte.class;
-        }
-        if (type == char.class) {
-            return Character.class;
-        }
-        return type;
+        return new EntityMetadata(entityName, idFieldName);
     }
 
     private record EntityMetadata(String name, String idName) {
