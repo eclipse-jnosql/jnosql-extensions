@@ -57,22 +57,6 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
     }
 
     @Override
-    public Stream<T> findByIdIn(Iterable<K> ids) {
-        Objects.requireNonNull(ids, "ids is required");
-
-        if (!ids.iterator().hasNext()) {
-            return Stream.empty();
-        }
-
-        var query = SelectQuery.select()
-                .from(metadata.name())
-                .where(metadata.idName())
-                .in(ids).build();
-
-        return sqlTemplate.select(query);
-    }
-
-    @Override
     public void deleteByIdIn(Iterable<K> ids) {
         Objects.requireNonNull(ids, "ids is required");
 
@@ -175,6 +159,22 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
     public Optional<T> findById(K id) {
         Objects.requireNonNull(id, "id is required");
         return sqlTemplate.find(entityType, id);
+    }
+
+    @Override
+    public Stream<T> findByIdIn(Iterable<K> ids) {
+        Objects.requireNonNull(ids, "ids is required");
+
+        if (!ids.iterator().hasNext()) {
+            return Stream.empty();
+        }
+
+        var query = SelectQuery.select()
+                .from(metadata.name())
+                .where(metadata.idName())
+                .in(ids).build();
+
+        return sqlTemplate.select(query);
     }
 
     @Override
