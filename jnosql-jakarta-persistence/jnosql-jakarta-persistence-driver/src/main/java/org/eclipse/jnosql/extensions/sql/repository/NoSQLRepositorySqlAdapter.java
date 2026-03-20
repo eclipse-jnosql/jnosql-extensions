@@ -29,13 +29,13 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
+final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     private final Class<T> entityType;
 
     private final SqlTemplate sqlTemplate;
 
-    public NoSQLRepositorySqlAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
+    NoSQLRepositorySqlAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
         this.entityType = entityType;
         this.sqlTemplate = sqlTemplate;
     }
