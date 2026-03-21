@@ -545,4 +545,92 @@ class NoSQLRepositorySqlAdapterTest {
                     .hasMessage("entities are required");
         }
     }
+
+    @Nested
+    @DisplayName("WhenUpdateOperations")
+    class WhenUpdateOperations {
+
+        @BeforeEach
+        void clean() {
+            repository.deleteAll();
+        }
+
+        @Test
+        @DisplayName("Should update existing entity")
+        void shouldUpdateEntity() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            computer.setModel("MacBook Pro M3");
+            var updated = repository.update(computer);
+
+            // then
+            var result = repository.findById(updated.getId()).orElseThrow();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(updated.getId()).isEqualTo(computer.getId());
+                softly.assertThat(result.getModel()).isEqualTo("MacBook Pro M3");
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entity is null in update")
+        void shouldThrowExceptionWhenUpdateEntityIsNull() {
+
+            assertThatThrownBy(() -> repository.update(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entity is required");
+        }
+
+        @Test
+        @DisplayName("Should update all entities")
+        void shouldUpdateAllEntities() {
+
+            // given
+            var computer1 = repository.insert(Computer.of("MacBook Pro", 2023));
+            var computer2 = repository.insert(Computer.of("ThinkPad", 2022));
+
+            computer1.setModel("MacBook Pro M3");
+            computer2.setModel("ThinkPad X1");
+
+            var entities = List.of(computer1, computer2);
+
+            // when
+            var updatedList = repository.updateAll(entities);
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(updatedList).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .containsExactlyInAnyOrder("MacBook Pro M3", "ThinkPad X1");
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entities list is null in updateAll")
+        void shouldThrowExceptionWhenUpdateAllEntitiesIsNull() {
+
+            assertThatThrownBy(() -> repository.updateAll(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entities are required");
+        }
+
+        @Test
+        @DisplayName("Should return empty list when updateAll receives empty list")
+        void shouldReturnEmptyWhenUpdateAllIsEmpty() {
+
+            // when
+            var result = repository.updateAll(List.of());
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+    }
 }
