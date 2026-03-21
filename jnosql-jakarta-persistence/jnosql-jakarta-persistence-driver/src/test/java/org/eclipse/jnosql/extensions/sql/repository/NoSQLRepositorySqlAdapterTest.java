@@ -633,4 +633,88 @@ class NoSQLRepositorySqlAdapterTest {
             });
         }
     }
+
+    @Nested
+    @DisplayName("WhenInsertOperations")
+    class WhenInsertOperations {
+
+        @BeforeEach
+        void clean() {
+            repository.deleteAll();
+        }
+
+        @Test
+        @DisplayName("Should insert entity successfully")
+        void shouldInsertEntity() {
+
+            // given
+            var computer = Computer.of("MacBook Pro", 2023);
+
+            // when
+            var inserted = repository.insert(computer);
+
+            // then
+            var result = repository.findById(inserted.getId()).orElseThrow();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(inserted.getId()).isNotNull();
+                softly.assertThat(result.getModel()).isEqualTo("MacBook Pro");
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entity is null in insert")
+        void shouldThrowExceptionWhenInsertEntityIsNull() {
+
+            assertThatThrownBy(() -> repository.insert(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entity is required");
+        }
+
+        @Test
+        @DisplayName("Should insert all entities")
+        void shouldInsertAllEntities() {
+
+            // given
+            var computer1 = Computer.of("MacBook Pro", 2023);
+            var computer2 = Computer.of("ThinkPad", 2022);
+
+            var entities = List.of(computer1, computer2);
+
+            // when
+            var insertedList = repository.insertAll(entities);
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(insertedList).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .containsExactlyInAnyOrder("MacBook Pro", "ThinkPad");
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entities list is null in insertAll")
+        void shouldThrowExceptionWhenInsertAllIsNull() {
+
+            assertThatThrownBy(() -> repository.insertAll(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entities are required");
+        }
+
+        @Test
+        @DisplayName("Should return empty list when insertAll receives empty list")
+        void shouldReturnEmptyWhenInsertAllIsEmpty() {
+
+            // when
+            var result = repository.insertAll(List.of());
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+    }
 }
