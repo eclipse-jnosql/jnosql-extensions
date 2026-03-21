@@ -74,6 +74,11 @@ class NoSQLRepositorySqlAdapterTest {
     @DisplayName("WhenFindAllOperations")
     class WhenFindAllOperations {
 
+        @BeforeEach
+        void clean() {
+            repository.deleteAll();
+        }
+
         @Test
         @DisplayName("Should return all persisted entities")
         void shouldReturnAllPersistedEntities() {
@@ -358,6 +363,186 @@ class NoSQLRepositorySqlAdapterTest {
             assertThatThrownBy(() -> repository.findByIdIn(null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("ids is required");
+        }
+    }
+
+    @Nested
+    @DisplayName("WhenDeleteOperations")
+    class WhenDeleteOperations {
+
+        @BeforeEach
+        void clean() {
+            repository.deleteAll();
+        }
+
+        @Test
+        @DisplayName("Should delete entities by ids")
+        void shouldDeleteByIdIn() {
+
+            // given
+            var computer1 = repository.insert(Computer.of("MacBook Pro", 2023));
+            var computer2 = repository.insert(Computer.of("ThinkPad", 2022));
+
+            var ids = List.of(computer1.getId(), computer2.getId());
+
+            // when
+            repository.deleteByIdIn(ids);
+            var result = repository.findAll().toList();
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should do nothing when deleteByIdIn receives empty list")
+        void shouldDoNothingWhenDeleteByIdInIsEmpty() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            repository.deleteByIdIn(List.of());
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(0).getId()).isEqualTo(computer.getId());
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when ids is null in deleteByIdIn")
+        void shouldThrowExceptionWhenDeleteByIdInIdsIsNull() {
+
+            assertThatThrownBy(() -> repository.deleteByIdIn(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("ids is required");
+        }
+
+        @Test
+        @DisplayName("Should delete all entities")
+        void shouldDeleteAll() {
+
+            // given
+            repository.insert(Computer.of("MacBook Pro", 2023));
+            repository.insert(Computer.of("ThinkPad", 2022));
+
+            // when
+            repository.deleteAll();
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should delete entity by id")
+        void shouldDeleteById() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            repository.deleteById(computer.getId());
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when id is null in deleteById")
+        void shouldThrowExceptionWhenDeleteByIdIsNull() {
+
+            assertThatThrownBy(() -> repository.deleteById(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("id is required");
+        }
+
+        @Test
+        @DisplayName("Should delete entity by instance")
+        void shouldDeleteEntity() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            repository.delete(computer);
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entity is null")
+        void shouldThrowExceptionWhenEntityIsNull() {
+
+            assertThatThrownBy(() -> repository.delete(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entity is required");
+        }
+
+        @Test
+        @DisplayName("Should delete all provided entities")
+        void shouldDeleteAllEntitiesFromList() {
+
+            // given
+            var computer1 = repository.insert(Computer.of("MacBook Pro", 2023));
+            var computer2 = repository.insert(Computer.of("ThinkPad", 2022));
+
+            var entities = List.of(computer1, computer2);
+
+            // when
+            repository.deleteAll(entities);
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should do nothing when deleteAll receives empty list")
+        void shouldDoNothingWhenDeleteAllListIsEmpty() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            repository.deleteAll(List.of());
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(0).getId()).isEqualTo(computer.getId());
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when deleteAll list is null")
+        void shouldThrowExceptionWhenDeleteAllListIsNull() {
+
+            assertThatThrownBy(() -> repository.deleteAll(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entities are required");
         }
     }
 }
