@@ -19,7 +19,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Factory responsible for creating {@link SqlTemplate} instances from a given {@link EntityManager}.
