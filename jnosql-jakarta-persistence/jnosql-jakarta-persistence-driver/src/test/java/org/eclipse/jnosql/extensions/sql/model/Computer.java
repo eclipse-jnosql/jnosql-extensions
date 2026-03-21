@@ -57,6 +57,21 @@ public class Computer {
         return release;
     }
 
+    public Computer setId(long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Computer setModel(String model) {
+        this.model = model;
+        return this;
+    }
+
+    public Computer setRelease(long release) {
+        this.release = release;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Computer computer)) {
