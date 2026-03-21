@@ -23,6 +23,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.SqlTemplateFactory;
@@ -304,6 +305,37 @@ class NoSQLRepositorySqlAdapterTest {
                         .extracting(Computer::getId)
                         .containsExactlyInAnyOrder(computer1.getId(), computer2.getId());
             });
+        }
+
+        @Test
+        @DisplayName("Should return empty when id iterable is empty")
+        void shouldReturnEmptyWhenIdIsEmpty() {
+
+            // given
+
+            var id = Long.MAX_VALUE;
+
+            // when
+            var result = repository.findById(id);
+
+            // then
+           Assertions.assertThat(result).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should return entity when id is provided")
+        void shouldReturnEntityWhenIdProvided() {
+
+            // given
+            var computer1 = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            var id = computer1.getId();
+
+            // when
+            var result = repository.findById(id);
+
+            // then
+            Assertions.assertThat(result).isNotEmpty();
         }
 
         @Test
