@@ -717,4 +717,135 @@ class NoSQLRepositorySqlAdapterTest {
             });
         }
     }
+
+    @Nested
+    @DisplayName("WhenSaveOperations")
+    class WhenSaveOperations {
+
+        @BeforeEach
+        void clean() {
+            repository.deleteAll();
+        }
+
+        @Test
+        @DisplayName("Should insert entity when it does not exist")
+        void shouldInsertWhenEntityDoesNotExist() {
+
+            // given
+            var computer = Computer.of("MacBook Pro", 2023);
+
+            // when
+            var saved = repository.save(computer);
+
+            // then
+            var result = repository.findById(saved.getId()).orElseThrow();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(saved.getId()).isNotNull();
+                softly.assertThat(result.getModel()).isEqualTo("MacBook Pro");
+            });
+        }
+
+        @Test
+        @DisplayName("Should update entity when it already exists")
+        void shouldUpdateWhenEntityExists() {
+
+            // given
+            var computer = repository.insert(Computer.of("MacBook Pro", 2023));
+
+            // when
+            computer.setModel("MacBook Pro M3");
+            var saved = repository.save(computer);
+
+            // then
+            var result = repository.findById(saved.getId()).orElseThrow();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(saved.getId()).isEqualTo(computer.getId());
+                softly.assertThat(result.getModel()).isEqualTo("MacBook Pro M3");
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entity is null")
+        void shouldThrowExceptionWhenEntityIsNull() {
+
+            assertThatThrownBy(() -> repository.save(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entity is required");
+        }
+
+        @Test
+        @DisplayName("Should insert all entities when they do not exist")
+        void shouldInsertAllWhenEntitiesDoNotExist() {
+
+            // given
+            var computer1 = Computer.of("MacBook Pro", 2023);
+            var computer2 = Computer.of("ThinkPad", 2022);
+
+            var entities = List.of(computer1, computer2);
+
+            // when
+            var savedList = repository.saveAll(entities);
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(savedList).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .containsExactlyInAnyOrder("MacBook Pro", "ThinkPad");
+            });
+        }
+
+        @Test
+        @DisplayName("Should update all entities when they already exist")
+        void shouldUpdateAllWhenEntitiesExist() {
+
+            // given
+            var computer1 = repository.insert(Computer.of("MacBook Pro", 2023));
+            var computer2 = repository.insert(Computer.of("ThinkPad", 2022));
+
+            computer1.setModel("MacBook Pro M3");
+            computer2.setModel("ThinkPad X1");
+
+            var entities = List.of(computer1, computer2);
+
+            // when
+            var savedList = repository.saveAll(entities);
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(savedList).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .containsExactlyInAnyOrder("MacBook Pro M3", "ThinkPad X1");
+            });
+        }
+
+        @Test
+        @DisplayName("Should return empty list when saveAll receives empty list")
+        void shouldReturnEmptyWhenSaveAllIsEmpty() {
+
+            // when
+            var result = repository.saveAll(List.of());
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should throw exception when entities list is null")
+        void shouldThrowExceptionWhenSaveAllIsNull() {
+
+            assertThatThrownBy(() -> repository.saveAll(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("entities are required");
+        }
+    }
 }
