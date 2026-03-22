@@ -28,7 +28,31 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-final class SqlEntityMetadata implements EntityMetadata {
+/**
+ * SQL-specific implementation of {@link EntityMetadata} backed by Jakarta Persistence.
+ *
+ * <p>This implementation acts as an adapter between the JNoSQL metadata model and
+ * the Jakarta Persistence metamodel. It provides only the minimal metadata required
+ * to execute SQL-based repository operations, delegating the full mapping responsibility
+ * to the underlying JPA provider (e.g., Hibernate or EclipseLink).</p>
+ *
+ * <p>Unlike document or key-value databases, relational persistence is already fully
+ * described by JPA annotations and the persistence provider. Therefore, this class
+ * intentionally exposes only a subset of the {@link EntityMetadata} contract, such as
+ * entity name and identifier field.</p>
+ *
+ * <p>All other metadata operations that relate to field mapping, constructors,
+ * inheritance, or column resolution are not supported and will throw
+ * {@link UnsupportedOperationException}.</p>
+ *
+ * <p>This design avoids duplicating mapping logic that is already handled by the
+ * Jakarta Persistence layer, keeping the integration lightweight and consistent
+ * with the JPA programming model.</p>
+ *
+ * @see EntityMetadata
+ * @see jakarta.persistence.EntityManager
+ */
+public final class SqlEntityMetadata implements EntityMetadata {
 
     private final String name;
     private final Class<?> entity;
