@@ -34,7 +34,7 @@ final class SqlEntityMetadata implements EntityMetadata {
     private final Class<?> entity;
     private final FieldMetadata idField;
 
-    SqlEntityMetadata(String name, Class<?> entity, FieldMetadata idField) {
+    private SqlEntityMetadata(String name, Class<?> entity, FieldMetadata idField) {
         this.name = name;
         this.entity = entity;
         this.idField = idField;
