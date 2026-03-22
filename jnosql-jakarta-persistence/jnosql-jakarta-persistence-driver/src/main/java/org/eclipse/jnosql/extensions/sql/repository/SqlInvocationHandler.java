@@ -15,5 +15,46 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-public class SqlInvocationHandler {
+import jakarta.nosql.Template;
+import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
+import org.eclipse.jnosql.mapping.core.repository.AbstractRepositoryInvocationHandler;
+import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+
+class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T, K>  {
+
+    private final SqlRepositoryAdapter<T, K> repository;
+    private final EntityMetadata entityMetadata;
+
+    @Override
+    protected AbstractRepository<T, K> repository() {
+        return repository;
+    }
+
+    @Override
+    protected EntityMetadata entityMetadata() {
+        return null;
+    }
+
+    @Override
+    protected RepositoryMetadata repositoryMetadata() {
+        return null;
+    }
+
+    @Override
+    protected InfrastructureOperatorProvider infrastructureOperatorProvider() {
+        return null;
+    }
+
+    @Override
+    protected RepositoryOperationProvider repositoryOperationProvider() {
+        return null;
+    }
+
+    @Override
+    protected Template template() {
+        return null;
+    }
 }
