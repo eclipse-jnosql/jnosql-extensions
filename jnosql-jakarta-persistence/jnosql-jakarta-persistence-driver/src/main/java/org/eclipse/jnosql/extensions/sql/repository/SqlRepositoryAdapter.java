@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
+final class SqlRepositoryAdapter<T, K> implements NoSQLRepository<T, K> {
 
     private final Class<T> entityType;
 
@@ -39,7 +39,7 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
 
     private final EntityMetadata metadata;
 
-    NoSQLRepositorySqlAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
+    SqlRepositoryAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
         this.entityType = entityType;
         this.sqlTemplate = sqlTemplate;
         this.metadata = resolveMetadata();
