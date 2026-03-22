@@ -21,13 +21,12 @@ import jakarta.data.page.PageRequest;
 import jakarta.nosql.Template;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,12 +39,12 @@ final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implemen
 
     private final SqlTemplate sqlTemplate;
 
-    private final EntityMetadata metadata;
+    private final SqlEntityMetadata metadata;
 
     SqlRepositoryAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
         this.entityType = entityType;
         this.sqlTemplate = sqlTemplate;
-        this.metadata = resolveMetadata();
+        this.metadata = SqlEntityMetadata.of(entityType, this.sqlTemplate.entityManager());
     }
 
     @Override
@@ -207,25 +206,6 @@ final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implemen
     }
 
 
-    private EntityMetadata resolveMetadata() {
 
-        var entityManager = sqlTemplate.entityManager();
-        var metamodel = entityManager.getMetamodel().entity(entityType);
 
-        String entityName = metamodel.getName();
-
-        // Find the @Id field manually (provider-safe)
-        String idFieldName = Arrays.stream(entityType.getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(jakarta.persistence.Id.class))
-                .findFirst()
-                .map(Field::getName)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No @Id field found on entity " + entityType.getName()
-                ));
-
-        return new EntityMetadata(entityName, idFieldName);
-    }
-
-    private record EntityMetadata(String name, String idName) {
-    }
 }

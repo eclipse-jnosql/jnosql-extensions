@@ -57,13 +57,18 @@ public final class SqlEntityMetadata implements EntityMetadata {
     private final String name;
     private final Class<?> entity;
     private final FieldMetadata idField;
+    private final String idName;
 
-    private SqlEntityMetadata(String name, Class<?> entity, FieldMetadata idField) {
+    private SqlEntityMetadata(String name, Class<?> entity, FieldMetadata idField, String idName) {
         this.name = name;
         this.entity = entity;
         this.idField = idField;
+        this.idName = idName;
     }
 
+    public String idName() {
+        return idName;
+    }
 
     @Override
     public String name() {
@@ -163,6 +168,6 @@ public final class SqlEntityMetadata implements EntityMetadata {
                         "No @Id field found on entity " + entityType.getName()
                 ));
         var idField = new SqlIdFieldMetadata(idFieldName);
-        return new SqlEntityMetadata(entityName, entityType, idField);
+        return new SqlEntityMetadata(entityName, entityType, idField, idFieldName);
     }
 }
