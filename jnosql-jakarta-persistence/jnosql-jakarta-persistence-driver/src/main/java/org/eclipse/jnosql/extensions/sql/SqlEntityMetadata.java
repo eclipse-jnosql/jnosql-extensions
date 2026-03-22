@@ -105,4 +105,9 @@ public class SqlEntityMetadata implements EntityMetadata {
     public Optional<FieldMetadata> id() {
         throw new UnsupportedOperationException("SQL entities do not support mapping names");
     }
+
+
+    public static SqlEntityMetadata of(Class<?> entityClass) {
+
+    }
 }
