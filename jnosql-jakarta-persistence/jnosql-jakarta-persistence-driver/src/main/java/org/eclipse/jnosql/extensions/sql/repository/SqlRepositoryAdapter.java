@@ -18,10 +18,13 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.nosql.Template;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
+import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -31,7 +34,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-final class SqlRepositoryAdapter<T, K> implements NoSQLRepository<T, K> {
+final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implements NoSQLRepository<T, K> {
 
     private final Class<T> entityType;
 
@@ -133,6 +136,16 @@ final class SqlRepositoryAdapter<T, K> implements NoSQLRepository<T, K> {
                 ? (List<S>) result
                 : StreamSupport.stream(result.spliterator(), false)
                 .toList();
+    }
+
+    @Override
+    protected Template template() {
+        return sqlTemplate;
+    }
+
+    @Override
+    protected org.eclipse.jnosql.mapping.metadata.EntityMetadata entityMetadata() {
+        return null;
     }
 
     @Override
