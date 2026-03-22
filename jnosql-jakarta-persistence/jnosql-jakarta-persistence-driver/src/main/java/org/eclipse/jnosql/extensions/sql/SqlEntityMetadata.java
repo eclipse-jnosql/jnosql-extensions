@@ -28,11 +28,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SqlEntityMetadata implements EntityMetadata {
+final class SqlEntityMetadata implements EntityMetadata {
+
+    private final String name;
+    private final Class<?> entity;
+    private final FieldMetadata idField;
+
+    SqlEntityMetadata(String name, Class<?> entity, FieldMetadata idField) {
+        this.name = name;
+        this.entity = entity;
+        this.idField = idField;
+    }
+
 
     @Override
     public String name() {
-        return "";
+        return name;
     }
 
     @Override
@@ -57,7 +68,7 @@ public class SqlEntityMetadata implements EntityMetadata {
 
     @Override
     public Class<?> type() {
-        throw new UnsupportedOperationException("SQL entities do not support mapping names");
+        return entity;
     }
 
     @Override
@@ -107,7 +118,7 @@ public class SqlEntityMetadata implements EntityMetadata {
 
     @Override
     public Optional<FieldMetadata> id() {
-        throw new UnsupportedOperationException("SQL entities do not support mapping names");
+        return Optional.ofNullable(idField);
     }
 
 
@@ -127,7 +138,7 @@ public class SqlEntityMetadata implements EntityMetadata {
                 .orElseThrow(() -> new IllegalStateException(
                         "No @Id field found on entity " + entityType.getName()
                 ));
-
-
+        var idField = new SqlIdFieldMetadata(idFieldName);
+        return new SqlEntityMetadata(entityName, entityType, idField);
     }
 }
