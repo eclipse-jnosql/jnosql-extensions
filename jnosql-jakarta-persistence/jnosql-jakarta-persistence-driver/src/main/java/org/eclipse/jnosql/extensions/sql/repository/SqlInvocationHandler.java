@@ -16,6 +16,8 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.nosql.Template;
+import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.repository.AbstractRepositoryInvocationHandler;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
@@ -26,7 +28,24 @@ import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T, K>  {
 
     private final SqlRepositoryAdapter<T, K> repository;
-    private final EntityMetadata entityMetadata;
+    private final SqlEntityMetadata entityMetadata;
+    private final SqlTemplate sqlTemplate;
+    private final RepositoryMetadata repositoryMetadata;
+    private final InfrastructureOperatorProvider infrastructureOperatorProvider;
+    private final RepositoryOperationProvider repositoryOperationProvider;
+
+    public SqlInvocationHandler(SqlRepositoryAdapter<T, K> repository,
+                                SqlEntityMetadata entityMetadata,
+                                SqlTemplate sqlTemplate, RepositoryMetadata repositoryMetadata,
+                                InfrastructureOperatorProvider infrastructureOperatorProvider,
+                                RepositoryOperationProvider repositoryOperationProvider) {
+        this.repository = repository;
+        this.entityMetadata = entityMetadata;
+        this.sqlTemplate = sqlTemplate;
+        this.repositoryMetadata = repositoryMetadata;
+        this.infrastructureOperatorProvider = infrastructureOperatorProvider;
+        this.repositoryOperationProvider = repositoryOperationProvider;
+    }
 
     @Override
     protected AbstractRepository<T, K> repository() {
@@ -34,27 +53,27 @@ class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T,
     }
 
     @Override
-    protected EntityMetadata entityMetadata() {
-        return null;
+    protected SqlEntityMetadata entityMetadata() {
+        return entityMetadata;
     }
 
     @Override
     protected RepositoryMetadata repositoryMetadata() {
-        return null;
+        return repositoryMetadata;
     }
 
     @Override
     protected InfrastructureOperatorProvider infrastructureOperatorProvider() {
-        return null;
+        return infrastructureOperatorProvider;
     }
 
     @Override
     protected RepositoryOperationProvider repositoryOperationProvider() {
-        return null;
+        return repositoryOperationProvider;
     }
 
     @Override
     protected Template template() {
-        return null;
+        return sqlTemplate;
     }
 }
