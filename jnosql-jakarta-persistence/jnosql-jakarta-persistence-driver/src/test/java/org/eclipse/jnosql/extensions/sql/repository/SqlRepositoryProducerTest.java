@@ -19,11 +19,13 @@ import jakarta.inject.Inject;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.SqlTemplateFactory;
+import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerRepository;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
 import org.jboss.weld.junit5.WeldSetup;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -100,6 +102,104 @@ class SqlRepositoryProducerTest {
             assertThatThrownBy(() -> producer.get(ComputerRepository.class, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessage("template is required");
+        }
+    }
+
+    @Nested
+    @DisplayName("WhenUsingRepositoryProxy")
+    class WhenUsingRepositoryProxy {
+
+        private ComputerRepository repository;
+
+        @BeforeEach
+        void setUp() {
+            repository = producer.get(ComputerRepository.class, template);
+        }
+
+        @Test
+        @DisplayName("Should save entity through proxy")
+        void shouldSaveEntityThroughProxy() {
+
+            // given
+            var computer = Computer.of("MacBook Pro", 2023);
+
+            // when
+            var saved = repository.save(computer);
+
+            // then
+            var result = repository.findById(saved.getId()).orElseThrow();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(saved.getId()).isNotNull();
+                softly.assertThat(result.getModel()).isEqualTo("MacBook Pro");
+            });
+
+            // cleanup
+            repository.deleteById(saved.getId());
+        }
+
+        @Test
+        @DisplayName("Should update entity through proxy")
+        void shouldUpdateEntityThroughProxy() {
+
+            // given
+            var computer = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            computer.setModel("MacBook Pro M3");
+            var updated = repository.save(computer);
+
+            // then
+            var result = repository.findById(updated.getId()).orElseThrow();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(updated.getId()).isEqualTo(computer.getId());
+                softly.assertThat(result.getModel()).isEqualTo("MacBook Pro M3");
+            });
+
+            // cleanup
+            repository.deleteById(updated.getId());
+        }
+
+        @Test
+        @DisplayName("Should delete entity through proxy")
+        void shouldDeleteEntityThroughProxy() {
+
+            // given
+            var computer = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            repository.deleteById(computer.getId());
+
+            // then
+            var result = repository.findById(computer.getId());
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+        }
+
+        @Test
+        @DisplayName("Should find all entities through proxy")
+        void shouldFindAllThroughProxy() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("ThinkPad", 2022));
+
+            // when
+            var result = repository.findAll().toList();
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .contains("MacBook Pro", "ThinkPad");
+            });
+
+            // cleanup (important: isolate test)
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
         }
     }
 }
