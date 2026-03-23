@@ -15,5 +15,40 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
+
+@ApplicationScoped
 class SqlRepositoryProducer {
+
+    private final InfrastructureOperatorProvider infrastructureOperatorProvider;
+    private final RepositoryOperationProvider repositoryOperationProvider;
+
+    @Inject
+    SqlRepositoryProducer(InfrastructureOperatorProvider infrastructureOperatorProvider, RepositoryOperationProvider repositoryOperationProvider) {
+        this.infrastructureOperatorProvider = infrastructureOperatorProvider;
+        this.repositoryOperationProvider = repositoryOperationProvider;
+    }
+
+
+    /**
+     * Returns a fully functional repository implementation for the given
+     * repository interface.
+     *
+     * @param repositoryClass the repository interface to implement
+     * @param template the semistructured template used by the repository
+     * @param <R> the repository type
+     * @return an instance implementing the given repository interface
+     * @throws NullPointerException if any argument is {@code null}
+     * @throws java.util.NoSuchElementException if required repository or entity
+     *         metadata cannot be resolved
+     */
+    @SuppressWarnings("unchecked")
+    public <R> R get(Class<?> repositoryClass, SqlTemplate template) {
+
+    }
 }
