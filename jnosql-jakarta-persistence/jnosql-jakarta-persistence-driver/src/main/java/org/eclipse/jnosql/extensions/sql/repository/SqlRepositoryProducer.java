@@ -20,7 +20,12 @@ import jakarta.inject.Inject;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositorySupplier;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
+
+import java.lang.reflect.Proxy;
+import java.util.Objects;
 
 @ApplicationScoped
 class SqlRepositoryProducer {
@@ -49,6 +54,21 @@ class SqlRepositoryProducer {
      */
     @SuppressWarnings("unchecked")
     public <R> R get(Class<?> repositoryClass, SqlTemplate template) {
+        Objects.requireNonNull(repositoryClass, "repository class is required");
+        Objects.requireNonNull(template, "template is required");
+        RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass);
+        Class<?> entity = repositoryClass.getInterfaces()[0];
+        SqlRepositoryAdapter<?, ?> repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
+        var entityMetadata = repositoryAdapter.metadata();
 
+        SqlInvocationHandler<?, ?> repositoryHandler = new SqlInvocationHandler<>(repositoryAdapter,
+                entityMetadata, template,
+                repositoryMetadata,
+                infrastructureOperatorProvider,
+                repositoryOperationProvider);
+
+        return (R) Proxy.newProxyInstance(repositoryClass.getClassLoader(),
+                new Class[]{repositoryClass},
+                repositoryHandler);
     }
 }
