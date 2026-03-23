@@ -203,8 +203,7 @@ final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implemen
                 .build();
         return sqlTemplate.selectOffSet(selectQuery, pageRequest);
     }
-
-
-
-
+    public SqlEntityMetadata metadata() {
+        return metadata;
+    }
 }
