@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositorySupplier;
-import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 import java.lang.reflect.Proxy;
 import java.util.Objects;
