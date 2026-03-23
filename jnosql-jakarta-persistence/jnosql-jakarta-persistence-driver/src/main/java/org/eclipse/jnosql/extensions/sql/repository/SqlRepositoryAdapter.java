@@ -25,7 +25,6 @@ import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
-import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 
 import java.util.List;
 import java.util.Objects;
