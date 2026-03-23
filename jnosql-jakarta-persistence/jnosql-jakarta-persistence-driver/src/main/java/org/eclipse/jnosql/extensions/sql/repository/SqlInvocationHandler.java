@@ -24,7 +24,7 @@ import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 
-class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T, K>  {
+final class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T, K>  {
 
     private final SqlRepositoryAdapter<T, K> repository;
     private final SqlEntityMetadata entityMetadata;
@@ -33,7 +33,7 @@ class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T,
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
     private final RepositoryOperationProvider repositoryOperationProvider;
 
-    public SqlInvocationHandler(SqlRepositoryAdapter<T, K> repository,
+    SqlInvocationHandler(SqlRepositoryAdapter<T, K> repository,
                                 SqlEntityMetadata entityMetadata,
                                 SqlTemplate sqlTemplate, RepositoryMetadata repositoryMetadata,
                                 InfrastructureOperatorProvider infrastructureOperatorProvider,
@@ -75,4 +75,5 @@ class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T,
     protected Template template() {
         return sqlTemplate;
     }
+
 }
