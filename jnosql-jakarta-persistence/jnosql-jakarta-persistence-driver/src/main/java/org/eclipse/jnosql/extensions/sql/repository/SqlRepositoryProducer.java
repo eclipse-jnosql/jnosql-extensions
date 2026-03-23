@@ -57,7 +57,7 @@ class SqlRepositoryProducer {
         Objects.requireNonNull(repositoryClass, "repository class is required");
         Objects.requireNonNull(template, "template is required");
         RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass);
-        Class<?> entity = repositoryClass.getInterfaces()[0];
+        var entity = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
         SqlRepositoryAdapter<?, ?> repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
         var entityMetadata = repositoryAdapter.metadata();
 
