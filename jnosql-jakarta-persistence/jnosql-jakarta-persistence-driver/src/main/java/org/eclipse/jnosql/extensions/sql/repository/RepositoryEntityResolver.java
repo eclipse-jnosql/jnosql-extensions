@@ -20,6 +20,19 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.Optional;
 
+
+/**
+ * Resolves the entity type from a Jakarta Data repository interface.
+ *
+ * <p>This resolver inspects the generic type parameters of repository interfaces
+ * such as {@code BasicRepository}, {@code CrudRepository}, and {@code DataRepository}
+ * to extract the domain entity type.</p>
+ *
+ * <p>The resolution process traverses interface hierarchies recursively, ensuring
+ * support for indirect inheritance and layered repository definitions.</p>
+ *
+ * <p>This class is stateless and thread-safe.</p>
+ */
 enum RepositoryEntityResolver {
 
 INSTANCE;
