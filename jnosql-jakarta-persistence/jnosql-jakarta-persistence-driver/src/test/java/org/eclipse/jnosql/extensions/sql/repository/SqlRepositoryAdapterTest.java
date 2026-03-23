@@ -42,12 +42,12 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @EnableWeld
-class NoSQLRepositorySqlAdapterTest {
+class SqlRepositoryAdapterTest {
 
     @WeldSetup
     WeldInitiator weld = WeldInitiator.from(
                     SqlTemplateFactory.class,
-                    NoSQLRepositorySqlAdapterTest.class
+                    SqlRepositoryAdapterTest.class
             )
             .build();
 
@@ -67,7 +67,7 @@ class NoSQLRepositorySqlAdapterTest {
 
     @BeforeEach
     void setUp() {
-        repository = new NoSQLRepositorySqlAdapter<> (Computer.class, template);
+        repository = new SqlRepositoryAdapter<>(Computer.class, template);
     }
 
     @Nested

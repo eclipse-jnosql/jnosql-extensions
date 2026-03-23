@@ -18,31 +18,32 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.nosql.Template;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
+import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
+final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implements NoSQLRepository<T, K> {
 
     private final Class<T> entityType;
 
     private final SqlTemplate sqlTemplate;
 
-    private final EntityMetadata metadata;
+    private final SqlEntityMetadata metadata;
 
-    NoSQLRepositorySqlAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
+    SqlRepositoryAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
         this.entityType = entityType;
         this.sqlTemplate = sqlTemplate;
-        this.metadata = resolveMetadata();
+        this.metadata = SqlEntityMetadata.of(entityType, this.sqlTemplate.entityManager());
     }
 
     @Override
@@ -136,6 +137,16 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
     }
 
     @Override
+    protected Template template() {
+        return sqlTemplate;
+    }
+
+    @Override
+    protected org.eclipse.jnosql.mapping.metadata.EntityMetadata entityMetadata() {
+        return null;
+    }
+
+    @Override
     public <S extends T> S save(S entity) {
         Objects.requireNonNull(entity, "entity is required");
         return sqlTemplate.update(entity);
@@ -192,27 +203,7 @@ final class NoSQLRepositorySqlAdapter<T, K> implements NoSQLRepository<T, K> {
                 .build();
         return sqlTemplate.selectOffSet(selectQuery, pageRequest);
     }
-
-
-    private EntityMetadata resolveMetadata() {
-
-        var entityManager = sqlTemplate.entityManager();
-        var metamodel = entityManager.getMetamodel().entity(entityType);
-
-        String entityName = metamodel.getName();
-
-        // Find the @Id field manually (provider-safe)
-        String idFieldName = Arrays.stream(entityType.getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(jakarta.persistence.Id.class))
-                .findFirst()
-                .map(Field::getName)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No @Id field found on entity " + entityType.getName()
-                ));
-
-        return new EntityMetadata(entityName, idFieldName);
-    }
-
-    private record EntityMetadata(String name, String idName) {
+    public SqlEntityMetadata metadata() {
+        return metadata;
     }
 }
