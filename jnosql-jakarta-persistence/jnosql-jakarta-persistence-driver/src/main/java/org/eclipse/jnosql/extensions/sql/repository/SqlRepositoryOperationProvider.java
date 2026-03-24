@@ -16,7 +16,6 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
-import jakarta.inject.Inject;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
@@ -41,24 +40,17 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
     private final UpdateOperation updateOperation;
     private final SaveOperation saveOperation;
     private final ProviderOperation providerOperation;
+    private final SqlFindByOperation findByOperation;
+    private final SqlDeleteOperation deleteOperation;
+    private final SqlFindAllOperation findAllOperation;
+    private final SqlCountByOperation countByOperation;
+    private final SqlCountAllOperation countAllOperation;
+    private final SqlExistsByOperation existsByOperation;
+    private final SqlDeleteByOperation deleteByOperation;
+    private final SqlParameterBasedOperation parameterBasedOperation;
+    private final SqlCursorPaginationOperation cursorPaginationOperation;
+    private final SqlQueryOperation queryOperation;
 
-    @Inject
-    SqlRepositoryOperationProvider(InsertOperation insertOperation,
-                                   UpdateOperation updateOperation,
-                                   SaveOperation saveOperation,
-                                   ProviderOperation providerOperation) {
-        this.insertOperation = insertOperation;
-        this.updateOperation = updateOperation;
-        this.saveOperation = saveOperation;
-        this.providerOperation = providerOperation;
-    }
-
-    SqlRepositoryOperationProvider() {
-        this.insertOperation = null;
-        this.updateOperation = null;
-        this.saveOperation = null;
-        this.providerOperation = null;
-    }
 
     @Override
     public InsertOperation insertOperation() {
@@ -72,7 +64,7 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
 
     @Override
     public DeleteOperation deleteOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+        return deleteOperation;
     }
 
     @Override
@@ -82,47 +74,47 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
 
     @Override
     public FindByOperation findByOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+       return findByOperation;
     }
 
     @Override
     public FindAllOperation findAllOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+        return findAllOperation;
     }
 
     @Override
     public CountByOperation countByOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+       return countByOperation;
     }
 
     @Override
     public CountAllOperation countAllOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+       return countAllOperation;
     }
 
     @Override
     public ExistsByOperation existsByOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+      return existsByOperation;
     }
 
     @Override
     public DeleteByOperation deleteByOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+       return deleteByOperation;
     }
 
     @Override
     public ParameterBasedOperation parameterBasedOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+        return parameterBasedOperation;
     }
 
     @Override
     public CursorPaginationOperation cursorPaginationOperation() {
-        throw new UnsupportedOperationException("There is not support on query yet");
+      return cursorPaginationOperation;
     }
 
     @Override
     public QueryOperation queryOperation() {
-       throw new UnsupportedOperationException("There is not support on query yet");
+      return queryOperation;
     }
 
     @Override
