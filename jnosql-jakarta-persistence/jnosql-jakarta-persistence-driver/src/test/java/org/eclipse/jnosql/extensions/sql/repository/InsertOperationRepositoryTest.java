@@ -17,6 +17,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
+import org.eclipse.jnosql.extensions.sql.model.ComputerInsertRepository;
 import org.eclipse.jnosql.extensions.sql.model.ComputerRepository;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,11 +38,11 @@ import static org.assertj.core.api.Assertions.assertThat;
     @Inject
     private SqlRepositoryProducer producer;
 
-    private ComputerRepository repository;
+    private ComputerInsertRepository repository;
 
     @BeforeEach
     void setUp() {
-        this.repository = producer.get(ComputerRepository.class, template);
+        this.repository = producer.get(ComputerInsertRepository.class, template);
     }
 
     @Nested

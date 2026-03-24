@@ -21,6 +21,24 @@ import jakarta.data.repository.Repository;
 import java.util.List;
 
 @Repository
-public interface ComputerRepository extends BasicRepository<Computer, Long> {
+public interface ComputerInsertRepository extends BasicRepository<Computer, Long> {
 
+    @Insert
+    Computer insert(Computer computer);
+
+    @Insert
+    Computer[] insert(Computer[] computers);
+
+    @Insert
+    List<Computer> insert(List<Computer> computers);
+
+
+    @Insert
+    void insertVoid(Computer computer);
+
+    @Insert
+    void insertVoid(Computer[] computers);
+
+    @Insert
+    void insertVoid(List<Computer> computers);
 }
