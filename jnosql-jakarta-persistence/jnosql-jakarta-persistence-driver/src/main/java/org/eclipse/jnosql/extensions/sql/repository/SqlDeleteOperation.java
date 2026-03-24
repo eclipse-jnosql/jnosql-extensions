@@ -16,12 +16,12 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
-import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteByOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 @ApplicationScoped
 @Typed(SqlDeleteOperation.class)
-class SqlDeleteOperation implements DeleteByOperation {
+class SqlDeleteOperation implements DeleteOperation {
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         throw new UnsupportedOperationException("DeleteByOperation is not supported by SQL extension");
