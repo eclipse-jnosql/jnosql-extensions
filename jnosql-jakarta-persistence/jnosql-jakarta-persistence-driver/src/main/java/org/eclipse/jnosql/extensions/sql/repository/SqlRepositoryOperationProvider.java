@@ -16,6 +16,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
@@ -50,6 +51,54 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
     private final SqlParameterBasedOperation parameterBasedOperation;
     private final SqlCursorPaginationOperation cursorPaginationOperation;
     private final SqlQueryOperation queryOperation;
+
+    @Inject
+    SqlRepositoryOperationProvider(InsertOperation insertOperation,
+                                   UpdateOperation updateOperation,
+                                   SaveOperation saveOperation,
+                                   ProviderOperation providerOperation,
+                                   SqlFindByOperation findByOperation,
+                                   SqlDeleteOperation deleteOperation,
+                                   SqlFindAllOperation findAllOperation,
+                                   SqlCountByOperation countByOperation,
+                                   SqlCountAllOperation countAllOperation,
+                                   SqlExistsByOperation existsByOperation,
+                                   SqlDeleteByOperation deleteByOperation,
+                                   SqlParameterBasedOperation parameterBasedOperation,
+                                   SqlCursorPaginationOperation cursorPaginationOperation,
+                                   SqlQueryOperation queryOperation) {
+        this.insertOperation = insertOperation;
+        this.updateOperation = updateOperation;
+        this.saveOperation = saveOperation;
+        this.providerOperation = providerOperation;
+        this.findByOperation = findByOperation;
+        this.deleteOperation = deleteOperation;
+        this.findAllOperation = findAllOperation;
+        this.countByOperation = countByOperation;
+        this.countAllOperation = countAllOperation;
+        this.existsByOperation = existsByOperation;
+        this.deleteByOperation = deleteByOperation;
+        this.parameterBasedOperation = parameterBasedOperation;
+        this.cursorPaginationOperation = cursorPaginationOperation;
+        this.queryOperation = queryOperation;
+    }
+
+    SqlRepositoryOperationProvider() {
+        this.insertOperation = null;
+        this.updateOperation = null;
+        this.saveOperation = null;
+        this.providerOperation = null;
+        this.findByOperation = null;
+        this.deleteOperation = null;
+        this.findAllOperation = null;
+        this.countByOperation = null;
+        this.countAllOperation = null;
+        this.existsByOperation = null;
+        this.deleteByOperation = null;
+        this.parameterBasedOperation = null;
+        this.cursorPaginationOperation = null;
+        this.queryOperation = null;
+    }
 
 
     @Override
