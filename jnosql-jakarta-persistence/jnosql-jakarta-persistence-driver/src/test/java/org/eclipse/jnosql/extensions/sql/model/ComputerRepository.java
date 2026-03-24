@@ -24,11 +24,21 @@ import java.util.List;
 public interface ComputerRepository extends BasicRepository<Computer, Long> {
 
     @Insert
-    void insert(Computer computer);
+    Computer insert(Computer computer);
 
     @Insert
-    void insert(Computer[] computers);
+    Computer[] insert(Computer[] computers);
 
     @Insert
-    void insert(List<Computer> computers);
+    List<Computer> insert(List<Computer> computers);
+
+
+    @Insert
+    void insertVoid(Computer computer);
+
+    @Insert
+    void insertVoid(Computer[] computers);
+
+    @Insert
+    void insertVoid(List<Computer> computers);
 }
