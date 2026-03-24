@@ -21,19 +21,28 @@ import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.Objects;
 import java.util.Optional;
 
 final class SqlIdFieldMetadata implements FieldMetadata {
 
     private final String name;
+    private final Field idAttribute;
 
-    SqlIdFieldMetadata(String name) {
+    SqlIdFieldMetadata(String name, Field idAttribute) {
         this.name = name;
+        this.idAttribute = idAttribute;
     }
 
     @Override
     public Object read(Object bean) {
-        throw new UnsupportedOperationException("SQL entities do not support field metadata");
+        Objects.requireNonNull(bean, "bean is required");
+        try {
+            return idAttribute.get(bean);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException("Error accessing field " + name + " on entity", e);
+        }
     }
 
     @Override
