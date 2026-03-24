@@ -16,6 +16,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
@@ -41,6 +42,7 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
     private final SaveOperation saveOperation;
     private final ProviderOperation providerOperation;
 
+    @Inject
     SqlRepositoryOperationProvider(InsertOperation insertOperation,
                                    UpdateOperation updateOperation,
                                    SaveOperation saveOperation,
@@ -49,6 +51,13 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
         this.updateOperation = updateOperation;
         this.saveOperation = saveOperation;
         this.providerOperation = providerOperation;
+    }
+
+    SqlRepositoryOperationProvider() {
+        this.insertOperation = null;
+        this.updateOperation = null;
+        this.saveOperation = null;
+        this.providerOperation = null;
     }
 
     @Override
