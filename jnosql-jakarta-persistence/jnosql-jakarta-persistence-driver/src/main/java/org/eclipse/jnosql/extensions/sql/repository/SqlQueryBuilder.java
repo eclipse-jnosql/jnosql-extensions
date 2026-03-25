@@ -21,7 +21,6 @@ import org.eclipse.jnosql.communication.semistructured.CommunicationObserverPars
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
-import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 import java.util.List;
