@@ -15,13 +15,40 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.communication.Value;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 @ApplicationScoped
 class SqlDeleteByOperation implements DeleteByOperation {
+
+    private final SqlQueryBuilder sqlQueryBuilder;
+
+    @Inject
+    SqlDeleteByOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlDeleteByOperation() {
+        this.sqlQueryBuilder = null;
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-        throw new UnsupportedOperationException("DeleteByOperation is not supported yet");
+        var method = context.method();
+        var returnType = method.returnType().orElse(void.class);
+        var template = (SqlTemplate) context.template();
+        var deleteQuery = sqlQueryBuilder.deleteQuery(context);
+        if (returnType.equals(void.class) || returnType.equals(Void.class)) {
+            template.delete(deleteQuery);
+            return (T) Void.class;
+        }
+        long count = template.deleteWithCount(deleteQuery);
+        return (T) Value.of(count).get(returnType);
     }
 }
