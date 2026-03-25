@@ -81,7 +81,32 @@ final class SelectQueryConverter extends QueryConverterSupport{
                 countQuery
         );
 
-        return (TypedQuery<Long>) manager.createQuery(countQuery);
+        return manager.createQuery(countQuery);
+    }
+
+    TypedQuery<Integer> convertExists(SelectQuery query) {
+        Objects.requireNonNull(query, "query is null");
+
+        Class<?> type = resolveEntity(query.name());
+
+        CriteriaBuilder cb = manager.getCriteriaBuilder();
+        CriteriaQuery<Integer> existsQuery = cb.createQuery(Integer.class);
+
+        Root<?> root = existsQuery.from(type);
+
+        existsQuery.select(cb.literal(1));
+
+        applyCondition(
+                query.condition().orElse(null),
+                cb,
+                root,
+                existsQuery
+        );
+
+        TypedQuery<Integer> typedQuery = manager.createQuery(existsQuery);
+        typedQuery.setMaxResults(1);
+
+        return typedQuery;
     }
 
     private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
