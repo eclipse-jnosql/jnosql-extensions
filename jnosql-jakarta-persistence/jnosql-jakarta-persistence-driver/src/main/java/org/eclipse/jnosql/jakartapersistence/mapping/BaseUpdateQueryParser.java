@@ -17,13 +17,12 @@ package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.data.Sort;
 import jakarta.persistence.Query;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
 class BaseUpdateQueryParser extends BaseQueryParser {
 

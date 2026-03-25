@@ -15,10 +15,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.metadata;
 
-import java.util.ServiceLoader;
-
 import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 import org.eclipse.jnosql.mapping.metadata.MetadataException;
+
+import java.util.ServiceLoader;
 
 /**
  * This is an extension of {@link ClassScanner} which is to be used for Jakarta Persistence entities.

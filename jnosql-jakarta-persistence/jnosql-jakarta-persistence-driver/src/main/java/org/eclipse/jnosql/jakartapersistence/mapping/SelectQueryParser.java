@@ -24,6 +24,15 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.eclipse.jnosql.communication.Params;
+import org.eclipse.jnosql.communication.query.data.SelectProvider;
+import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
+import org.eclipse.jnosql.communication.semistructured.Conditions;
+import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
+import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,17 +44,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-
-import org.eclipse.jnosql.communication.Params;
-import org.eclipse.jnosql.communication.query.data.SelectProvider;
-import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
-import org.eclipse.jnosql.communication.semistructured.Conditions;
-import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
-import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.mapping.core.PersistencePage;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.parser.OptionalPartsParser;
 
 /**
  * Parser for SELECT queries in the Jakarta Persistence driver.

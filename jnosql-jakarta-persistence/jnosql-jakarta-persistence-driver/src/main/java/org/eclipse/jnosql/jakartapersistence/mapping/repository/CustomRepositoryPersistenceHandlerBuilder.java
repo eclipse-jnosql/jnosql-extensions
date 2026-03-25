@@ -16,15 +16,14 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
+import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
+import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
 
 import java.util.Objects;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
-import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
 
 
 /**

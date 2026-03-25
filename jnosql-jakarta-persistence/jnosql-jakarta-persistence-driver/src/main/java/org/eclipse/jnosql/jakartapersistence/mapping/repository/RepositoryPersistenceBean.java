@@ -17,14 +17,12 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.repository.DataRepository;
 import jakarta.enterprise.inject.spi.BeanManager;
-
-import java.lang.reflect.InvocationHandler;
-
-import org.eclipse.jnosql.mapping.core.Converters;
-
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+
+import java.lang.reflect.InvocationHandler;
 
 /**
  * This class serves as a JNoSQL discovery bean for CDI extension, responsible

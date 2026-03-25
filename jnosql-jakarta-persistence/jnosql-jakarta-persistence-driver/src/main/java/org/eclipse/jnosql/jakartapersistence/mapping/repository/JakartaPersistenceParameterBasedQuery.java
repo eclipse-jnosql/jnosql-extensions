@@ -15,18 +15,16 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.data.Sort;
-
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
+import org.eclipse.jnosql.mapping.core.repository.ParamValue;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
-
-import org.eclipse.jnosql.mapping.core.repository.ParamValue;
 
 
 /**

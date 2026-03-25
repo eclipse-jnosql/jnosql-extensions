@@ -20,6 +20,15 @@ import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
+import org.eclipse.jnosql.jakartapersistence.CdiUtil;
+import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManagerProvider;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.mapping.core.Converters;
+import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
+import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -32,16 +41,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.eclipse.jnosql.jakartapersistence.CdiUtil;
-import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManagerProvider;
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.mapping.core.Converters;
-import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
-import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 /**
  * Base class with common functionality shared Jakarta Persistence Data repository beans

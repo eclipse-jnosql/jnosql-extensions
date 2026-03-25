@@ -21,12 +21,11 @@ import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.EntityType;
+import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
+import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
-import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
 
 /**
  * Provides a {@link PersistenceDatabaseManager} for a specific

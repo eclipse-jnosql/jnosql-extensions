@@ -22,10 +22,9 @@ import jakarta.interceptor.InvocationContext;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import jakarta.transaction.Transactional;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
 import java.util.concurrent.Callable;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 
 /**
  *
