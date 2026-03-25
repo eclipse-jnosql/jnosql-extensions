@@ -21,7 +21,6 @@ import jakarta.inject.Inject;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
-import org.eclipse.jnosql.mapping.core.repository.operations.CoreBaseRepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.reflection.ProjectionFound;
 import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositorySupplier;
@@ -38,7 +37,7 @@ class SqlRepositoryProducer {
 
     @Inject
     SqlRepositoryProducer(InfrastructureOperatorProvider infrastructureOperatorProvider,
-                          CoreBaseRepositoryOperationProvider repositoryOperationProvider,
+                          SqlRepositoryOperationProvider repositoryOperationProvider,
                           Event<ProjectionFound> projectionFoundEvent) {
         this.infrastructureOperatorProvider = infrastructureOperatorProvider;
         this.repositoryOperationProvider = repositoryOperationProvider;
