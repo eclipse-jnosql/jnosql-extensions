@@ -14,21 +14,19 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.spi;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
-
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
+import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
+import org.eclipse.jnosql.jakartapersistence.mapping.repository.CustomRepositoryPersistenceBean;
+import org.eclipse.jnosql.jakartapersistence.mapping.repository.RepositoryPersistenceBean;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.repository.CustomRepositoryPersistenceBean;
-import org.eclipse.jnosql.jakartapersistence.mapping.repository.RepositoryPersistenceBean;
 
 /**
  * This CDI extension, {@code JakartaPersistenceExtension}, observes the CDI

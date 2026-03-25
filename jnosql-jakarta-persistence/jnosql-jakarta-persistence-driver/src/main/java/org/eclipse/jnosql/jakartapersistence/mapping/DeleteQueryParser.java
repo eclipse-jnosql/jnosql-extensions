@@ -22,12 +22,11 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
-
-import java.util.function.Function;
-
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+
+import java.util.function.Function;
 
 class DeleteQueryParser extends BaseUpdateQueryParser {
 

@@ -20,16 +20,13 @@ import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
-
-import java.util.List;
-import java.util.function.Function;
-
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
 import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-import static org.eclipse.jnosql.jakartapersistence.mapping.BaseQueryParser.parseCriteria;
+import java.util.List;
+import java.util.function.Function;
 
 class UpdateQueryParser extends BaseUpdateQueryParser {
 

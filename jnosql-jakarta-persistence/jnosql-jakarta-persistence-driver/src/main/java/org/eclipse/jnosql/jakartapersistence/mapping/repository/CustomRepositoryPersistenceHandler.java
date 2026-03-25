@@ -15,16 +15,11 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
-
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.persistence.EntityManager;
-
-import java.lang.reflect.Method;
-import java.util.Map;
-
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -32,6 +27,9 @@ import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
+
+import java.lang.reflect.Method;
+import java.util.Map;
 
 /**
  *

@@ -20,13 +20,12 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 
 /**
  *

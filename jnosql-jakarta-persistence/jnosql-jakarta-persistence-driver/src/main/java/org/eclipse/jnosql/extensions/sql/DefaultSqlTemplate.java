@@ -64,7 +64,8 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public long deleteWithCount(DeleteQuery query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return executeInTransaction(() -> deleteQueryConverter.convert(query).executeUpdate());
     }
 
     @Override
@@ -140,19 +141,18 @@ class DefaultSqlTemplate implements SqlTemplate {
     public long count(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.convert(query);
-            return (long) typedQuery.getResultList().size();
+            var typedQuery = selectQueryConverter.convertCount(query);
+            return (long) typedQuery.getSingleResult();
         });
     }
 
     @Override
     public boolean exists(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
-        return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.convert(query);
-            typedQuery.setMaxResults(1);
-            return !typedQuery.getResultList().isEmpty();
-        });
+        return executeInTransaction(() -> !selectQueryConverter
+                .convertExists(query)
+                .getResultList()
+                .isEmpty());
     }
 
     @SuppressWarnings("unchecked")

@@ -16,12 +16,12 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Event;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
-import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
-import org.eclipse.jnosql.mapping.core.repository.operations.CoreBaseRepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.reflection.ProjectionFound;
 import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositorySupplier;
 
 import java.lang.reflect.Proxy;
@@ -31,12 +31,16 @@ import java.util.Objects;
 class SqlRepositoryProducer {
 
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
-    private final RepositoryOperationProvider repositoryOperationProvider;
+    private final SqlRepositoryOperationProvider repositoryOperationProvider;
+    private final Event<ProjectionFound> projectionFoundEvent;
 
     @Inject
-    SqlRepositoryProducer(InfrastructureOperatorProvider infrastructureOperatorProvider, CoreBaseRepositoryOperationProvider repositoryOperationProvider) {
+    SqlRepositoryProducer(InfrastructureOperatorProvider infrastructureOperatorProvider,
+                          SqlRepositoryOperationProvider repositoryOperationProvider,
+                          Event<ProjectionFound> projectionFoundEvent) {
         this.infrastructureOperatorProvider = infrastructureOperatorProvider;
         this.repositoryOperationProvider = repositoryOperationProvider;
+        this.projectionFoundEvent = projectionFoundEvent;
     }
 
 
@@ -56,7 +60,7 @@ class SqlRepositoryProducer {
     public <R> R get(Class<?> repositoryClass, SqlTemplate template) {
         Objects.requireNonNull(repositoryClass, "repository class is required");
         Objects.requireNonNull(template, "template is required");
-        RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass);
+        RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass, projectionFoundEvent);
         var entity = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
         SqlRepositoryAdapter<?, ?> repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
         var entityMetadata = repositoryAdapter.metadata();

@@ -16,13 +16,12 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 
 import jakarta.data.page.PageRequest;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
+import org.eclipse.jnosql.mapping.core.repository.MethodDynamicExecutable;
 
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.function.Function;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
-import org.eclipse.jnosql.mapping.core.repository.MethodDynamicExecutable;
 
 /**
  * Copied from DynamicQueryMethodReturn in JNoSQL and modified for Jakarta Persistence

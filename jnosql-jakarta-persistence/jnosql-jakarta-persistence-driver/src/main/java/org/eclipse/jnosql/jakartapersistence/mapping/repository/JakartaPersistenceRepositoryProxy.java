@@ -15,37 +15,25 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
-import jakarta.data.repository.Find;
-import jakarta.data.repository.OrderBy;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
-
 import jakarta.data.Limit;
 import jakarta.data.Sort;
 import jakarta.data.exceptions.EmptyResultException;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.data.repository.Find;
 import jakarta.data.repository.First;
+import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Query;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.persistence.EntityManager;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
-
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.jakartapersistence.mapping.DataExceptions;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
+import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 import org.eclipse.jnosql.mapping.core.query.RepositoryType;
@@ -57,6 +45,16 @@ import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepository;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;

@@ -25,30 +25,16 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
-
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
 import org.eclipse.jnosql.communication.ParamValue;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 
-import static org.eclipse.jnosql.communication.Condition.AND;
-import static org.eclipse.jnosql.communication.Condition.BETWEEN;
-import static org.eclipse.jnosql.communication.Condition.CONTAINS;
-import static org.eclipse.jnosql.communication.Condition.ENDS_WITH;
-import static org.eclipse.jnosql.communication.Condition.EQUALS;
-import static org.eclipse.jnosql.communication.Condition.GREATER_EQUALS_THAN;
-import static org.eclipse.jnosql.communication.Condition.GREATER_THAN;
-import static org.eclipse.jnosql.communication.Condition.IN;
-import static org.eclipse.jnosql.communication.Condition.LESSER_EQUALS_THAN;
-import static org.eclipse.jnosql.communication.Condition.LESSER_THAN;
-import static org.eclipse.jnosql.communication.Condition.LIKE;
-import static org.eclipse.jnosql.communication.Condition.NOT;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 
 abstract class BaseQueryParser {

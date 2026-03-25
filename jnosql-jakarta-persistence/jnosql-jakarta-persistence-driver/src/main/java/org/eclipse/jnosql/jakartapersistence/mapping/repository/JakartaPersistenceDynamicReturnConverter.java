@@ -14,7 +14,10 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryReflectionUtils;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryReturn;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -22,10 +25,6 @@ import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
-import org.eclipse.jnosql.mapping.core.repository.RepositoryReflectionUtils;
-import org.eclipse.jnosql.mapping.core.repository.RepositoryReturn;
 
 /**
  * Copied from DynamicReturnConverter in JNoSQL and modified for Jakarta Persistence

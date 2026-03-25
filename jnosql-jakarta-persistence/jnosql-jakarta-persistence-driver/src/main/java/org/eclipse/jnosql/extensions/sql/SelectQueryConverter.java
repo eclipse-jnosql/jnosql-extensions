@@ -32,6 +32,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 final class SelectQueryConverter extends QueryConverterSupport{
 
@@ -57,6 +58,54 @@ final class SelectQueryConverter extends QueryConverterSupport{
         TypedQuery<T> typedQuery = manager.createQuery(criteriaQuery);
         applySkip(query.skip(), typedQuery);
         applyLimit(limit, typedQuery);
+        return typedQuery;
+    }
+
+    @SuppressWarnings("unchecked")
+    <T>TypedQuery<Long> convertCount(SelectQuery query) {
+        Objects.requireNonNull(query, "query is null");
+
+        Class<T> type = resolveEntity(query.name());
+
+        CriteriaBuilder cb = manager.getCriteriaBuilder();
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+
+        Root<T> root = countQuery.from(type);
+
+        countQuery.select(cb.count(root));
+
+        applyCondition(
+                query.condition().orElse(null),
+                cb,
+                root,
+                countQuery
+        );
+
+        return manager.createQuery(countQuery);
+    }
+
+    TypedQuery<Integer> convertExists(SelectQuery query) {
+        Objects.requireNonNull(query, "query is null");
+
+        Class<?> type = resolveEntity(query.name());
+
+        CriteriaBuilder cb = manager.getCriteriaBuilder();
+        CriteriaQuery<Integer> existsQuery = cb.createQuery(Integer.class);
+
+        Root<?> root = existsQuery.from(type);
+
+        existsQuery.select(cb.literal(1));
+
+        applyCondition(
+                query.condition().orElse(null),
+                cb,
+                root,
+                existsQuery
+        );
+
+        TypedQuery<Integer> typedQuery = manager.createQuery(existsQuery);
+        typedQuery.setMaxResults(1);
+
         return typedQuery;
     }
 

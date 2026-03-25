@@ -16,9 +16,6 @@
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
 import jakarta.data.exceptions.OptimisticLockingFailureException;
-
-import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
-
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
@@ -29,6 +26,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PersistenceUnitUtil;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
+import org.eclipse.jnosql.mapping.PreparedStatement;
+import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
 import java.time.Duration;
 import java.util.List;
@@ -38,12 +41,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-
-import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
-import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
-import org.eclipse.jnosql.mapping.PreparedStatement;
-import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;

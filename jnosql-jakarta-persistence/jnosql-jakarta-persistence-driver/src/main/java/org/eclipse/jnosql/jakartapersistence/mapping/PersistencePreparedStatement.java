@@ -20,6 +20,8 @@ import jakarta.data.Sort;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.persistence.Query;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.PreparedStatement;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,9 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
-
-import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.mapping.PreparedStatement;
 
 /**
  *

@@ -16,9 +16,8 @@ package org.eclipse.jnosql.jakartapersistence.communication;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
-
-import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCache;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 
 /**
  * Database manager that provides access to Jakarta Persistence EntityManager
