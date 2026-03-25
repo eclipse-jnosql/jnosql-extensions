@@ -141,8 +141,8 @@ class DefaultSqlTemplate implements SqlTemplate {
     public long count(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.convert(query);
-            return (long) typedQuery.getResultList().size();
+            var typedQuery = selectQueryConverter.convertCount(query);
+            return (long) typedQuery.getSingleResult();
         });
     }
 
