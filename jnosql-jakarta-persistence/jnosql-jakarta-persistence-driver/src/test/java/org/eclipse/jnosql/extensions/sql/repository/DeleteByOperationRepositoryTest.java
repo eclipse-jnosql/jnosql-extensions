@@ -44,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     @BeforeEach
     void setUp() {
         this.repository = producer.get(ComputerDeleteByRepository.class, template);
+        this.template.deleteAll(Computer.class);
     }
 
     @Nested
