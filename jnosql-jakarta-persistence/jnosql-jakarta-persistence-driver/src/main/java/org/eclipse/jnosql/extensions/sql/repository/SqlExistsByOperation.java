@@ -15,16 +15,29 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ExistsByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 @ApplicationScoped
 class SqlExistsByOperation implements ExistsByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;
 
+    @Inject
+    SqlExistsByOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlExistsByOperation() {
+        this.sqlQueryBuilder = null;
+    }
+
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-        throw new UnsupportedOperationException("ExistsByOperation is not supported yet");
+        var selectQuery = this.sqlQueryBuilder.selectQuery(context);
+        var template = (SemiStructuredTemplate) context.template();
+        return (T) (Boolean) template.exists(selectQuery);
     }
 }
