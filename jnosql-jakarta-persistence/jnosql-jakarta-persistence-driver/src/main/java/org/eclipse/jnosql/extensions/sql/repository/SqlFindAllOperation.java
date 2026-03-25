@@ -17,14 +17,19 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindAllOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 @ApplicationScoped
 @Typed(SqlFindAllOperation.class)
 class SqlFindAllOperation implements FindAllOperation {
+
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
+        var entityMetadata = context.entityMetadata();
+        var query = SelectQuery.select().from(entityMetadata.name()).build();
         throw new UnsupportedOperationException("FindAllOperation is not supported by SQL extension");
     }
 }
