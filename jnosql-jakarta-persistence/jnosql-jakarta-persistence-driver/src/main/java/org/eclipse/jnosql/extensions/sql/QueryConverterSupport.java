@@ -38,7 +38,7 @@ abstract class QueryConverterSupport {
     }
 
 
-    protected<T> void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+    protected void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<?> root, CriteriaQuery<?> criteriaQuery) {
         if (criteriaCondition == null) {
             return;
         }
