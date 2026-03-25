@@ -35,6 +35,7 @@ abstract class AbstractTestRepository {
                     )
                     .addPackages(true, CoreDeleteOperation.class)
                     .addPackages(true, FieldReader.class)
+                    .addPackages(true, SqlRepositoryOperationProvider.class)
                     .addExtensions(ReflectionEntityMetadataExtension.class)
     );
 
