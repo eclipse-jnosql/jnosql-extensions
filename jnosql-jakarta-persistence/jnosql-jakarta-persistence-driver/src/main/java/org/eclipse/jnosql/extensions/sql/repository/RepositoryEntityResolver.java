@@ -115,6 +115,7 @@ INSTANCE;
 
         return name.equals("jakarta.data.repository.BasicRepository")
                 || name.equals("jakarta.data.repository.CrudRepository")
-                || name.equals("jakarta.data.repository.DataRepository");
+                || name.equals("jakarta.data.repository.DataRepository")
+                || name.equals("org.eclipse.jnosql.mapping.NoSQLRepository");
     }
 }

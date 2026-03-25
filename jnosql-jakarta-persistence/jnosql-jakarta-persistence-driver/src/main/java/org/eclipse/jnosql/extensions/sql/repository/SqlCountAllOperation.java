@@ -12,15 +12,18 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.extensions.sql.model;
+package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.repository.BasicRepository;
-import jakarta.data.repository.Insert;
-import jakarta.data.repository.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
-import java.util.List;
+@ApplicationScoped
+class SqlCountAllOperation implements CountAllOperation {
 
-@Repository
-public interface ComputerRepository extends BasicRepository<Computer, Long> {
+    @Override
+    public <T> T execute(RepositoryInvocationContext context) {
+        throw new UnsupportedOperationException("CountAllOperation is not supported yet");
+    }
 
 }

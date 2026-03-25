@@ -12,15 +12,16 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.extensions.sql.model;
+package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.repository.BasicRepository;
-import jakarta.data.repository.Insert;
-import jakarta.data.repository.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
-import java.util.List;
-
-@Repository
-public interface ComputerRepository extends BasicRepository<Computer, Long> {
-
+@ApplicationScoped
+class SqlCursorPaginationOperation implements CursorPaginationOperation {
+    @Override
+    public <T> T execute(RepositoryInvocationContext context) {
+        throw new UnsupportedOperationException("CursorPaginationOperation is not supported yet");
+    }
 }

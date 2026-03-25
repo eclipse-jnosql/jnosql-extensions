@@ -18,13 +18,9 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.inject.Inject;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
-import org.eclipse.jnosql.extensions.sql.SqlTemplateFactory;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerRepository;
-import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.jboss.weld.junit5.EnableWeld;
-import org.jboss.weld.junit5.WeldInitiator;
-import org.jboss.weld.junit5.WeldSetup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,18 +32,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 
 @EnableWeld
-class SqlRepositoryProducerTest {
+class SqlRepositoryProducerTest extends AbstractTestRepository {
 
-    @WeldSetup
-    WeldInitiator weld = WeldInitiator.of(
-            WeldInitiator.createWeld()
-                    .addBeanClasses(
-                            SqlTemplateFactory.class,
-                            SqlRepositoryAdapterTest.class,
-                            SqlRepositoryProducer.class
-                    )
-                    .addPackages(true, CoreDeleteOperation.class)
-    );
 
     @Inject
     private SqlTemplate template;

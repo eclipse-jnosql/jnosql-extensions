@@ -15,12 +15,31 @@
 package org.eclipse.jnosql.extensions.sql.model;
 
 import jakarta.data.repository.BasicRepository;
-import jakarta.data.repository.Insert;
 import jakarta.data.repository.Repository;
+import jakarta.data.repository.Save;
+import jakarta.data.repository.Update;
 
 import java.util.List;
 
 @Repository
-public interface ComputerRepository extends BasicRepository<Computer, Long> {
+public interface ComputerSaveRepository extends BasicRepository<Computer, Long> {
 
+    @Save
+    Computer save(Computer computer);
+
+    @Save
+    Computer[] save(Computer[] computers);
+
+    @Save
+    List<Computer> save(List<Computer> computers);
+
+
+    @Save
+    void saveVoid(Computer computer);
+
+    @Save
+    void saveVoid(Computer[] computers);
+
+    @Save
+    void saveVoid(List<Computer> computers);
 }

@@ -159,15 +159,15 @@ public final class SqlEntityMetadata implements EntityMetadata {
 
         String entityName = metamodel.getName();
 
-        // Find the @Id field manually (provider-safe)
-        String idFieldName = Arrays.stream(entityType.getDeclaredFields())
+        Field idAttribute = Arrays.stream(entityType.getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(jakarta.persistence.Id.class))
                 .findFirst()
-                .map(Field::getName)
                 .orElseThrow(() -> new IllegalStateException(
                         "No @Id field found on entity " + entityType.getName()
                 ));
-        var idField = new SqlIdFieldMetadata(idFieldName);
+        var idFieldName = idAttribute.getName();
+        idAttribute.setAccessible(true);
+        var idField = new SqlIdFieldMetadata(idFieldName, idAttribute);
         return new SqlEntityMetadata(entityName, entityType, idField, idFieldName);
     }
 }

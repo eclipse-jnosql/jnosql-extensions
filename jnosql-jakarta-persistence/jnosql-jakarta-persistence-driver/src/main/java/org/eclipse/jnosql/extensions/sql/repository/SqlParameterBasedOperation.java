@@ -12,15 +12,17 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.extensions.sql.model;
+package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.repository.BasicRepository;
-import jakarta.data.repository.Insert;
-import jakarta.data.repository.Repository;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
-import java.util.List;
+@ApplicationScoped
+class SqlParameterBasedOperation implements ParameterBasedOperation {
 
-@Repository
-public interface ComputerRepository extends BasicRepository<Computer, Long> {
-
+    @Override
+    public <T> T execute(RepositoryInvocationContext context) {
+        throw new UnsupportedOperationException("ParameterBasedOperation is not supported yet");
+    }
 }
