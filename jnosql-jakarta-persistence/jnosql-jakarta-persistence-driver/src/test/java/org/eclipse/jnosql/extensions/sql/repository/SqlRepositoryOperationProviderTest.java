@@ -22,6 +22,9 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.InsertOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ProviderOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.SaveOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
+import org.eclipse.jnosql.mapping.reflection.FieldReader;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
+import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
 import org.jboss.weld.junit5.WeldSetup;
@@ -38,16 +41,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SqlRepositoryOperationProviderTest {
 
+    @SuppressWarnings("unchecked")
     @WeldSetup
     WeldInitiator weld = WeldInitiator.of(
             WeldInitiator.createWeld()
                     .addBeanClasses(
                             SqlTemplateFactory.class,
                             SqlRepositoryAdapterTest.class,
-                            SqlRepositoryProducer.class
+                            SqlRepositoryProducer.class,
+                            ProjectorConverter.class
                     )
                     .addPackages(true, CoreDeleteOperation.class)
+                    .addPackages(true, FieldReader.class)
                     .addPackages(true, SqlRepositoryOperationProvider.class)
+                    .addExtensions(ReflectionEntityMetadataExtension.class)
     );
 
     @Inject
