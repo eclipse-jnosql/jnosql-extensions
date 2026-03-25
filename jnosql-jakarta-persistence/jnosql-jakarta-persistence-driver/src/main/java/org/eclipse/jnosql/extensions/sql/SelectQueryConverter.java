@@ -32,6 +32,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 final class SelectQueryConverter extends QueryConverterSupport{
 
@@ -58,6 +59,29 @@ final class SelectQueryConverter extends QueryConverterSupport{
         applySkip(query.skip(), typedQuery);
         applyLimit(limit, typedQuery);
         return typedQuery;
+    }
+
+    @SuppressWarnings("unchecked")
+    <T>TypedQuery<Long> convertCount(SelectQuery query) {
+        Objects.requireNonNull(query, "query is null");
+
+        Class<T> type = resolveEntity(query.name());
+
+        CriteriaBuilder cb = manager.getCriteriaBuilder();
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+
+        Root<T> root = countQuery.from(type);
+
+        countQuery.select(cb.count(root));
+
+        applyCondition(
+                query.condition().orElse(null),
+                cb,
+                root,
+                countQuery
+        );
+
+        return (TypedQuery<Long>) manager.createQuery(countQuery);
     }
 
     private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
