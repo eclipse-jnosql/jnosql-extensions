@@ -16,8 +16,11 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.communication.Params;
+import org.eclipse.jnosql.communication.query.method.DeleteMethodProvider;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
@@ -30,8 +33,7 @@ import java.util.Objects;
 class SqlQueryBuilder {
 
     private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
-
-
+    private static final DeleteQueryParser DELETE_PARSER = new DeleteQueryParser();
 
     SelectQuery selectQuery(RepositoryInvocationContext context) {
         var method = context.method();
@@ -46,8 +48,21 @@ class SqlQueryBuilder {
         return query;
     }
 
+    DeleteQuery deleteQuery(RepositoryInvocationContext context) {
+        var entityMetadata = context.entityMetadata();
+        var provider = DeleteMethodProvider.INSTANCE;
+        var method = context.method();
+        var deleteQuery = provider.apply(method.name(), entityMetadata.name());
+        var queryParams = DELETE_PARSER.apply(deleteQuery, CommunicationObserverParser.EMPTY);
+        var params = queryParams.params();
+        var parameters = context.parameters();
+        var query = queryParams.query();
+        bind(params, parameters, method.name());
+        return query;
+    }
 
-    public void bind(Params params, Object[] args, String methodName) {
+
+    private void bind(Params params, Object[] args, String methodName) {
         Objects.requireNonNull(params, "params is required");
         Objects.requireNonNull(args, "args is required");
         Objects.requireNonNull(methodName, "methodName is required");
