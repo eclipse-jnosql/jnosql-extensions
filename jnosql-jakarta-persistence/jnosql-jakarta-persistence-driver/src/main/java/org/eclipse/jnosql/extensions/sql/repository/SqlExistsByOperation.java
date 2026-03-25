@@ -20,6 +20,9 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 
 @ApplicationScoped
 class SqlExistsByOperation implements ExistsByOperation {
+
+    private final SqlQueryBuilder sqlQueryBuilder;
+
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         throw new UnsupportedOperationException("ExistsByOperation is not supported yet");
