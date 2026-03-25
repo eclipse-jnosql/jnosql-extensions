@@ -149,10 +149,10 @@ class DefaultSqlTemplate implements SqlTemplate {
     @Override
     public boolean exists(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
-        return executeInTransaction(() -> {
-            var typedQuery = selectQueryConverter.convertCount(query);
-            return typedQuery.getSingleResult() > 0;
-        });
+        return executeInTransaction(() -> !selectQueryConverter
+                .convertExists(query)
+                .getResultList()
+                .isEmpty());
     }
 
     @SuppressWarnings("unchecked")
