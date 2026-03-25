@@ -14,8 +14,31 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.mapping.core.NoSQLPage;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
+
+import java.util.Collections;
 
 @ApplicationScoped
 class SqlReturnType {
+
+    private static final Page<Object> EMPTY_PAGINATION = NoSQLPage.of(Collections.emptyList(), PageRequest.ofSize(1));
+    private final EntitiesMetadata entitiesMetadata;
+    private final ProjectorConverter projectorConverter;
+
+    @Inject
+    SqlReturnType(EntitiesMetadata entitiesMetadata, ProjectorConverter projectorConverter) {
+        this.entitiesMetadata = entitiesMetadata;
+        this.projectorConverter = projectorConverter;
+    }
+
+    SqlReturnType() {
+        this.entitiesMetadata = null;
+        this.projectorConverter = null;
+    }
 }
