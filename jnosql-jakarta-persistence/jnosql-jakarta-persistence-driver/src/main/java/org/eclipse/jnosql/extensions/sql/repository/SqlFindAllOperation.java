@@ -17,6 +17,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
@@ -29,12 +30,23 @@ class SqlFindAllOperation implements FindAllOperation {
 
     private static final String[] EMPTY = new String[0];
 
+    private final SqlReturnType sqlReturnType;
+
+    @Inject
+    SqlFindAllOperation(SqlReturnType sqlReturnType) {
+        this.sqlReturnType = sqlReturnType;
+    }
+
+    SqlFindAllOperation() {
+        this.sqlReturnType = null;
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         var entityMetadata = context.entityMetadata();
         RepositoryMethod method = context.method();
         var query = SelectQuery.select(method.select().toArray(EMPTY)).from(entityMetadata.name()).build();
-
-        throw new UnsupportedOperationException("FindAllOperation is not supported by SQL extension");
+        return (T) sqlReturnType.executeFindByQuery(context, query);
     }
 }
