@@ -14,13 +14,11 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.restrict.Restriction;
 import jakarta.inject.Inject;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerDeleteRepository;
-import org.eclipse.jnosql.extensions.sql.model.ComputerUpdateRepository;
 import org.eclipse.jnosql.extensions.sql.model._Computer;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,8 +27,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @EnableWeld
  class DeleteOperationRepositoryTest extends AbstractTestRepository {
@@ -46,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     @BeforeEach
     void setUp() {
         this.repository = producer.get(ComputerDeleteRepository.class, template);
+        this.template.deleteAll(Computer.class);
     }
 
     @Nested
