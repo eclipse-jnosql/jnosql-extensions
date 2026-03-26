@@ -60,9 +60,8 @@ enum SqlRestrictionConverter {
     private static final String RESTRICTION_UNMATCHABLE = "UNMATCHABLE";
     private static final String RESTRICTION_UNRESTRICTED = "UNRESTRICTED";
 
-    public Optional<CriteriaCondition> parser(Restriction<?> restriction, EntityMetadata entityMetadata) {
+    public Optional<CriteriaCondition> parser(Restriction<?> restriction) {
         Objects.requireNonNull(restriction, "restriction is required");
-        Objects.requireNonNull(entityMetadata, "entityMetadata is required");
 
         LOGGER.fine(() -> "Converter is invoked for restriction " + restriction);
 
@@ -92,7 +91,7 @@ enum SqlRestrictionConverter {
                         .stream()
                         .map(r -> {
                             if(r instanceof CompositeRestriction<?>) {
-                                return parser(r, entityMetadata)
+                                return parser(r)
                                         .orElseThrow(() -> new UnsupportedOperationException(
                                                 "Cannot parse nested composite restriction: " + r));
                             }
@@ -100,7 +99,7 @@ enum SqlRestrictionConverter {
                         })
                         .map(r ->{
                             if(r instanceof BasicRestriction<?, ?> basicRestriction) {
-                                return parser(negated? basicRestriction.negate(): basicRestriction, entityMetadata);
+                                return parser(negated? basicRestriction.negate(): basicRestriction);
                             }
                             return Optional.ofNullable((CriteriaCondition)r);
                         })
