@@ -14,16 +14,32 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.MappingDeleteQuery;
+import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
+import org.eclipse.jnosql.mapping.semistructured.query.RestrictionConverter;
+
+import java.util.Optional;
 
 @ApplicationScoped
 @Typed(SqlDeleteOperation.class)
-class SqlDeleteOperation implements DeleteOperation {
+class SqlDeleteOperation extends CoreDeleteOperation implements DeleteOperation {
+
+
     @Override
-    public <T> T execute(RepositoryInvocationContext context) {
-        throw new UnsupportedOperationException("DeleteByOperation is not supported by SQL extension");
+    protected void deleteByRestriction(RepositoryInvocationContext context, Restriction<?> restriction) {
+
+        var template = (SemiStructuredTemplate) context.template();
+        EntityMetadata entityMetadata = context.entityMetadata();
+        Optional<CriteriaCondition> condition = RestrictionConverter.INSTANCE.parser(restriction, entityMetadata, converters);
+        var deleteQuery = new MappingDeleteQuery(entityMetadata.name(), condition.orElse(null));
+        template.delete(deleteQuery);
     }
 }
