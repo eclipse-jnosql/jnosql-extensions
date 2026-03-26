@@ -14,6 +14,32 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.expression.Expression;
+import jakarta.data.metamodel.BasicAttribute;
+import jakarta.data.spi.expression.literal.Literal;
+import org.eclipse.jnosql.communication.Value;
+
+import java.util.function.Supplier;
+
 enum SqlValueConverter {
     INSTANCE;
+
+    static Object of(Supplier<Expression<?, ?>> supplier, BasicAttribute<?, ?> basicAttribute) {
+        var expression = supplier.get();
+        var literal = getLiteral(expression);
+        return getValue(basicAttribute, literal);
+    }
+
+    private static Literal<?> getLiteral(Expression<?, ?> expression) {
+        if(expression instanceof Literal<?> literal) {
+            return literal;
+        } else {
+            throw new UnsupportedOperationException("Currently only Literal values are supported for EqualTo constraints, but got: " + expression);
+        }
+    }
+
+    private static Object getValue(BasicAttribute<?, ?> basicAttribute,
+                                   Literal<?> literal) {
+        return Value.of(literal.value()).get(basicAttribute.attributeType());
+    }
 }
