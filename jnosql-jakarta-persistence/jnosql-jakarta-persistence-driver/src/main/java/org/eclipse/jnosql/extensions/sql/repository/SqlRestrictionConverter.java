@@ -15,4 +15,5 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 enum SqlRestrictionConverter {
+    INSTANCE;
 }
