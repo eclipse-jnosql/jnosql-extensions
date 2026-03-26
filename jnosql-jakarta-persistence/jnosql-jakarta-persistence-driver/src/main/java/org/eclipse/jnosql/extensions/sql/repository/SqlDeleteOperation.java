@@ -24,8 +24,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.semistructured.MappingDeleteQuery;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
-import org.eclipse.jnosql.mapping.semistructured.query.RestrictionConverter;
-
 import java.util.Optional;
 
 @ApplicationScoped
