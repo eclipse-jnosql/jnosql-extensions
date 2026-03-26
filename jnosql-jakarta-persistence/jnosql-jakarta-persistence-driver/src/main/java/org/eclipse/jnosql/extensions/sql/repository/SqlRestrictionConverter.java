@@ -35,11 +35,8 @@ import jakarta.data.restrict.CompositeRestriction;
 import jakarta.data.restrict.Restriction;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
-import org.eclipse.jnosql.mapping.metadata.FieldParameterMetadata;
 import org.eclipse.jnosql.mapping.semistructured.query.UnsatisfiableQueryException;
-import org.eclipse.jnosql.mapping.semistructured.query.ValueConverter;
 
 import java.util.List;
 import java.util.Objects;
@@ -60,6 +57,8 @@ import static org.eclipse.jnosql.communication.semistructured.CriteriaCondition.
 enum SqlRestrictionConverter {
     INSTANCE;
     private static final Logger LOGGER = Logger.getLogger(SqlRestrictionConverter.class.getName());
+    private static final String RESTRICTION_UNMATCHABLE = "UNMATCHABLE";
+    private static final String RESTRICTION_UNRESTRICTED = "UNRESTRICTED";
 
     public Optional<CriteriaCondition> parser(Restriction<?> restriction, EntityMetadata entityMetadata) {
         Objects.requireNonNull(restriction, "restriction is required");
@@ -72,7 +71,7 @@ enum SqlRestrictionConverter {
             case BasicRestriction<?, ?> basicRestriction -> {
                 if (basicRestriction.expression() instanceof BasicAttribute<?, ?> basicAttribute) {
                     Constraint<?> constraint = basicRestriction.constraint();
-                    criteriaCondition = condition(basicAttribute, constraint, entityMetadata);
+                    criteriaCondition = condition(basicAttribute, constraint);
                 } else {
                     throw new UnsupportedOperationException("The expression " + basicRestriction.expression() + " is not supported");
                 }
@@ -93,7 +92,7 @@ enum SqlRestrictionConverter {
                         .stream()
                         .map(r -> {
                             if(r instanceof CompositeRestriction<?>) {
-                                return parser(r, entityMetadata, converters)
+                                return parser(r, entityMetadata)
                                         .orElseThrow(() -> new UnsupportedOperationException(
                                                 "Cannot parse nested composite restriction: " + r));
                             }
@@ -101,8 +100,7 @@ enum SqlRestrictionConverter {
                         })
                         .map(r ->{
                             if(r instanceof BasicRestriction<?, ?> basicRestriction) {
-                                return parser(negated? basicRestriction.negate(): basicRestriction, entityMetadata,
-                                        converters);
+                                return parser(negated? basicRestriction.negate(): basicRestriction, entityMetadata);
                             }
                             return Optional.ofNullable((CriteriaCondition)r);
                         })
@@ -127,90 +125,84 @@ enum SqlRestrictionConverter {
         switch (constraint) {
 
             case EqualTo<?> equalTo -> {
-                var value = ValueConverter.of(equalTo::expression, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return eq(nativeColumn, value);
+                var value = SqlValueConverter.of(equalTo::expression, basicAttribute);
+                return eq(name, value);
             }
 
             case NotEqualTo<?> notEqualTo -> {
-                var value = ValueConverter.of(notEqualTo::expression, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return eq(nativeColumn, value).negate();
+                var value = SqlValueConverter.of(notEqualTo::expression, basicAttribute);
+                return eq(name, value).negate();
             }
 
             case LessThan<?> lessThan -> {
-                var value = ValueConverter.of(lessThan::bound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return lt(nativeColumn, value);
+                var value = SqlValueConverter.of(lessThan::bound, basicAttribute);
+                return lt(name, value);
             }
 
             case GreaterThan<?> greaterThan -> {
-                var value = ValueConverter.of(greaterThan::bound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return gt(nativeColumn, value);
+                var value = SqlValueConverter.of(greaterThan::bound, basicAttribute);
+                return gt(name, value);
             }
 
             case AtLeast<?> greaterThanOrEqual -> {
-                var value = ValueConverter.of(greaterThanOrEqual::bound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return gte(nativeColumn, value);
+                var value = SqlValueConverter.of(greaterThanOrEqual::bound, basicAttribute);
+                return gte(name, value);
             }
 
             case AtMost<?> lesserThanOrEqual -> {
-                var value = ValueConverter.of(lesserThanOrEqual::bound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return lte(nativeColumn, value);
+                var value = SqlValueConverter.of(lesserThanOrEqual::bound, basicAttribute);
+                return lte(name, value);
             }
 
             case Between<?> between -> {
-                var lowerBound = ValueConverter.of(between::lowerBound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                var upperBound = ValueConverter.of(between::upperBound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return between(nativeColumn, List.of(lowerBound, upperBound));
+                var lowerBound = SqlValueConverter.of(between::lowerBound, basicAttribute);
+                var upperBound = SqlValueConverter.of(between::upperBound, basicAttribute);
+                return between(name, List.of(lowerBound, upperBound));
             }
 
             case NotBetween<?> between -> {
-                var lowerBound = ValueConverter.of(between::lowerBound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                var upperBound = ValueConverter.of(between::upperBound, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return between(nativeColumn, List.of(lowerBound, upperBound)).negate();
+                var lowerBound = SqlValueConverter.of(between::lowerBound, basicAttribute);
+                var upperBound = SqlValueConverter.of(between::upperBound, basicAttribute);
+                return between(name, List.of(lowerBound, upperBound)).negate();
             }
 
             case Like like -> {
-                var value = ValueConverter.of(like::pattern, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return like(nativeColumn, value);
+                var value = SqlValueConverter.of(like::pattern, basicAttribute);
+                return like(name, value);
             }
 
             case NotLike like -> {
-                var value = ValueConverter.of(like::pattern, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null));
-                return like(nativeColumn, value).negate();
+                var value = SqlValueConverter.of(like::pattern, basicAttribute);
+                return like(name, value).negate();
             }
 
             case Null<?> isNull -> {
-                return eq(nativeColumn, Value.ofNull());
+                return eq(name, Value.ofNull());
             }
 
             case NotNull<?> isNull -> {
-                return eq(nativeColumn, Value.ofNull()).negate();
+                return eq(name, Value.ofNull()).negate();
             }
 
             case In<?> in -> {
-                var values = in.expressions().stream().map(expression -> ValueConverter.of(() -> expression, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null))).toList();
-                return in(nativeColumn, values);
+                var values = in.expressions().stream().map(expression -> SqlValueConverter.of(() -> expression, basicAttribute)).toList();
+                return in(name, values);
             }
 
             case NotIn<?> in -> {
-                var values = in.expressions().stream().map(expression -> ValueConverter.of(() -> expression, basicAttribute, converters,
-                        converter.orElse(null), fieldMetadata.orElse(null))).toList();
-                return in(nativeColumn, values).negate();
+                var values = in.expressions().stream().map(expression -> SqlValueConverter.of(() -> expression, basicAttribute)).toList();
+                return in(name, values).negate();
             }
 
             default -> throw new UnsupportedOperationException("Unexpected value: " + constraint);
         }
+    }
 
+    private static boolean isUnrestricted(Restriction<?> r) {
+        return RESTRICTION_UNRESTRICTED.equals(r.toString());
+    }
+
+    private static boolean isUnmatchable(Restriction<?> r) {
+        return RESTRICTION_UNMATCHABLE.equals(r.toString());
+    }
 }
