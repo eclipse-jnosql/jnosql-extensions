@@ -38,7 +38,7 @@ class SqlDeleteOperation extends CoreDeleteOperation implements DeleteOperation 
 
         var template = (SemiStructuredTemplate) context.template();
         EntityMetadata entityMetadata = context.entityMetadata();
-        Optional<CriteriaCondition> condition = SqlRestrictionConverter.INSTANCE.parser(restriction, entityMetadata);
+        Optional<CriteriaCondition> condition = SqlRestrictionConverter.INSTANCE.parser(restriction);
         var deleteQuery = new MappingDeleteQuery(entityMetadata.name(), condition.orElse(null));
         template.delete(deleteQuery);
     }
