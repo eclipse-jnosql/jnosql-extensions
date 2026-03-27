@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
@@ -26,10 +27,21 @@ import java.util.function.Function;
 @ApplicationScoped
 class SqlCountByOperation implements CountByOperation {
 
+    private final SqlQueryBuilder sqlQueryBuilder;
+
+    @Inject
+    SqlCountByOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlCountByOperation() {
+        this.sqlQueryBuilder = null;
+    }
+
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         var method = context.method();
-        SelectQuery selectQuery = this.semistructuredQueryBuilder.selectQuery(context);
+        SelectQuery selectQuery = this.sqlQueryBuilder.selectQuery(context);
         var template = (SemiStructuredTemplate) context.template();
         Long count = template.count(selectQuery);
         var returnType = method.returnType();
