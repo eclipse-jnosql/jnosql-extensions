@@ -35,7 +35,6 @@ import jakarta.data.restrict.CompositeRestriction;
 import jakarta.data.restrict.Restriction;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.semistructured.query.UnsatisfiableQueryException;
 
 import java.util.List;
