@@ -38,6 +38,7 @@ class SqlCountByOperation implements CountByOperation {
         this.sqlQueryBuilder = null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         var method = context.method();
