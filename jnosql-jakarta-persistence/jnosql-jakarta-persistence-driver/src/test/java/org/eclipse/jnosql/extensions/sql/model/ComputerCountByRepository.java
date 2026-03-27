@@ -23,22 +23,9 @@ import java.util.List;
 @Repository
 public interface ComputerCountByRepository extends BasicRepository<Computer, Long> {
 
-    @Update
-    Computer update(Computer computer);
+   int countByModel(String model);
 
-    @Update
-    Computer[] update(Computer[] computers);
+   long countByRelease(long release);
 
-    @Update
-    List<Computer> update(List<Computer> computers);
-
-
-    @Update
-    void updateVoid(Computer computer);
-
-    @Update
-    void updateVoid(Computer[] computers);
-
-    @Update
-    void updateVoid(List<Computer> computers);
+   Long countByModelAndRelease(String model, long release);
 }
