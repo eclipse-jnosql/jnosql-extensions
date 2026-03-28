@@ -55,8 +55,7 @@ class SqlFindByOperation implements FindByOperation {
         var selectQuery = sqlQueryBuilder.selectQuery(context);
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
 
-        List<Sort<?>> sorts = new ArrayList<>(method.sorts());
-        sorts.addAll(specialParameters.sorts());
+
 
 
     }
