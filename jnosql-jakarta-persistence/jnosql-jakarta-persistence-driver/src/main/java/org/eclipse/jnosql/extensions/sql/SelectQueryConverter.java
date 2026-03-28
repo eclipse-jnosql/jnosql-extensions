@@ -346,7 +346,6 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         criteriaQuery.orderBy(orders);
     }
 
-    @SuppressWarnings("deprecation")
     private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
         if (columns == null || columns.isEmpty()) {
             criteriaQuery.select(root);
