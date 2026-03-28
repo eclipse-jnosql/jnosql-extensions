@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.communication.Params;
 import org.eclipse.jnosql.communication.query.method.DeleteMethodProvider;
@@ -24,10 +25,14 @@ import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
+import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 @ApplicationScoped
 class SqlQueryBuilder {
@@ -45,7 +50,14 @@ class SqlQueryBuilder {
         var query = queryParams.query();
         var params = queryParams.params();
         bind(params, parameters, method.name());
-        return query;
+        List<Sort<?>> sorts = new ArrayList<>(method.sorts());
+        var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
+        sorts.addAll(specialParameters.sorts());
+        List<String> attributes = new ArrayList<>(query.columns());
+        attributes.addAll(method.select());
+        return new MappingQuery(sorts, query.limit(), query.skip(), query.condition().orElse(null),
+                query.name()
+                , attributes);
     }
 
     DeleteQuery deleteQuery(RepositoryInvocationContext context) {
