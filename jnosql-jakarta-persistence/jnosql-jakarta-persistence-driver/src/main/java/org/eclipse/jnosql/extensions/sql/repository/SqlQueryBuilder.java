@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.Limit;
 import jakarta.data.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.communication.Params;
@@ -32,6 +33,7 @@ import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 @ApplicationScoped
@@ -55,7 +57,10 @@ class SqlQueryBuilder {
         sorts.addAll(specialParameters.sorts());
         List<String> attributes = new ArrayList<>(query.columns());
         attributes.addAll(method.select());
-        return new MappingQuery(sorts, query.limit(), query.skip(), query.condition().orElse(null),
+
+        var skip = specialParameters.limit().map(Limit::startAt).orElse(query.skip());
+        var limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
+        return new MappingQuery(sorts, limit, skip, query.condition().orElse(null),
                 query.name()
                 , attributes);
     }
