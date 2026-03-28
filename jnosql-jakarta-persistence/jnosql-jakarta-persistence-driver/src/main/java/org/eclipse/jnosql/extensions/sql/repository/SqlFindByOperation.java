@@ -16,6 +16,9 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
@@ -24,10 +27,28 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 @Typed(SqlFindByOperation.class)
 class SqlFindByOperation implements FindByOperation {
 
+    private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
+
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         RepositoryMethod method = context.method();
         String name = method.name();
 
+    }
+
+
+    private SelectQuery getSelectQuery(RepositoryInvocationContext context) {
+        RepositoryMethod method = context.method();
+        var entityMetadata = context.entityMetadata();
+        var parameters = context.parameters();
+        var provider = SelectMethodProvider.INSTANCE;
+        var selectQuery = provider.apply(method.name(), entityMetadata.name());
+        var observer = semistructuredQueryBuilder.observer(entityMetadata);
+        var paramsBinder = semistructuredQueryBuilder.paramsBinder(entityMetadata);
+        var queryParams = SELECT_PARSER.apply(selectQuery, observer);
+        var query = queryParams.query();
+        var params = queryParams.params();
+        paramsBinder.bind(params, parameters, method.name());
+        return semistructuredQueryBuilder.updateDynamicQuery(query, context);
     }
 }
