@@ -16,6 +16,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
@@ -25,6 +26,8 @@ class SqlFindByOperation implements FindByOperation {
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-     throw new UnsupportedOperationException("FindByOperation is not supported by SQL extension");
+        RepositoryMethod method = context.method();
+        String name = method.name();
+
     }
 }
