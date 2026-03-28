@@ -34,11 +34,35 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-final class SelectQueryConverter extends QueryConverterSupport{
+
+/**
+ * Converts {@link SelectQuery} instances into Jakarta Persistence {@link TypedQuery}
+ * representations using the Criteria API.
+ *
+ * <p>This converter acts as a bridge between the JNoSQL semi-structured query model
+ * and relational persistence provided by Jakarta Persistence. It translates
+ * {@link SelectQuery} definitions into executable queries while preserving
+ * filtering, sorting, and pagination semantics.</p>
+ *
+ * <p>The converter supports three main query types:</p>
+ * <ul>
+ *     <li><b>Selection queries</b> via {@link #convert(SelectQuery)} returning entities or projections</li>
+ *     <li><b>Count queries</b> via {@link #convertCount(SelectQuery)} returning aggregated results</li>
+ *     <li><b>Existence queries</b> via {@link #convertExists(SelectQuery)} optimized for short-circuit evaluation</li>
+ * </ul>
+ *
+ * <p>Each method builds a {@link TypedQuery} but does not execute it. Execution
+ * is delegated to higher-level components such as {@code SqlTemplate}.</p>
+ *
+ * <p><b>Important:</b> Not all aspects of a {@link SelectQuery} are applicable to all query types.
+ * For example, sorting and pagination are ignored in count and existence queries.</p>
+ *
+ */
+public final class SelectQueryConverter extends QueryConverterSupport {
 
     private static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
 
-    SelectQueryConverter(EntityManager manager) {
+    public SelectQueryConverter(EntityManager manager) {
         super(manager);
     }
 
