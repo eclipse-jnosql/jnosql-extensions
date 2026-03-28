@@ -15,11 +15,15 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.inject.Inject;
+import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerCountByRepository;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 @EnableWeld
 @DisplayName("Count Operation Repository Tests")
@@ -38,5 +42,97 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
         this.repository = producer.get(ComputerCountByRepository.class, template);
     }
 
+    @Nested
+    @DisplayName("WhenUsingCountByRepository")
+    class WhenUsingCountByRepository {
+
+        @Test
+        @DisplayName("Should count entities by model")
+        void shouldCountByModel() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("MacBook Pro", 2022));
+            var c3 = repository.save(Computer.of("ThinkPad", 2023));
+
+            // when
+            long count = repository.countByModel("MacBook Pro");
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(count).isEqualTo(2);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should count entities by release")
+        void shouldCountByRelease() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("ThinkPad", 2023));
+            var c3 = repository.save(Computer.of("Dell XPS", 2022));
+
+            // when
+            long count = repository.countByRelease(2023);
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(count).isEqualTo(2);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should return zero when no entities match")
+        void shouldReturnZeroWhenNoMatch() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            long count = repository.countByModel("NonExisting");
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(count).isZero();
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+        }
+
+        @Test
+        @DisplayName("Should not affect data when counting")
+        void shouldNotModifyDataWhenCounting() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            long count = repository.countByModel("MacBook Pro");
+
+            // then
+            var result = repository.findAll().toList();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(count).isEqualTo(1);
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(0).getModel()).isEqualTo("MacBook Pro");
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+        }
+    }
 
 }
