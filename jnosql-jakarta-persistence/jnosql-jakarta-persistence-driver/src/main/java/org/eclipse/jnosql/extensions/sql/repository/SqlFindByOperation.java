@@ -14,41 +14,50 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.Sort;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
+import jakarta.nosql.Template;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 @ApplicationScoped
 @Typed(SqlFindByOperation.class)
 class SqlFindByOperation implements FindByOperation {
 
     private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
+    private final SqlQueryBuilder sqlQueryBuilder;
+
+    @Inject
+    SqlFindByOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlFindByOperation() {
+        this.sqlQueryBuilder = null;
+    }
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         RepositoryMethod method = context.method();
-        String name = method.name();
+        var template = (SqlTemplate) context.template();
+        var selectQuery = sqlQueryBuilder.selectQuery(context);
+        var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
 
-    }
+        List<Sort<?>> sorts = new ArrayList<>(method.sorts());
+        sorts.addAll(specialParameters.sorts());
 
 
-    private SelectQuery getSelectQuery(RepositoryInvocationContext context) {
-        RepositoryMethod method = context.method();
-        var entityMetadata = context.entityMetadata();
-        var parameters = context.parameters();
-        var provider = SelectMethodProvider.INSTANCE;
-        var selectQuery = provider.apply(method.name(), entityMetadata.name());
-        var observer = semistructuredQueryBuilder.observer(entityMetadata);
-        var paramsBinder = semistructuredQueryBuilder.paramsBinder(entityMetadata);
-        var queryParams = SELECT_PARSER.apply(selectQuery, observer);
-        var query = queryParams.query();
-        var params = queryParams.params();
-        paramsBinder.bind(params, parameters, method.name());
-        return semistructuredQueryBuilder.updateDynamicQuery(query, context);
     }
 }
