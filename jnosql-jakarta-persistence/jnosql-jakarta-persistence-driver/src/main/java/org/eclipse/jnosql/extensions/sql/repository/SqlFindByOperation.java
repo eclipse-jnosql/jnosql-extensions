@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.data.Sort;
+import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
@@ -30,6 +31,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @ApplicationScoped
@@ -54,9 +56,8 @@ class SqlFindByOperation implements FindByOperation {
         var template = (SqlTemplate) context.template();
         var selectQuery = sqlQueryBuilder.selectQuery(context);
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
-
-
-
+        Optional<Restriction<?>> restriction = specialParameters.restriction();
+        return null;
 
     }
 }
