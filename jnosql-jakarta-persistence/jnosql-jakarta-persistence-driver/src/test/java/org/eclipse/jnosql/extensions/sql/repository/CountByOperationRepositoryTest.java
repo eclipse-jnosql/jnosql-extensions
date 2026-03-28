@@ -40,6 +40,7 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
     @BeforeEach
     void setUp() {
         this.repository = producer.get(ComputerCountByRepository.class, template);
+        this.template.deleteAll(Computer.class);
     }
 
     @Nested
@@ -59,9 +60,7 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
             long count = repository.countByModel("MacBook Pro");
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(count).isEqualTo(2);
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(count).isEqualTo(2));
 
             // cleanup
             repository.deleteById(c1.getId());
@@ -127,7 +126,7 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(count).isEqualTo(1);
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("MacBook Pro");
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("MacBook Pro");
             });
 
             // cleanup
