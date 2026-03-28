@@ -60,8 +60,6 @@ import java.util.Objects;
  */
 public final class SelectQueryConverter extends QueryConverterSupport {
 
-    private static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
-
     public SelectQueryConverter(EntityManager manager) {
         super(manager);
     }
@@ -155,47 +153,6 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         typedQuery.setMaxResults(1);
 
         return typedQuery;
-    }
-
-    private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
-        if (limit > 0) {
-            typedQuery.setMaxResults((int) limit);
-        }
-    }
-
-    private static <T> void applySkip(long skip, TypedQuery<T> typedQuery) {
-        if (skip > 0) {
-            typedQuery.setFirstResult((int) skip);
-        }
-    }
-
-    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
-        if(sorts.isEmpty()) {
-            return;
-        }
-        List<Order> orders = new ArrayList<>();
-        for (Sort<?> sort : sorts) {
-            Path<?> path = resolvePath(root, sort.property());
-            if (sort.isAscending()) {
-                orders.add(criteriaBuilder.asc(path));
-            } else {
-                orders.add(criteriaBuilder.desc(path));
-            }
-        }
-        criteriaQuery.orderBy(orders);
-    }
-
-    private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
-        if (columns == null || columns.isEmpty()) {
-            criteriaQuery.select(root);
-            return;
-        }
-
-        Selection<?>[] selections = columns.stream()
-                .map(column -> resolvePath(root, column))
-                .toArray(Selection[]::new);
-
-        criteriaQuery.multiselect(selections);
     }
 
     <T> PageRecord<T> executePagination(SelectQuery query, PageRequest pageRequest, DefaultSqlTemplate template) {
@@ -359,6 +316,48 @@ public final class SelectQueryConverter extends QueryConverterSupport {
             keys.add(readProperty(entity, sort.property()));
         }
         return PageRequest.Cursor.forKey(keys.toArray());
+    }
+
+    private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
+        if (limit > 0) {
+            typedQuery.setMaxResults((int) limit);
+        }
+    }
+
+    private static <T> void applySkip(long skip, TypedQuery<T> typedQuery) {
+        if (skip > 0) {
+            typedQuery.setFirstResult((int) skip);
+        }
+    }
+
+    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+        if(sorts.isEmpty()) {
+            return;
+        }
+        List<Order> orders = new ArrayList<>();
+        for (Sort<?> sort : sorts) {
+            Path<?> path = resolvePath(root, sort.property());
+            if (sort.isAscending()) {
+                orders.add(criteriaBuilder.asc(path));
+            } else {
+                orders.add(criteriaBuilder.desc(path));
+            }
+        }
+        criteriaQuery.orderBy(orders);
+    }
+
+    @SuppressWarnings("deprecation")
+    private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+        if (columns == null || columns.isEmpty()) {
+            criteriaQuery.select(root);
+            return;
+        }
+
+        Selection<?>[] selections = columns.stream()
+                .map(column -> resolvePath(root, column))
+                .toArray(Selection[]::new);
+
+        criteriaQuery.multiselect(selections);
     }
 
 }
