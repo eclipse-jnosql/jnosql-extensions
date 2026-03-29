@@ -34,16 +34,62 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-final class SelectQueryConverter extends QueryConverterSupport{
 
-    private static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
+/**
+ * Converts {@link SelectQuery} instances into Jakarta Persistence {@link TypedQuery}
+ * representations using the Criteria API.
+ *
+ * <p>This converter acts as a bridge between the JNoSQL semi-structured query model
+ * and relational persistence provided by Jakarta Persistence. It translates
+ * {@link SelectQuery} definitions into executable queries while preserving
+ * filtering, sorting, and pagination semantics.</p>
+ *
+ * <p>The converter supports three main query types:</p>
+ * <ul>
+ *     <li><b>Selection queries</b> via {@link #convert(SelectQuery)} returning entities or projections</li>
+ *     <li><b>Count queries</b> via {@link #convertCount(SelectQuery)} returning aggregated results</li>
+ *     <li><b>Existence queries</b> via {@link #convertExists(SelectQuery)} optimized for short-circuit evaluation</li>
+ * </ul>
+ *
+ * <p>Each method builds a {@link TypedQuery} but does not execute it. Execution
+ * is delegated to higher-level components such as {@code SqlTemplate}.</p>
+ *
+ * <p><b>Important:</b> Not all aspects of a {@link SelectQuery} are applicable to all query types.
+ * For example, sorting and pagination are ignored in count and existence queries.</p>
+ *
+ */
+public final class SelectQueryConverter extends QueryConverterSupport {
 
-    SelectQueryConverter(EntityManager manager) {
+    public SelectQueryConverter(EntityManager manager) {
         super(manager);
     }
 
+    /**
+     * Converts {@link SelectQuery} instances into Jakarta Persistence {@link TypedQuery}
+     * representations using the Criteria API.
+     *
+     * <p>This converter acts as a bridge between the JNoSQL semi-structured query model
+     * and relational persistence provided by Jakarta Persistence. It translates
+     * {@link SelectQuery} definitions into executable queries while preserving
+     * filtering, sorting, and pagination semantics.</p>
+     *
+     * <p>The converter supports three main query types:</p>
+     * <ul>
+     *     <li><b>Selection queries</b> via {@link #convert(SelectQuery)} returning entities or projections</li>
+     *     <li><b>Count queries</b> via {@link #convertCount(SelectQuery)} returning aggregated results</li>
+     *     <li><b>Existence queries</b> via {@link #convertExists(SelectQuery)} optimized for short-circuit evaluation</li>
+     * </ul>
+     *
+     * <p>Each method builds a {@link TypedQuery} but does not execute it. Execution
+     * is delegated to higher-level components such as {@code SqlTemplate}.</p>
+     *
+     * <p><b>Important:</b> Not all aspects of a {@link SelectQuery} are applicable to all query types.
+     * For example, sorting and pagination are ignored in count and existence queries.</p>
+     *
+     * @since 1.0
+     */
     @SuppressWarnings("unchecked")
-    <T> TypedQuery<T> convert(SelectQuery query) {
+    public <T> TypedQuery<T> convert(SelectQuery query) {
         Class<T> type = resolveEntity(query.name());
 
         CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
@@ -107,47 +153,6 @@ final class SelectQueryConverter extends QueryConverterSupport{
         typedQuery.setMaxResults(1);
 
         return typedQuery;
-    }
-
-    private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
-        if (limit > 0) {
-            typedQuery.setMaxResults((int) limit);
-        }
-    }
-
-    private static <T> void applySkip(long skip, TypedQuery<T> typedQuery) {
-        if (skip > 0) {
-            typedQuery.setFirstResult((int) skip);
-        }
-    }
-
-    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
-        if(sorts.isEmpty()) {
-            return;
-        }
-        List<Order> orders = new ArrayList<>();
-        for (Sort<?> sort : sorts) {
-            Path<?> path = resolvePath(root, sort.property());
-            if (sort.isAscending()) {
-                orders.add(criteriaBuilder.asc(path));
-            } else {
-                orders.add(criteriaBuilder.desc(path));
-            }
-        }
-        criteriaQuery.orderBy(orders);
-    }
-
-    private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
-        if (columns == null || columns.isEmpty()) {
-            criteriaQuery.select(root);
-            return;
-        }
-
-        Selection<?>[] selections = columns.stream()
-                .map(column -> resolvePath(root, column))
-                .toArray(Selection[]::new);
-
-        criteriaQuery.multiselect(selections);
     }
 
     <T> PageRecord<T> executePagination(SelectQuery query, PageRequest pageRequest, DefaultSqlTemplate template) {
@@ -311,6 +316,47 @@ final class SelectQueryConverter extends QueryConverterSupport{
             keys.add(readProperty(entity, sort.property()));
         }
         return PageRequest.Cursor.forKey(keys.toArray());
+    }
+
+    private static <T> void applyLimit(long limit, TypedQuery<T> typedQuery) {
+        if (limit > 0) {
+            typedQuery.setMaxResults((int) limit);
+        }
+    }
+
+    private static <T> void applySkip(long skip, TypedQuery<T> typedQuery) {
+        if (skip > 0) {
+            typedQuery.setFirstResult((int) skip);
+        }
+    }
+
+    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+        if(sorts.isEmpty()) {
+            return;
+        }
+        List<Order> orders = new ArrayList<>();
+        for (Sort<?> sort : sorts) {
+            Path<?> path = resolvePath(root, sort.property());
+            if (sort.isAscending()) {
+                orders.add(criteriaBuilder.asc(path));
+            } else {
+                orders.add(criteriaBuilder.desc(path));
+            }
+        }
+        criteriaQuery.orderBy(orders);
+    }
+
+    private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+        if (columns == null || columns.isEmpty()) {
+            criteriaQuery.select(root);
+            return;
+        }
+
+        Selection<?>[] selections = columns.stream()
+                .map(column -> resolvePath(root, column))
+                .toArray(Selection[]::new);
+
+        criteriaQuery.multiselect(selections);
     }
 
 }

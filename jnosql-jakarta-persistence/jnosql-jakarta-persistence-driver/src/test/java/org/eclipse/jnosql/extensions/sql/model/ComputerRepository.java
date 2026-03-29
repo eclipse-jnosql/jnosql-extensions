@@ -15,10 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.model;
 
 import jakarta.data.repository.BasicRepository;
-import jakarta.data.repository.Insert;
 import jakarta.data.repository.Repository;
-
-import java.util.List;
 
 @Repository
 public interface ComputerRepository extends BasicRepository<Computer, Long> {

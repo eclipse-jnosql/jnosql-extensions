@@ -18,10 +18,11 @@ import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
 
 @Repository
-public interface ComputerDeleteByRepository extends BasicRepository<Computer, Long> {
+public interface ComputerCountByRepository extends BasicRepository<Computer, Long> {
 
+   int countByModel(String model);
 
-    void deleteByModel(String model);
+   long countByRelease(long release);
 
-    int deleteByRelease(long release);
+   Long countByModelAndRelease(String model, long release);
 }

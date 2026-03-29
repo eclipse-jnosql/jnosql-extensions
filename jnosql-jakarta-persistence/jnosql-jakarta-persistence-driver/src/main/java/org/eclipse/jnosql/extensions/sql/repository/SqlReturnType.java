@@ -82,28 +82,6 @@ class SqlReturnType {
         return dynamicReturn.execute();
     }
 
-    @SuppressWarnings("unchecked")
-    protected Object executeEmptyResult(RepositoryInvocationContext context) {
-        var method = context.method();
-        var entityMetadata = context.entityMetadata();
-        var typeClass = entityMetadata.type();
-        DynamicReturn<?> dynamicReturn = DynamicReturn.builder()
-                .classSource(typeClass)
-                .methodName(method.name())
-                .returnType(method.returnType().orElseThrow())
-
-                .result(() -> Stream.empty().map(mapper(method, entityMetadata)))
-                .singleResult(() -> {
-                    return Optional.empty().map(mapper(method, entityMetadata));
-                })
-                .pagination(DynamicReturn.findPageRequest(context.parameters()))
-                .streamPagination(p -> Stream.empty())
-                .singleResultPagination(p -> Optional.empty())
-                .page(p -> EMPTY_PAGINATION)
-                .build();
-        return dynamicReturn.execute();
-    }
-
     protected <T> Function<PageRequest, Stream<T>> streamPagination(SelectQuery query,
                                                                     RepositoryMethod method,
                                                                     EntityMetadata entityMetadata,

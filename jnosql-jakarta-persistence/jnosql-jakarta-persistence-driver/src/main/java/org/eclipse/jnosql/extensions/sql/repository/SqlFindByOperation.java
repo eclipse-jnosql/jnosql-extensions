@@ -14,17 +14,65 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
+
+import java.util.Optional;
+import java.util.function.Function;
 
 @ApplicationScoped
 @Typed(SqlFindByOperation.class)
 class SqlFindByOperation implements FindByOperation {
 
+    private final SqlQueryBuilder sqlQueryBuilder;
+    private final SqlReturnType sqlReturnType;
+
+    @Inject
+    SqlFindByOperation(SqlQueryBuilder sqlQueryBuilder, SqlReturnType sqlReturnType) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+        this.sqlReturnType = sqlReturnType;
+    }
+
+    SqlFindByOperation() {
+        this.sqlReturnType = null;
+        this.sqlQueryBuilder = null;
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-     throw new UnsupportedOperationException("FindByOperation is not supported by SQL extension");
+        var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
+        Optional<Restriction<?>> restriction = specialParameters.restriction();
+        var selectQuery = sqlQueryBuilder.selectQuery(context);
+        var query = restriction.map(r -> {
+            var condition = appendCriteriaCondition(selectQuery.condition().orElse(null),
+                    SqlRestrictionConverter.INSTANCE.parser(r).orElse(null));
+            return (SelectQuery) new MappingQuery(selectQuery.sorts(),
+                    selectQuery.limit(),
+                    selectQuery.skip(),
+                    condition,
+                    selectQuery.name(),
+                    selectQuery.columns());
+        }).orElse(selectQuery);
+
+        return (T) sqlReturnType.executeFindByQuery(context, query);
     }
+
+
+    private static CriteriaCondition appendCriteriaCondition(CriteriaCondition condition, CriteriaCondition newCondition) {
+        if (condition != null) {
+            return CriteriaCondition.and(condition, newCondition);
+        } else {
+            return newCondition;
+        }
+    }
+
 }

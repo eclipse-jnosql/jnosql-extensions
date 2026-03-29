@@ -17,7 +17,6 @@ package org.eclipse.jnosql.extensions.sql.model;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
-import jakarta.data.repository.Update;
 
 import java.util.List;
 

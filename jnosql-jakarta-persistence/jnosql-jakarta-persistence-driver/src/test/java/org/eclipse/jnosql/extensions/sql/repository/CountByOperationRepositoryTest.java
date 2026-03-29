@@ -18,7 +18,7 @@ import jakarta.inject.Inject;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
-import org.eclipse.jnosql.extensions.sql.model.ComputerDeleteByRepository;
+import org.eclipse.jnosql.extensions.sql.model.ComputerCountByRepository;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +26,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @EnableWeld
- class DeleteByOperationRepositoryTest extends AbstractTestRepository {
+@DisplayName("Count Operation Repository Tests")
+class CountByOperationRepositoryTest extends AbstractTestRepository {
 
     @Inject
     private SqlTemplate template;
@@ -34,21 +35,21 @@ import org.junit.jupiter.api.Test;
     @Inject
     private SqlRepositoryProducer producer;
 
-    private ComputerDeleteByRepository repository;
+    private ComputerCountByRepository repository;
 
     @BeforeEach
     void setUp() {
-        this.repository = producer.get(ComputerDeleteByRepository.class, template);
+        this.repository = producer.get(ComputerCountByRepository.class, template);
         this.template.deleteAll(Computer.class);
     }
 
     @Nested
-    @DisplayName("WhenUsingDeleteByRepository")
-    class WhenUsingDeleteByRepository {
+    @DisplayName("WhenUsingCountByRepository")
+    class WhenUsingCountByRepository {
 
         @Test
-        @DisplayName("Should delete entities by model")
-        void shouldDeleteByModel() {
+        @DisplayName("Should count entities by model")
+        void shouldCountByModel() {
 
             // given
             var c1 = repository.save(Computer.of("MacBook Pro", 2023));
@@ -56,23 +57,20 @@ import org.junit.jupiter.api.Test;
             var c3 = repository.save(Computer.of("ThinkPad", 2023));
 
             // when
-            repository.deleteByModel("MacBook Pro");
+            long count = repository.countByModel("MacBook Pro");
 
             // then
-            var result = repository.findAll().toList();
-
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("ThinkPad");
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(count).isEqualTo(2));
 
             // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
             repository.deleteById(c3.getId());
         }
 
         @Test
-        @DisplayName("Should delete entities by release and return count")
-        void shouldDeleteByReleaseAndReturnCount() {
+        @DisplayName("Should count entities by release")
+        void shouldCountByRelease() {
 
             // given
             var c1 = repository.save(Computer.of("MacBook Pro", 2023));
@@ -80,37 +78,32 @@ import org.junit.jupiter.api.Test;
             var c3 = repository.save(Computer.of("Dell XPS", 2022));
 
             // when
-            int deleted = repository.deleteByRelease(2023);
+            long count = repository.countByRelease(2023);
 
             // then
-            var result = repository.findAll().toList();
-
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(deleted).isEqualTo(2);
-                softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("Dell XPS");
+                softly.assertThat(count).isEqualTo(2);
             });
 
             // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
             repository.deleteById(c3.getId());
         }
 
         @Test
-        @DisplayName("Should not delete when model does not match")
-        void shouldNotDeleteWhenModelDoesNotMatch() {
+        @DisplayName("Should return zero when no entities match")
+        void shouldReturnZeroWhenNoMatch() {
 
             // given
             var c1 = repository.save(Computer.of("MacBook Pro", 2023));
 
             // when
-            repository.deleteByModel("NonExisting");
+            long count = repository.countByModel("NonExisting");
 
             // then
-            var result = repository.findAll().toList();
-
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("MacBook Pro");
+                softly.assertThat(count).isZero();
             });
 
             // cleanup
@@ -118,22 +111,27 @@ import org.junit.jupiter.api.Test;
         }
 
         @Test
-        @DisplayName("Should return zero when release does not match")
-        void shouldReturnZeroWhenReleaseDoesNotMatch() {
+        @DisplayName("Should not affect data when counting")
+        void shouldNotModifyDataWhenCounting() {
 
             // given
             var c1 = repository.save(Computer.of("MacBook Pro", 2023));
 
             // when
-            int deleted = repository.deleteByRelease(1999);
+            long count = repository.countByModel("MacBook Pro");
 
             // then
+            var result = repository.findAll().toList();
+
             SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(deleted).isZero();
+                softly.assertThat(count).isEqualTo(1);
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("MacBook Pro");
             });
 
             // cleanup
             repository.deleteById(c1.getId());
         }
     }
+
 }
