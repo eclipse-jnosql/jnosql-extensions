@@ -20,9 +20,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import jakarta.nosql.Template;
+import jakarta.persistence.TypedQuery;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
+import org.eclipse.jnosql.extensions.sql.SelectQueryConverter;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
@@ -57,6 +59,9 @@ class SqlFindByOperation implements FindByOperation {
         var selectQuery = sqlQueryBuilder.selectQuery(context);
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         Optional<Restriction<?>> restriction = specialParameters.restriction();
+        var selectConverter = new SelectQueryConverter(template.entityManager());;
+        TypedQuery<T> convert = selectConverter.convert(selectQuery);
+
         return null;
 
     }
