@@ -22,6 +22,7 @@ import jakarta.inject.Inject;
 import jakarta.nosql.Template;
 import jakarta.persistence.TypedQuery;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.extensions.sql.SelectQueryConverter;
@@ -30,6 +31,7 @@ import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,13 +58,30 @@ class SqlFindByOperation implements FindByOperation {
     public <T> T execute(RepositoryInvocationContext context) {
         RepositoryMethod method = context.method();
         var template = (SqlTemplate) context.template();
-        var selectQuery = sqlQueryBuilder.selectQuery(context);
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         Optional<Restriction<?>> restriction = specialParameters.restriction();
-        var selectConverter = new SelectQueryConverter(template.entityManager());;
-        TypedQuery<T> convert = selectConverter.convert(selectQuery);
+        var selectQuery = sqlQueryBuilder.selectQuery(context);
+        var query = restriction.map(r -> {
+            var condition = appendCriteriaCondition(selectQuery.condition().orElse(null),
+                    SqlRestrictionConverter.INSTANCE.parser(r).orElse(null));
+            return (SelectQuery) new MappingQuery(selectQuery.sorts(),
+                    selectQuery.limit(),
+                    selectQuery.skip(),
+                    condition,
+                    selectQuery.name(),
+                    selectQuery.columns());
+        }).orElse(selectQuery);
 
         return null;
 
     }
+
+    private static CriteriaCondition appendCriteriaCondition(CriteriaCondition condition, CriteriaCondition newCondition) {
+        if (condition != null) {
+            return CriteriaCondition.and(condition, newCondition);
+        } else {
+            return newCondition;
+        }
+    }
+
 }
