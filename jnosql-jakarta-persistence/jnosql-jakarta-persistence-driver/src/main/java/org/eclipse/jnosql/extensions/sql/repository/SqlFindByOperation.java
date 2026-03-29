@@ -14,27 +14,17 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.Sort;
 import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
-import jakarta.nosql.Template;
-import jakarta.persistence.TypedQuery;
-import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
-import org.eclipse.jnosql.extensions.sql.SelectQueryConverter;
-import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
-import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
