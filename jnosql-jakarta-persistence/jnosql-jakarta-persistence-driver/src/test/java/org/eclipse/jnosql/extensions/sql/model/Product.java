@@ -15,7 +15,6 @@
 package org.eclipse.jnosql.extensions.sql.model;
 
 import jakarta.nosql.Column;
-import jakarta.nosql.Convert;
 import jakarta.nosql.Entity;
 
 import java.math.BigDecimal;

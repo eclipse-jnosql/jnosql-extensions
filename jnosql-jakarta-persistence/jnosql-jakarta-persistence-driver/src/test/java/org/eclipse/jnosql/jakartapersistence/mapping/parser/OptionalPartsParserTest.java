@@ -15,8 +15,9 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.parser;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test adding missing parts in SELECT.

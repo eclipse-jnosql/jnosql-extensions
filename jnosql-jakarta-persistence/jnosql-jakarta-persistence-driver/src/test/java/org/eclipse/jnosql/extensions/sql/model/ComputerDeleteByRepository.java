@@ -16,9 +16,6 @@ package org.eclipse.jnosql.extensions.sql.model;
 
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
-import jakarta.data.repository.Save;
-
-import java.util.List;
 
 @Repository
 public interface ComputerDeleteByRepository extends BasicRepository<Computer, Long> {

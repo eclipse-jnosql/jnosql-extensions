@@ -18,7 +18,6 @@ import jakarta.inject.Inject;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
-import org.eclipse.jnosql.extensions.sql.model.ComputerExistByRepository;
 import org.eclipse.jnosql.extensions.sql.model.ComputerFindByRepository;
 import org.eclipse.jnosql.extensions.sql.model._Computer;
 import org.jboss.weld.junit5.EnableWeld;
@@ -26,8 +25,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @EnableWeld
 @DisplayName("FindBy Operation Repository Tests")
