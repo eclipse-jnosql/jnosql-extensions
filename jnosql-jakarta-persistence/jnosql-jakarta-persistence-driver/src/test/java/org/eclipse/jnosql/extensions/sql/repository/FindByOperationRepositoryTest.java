@@ -44,6 +44,7 @@ class FindByOperationRepositoryTest extends AbstractTestRepository {
     @BeforeEach
     void setUp() {
         this.repository = producer.get(ComputerFindByRepository.class, template);
+        this.template.deleteAll(Computer.class);
     }
 
 
