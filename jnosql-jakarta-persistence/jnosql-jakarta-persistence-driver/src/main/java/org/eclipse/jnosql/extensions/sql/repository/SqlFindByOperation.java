@@ -42,22 +42,22 @@ import java.util.function.Function;
 @Typed(SqlFindByOperation.class)
 class SqlFindByOperation implements FindByOperation {
 
-    private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
     private final SqlQueryBuilder sqlQueryBuilder;
+    private final SqlReturnType sqlReturnType;
 
     @Inject
-    SqlFindByOperation(SqlQueryBuilder sqlQueryBuilder) {
+    SqlFindByOperation(SqlQueryBuilder sqlQueryBuilder, SqlReturnType sqlReturnType) {
         this.sqlQueryBuilder = sqlQueryBuilder;
+        this.sqlReturnType = sqlReturnType;
     }
 
     SqlFindByOperation() {
+        this.sqlReturnType = null;
         this.sqlQueryBuilder = null;
     }
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-        RepositoryMethod method = context.method();
-        var template = (SqlTemplate) context.template();
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         Optional<Restriction<?>> restriction = specialParameters.restriction();
         var selectQuery = sqlQueryBuilder.selectQuery(context);
@@ -72,9 +72,9 @@ class SqlFindByOperation implements FindByOperation {
                     selectQuery.columns());
         }).orElse(selectQuery);
 
-        return null;
-
+        return (T) sqlReturnType.executeFindByQuery(context, query);
     }
+
 
     private static CriteriaCondition appendCriteriaCondition(CriteriaCondition condition, CriteriaCondition newCondition) {
         if (condition != null) {
