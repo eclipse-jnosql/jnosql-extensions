@@ -56,6 +56,7 @@ class SqlFindByOperation implements FindByOperation {
         this.sqlQueryBuilder = null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
