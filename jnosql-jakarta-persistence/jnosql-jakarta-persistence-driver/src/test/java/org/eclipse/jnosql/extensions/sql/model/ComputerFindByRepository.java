@@ -17,8 +17,10 @@ package org.eclipse.jnosql.extensions.sql.model;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Update;
+import jakarta.data.restrict.Restriction;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface ComputerFindByRepository extends BasicRepository<Computer, Long> {
@@ -26,5 +28,11 @@ public interface ComputerFindByRepository extends BasicRepository<Computer, Long
 
     List<Computer> findByModel(String model);
 
-    List<Computer> findByRelease(long release);
+    Set<Computer> findByRelease(long release);
+
+    List<Computer> findByModel(String model, Restriction<Computer> restriction);
+
+    List<Computer> findByRelease(long release, Restriction<Computer> restriction);
+
+    List<Computer> findByModelAndRelease(String model, long release);
 }
