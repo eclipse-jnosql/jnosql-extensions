@@ -15,9 +15,12 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.inject.Inject;
+import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerExistByRepository;
+import org.eclipse.jnosql.extensions.sql.model.ComputerFindByRepository;
+import org.eclipse.jnosql.extensions.sql.model._Computer;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,113 +39,167 @@ class FindByOperationRepositoryTest extends AbstractTestRepository {
     @Inject
     private SqlRepositoryProducer producer;
 
-    private ComputerExistByRepository repository;
+    private ComputerFindByRepository repository;
 
     @BeforeEach
     void setUp() {
-        this.repository = producer.get(ComputerExistByRepository.class, template);
+        this.repository = producer.get(ComputerFindByRepository.class, template);
     }
+
 
     @Nested
-    @DisplayName("WhenExistsById")
-    class WhenExistsById {
+    @DisplayName("WhenUsingFindByRepository")
+    class WhenUsingFindByRepository {
 
         @Test
-        @DisplayName("Should return true when entity exists by id")
-        void shouldReturnTrueWhenExistsById() {
+        @DisplayName("Should find entities by model")
+        void shouldFindByModel() {
 
             // given
-            var computer = Computer.of("model", 2024);
-            template.insert(computer);
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("MacBook Pro", 2022));
+            var c3 = repository.save(Computer.of("ThinkPad", 2023));
 
             // when
-            var result = repository.existsById(computer.getId());
+            var result = repository.findByModel("MacBook Pro");
 
             // then
-            assertThat(result).isTrue();
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .containsOnly("MacBook Pro");
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
         }
 
         @Test
-        @DisplayName("Should return false when entity does not exist by id")
-        void shouldReturnFalseWhenNotExistsById() {
+        @DisplayName("Should find entities by release returning a set")
+        void shouldFindByReleaseReturningSet() {
 
             // given
-            long nonExistingId = 9999L;
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("ThinkPad", 2023));
+            var c3 = repository.save(Computer.of("Dell XPS", 2022));
 
             // when
-            var result = repository.existsById(nonExistingId);
+            var result = repository.findByRelease(2023);
 
             // then
-            assertThat(result).isFalse();
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getRelease)
+                        .containsOnly(2023L);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should find by model with additional restriction")
+        void shouldFindByModelWithRestriction() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("MacBook Pro", 2022));
+            var c3 = repository.save(Computer.of("MacBook Pro", 2021));
+
+            // when
+
+            var result = repository.findByModel(
+                    "MacBook Pro",
+                    _Computer.release.greaterThan(2022L)
+            );
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(0).getRelease()).isEqualTo(2023);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should find by release with additional restriction")
+        void shouldFindByReleaseWithRestriction() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("ThinkPad", 2023));
+            var c3 = repository.save(Computer.of("Dell XPS", 2023));
+
+            // when
+            var result = repository.findByRelease(
+                    2023,
+                    _Computer.model.equalTo("ThinkPad")
+            );
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("ThinkPad");
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should find by model and release")
+        void shouldFindByModelAndRelease() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("MacBook Pro", 2022));
+            var c3 = repository.save(Computer.of("ThinkPad", 2023));
+
+            // when
+            var result = repository.findByModelAndRelease("MacBook Pro", 2023);
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.get(0).getModel()).isEqualTo("MacBook Pro");
+                softly.assertThat(result.get(0).getRelease()).isEqualTo(2023);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should return empty when no match is found")
+        void shouldReturnEmptyWhenNoMatch() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            var result = repository.findByModel("NonExisting");
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
         }
     }
-
-    @Nested
-    @DisplayName("WhenExistsByModel")
-    class WhenExistsByModel {
-
-        @Test
-        @DisplayName("Should return true when entity exists by model")
-        void shouldReturnTrueWhenExistsByModel() {
-
-            // given
-            var computer = Computer.of("macbook", 2024);
-            template.insert(computer);
-
-            // when
-            var result = repository.existsByModel("macbook");
-
-            // then
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Should return false when entity does not exist by model")
-        void shouldReturnFalseWhenNotExistsByModel() {
-
-            // given
-            String model = "non-existent";
-
-            // when
-            var result = repository.existsByModel(model);
-
-            // then
-            assertThat(result).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("WhenExistsByRelease")
-    class WhenExistsByRelease {
-
-        @Test
-        @DisplayName("Should return true when entity exists by release")
-        void shouldReturnTrueWhenExistsByRelease() {
-
-            // given
-            var computer = Computer.of("model", 2024);
-            template.insert(computer);
-
-            // when
-            var result = repository.existsByRelease(2024);
-
-            // then
-            assertThat(result).isTrue();
-        }
-
-        @Test
-        @DisplayName("Should return false when entity does not exist by release")
-        void shouldReturnFalseWhenNotExistsByRelease() {
-
-            // given
-            long release = 1900;
-
-            // when
-            var result = repository.existsByRelease(release);
-
-            // then
-            assertThat(result).isFalse();
-        }
-    }
-
 }
