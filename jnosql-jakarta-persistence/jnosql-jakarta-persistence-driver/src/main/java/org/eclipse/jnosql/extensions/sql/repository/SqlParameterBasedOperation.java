@@ -15,11 +15,23 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 @ApplicationScoped
 class SqlParameterBasedOperation implements ParameterBasedOperation {
+
+    private final SqlQueryBuilder sqlQueryBuilder;
+
+    @Inject
+    SqlParameterBasedOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlParameterBasedOperation() {
+        this.sqlQueryBuilder = null;
+    }
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
