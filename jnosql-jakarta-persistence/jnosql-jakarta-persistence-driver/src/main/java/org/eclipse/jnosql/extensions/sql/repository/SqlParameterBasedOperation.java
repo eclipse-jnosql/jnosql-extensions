@@ -54,7 +54,7 @@ class SqlParameterBasedOperation implements ParameterBasedOperation {
                 .orElse(context.entityMetadata());
         var parameters = context.parameters();
         Map<String, ParamValue> paramValueMap = RepositoryMetadataUtils.INSTANCE.getBy(method, parameters);
-        var query = SqlParameterBasedQuery.INSTANCE.toQuery(paramValueMap, Collections.emptyList(), entityMetadata);
+        var query = SqlParameterBasedQuery.INSTANCE.toQuery(paramValueMap, entityMetadata);
         var selectQuery = SqlQueryBuilder.updateQuery(context, method, query);
         return (T) sqlReturnType.executeFindByQuery(context, selectQuery);
     }
