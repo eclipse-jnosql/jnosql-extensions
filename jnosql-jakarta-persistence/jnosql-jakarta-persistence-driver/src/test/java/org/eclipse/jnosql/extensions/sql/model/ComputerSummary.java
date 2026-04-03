@@ -14,7 +14,5 @@
  */
 package org.eclipse.jnosql.extensions.sql.model;
 
-import jakarta.persistence.Column;
-
 public record ComputerSummary(long id, String model) {
 }
