@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.model;
 
 import jakarta.data.repository.BasicRepository;
+import jakarta.data.repository.Find;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Update;
 
@@ -23,22 +24,7 @@ import java.util.List;
 @Repository
 public interface ComputerFindRepository extends BasicRepository<Computer, Long> {
 
-    @Update
-    Computer update(Computer computer);
+    @Find
+    Computer update();
 
-    @Update
-    Computer[] update(Computer[] computers);
-
-    @Update
-    List<Computer> update(List<Computer> computers);
-
-
-    @Update
-    void updateVoid(Computer computer);
-
-    @Update
-    void updateVoid(Computer[] computers);
-
-    @Update
-    void updateVoid(List<Computer> computers);
 }
