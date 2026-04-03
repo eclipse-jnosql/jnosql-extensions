@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @EnableWeld
-@DisplayName("Count Operation Repository Tests")
+@DisplayName("Find Operation Repository Tests")
 class FindOperationRepositoryTest extends AbstractTestRepository {
 
     @Inject
@@ -42,6 +42,128 @@ class FindOperationRepositoryTest extends AbstractTestRepository {
     void setUp() {
         this.repository = producer.get(ComputerFindRepository.class, template);
         template.deleteAll(Computer.class);
+    }
+
+    @Nested
+    @DisplayName("WhenUsingFindRepository")
+    class WhenUsingFindRepository {
+
+        @Test
+        @DisplayName("Should return all computers")
+        void shouldReturnAllComputers() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("ThinkPad", 2022));
+
+            // when
+            var result = repository.allComputers();
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+        }
+
+        @Test
+        @DisplayName("Should find computer by id")
+        void shouldFindById() {
+
+            // given
+            var computer = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            var result = repository.computersBy(computer.getId());
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(1);
+                softly.assertThat(result.getFirst().getId()).isEqualTo(computer.getId());
+            });
+
+            // cleanup
+            repository.deleteById(computer.getId());
+        }
+
+        @Test
+        @DisplayName("Should find computers by model")
+        void shouldFindByModel() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("MacBook Pro", 2022));
+            var c3 = repository.save(Computer.of("ThinkPad", 2023));
+
+            // when
+            var result = repository.computersBy("MacBook Pro");
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+                softly.assertThat(result)
+                        .extracting(Computer::getModel)
+                        .containsOnly("MacBook Pro");
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should return projection when finding by release")
+        void shouldReturnProjectionByRelease() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+            var c2 = repository.save(Computer.of("ThinkPad", 2023));
+            var c3 = repository.save(Computer.of("Dell XPS", 2022));
+
+            // when
+            var result = repository.computersByRelease(2023);
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).hasSize(2);
+
+                softly.assertThat(result)
+                        .extracting("model")
+                        .containsOnly("MacBook Pro", "ThinkPad");
+
+                softly.assertThat(result)
+                        .extracting("release")
+                        .containsOnly(2023L);
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+            repository.deleteById(c2.getId());
+            repository.deleteById(c3.getId());
+        }
+
+        @Test
+        @DisplayName("Should return empty when no match is found")
+        void shouldReturnEmptyWhenNoMatch() {
+
+            // given
+            var c1 = repository.save(Computer.of("MacBook Pro", 2023));
+
+            // when
+            var result = repository.computersBy("NonExisting");
+
+            // then
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(result).isEmpty();
+            });
+
+            // cleanup
+            repository.deleteById(c1.getId());
+        }
     }
 
 }
