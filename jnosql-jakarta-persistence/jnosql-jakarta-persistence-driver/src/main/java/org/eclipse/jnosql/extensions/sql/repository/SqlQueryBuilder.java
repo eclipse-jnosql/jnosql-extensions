@@ -27,6 +27,7 @@ import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
+import org.eclipse.jnosql.extensions.sql.SqlSelectQuery;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
@@ -72,9 +73,28 @@ class SqlQueryBuilder {
         var condition = restriction.map(r -> SqlRestrictionConverter.INSTANCE.parser(r)
                 .map(c -> appendCriteriaCondition(criteriaCondition, c))
                 .orElse(criteriaCondition)).orElse(criteriaCondition);
-        return new MappingQuery(sorts, limit, skip, condition,
-                query.name()
-                , attributes);
+
+        Optional<Class<?>> projector = method.returnType().filter(r -> !void.class.equals(r))
+                .filter(Class::isRecord);
+
+        return projector
+                .<SelectQuery>map(projection -> new SqlSelectQuery(
+                        sorts,
+                        limit,
+                        skip,
+                        condition,
+                        query.name(),
+                        attributes,
+                        projection
+                ))
+                .orElseGet(() -> new MappingQuery(
+                        sorts,
+                        limit,
+                        skip,
+                        condition,
+                        query.name(),
+                        attributes
+                ));
     }
 
 
