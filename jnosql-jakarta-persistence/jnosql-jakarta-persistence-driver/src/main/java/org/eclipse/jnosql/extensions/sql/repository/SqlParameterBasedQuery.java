@@ -17,12 +17,10 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.Sort;
 import jakarta.data.page.PageRequest;
 import jakarta.data.repository.By;
-import jakarta.enterprise.inject.spi.CDI;
 import org.eclipse.jnosql.communication.Condition;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.NoSQLPage;
 import org.eclipse.jnosql.mapping.core.repository.ParamValue;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
@@ -35,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
-import static org.eclipse.jnosql.mapping.core.util.ConverterUtil.getValue;
 
 enum SqlParameterBasedQuery {
 
@@ -43,13 +40,12 @@ enum SqlParameterBasedQuery {
     private static final IntFunction<CriteriaCondition[]> TO_ARRAY = CriteriaCondition[]::new;
 
 
-    public SelectQuery toQuery(Map<String, ParamValue> params,
-                               List<Sort<?>> sorts,
-                               EntityMetadata entityMetadata) {
-        var convert = CDI.current().select(Converters.class).get();
+    SelectQuery toQuery(Map<String, ParamValue> params,
+                                                                               List<Sort<?>> sorts,
+                                                                               EntityMetadata entityMetadata) {
         List<CriteriaCondition> conditions = new ArrayList<>();
         for (Map.Entry<String, ParamValue> entry : params.entrySet()) {
-            conditions.add(condition(convert, entityMetadata, entry));
+            conditions.add(createCondition(entityMetadata, entry));
         }
 
         List<Sort<?>> updateSorter = getSorts(sorts, entityMetadata);
@@ -59,7 +55,7 @@ enum SqlParameterBasedQuery {
         return new MappingQuery(updateSorter, 0L, 0L, condition, entity, List.of());
     }
 
-    SelectQuery toQueryNative(Map<String, Object> params,
+SelectQuery toQueryNative(Map<String, Object> params,
                                                                                      List<Sort<?>> sorts, PageRequest pageRequest,
                                                                                      EntityMetadata entityMetadata) {
         List<CriteriaCondition> conditions = new ArrayList<>();
@@ -89,12 +85,11 @@ enum SqlParameterBasedQuery {
         return CriteriaCondition.and(conditions.toArray(TO_ARRAY));
     }
 
-    private CriteriaCondition condition(Converters convert, EntityMetadata entityMetadata,Map.Entry<String, ParamValue> entry) {
+    private CriteriaCondition createCondition(EntityMetadata entityMetadata, Map.Entry<String, ParamValue> entry) {
         var fieldName = resolveFieldName(entityMetadata, entry.getKey());
         var paramValue = entry.getValue();
         var condition = paramValue.condition();
-        var value = extractConditionValue(paramValue.value(), condition, entityMetadata, entry.getKey(), convert);
-
+        var value = extractConditionValue(paramValue.value(), condition);
         return paramValue.negate() ? CriteriaCondition.of(Element.of(fieldName, value), condition).negate():
                 CriteriaCondition.of(Element.of(fieldName, value), condition);
     }
@@ -106,31 +101,29 @@ enum SqlParameterBasedQuery {
         return metadata.fieldMapping(key).map(FieldMetadata::name).orElse(key);
     }
 
-    private Object extractConditionValue(Object rawValue, Condition condition, EntityMetadata metadata,
-                                         String fieldKey, Converters convert) {
+    private Object extractConditionValue(Object rawValue, Condition condition) {
         boolean isCollectionParameter = rawValue instanceof Iterable<?> || rawValue != null && rawValue.getClass().isArray();
 
         if (Condition.BETWEEN.equals(condition) || Condition.IN.equals(condition)) {
             if (!isCollectionParameter) {
                 throw new IllegalArgumentException("The value for condition " + condition + " must be a Iterable or array, but received: " + rawValue);
             }
-            return extractMultipleValues(rawValue, metadata, fieldKey, convert, condition);
+            return extractMultipleValues(rawValue, condition);
         }
         if(isCollectionParameter) {
             throw new IllegalArgumentException("The value for condition " + condition + " must be a single value, but received: " + rawValue);
         }
-        return getValue(rawValue, metadata, fieldKey, convert);
+        return rawValue;
     }
 
-    private List<Object> extractMultipleValues(Object rawValue, EntityMetadata metadata, String fieldKey,
-                                               Converters convert, Condition condition) {
+    private List<Object> extractMultipleValues(Object rawValue, Condition condition) {
         List<Object> values = new ArrayList<>();
         if (rawValue instanceof Iterable<?> iterable) {
-            iterable.forEach(v -> values.add(getValue(v, metadata, fieldKey, convert)));
+            iterable.forEach(values::add);
         } else if (rawValue != null && rawValue.getClass().isArray()) {
             for (int i = 0; i < Array.getLength(rawValue); i++) {
                 Object element = Array.get(rawValue, i);
-                values.add(getValue(element, metadata, fieldKey, convert));
+                values.add(element);
             }
         }
         if (Condition.BETWEEN.equals(condition) && values.size() != 2) {
