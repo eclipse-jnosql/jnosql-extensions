@@ -16,11 +16,13 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.data.Limit;
 import jakarta.data.Sort;
+import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.communication.Params;
 import org.eclipse.jnosql.communication.query.method.DeleteMethodProvider;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
@@ -34,6 +36,7 @@ import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 @ApplicationScoped
@@ -64,10 +67,14 @@ class SqlQueryBuilder {
 
         var skip = specialParameters.limit().map(Limit::startAt).orElse(query.skip());
         var limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
-        return new MappingQuery(sorts, limit, skip, query.condition().orElse(null),
+        Optional<Restriction<?>> restriction = specialParameters.restriction();
+        var condition = restriction.flatMap(SqlRestrictionConverter.INSTANCE::parser).orElse(null);
+        return new MappingQuery(sorts, limit, skip, condition,
                 query.name()
                 , attributes);
     }
+
+
 
     DeleteQuery deleteQuery(RepositoryInvocationContext context) {
         var entityMetadata = context.entityMetadata();
@@ -96,6 +103,14 @@ class SqlQueryBuilder {
         for (int index = 0; index < names.size(); index++) {
             String name = names.get(index);
             params.bind(name, args[index]);
+        }
+    }
+
+    private static CriteriaCondition appendCriteriaCondition(CriteriaCondition condition, CriteriaCondition newCondition) {
+        if (condition != null) {
+            return CriteriaCondition.and(condition, newCondition);
+        } else {
+            return newCondition;
         }
     }
 
