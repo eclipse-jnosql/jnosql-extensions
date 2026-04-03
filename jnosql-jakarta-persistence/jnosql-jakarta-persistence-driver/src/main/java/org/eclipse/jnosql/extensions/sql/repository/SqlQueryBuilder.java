@@ -27,6 +27,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
@@ -51,6 +52,10 @@ class SqlQueryBuilder {
         var query = queryParams.query();
         var params = queryParams.params();
         bind(params, parameters, method.name());
+        return updateQuery(context, method, query);
+    }
+
+    static SelectQuery updateQuery(RepositoryInvocationContext context, RepositoryMethod method, SelectQuery query) {
         List<Sort<?>> sorts = new ArrayList<>(method.sorts());
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         sorts.addAll(specialParameters.sorts());
