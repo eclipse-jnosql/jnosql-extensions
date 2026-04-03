@@ -16,8 +16,17 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.mapping.core.repository.ParamValue;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.query.SemiStructuredParameterBasedQuery;
+
+import java.util.Collections;
+import java.util.Map;
 
 @ApplicationScoped
 class SqlParameterBasedOperation implements ParameterBasedOperation {
@@ -35,6 +44,13 @@ class SqlParameterBasedOperation implements ParameterBasedOperation {
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-        throw new UnsupportedOperationException("ParameterBasedOperation is not supported yet");
+        var method = context.method();
+        var template = (SqlTemplate) context.template();
+        var entityMetadata = method.find().filter(r -> !void.class.equals(r))
+                .flatMap(r -> entitiesMetadata.findByClassName(r.getName()))
+                .orElse(context.entityMetadata());
+        var parameters = context.parameters();
+        Map<String, ParamValue> paramValueMap = RepositoryMetadataUtils.INSTANCE.getBy(method, parameters);
+        var query = SemiStructuredParameterBasedQuery.INSTANCE.toQuery(paramValueMap, Collections.emptyList(), entityMetadata);
     }
 }
