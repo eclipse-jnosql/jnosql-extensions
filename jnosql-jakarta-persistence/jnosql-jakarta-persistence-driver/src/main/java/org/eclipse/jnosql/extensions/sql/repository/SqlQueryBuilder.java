@@ -68,7 +68,10 @@ class SqlQueryBuilder {
         var skip = specialParameters.limit().map(Limit::startAt).orElse(query.skip());
         var limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
         Optional<Restriction<?>> restriction = specialParameters.restriction();
-        var condition = restriction.flatMap(SqlRestrictionConverter.INSTANCE::parser).orElse(null);
+        var criteriaCondition = query.condition().orElse(null);
+        var condition = restriction.map(r -> SqlRestrictionConverter.INSTANCE.parser(r)
+                .map(c -> appendCriteriaCondition(criteriaCondition, c))
+                .orElse(criteriaCondition)).orElse(criteriaCondition);
         return new MappingQuery(sorts, limit, skip, condition,
                 query.name()
                 , attributes);
