@@ -17,9 +17,11 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
+import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.ParamValue;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
@@ -31,26 +33,29 @@ import java.util.Map;
 @ApplicationScoped
 class SqlParameterBasedOperation implements ParameterBasedOperation {
 
-    private final SqlQueryBuilder sqlQueryBuilder;
+    private final SqlReturnType sqlReturnType;
 
     @Inject
-    SqlParameterBasedOperation(SqlQueryBuilder sqlQueryBuilder) {
-        this.sqlQueryBuilder = sqlQueryBuilder;
+    SqlParameterBasedOperation(SqlReturnType sqlReturnType) {
+        this.sqlReturnType = sqlReturnType;
     }
 
     SqlParameterBasedOperation() {
-        this.sqlQueryBuilder = null;
+        this.sqlReturnType = null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         var method = context.method();
         var template = (SqlTemplate) context.template();
         var entityMetadata = method.find().filter(r -> !void.class.equals(r))
-                .flatMap(r -> entitiesMetadata.findByClassName(r.getName()))
+                .map(r -> (EntityMetadata) SqlEntityMetadata.of(r, template.entityManager()))
                 .orElse(context.entityMetadata());
         var parameters = context.parameters();
         Map<String, ParamValue> paramValueMap = RepositoryMetadataUtils.INSTANCE.getBy(method, parameters);
         var query = SemiStructuredParameterBasedQuery.INSTANCE.toQuery(paramValueMap, Collections.emptyList(), entityMetadata);
+        var selectQuery = SqlQueryBuilder.updateQuery(context, method, query);
+        return (T) sqlReturnType.executeFindByQuery(context, selectQuery);
     }
 }
