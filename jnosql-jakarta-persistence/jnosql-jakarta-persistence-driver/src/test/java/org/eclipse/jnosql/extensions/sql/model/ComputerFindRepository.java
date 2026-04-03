@@ -35,5 +35,5 @@ public interface ComputerFindRepository extends BasicRepository<Computer, Long> 
     List<Computer> computersBy(@By("model") String model);
 
     @Find
-    List<Computer> computersByRelease(@By("release") long release);
+    List<ComputerSummary> computersByRelease(@By("release") long release);
 }
