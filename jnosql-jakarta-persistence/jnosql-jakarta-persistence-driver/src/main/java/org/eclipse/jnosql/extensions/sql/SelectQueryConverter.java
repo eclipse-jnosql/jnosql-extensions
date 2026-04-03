@@ -31,6 +31,7 @@ import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -88,7 +89,6 @@ public final class SelectQueryConverter extends QueryConverterSupport {
      *
      * @since 1.0
      */
-    @SuppressWarnings("unchecked")
     public <T> TypedQuery<T> convert(SelectQuery query) {
         Class<T> type = resolveEntity(query.name());
 
@@ -104,10 +104,37 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         TypedQuery<T> typedQuery = manager.createQuery(criteriaQuery);
         applySkip(query.skip(), typedQuery);
         applyLimit(limit, typedQuery);
+        if(query instanceof SqlSelectQuery sqlSelectQuery) {
+            appendProjector(query, sqlSelectQuery, root, criteriaQuery, criteriaBuilder);
+        }
         return typedQuery;
     }
 
-    @SuppressWarnings("unchecked")
+    private <T> void appendProjector(SelectQuery query, SqlSelectQuery sqlSelectQuery, Root<T> root, CriteriaQuery<T> criteriaQuery, CriteriaBuilder criteriaBuilder) {
+        Class<?> projector = sqlSelectQuery.projector();
+
+        if (projector != null) {
+
+            List<String> columns = query.columns();
+
+            if (columns == null || columns.isEmpty()) {
+                columns = Arrays.stream(projector.getRecordComponents())
+                        .map(rc -> {
+                            var select = rc.getAnnotation(jakarta.data.repository.Select.class);
+                            return (select != null && !select.value().isBlank())
+                                    ? select.value()
+                                    : rc.getName();
+                        })
+                        .toList();
+            }
+
+            Selection<?>[] selections = columns.stream()
+                    .map(column -> resolvePath(root, column))
+                    .toArray(Selection[]::new);
+            criteriaQuery.select((Selection<? extends T>) criteriaBuilder.construct(projector, selections));
+        }
+    }
+
     <T>TypedQuery<Long> convertCount(SelectQuery query) {
         Objects.requireNonNull(query, "query is null");
 
