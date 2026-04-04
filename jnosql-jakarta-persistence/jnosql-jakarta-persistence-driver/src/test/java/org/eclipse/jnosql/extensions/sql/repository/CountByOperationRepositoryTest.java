@@ -40,12 +40,16 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
     @BeforeEach
     void setUp() {
         this.repository = producer.get(ComputerCountByRepository.class, template);
-        this.template.deleteAll(Computer.class);
     }
 
     @Nested
     @DisplayName("WhenUsingCountByRepository")
     class WhenUsingCountByRepository {
+
+        @BeforeEach
+        void setUp() {
+            template.deleteAll(Computer.class);
+        }
 
         @Test
         @DisplayName("Should count entities by model")

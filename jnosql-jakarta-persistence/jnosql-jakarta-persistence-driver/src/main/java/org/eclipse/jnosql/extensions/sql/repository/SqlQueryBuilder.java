@@ -16,23 +16,28 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.data.Limit;
 import jakarta.data.Sort;
+import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.communication.Params;
 import org.eclipse.jnosql.communication.query.method.DeleteMethodProvider;
 import org.eclipse.jnosql.communication.query.method.SelectMethodProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
+import org.eclipse.jnosql.extensions.sql.SqlSelectQuery;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 @ApplicationScoped
@@ -51,6 +56,10 @@ class SqlQueryBuilder {
         var query = queryParams.query();
         var params = queryParams.params();
         bind(params, parameters, method.name());
+        return updateQuery(context, method, query);
+    }
+
+    static SelectQuery updateQuery(RepositoryInvocationContext context, RepositoryMethod method, SelectQuery query) {
         List<Sort<?>> sorts = new ArrayList<>(method.sorts());
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         sorts.addAll(specialParameters.sorts());
@@ -59,10 +68,36 @@ class SqlQueryBuilder {
 
         var skip = specialParameters.limit().map(Limit::startAt).orElse(query.skip());
         var limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
-        return new MappingQuery(sorts, limit, skip, query.condition().orElse(null),
-                query.name()
-                , attributes);
+        Optional<Restriction<?>> restriction = specialParameters.restriction();
+        var criteriaCondition = query.condition().orElse(null);
+        var condition = restriction.map(r -> SqlRestrictionConverter.INSTANCE.parser(r)
+                .map(c -> appendCriteriaCondition(criteriaCondition, c))
+                .orElse(criteriaCondition)).orElse(criteriaCondition);
+
+        Optional<Class<?>> projector = method.returnType().filter(r -> !void.class.equals(r))
+                .filter(Class::isRecord);
+
+        return projector
+                .<SelectQuery>map(projection -> new SqlSelectQuery(
+                        sorts,
+                        limit,
+                        skip,
+                        condition,
+                        query.name(),
+                        attributes,
+                        projection
+                ))
+                .orElseGet(() -> new MappingQuery(
+                        sorts,
+                        limit,
+                        skip,
+                        condition,
+                        query.name(),
+                        attributes
+                ));
     }
+
+
 
     DeleteQuery deleteQuery(RepositoryInvocationContext context) {
         var entityMetadata = context.entityMetadata();
@@ -91,6 +126,14 @@ class SqlQueryBuilder {
         for (int index = 0; index < names.size(); index++) {
             String name = names.get(index);
             params.bind(name, args[index]);
+        }
+    }
+
+    private static CriteriaCondition appendCriteriaCondition(CriteriaCondition condition, CriteriaCondition newCondition) {
+        if (condition != null) {
+            return CriteriaCondition.and(condition, newCondition);
+        } else {
+            return newCondition;
         }
     }
 

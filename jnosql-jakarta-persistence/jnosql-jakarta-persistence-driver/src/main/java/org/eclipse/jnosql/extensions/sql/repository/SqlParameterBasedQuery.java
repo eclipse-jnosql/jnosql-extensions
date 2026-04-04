@@ -1,0 +1,109 @@
+/*
+ *  Copyright (c) 2026 Contributors to the Eclipse Foundation
+ *   All rights reserved. This program and the accompanying materials
+ *   are made available under the terms of the Eclipse Public License v1.0
+ *   and Apache License v2.0 which accompanies this distribution.
+ *   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+ *   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+ *
+ *   You may elect to redistribute this code under either of these licenses.
+ *
+ *   Contributors:
+ *
+ *   Otavio Santana
+ */
+package org.eclipse.jnosql.extensions.sql.repository;
+
+import org.eclipse.jnosql.communication.Condition;
+import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.Element;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.core.repository.ParamValue;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
+import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.IntFunction;
+
+
+enum SqlParameterBasedQuery {
+
+    INSTANCE;
+    private static final IntFunction<CriteriaCondition[]> TO_ARRAY = CriteriaCondition[]::new;
+
+
+    SelectQuery toQuery(Map<String, ParamValue> params,
+                                                                               EntityMetadata entityMetadata) {
+        List<CriteriaCondition> conditions = new ArrayList<>();
+        for (Map.Entry<String, ParamValue> entry : params.entrySet()) {
+            conditions.add(createCondition(entry));
+        }
+        var condition = condition(conditions);
+        var entity = entityMetadata.name();
+        return new MappingQuery(Collections.emptyList(), 0L, 0L, condition, entity, List.of());
+    }
+
+
+    private CriteriaCondition condition(List<CriteriaCondition> conditions) {
+        if (conditions.isEmpty()) {
+            return null;
+        } else if (conditions.size() == 1) {
+            return conditions.getFirst();
+        }
+        return CriteriaCondition.and(conditions.toArray(TO_ARRAY));
+    }
+
+    private CriteriaCondition createCondition(Map.Entry<String, ParamValue> entry) {
+        var fieldName = entry.getKey();
+        var paramValue = entry.getValue();
+        var condition = paramValue.condition();
+        var value = extractConditionValue(paramValue.value(), condition);
+        return paramValue.negate() ? CriteriaCondition.of(Element.of(fieldName, value), condition).negate():
+                CriteriaCondition.of(Element.of(fieldName, value), condition);
+    }
+
+    private Object extractConditionValue(Object rawValue, Condition condition) {
+        boolean isCollectionParameter = rawValue instanceof Iterable<?> || rawValue != null && rawValue.getClass().isArray();
+
+        if (Condition.BETWEEN.equals(condition) || Condition.IN.equals(condition)) {
+            if (!isCollectionParameter) {
+                throw new IllegalArgumentException("The value for condition " + condition + " must be a Iterable or array, but received: " + rawValue);
+            }
+            return extractMultipleValues(rawValue, condition);
+        }
+        if(isCollectionParameter) {
+            throw new IllegalArgumentException("The value for condition " + condition + " must be a single value, but received: " + rawValue);
+        }
+        return rawValue;
+    }
+
+    private List<Object> extractMultipleValues(Object rawValue, Condition condition) {
+        List<Object> values = new ArrayList<>();
+        if (rawValue instanceof Iterable<?> iterable) {
+            iterable.forEach(values::add);
+        } else if (rawValue != null && rawValue.getClass().isArray()) {
+            for (int i = 0; i < Array.getLength(rawValue); i++) {
+                Object element = Array.get(rawValue, i);
+                values.add(element);
+            }
+        }
+        if (Condition.BETWEEN.equals(condition) && values.size() != 2) {
+            throw new IllegalArgumentException("The value for condition " + condition + " must have exactly two elements, but received: " + values);
+        }
+        return values;
+    }
+
+    private CriteriaCondition condition(EntityMetadata entityMetadata, Map.Entry<String, Object> entry) {
+        var name = entityMetadata.fieldMapping(entry.getKey())
+                .map(FieldMetadata::name)
+                .orElse(entry.getKey());
+        var value = entry.getValue();
+        return CriteriaCondition.eq(name, value);
+    }
+
+}
