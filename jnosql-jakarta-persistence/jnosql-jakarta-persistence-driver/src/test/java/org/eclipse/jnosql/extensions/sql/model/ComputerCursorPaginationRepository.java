@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.model;
 
 import jakarta.data.page.CursoredPage;
+import jakarta.data.page.PageRequest;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Find;
@@ -26,9 +27,9 @@ public interface ComputerCursorPaginationRepository extends BasicRepository<Comp
 
 
     @OrderBy("id")
-    CursoredPage<Computer> findByModel(String model);
+    CursoredPage<Computer> findByModel(String model, PageRequest pageRequest);
 
     @OrderBy("id")
     @Find
-    CursoredPage<Computer> model(@By("model") String model);
+    CursoredPage<Computer> model(@By("model") String model, PageRequest pageRequest);
 }
