@@ -68,9 +68,8 @@ class SqlQueryOperation implements QueryOperation {
                 .pageRequest(pageRequest)
                 .mapper(sqlReturnType.mapper())
                 .prepareConverter(textQuery -> {
-                    var prepare = (org.eclipse.jnosql.mapping.semistructured.PreparedStatement) template.prepare(textQuery, entity);
-                    prepare.setSelectMapper(query ->SqlQueryBuilder.updateQuery(context, method, query));
-                    return prepare;
+                   //TODO  we need the new feature to return string on criteria
+                    return null;
                 }).build();
         return (T) methodReturn.execute();
     }
