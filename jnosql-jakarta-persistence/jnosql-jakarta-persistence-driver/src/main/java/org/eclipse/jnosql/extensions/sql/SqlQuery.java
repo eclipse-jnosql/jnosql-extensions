@@ -65,7 +65,7 @@ final class SqlQuery implements Query {
                     "Query returned more than one result: " + results.size());
         }
 
-        return Optional.of((T) results.get(0));
+        return Optional.of((T) results.getFirst());
     }
 
     @Override
