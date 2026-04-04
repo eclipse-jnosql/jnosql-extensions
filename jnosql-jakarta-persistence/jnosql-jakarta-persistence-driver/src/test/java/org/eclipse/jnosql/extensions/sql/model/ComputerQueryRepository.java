@@ -17,6 +17,7 @@ package org.eclipse.jnosql.extensions.sql.model;
 import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.By;
 import jakarta.data.repository.Find;
+import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
 
 import java.util.List;
@@ -24,15 +25,12 @@ import java.util.List;
 @Repository
 public interface ComputerQueryRepository extends BasicRepository<Computer, Long> {
 
-    @Find
+    @Query("FROM Computer")
     List<Computer> allComputers();
 
-    @Find
+    @Query("FROM Computer WHERE id = :id")
     List<Computer> computersBy(@By("id") long id);
 
-    @Find
+    @Query("FROM Computer WHERE model = :model")
     List<Computer> computersBy(@By("model") String model);
-
-    @Find
-    List<ComputerSummary> computersByRelease(@By("release") long release);
 }
