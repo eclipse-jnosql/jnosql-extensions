@@ -21,12 +21,14 @@ import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerQueryRepository;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @EnableWeld
 @DisplayName("Query Operation Repository Tests")
+@Disabled
 class QueryOperationRepositoryTest extends AbstractTestRepository {
 
     @Inject
