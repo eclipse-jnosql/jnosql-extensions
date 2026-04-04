@@ -334,6 +334,11 @@ public final class SelectQueryConverter extends QueryConverterSupport {
 
         builder.limit(limit);
 
+        if(query instanceof SqlSelectQuery sqlSelectQuery) {
+            var newQuery = builder.build();
+            return SqlSelectQuery.of(newQuery, sqlSelectQuery.projector());
+        }
+
         return builder.build();
     }
 

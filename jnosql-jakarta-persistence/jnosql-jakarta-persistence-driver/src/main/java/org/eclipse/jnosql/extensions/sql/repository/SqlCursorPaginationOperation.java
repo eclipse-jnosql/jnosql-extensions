@@ -14,14 +14,72 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.page.CursoredPage;
+import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
+import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
+import org.eclipse.jnosql.mapping.semistructured.query.SemiStructuredParameterBasedQuery;
+
+import java.util.Collections;
+import java.util.function.Function;
 
 @ApplicationScoped
 class SqlCursorPaginationOperation implements CursorPaginationOperation {
+
+    private final SqlQueryBuilder sqlQueryBuilder;
+
+    @Inject
+    SqlCursorPaginationOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlCursorPaginationOperation() {
+        this.sqlQueryBuilder = null;
+    }
+
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-        throw new UnsupportedOperationException("CursorPaginationOperation is not supported yet");
+        var method = context.method();
+        var entityMetadata = context.entityMetadata();
+        var template = (SemiStructuredTemplate) context.template();
+        if (method.query().isPresent()) {
+            throw new UnsupportedOperationException("The query annotation is not supported for cursor pagination operations");
+        } else if (method.find().isPresent()) {
+            return (T) executeFindAnnotation(context, method, entityMetadata, template);
+        } else {
+            return (T) executeMethodByQuery(context, method, template);
+        }
+    }
+
+    private CursoredPage<?> executeMethodByQuery(RepositoryInvocationContext context, RepositoryMethod method, SemiStructuredTemplate template) {
+        SelectQuery query = SqlQueryBuilder.updateQuery(context, method, sqlQueryBuilder.selectQuery(context));
+        var special = DynamicReturn.findSpecialParameters(context.parameters(), Function.identity());
+        var pageRequest = pageRequest(method, special);
+        return template.selectCursor(query, pageRequest);
+    }
+
+    private CursoredPage<?> executeFindAnnotation(RepositoryInvocationContext context, RepositoryMethod method, EntityMetadata entityMetadata, SemiStructuredTemplate template) {
+        var paramValueMap = RepositoryMetadataUtils.INSTANCE.getBy(method, context.parameters());
+        var query = SqlParameterBasedQuery.INSTANCE.toQuery(paramValueMap, entityMetadata);
+        var updateDynamicQuery = SqlQueryBuilder.updateQuery(context, method, query);
+        var special = DynamicReturn.findSpecialParameters(context.parameters(), Function.identity());
+        var pageRequest = pageRequest(method, special);
+        return template.selectCursor(updateDynamicQuery, pageRequest);
+    }
+
+    private static PageRequest pageRequest(RepositoryMethod method, SpecialParameters special) {
+        return special.pageRequest()
+                .orElseThrow(() -> new IllegalArgumentException("Pageable is required in the method signature" +
+                        " as parameter at " + method.name()));
     }
 }
