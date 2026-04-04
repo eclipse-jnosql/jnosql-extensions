@@ -21,11 +21,8 @@ import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
-import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
-import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
-import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 import java.util.logging.Logger;
 
@@ -34,17 +31,14 @@ class SqlQueryOperation implements QueryOperation {
 
     private static final Logger LOGGER = Logger.getLogger(SqlQueryOperation.class.getName());
 
-    private final SqlQueryBuilder queryBuilder;
     private final SqlReturnType sqlReturnType;
 
     @Inject
-    SqlQueryOperation(SqlQueryBuilder queryBuilder, SqlReturnType sqlReturnType) {
-        this.queryBuilder = queryBuilder;
+    SqlQueryOperation(SqlReturnType sqlReturnType) {
         this.sqlReturnType = sqlReturnType;
     }
 
     public SqlQueryOperation() {
-        this.queryBuilder = null;
         this.sqlReturnType = null;
     }
 
@@ -56,7 +50,7 @@ class SqlQueryOperation implements QueryOperation {
         var params = context.parameters();
         var template = (SqlTemplate) context.template();
         Class<?> type = entityMetadata.type();
-        var entity = getEntity(entityMetadata, method);
+        var entity = entityMetadata.name();
         var pageRequest = DynamicReturn.findPageRequest(params);
         var queryValue = method.query().orElseThrow();
         var queryType = QueryType.parse(queryValue);
