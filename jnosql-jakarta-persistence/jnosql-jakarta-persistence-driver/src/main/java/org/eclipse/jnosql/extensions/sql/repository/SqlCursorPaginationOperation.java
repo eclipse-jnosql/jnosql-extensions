@@ -17,6 +17,8 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
@@ -35,6 +37,15 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;
 
+    @Inject
+    SqlCursorPaginationOperation(SqlQueryBuilder sqlQueryBuilder) {
+        this.sqlQueryBuilder = sqlQueryBuilder;
+    }
+
+    SqlCursorPaginationOperation() {
+        this.sqlQueryBuilder = null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
@@ -46,15 +57,21 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
         } else if (method.find().isPresent()) {
             return (T) executeFindAnnotation(context, method, entityMetadata, template);
         } else {
-            return executeMethodByQuery(context, method, template));
+            return (T) executeMethodByQuery(context, method, template);
         }
     }
 
+    private CursoredPage<?> executeMethodByQuery(RepositoryInvocationContext context, RepositoryMethod method, SemiStructuredTemplate template) {
+        SelectQuery query = SqlQueryBuilder.updateQuery(context, method, sqlQueryBuilder.selectQuery(context));
+        var special = DynamicReturn.findSpecialParameters(context.parameters(), Function.identity());
+        var pageRequest = pageRequest(method, special);
+        return template.selectCursor(query, pageRequest);
+    }
 
     private CursoredPage<?> executeFindAnnotation(RepositoryInvocationContext context, RepositoryMethod method, EntityMetadata entityMetadata, SemiStructuredTemplate template) {
         var paramValueMap = RepositoryMetadataUtils.INSTANCE.getBy(method, context.parameters());
         var query = SqlParameterBasedQuery.INSTANCE.toQuery(paramValueMap, entityMetadata);
-        var updateDynamicQuery = sqlQueryBuilder.updateQuery(context, method, query);
+        var updateDynamicQuery = SqlQueryBuilder.updateQuery(context, method, query);
         var special = DynamicReturn.findSpecialParameters(context.parameters(), Function.identity());
         var pageRequest = pageRequest(method, special);
         return template.selectCursor(updateDynamicQuery, pageRequest);
