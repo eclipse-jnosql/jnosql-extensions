@@ -36,6 +36,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,12 +83,8 @@ public class JNoSQLCoreAutoConfiguration {
     private void loadAllProperties(SettingsBuilder builder, Environment env) {
         if (env instanceof ConfigurableEnvironment environment) {
             environment.getPropertySources().forEach(ps -> {
-                if (ps instanceof org.springframework.core.env.MapPropertySource mapPropertySource) {
-                    mapPropertySource.getSource().forEach((key, value) -> {
-                        if (value != null) {
-                            builder.put(key, value.toString());
-                        }
-                    });
+                if (ps instanceof MapPropertySource mapPropertySource) {
+                    mapPropertySource.getSource().forEach((key, value) -> builder.put(key, value.toString()));
                 }
             });
         }
