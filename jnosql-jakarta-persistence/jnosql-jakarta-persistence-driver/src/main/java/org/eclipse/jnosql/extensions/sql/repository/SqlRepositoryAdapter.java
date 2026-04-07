@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implements NoSQLRepository<T, K> {
+final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implements PersistenceRepository<T, K> {
 
     private final Class<T> entityType;
 
