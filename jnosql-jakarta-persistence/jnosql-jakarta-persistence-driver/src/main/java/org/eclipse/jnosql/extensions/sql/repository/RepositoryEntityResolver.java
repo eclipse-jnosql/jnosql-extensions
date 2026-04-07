@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.page.Page;
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Insert;
 import jakarta.data.repository.Save;
@@ -103,14 +104,16 @@ INSTANCE;
             if (rawType instanceof Class<?>) {
                 Class<?> rawClass = (Class<?>) rawType;
 
-                // Optional<T>
                 if (Optional.class.isAssignableFrom(rawClass)) {
                     return extractEntityFromReturnType(
                             parameterizedType.getActualTypeArguments()[0]
                     );
                 }
 
-                // Iterable / Collection<T>
+                if(Page.class.isAssignableFrom(rawClass)) {
+
+                }
+
                 if (Iterable.class.isAssignableFrom(rawClass) ||
                         Collection.class.isAssignableFrom(rawClass)) {
                     return extractEntityFromReturnType(
@@ -131,10 +134,7 @@ INSTANCE;
                 return resolved;
             }
         }
-
-        // 2. Inspect superclass (important for proxies / abstract layers)
         Type superclass = clazz.getGenericSuperclass();
-
         if (superclass != null) {
             Optional<Class<?>> resolved = resolveFromType(superclass);
             if (resolved.isPresent()) {
