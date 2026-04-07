@@ -127,4 +127,10 @@ class RepositoryEntityResolverTest {
                     .hasMessageContaining("Cannot resolve entity type");
         }
     }
+
+    @Nested
+    @DisplayName("When resolve entity from custom repository")
+    class WhenResolveEntityFromCustomRepository {
+
+    }
 }
