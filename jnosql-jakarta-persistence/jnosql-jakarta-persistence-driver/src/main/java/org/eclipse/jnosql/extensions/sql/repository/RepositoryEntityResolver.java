@@ -52,7 +52,11 @@ INSTANCE;
         if(entityType.isPresent()) {
             return entityType.get();
         }
-    return resolveFromCustomRepository();
+        return resolveFromCustomRepository(repositoryType);
+    }
+
+    private Class<?> resolveFromCustomRepository(Class<?> repositoryType) {
+        return null;
     }
 
     private Optional<Class<?>> resolveFromClass(Class<?> clazz) {
