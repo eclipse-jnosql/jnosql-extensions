@@ -15,7 +15,15 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
 
 interface PersistenceRepository<T, K> extends NoSQLRepository<T, K> {
+
+    /**
+     * Retrieves the {@link EntityManager} instance associated with the repository.
+     *
+     * @return the {@code EntityManager} responsible for managing the persistence context.
+     */
+    EntityManager entityManager();
 }
