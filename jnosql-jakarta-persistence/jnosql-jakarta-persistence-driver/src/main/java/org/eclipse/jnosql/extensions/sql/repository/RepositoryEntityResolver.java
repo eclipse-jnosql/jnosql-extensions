@@ -49,6 +49,9 @@ INSTANCE;
         Objects.requireNonNull(repositoryClass, "repositoryClass is required");
 
         Optional<Class<?>> entityType = resolveFromClass(repositoryClass);
+        if(entityType.isPresent()) {
+            return entityType.get();
+        }
 
     }
 
