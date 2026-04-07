@@ -64,6 +64,7 @@ class SqlRepositoryProducer {
             repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
             entityMetadata = ((SqlRepositoryAdapter<?, ?>)repositoryAdapter).metadata();
         } else {
+            repositoryAdapter = new NoopRepository<>(template);
             entityMetadata = null;
         }
 
