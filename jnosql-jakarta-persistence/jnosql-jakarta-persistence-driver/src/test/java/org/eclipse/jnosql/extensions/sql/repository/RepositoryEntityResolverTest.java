@@ -22,6 +22,8 @@ import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
@@ -137,6 +139,17 @@ class RepositoryEntityResolverTest {
     class WhenResolveEntityFromCustomRepository {
 
 
+        @ParameterizedTest
+        @ValueSource(classes = {CustomRepository.class, CustomInsertRepository.class, CustomUpdateRepository.class})
+        void shouldResolveFromCustomRepository(Class<?> repositoryClass) {
+
+            var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
+
+            SoftAssertions.assertSoftly(softly ->
+                    softly.assertThat(result).isEqualTo(Computer.class)
+            );
+
+        }
         interface CustomRepository {
             Computer findComputerById(Long id);
         }
