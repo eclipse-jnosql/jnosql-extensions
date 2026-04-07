@@ -15,5 +15,98 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-public interface NoopRepository {
+import jakarta.data.Order;
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
+import org.eclipse.jnosql.mapping.NoSQLRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+final class NoopRepository<T, K>  implements NoSQLRepository<T, K> {
+    @Override
+    public void deleteAll() {
+
+    }
+
+    @Override
+    public long countBy() {
+        return 0;
+    }
+
+    @Override
+    public boolean existsById(K id) {
+        return false;
+    }
+
+    @Override
+    public Stream<T> findByIdIn(Iterable<K> ids) {
+        return Stream.empty();
+    }
+
+    @Override
+    public void deleteByIdIn(Iterable<K> ids) {
+
+    }
+
+    @Override
+    public <S extends T> S insert(S entity) {
+        return null;
+    }
+
+    @Override
+    public <S extends T> List<S> insertAll(List<S> entities) {
+        return List.of();
+    }
+
+    @Override
+    public <S extends T> S update(S entity) {
+        return null;
+    }
+
+    @Override
+    public <S extends T> List<S> updateAll(List<S> entities) {
+        return List.of();
+    }
+
+    @Override
+    public <S extends T> S save(S entity) {
+        return null;
+    }
+
+    @Override
+    public <S extends T> List<S> saveAll(List<S> entities) {
+        return List.of();
+    }
+
+    @Override
+    public Optional<T> findById(K id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Stream<T> findAll() {
+        return Stream.empty();
+    }
+
+    @Override
+    public Page<T> findAll(PageRequest pageRequest, Order<T> sortBy) {
+        return null;
+    }
+
+    @Override
+    public void deleteById(K id) {
+
+    }
+
+    @Override
+    public void delete(T entity) {
+
+    }
+
+    @Override
+    public void deleteAll(List<? extends T> entities) {
+
+    }
 }
