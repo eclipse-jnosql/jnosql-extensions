@@ -15,11 +15,15 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.repository.Insert;
+import jakarta.data.repository.Update;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -132,5 +136,19 @@ class RepositoryEntityResolverTest {
     @DisplayName("When resolve entity from custom repository")
     class WhenResolveEntityFromCustomRepository {
 
+
+        interface CustomRepository {
+            Computer findComputerById(Long id);
+        }
+
+        interface CustomInsertRepository {
+            @Insert
+            Computer[] insert(Long id);
+        }
+
+        interface CustomUpdateRepository {
+            @Update
+            List<Computer> update(Long id);
+        }
     }
 }
