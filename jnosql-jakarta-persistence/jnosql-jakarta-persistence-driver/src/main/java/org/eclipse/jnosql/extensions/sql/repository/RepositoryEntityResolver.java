@@ -48,15 +48,12 @@ INSTANCE;
     public Class<?> resolveEntityType(Class<?> repositoryClass) {
         Objects.requireNonNull(repositoryClass, "repositoryClass is required");
 
-        return resolveFromClass(repositoryClass)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Cannot resolve entity type from repository: " + repositoryClass.getName()
-                ));
+        Optional<Class<?>> entityType = resolveFromClass(repositoryClass);
+
     }
 
     private Optional<Class<?>> resolveFromClass(Class<?> clazz) {
 
-        // 1. Inspect interfaces
         for (Type type : clazz.getGenericInterfaces()) {
             Optional<Class<?>> resolved = resolveFromType(type);
             if (resolved.isPresent()) {
