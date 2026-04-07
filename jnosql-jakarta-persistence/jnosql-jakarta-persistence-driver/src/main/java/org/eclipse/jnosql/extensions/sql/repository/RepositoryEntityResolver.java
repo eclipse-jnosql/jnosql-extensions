@@ -186,4 +186,21 @@ INSTANCE;
                 || name.equals("jakarta.data.repository.DataRepository")
                 || name.equals("org.eclipse.jnosql.mapping.NoSQLRepository");
     }
+
+    private boolean isEntity(Type type) {
+        if (type instanceof Class<?> entityClass) {
+            return entityClass.isAnnotationPresent(jakarta.persistence.Entity.class);
+        }
+
+        if (type instanceof ParameterizedType parameterizedType) {
+            Type rawType = parameterizedType.getRawType();
+            return isEntity(rawType);
+        }
+
+        if (type instanceof GenericArrayType genericArrayType) {
+            return isEntity(genericArrayType.getGenericComponentType());
+        }
+
+        return false;
+    }
 }
