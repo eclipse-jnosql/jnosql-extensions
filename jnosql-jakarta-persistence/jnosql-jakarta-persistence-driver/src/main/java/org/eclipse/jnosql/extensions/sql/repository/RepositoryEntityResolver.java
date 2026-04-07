@@ -16,14 +16,9 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.data.page.Page;
-import jakarta.data.repository.Delete;
-import jakarta.data.repository.Insert;
-import jakarta.data.repository.Save;
-import jakarta.data.repository.Update;
 
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
