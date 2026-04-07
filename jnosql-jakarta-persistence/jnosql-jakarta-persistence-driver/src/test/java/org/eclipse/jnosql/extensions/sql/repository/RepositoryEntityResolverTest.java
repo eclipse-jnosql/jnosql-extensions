@@ -142,8 +142,11 @@ class RepositoryEntityResolverTest {
 
 
         @ParameterizedTest
-        @ValueSource(classes = {CustomRepository.class, CustomInsertRepository.class, CustomUpdateRepository.class,
-                CustomPageRepository.class, CustomCursorRepository.class})
+        @ValueSource(classes = {CustomRepository.class,
+                CustomInsertRepository.class,
+                CustomUpdateRepository.class,
+                CustomPageRepository.class,
+                CustomCursorRepository.class})
         void shouldResolveFromCustomRepository(Class<?> repositoryClass) {
 
             var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
