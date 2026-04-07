@@ -15,5 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-public interface PersistenceRepository {
+import org.eclipse.jnosql.mapping.NoSQLRepository;
+
+interface PersistenceRepository<T, K> extends NoSQLRepository<T, K> {
 }
