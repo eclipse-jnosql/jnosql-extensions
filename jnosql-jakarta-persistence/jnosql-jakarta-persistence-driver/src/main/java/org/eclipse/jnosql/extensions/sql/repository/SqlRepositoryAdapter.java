@@ -19,6 +19,7 @@ import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.nosql.Template;
+import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
@@ -205,5 +206,10 @@ final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implemen
     }
     public SqlEntityMetadata metadata() {
         return metadata;
+    }
+
+    @Override
+    public EntityManager entityManager() {
+        return sqlTemplate.entityManager();
     }
 }
