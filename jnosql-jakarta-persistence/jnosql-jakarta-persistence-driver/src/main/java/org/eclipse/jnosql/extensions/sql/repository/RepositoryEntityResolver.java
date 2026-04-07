@@ -20,6 +20,7 @@ import jakarta.data.repository.Insert;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
@@ -77,14 +78,24 @@ INSTANCE;
 
     private Class<?> extractEntityFromReturnType(Type type) {
 
-        // Case 1: Direct return type (e.g., User)
+        // Case 1: Direct class (e.g., User)
         if (type instanceof Class<?>) {
-            Class<?> clazz = (Class<?>) type;
+            Class<?> typeEntity = (Class<?>) type;
 
-            return isEntity(clazz) ? clazz : null;
+            // Handle arrays like User[]
+            if (typeEntity.isArray()) {
+                return extractEntityFromReturnType(typeEntity.getComponentType());
+            }
+
+            return isEntity(typeEntity) ? typeEntity : null;
         }
 
-        // Case 2: Parameterized types (Optional<User>, List<User>, etc.)
+        // Case 2: Generic array (e.g., T[])
+        if (type instanceof GenericArrayType genericArrayType) {
+            return extractEntityFromReturnType(genericArrayType.getGenericComponentType());
+        }
+
+        // Case 3: Parameterized types (Optional<User>, List<User>, etc.)
         if (type instanceof ParameterizedType parameterizedType) {
 
             Type rawType = parameterizedType.getRawType();
@@ -94,12 +105,17 @@ INSTANCE;
 
                 // Optional<T>
                 if (Optional.class.isAssignableFrom(rawClass)) {
-                    return extractEntityFromReturnType(parameterizedType.getActualTypeArguments()[0]);
+                    return extractEntityFromReturnType(
+                            parameterizedType.getActualTypeArguments()[0]
+                    );
                 }
 
-                // Collection<T> (List, Set, etc.)
-                if (Collection.class.isAssignableFrom(rawClass)) {
-                    return extractEntityFromReturnType(parameterizedType.getActualTypeArguments()[0]);
+                // Iterable / Collection<T>
+                if (Iterable.class.isAssignableFrom(rawClass) ||
+                        Collection.class.isAssignableFrom(rawClass)) {
+                    return extractEntityFromReturnType(
+                            parameterizedType.getActualTypeArguments()[0]
+                    );
                 }
             }
         }
