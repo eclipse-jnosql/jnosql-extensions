@@ -15,6 +15,8 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.page.CursoredPage;
+import jakarta.data.page.Page;
 import jakarta.data.repository.Insert;
 import jakarta.data.repository.Update;
 import org.assertj.core.api.SoftAssertions;
@@ -140,7 +142,8 @@ class RepositoryEntityResolverTest {
 
 
         @ParameterizedTest
-        @ValueSource(classes = {CustomRepository.class, CustomInsertRepository.class, CustomUpdateRepository.class})
+        @ValueSource(classes = {CustomRepository.class, CustomInsertRepository.class, CustomUpdateRepository.class,
+                CustomPageRepository.class, CustomCursorRepository.class})
         void shouldResolveFromCustomRepository(Class<?> repositoryClass) {
 
             var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
@@ -162,6 +165,16 @@ class RepositoryEntityResolverTest {
         interface CustomUpdateRepository {
             @Update
             List<Computer> update(Long id);
+        }
+
+        interface CustomPageRepository {
+            @Update
+            Page<Computer> page(Long id);
+        }
+
+        interface CustomCursorRepository {
+            @Update
+            CursoredPage<Computer> cursor(Long id);
         }
     }
 }
