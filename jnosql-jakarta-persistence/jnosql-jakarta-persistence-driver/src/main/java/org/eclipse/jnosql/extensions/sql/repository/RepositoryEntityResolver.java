@@ -15,6 +15,11 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.repository.Insert;
+import jakarta.data.repository.Save;
+import jakarta.data.repository.Update;
+
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
@@ -56,6 +61,13 @@ INSTANCE;
     }
 
     private Class<?> resolveFromCustomRepository(Class<?> repositoryType) {
+        for (Method method : repositoryType.getDeclaredMethods()) {
+            if (method.getAnnotation(Save.class) != null ||
+                    method.getAnnotation(Insert.class) != null ||
+                    method.getAnnotation(Update.class) != null) {
+            }
+
+        }
         return null;
     }
 
