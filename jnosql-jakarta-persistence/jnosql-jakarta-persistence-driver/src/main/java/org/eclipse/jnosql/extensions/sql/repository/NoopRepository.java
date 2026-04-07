@@ -18,14 +18,16 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
+import jakarta.nosql.Template;
 import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-final class NoopRepository<T, K>  implements PersistenceRepository<T, K> {
+final class NoopRepository<T, K>  extends PersistenceRepository<T, K> {
 
     private final SqlTemplate sqlTemplate;
 
@@ -75,6 +77,16 @@ final class NoopRepository<T, K>  implements PersistenceRepository<T, K> {
 
     @Override
     public <S extends T> List<S> updateAll(List<S> entities) {
+        throw new UnsupportedOperationException("The operation is not supported when entity is not defined");
+    }
+
+    @Override
+    protected Template template() {
+        return sqlTemplate;
+    }
+
+    @Override
+    protected EntityMetadata entityMetadata() {
         throw new UnsupportedOperationException("The operation is not supported when entity is not defined");
     }
 
