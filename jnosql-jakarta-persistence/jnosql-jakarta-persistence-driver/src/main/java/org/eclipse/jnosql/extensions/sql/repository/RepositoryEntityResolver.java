@@ -15,13 +15,16 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.repository.Delete;
 import jakarta.data.repository.Insert;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -62,12 +65,45 @@ INSTANCE;
 
     private Class<?> resolveFromCustomRepository(Class<?> repositoryType) {
         for (Method method : repositoryType.getDeclaredMethods()) {
-            if (method.getAnnotation(Save.class) != null ||
-                    method.getAnnotation(Insert.class) != null ||
-                    method.getAnnotation(Update.class) != null) {
-            }
 
+            Class<?> entity = extractEntityFromReturnType(method.getGenericReturnType());
+
+            if (entity != null) {
+                return entity;
+            }
         }
+        return null;
+    }
+
+    private Class<?> extractEntityFromReturnType(Type type) {
+
+        // Case 1: Direct return type (e.g., User)
+        if (type instanceof Class<?>) {
+            Class<?> clazz = (Class<?>) type;
+
+            return isEntity(clazz) ? clazz : null;
+        }
+
+        // Case 2: Parameterized types (Optional<User>, List<User>, etc.)
+        if (type instanceof ParameterizedType parameterizedType) {
+
+            Type rawType = parameterizedType.getRawType();
+
+            if (rawType instanceof Class<?>) {
+                Class<?> rawClass = (Class<?>) rawType;
+
+                // Optional<T>
+                if (Optional.class.isAssignableFrom(rawClass)) {
+                    return extractEntityFromReturnType(parameterizedType.getActualTypeArguments()[0]);
+                }
+
+                // Collection<T> (List, Set, etc.)
+                if (Collection.class.isAssignableFrom(rawClass)) {
+                    return extractEntityFromReturnType(parameterizedType.getActualTypeArguments()[0]);
+                }
+            }
+        }
+
         return null;
     }
 
