@@ -40,19 +40,19 @@ INSTANCE;
     /**
      * Resolves the entity type (T) from the given repository class.
      *
-     * @param repositoryClass the repository interface
+     * @param repositoryType the repository interface
      * @return the resolved entity class
-     * @throws NullPointerException if {@code repositoryClass} is null
+     * @throws NullPointerException if {@code repositoryType} is null
      * @throws IllegalArgumentException if the entity type cannot be resolved
      */
-    public Class<?> resolveEntityType(Class<?> repositoryClass) {
-        Objects.requireNonNull(repositoryClass, "repositoryClass is required");
+    public Class<?> resolveEntityType(Class<?> repositoryType) {
+        Objects.requireNonNull(repositoryType, "repositoryType is required");
 
-        Optional<Class<?>> entityType = resolveFromClass(repositoryClass);
+        Optional<Class<?>> entityType = resolveFromClass(repositoryType);
         if(entityType.isPresent()) {
             return entityType.get();
         }
-
+    return resolveFromCustomRepository();
     }
 
     private Optional<Class<?>> resolveFromClass(Class<?> clazz) {
