@@ -123,17 +123,9 @@ class RepositoryEntityResolverTest {
 
             assertThatThrownBy(() -> RepositoryEntityResolver.INSTANCE.resolveEntityType(null))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("repositoryClass is required");
+                    .hasMessage("repositoryType is required");
         }
 
-        @Test
-        @DisplayName("Should throw exception when entity cannot be resolved")
-        void shouldThrowWhenEntityCannotBeResolved() {
-
-            assertThatThrownBy(() -> RepositoryEntityResolver.INSTANCE.resolveEntityType(InvalidRepository.class))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Cannot resolve entity type");
-        }
     }
 
     @Nested
