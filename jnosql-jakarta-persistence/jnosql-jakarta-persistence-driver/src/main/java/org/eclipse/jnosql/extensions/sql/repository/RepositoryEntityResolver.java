@@ -15,8 +15,6 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.page.Page;
-
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
