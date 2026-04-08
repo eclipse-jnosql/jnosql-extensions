@@ -105,10 +105,6 @@ INSTANCE;
                     );
                 }
 
-                if(Page.class.isAssignableFrom(rawClass)) {
-
-                }
-
                 if (Iterable.class.isAssignableFrom(rawClass) ||
                         Collection.class.isAssignableFrom(rawClass)) {
                     return extractEntityFromReturnType(
