@@ -41,5 +41,7 @@ class SqlQueryOperation implements QueryOperation {
         var returnType = method.returnType().orElseThrow();
         LOGGER.finest("Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
+
+
     }
 }
