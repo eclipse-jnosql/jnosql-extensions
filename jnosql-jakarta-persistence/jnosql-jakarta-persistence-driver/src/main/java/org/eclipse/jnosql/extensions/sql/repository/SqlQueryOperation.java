@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
@@ -31,6 +32,15 @@ class SqlQueryOperation implements QueryOperation {
     private static final Logger LOGGER = Logger.getLogger(SqlQueryOperation.class.getName());
 
     private final SqlReturnType sqlReturnType;
+
+    @Inject
+    SqlQueryOperation(SqlReturnType sqlReturnType) {
+        this.sqlReturnType = sqlReturnType;
+    }
+
+     SqlQueryOperation() {
+        this.sqlReturnType = null;
+    }
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
