@@ -18,7 +18,6 @@ import jakarta.inject.Inject;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
-import org.eclipse.jnosql.extensions.sql.model.ComputerCountByRepository;
 import org.eclipse.jnosql.extensions.sql.model.ComputerFindRepository;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;

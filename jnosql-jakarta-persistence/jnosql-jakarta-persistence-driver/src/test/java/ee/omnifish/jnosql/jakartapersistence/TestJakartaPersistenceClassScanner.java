@@ -16,11 +16,10 @@
 package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.data.repository.DataRepository;
+import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
 
 import java.util.Map;
 import java.util.Set;
-
-import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
 
 /**
  *

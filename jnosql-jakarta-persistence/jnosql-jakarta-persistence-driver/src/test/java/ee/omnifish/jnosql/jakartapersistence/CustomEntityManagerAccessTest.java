@@ -14,12 +14,11 @@ package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.persistence.EntityManager;
-
-import java.util.Set;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;

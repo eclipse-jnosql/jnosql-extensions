@@ -19,12 +19,11 @@ import jakarta.data.Order;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.nosql.Template;
+import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
-import org.eclipse.jnosql.mapping.NoSQLRepository;
-import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +31,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implements NoSQLRepository<T, K> {
+final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
 
     private final Class<T> entityType;
 
@@ -205,5 +204,10 @@ final class SqlRepositoryAdapter<T, K> extends AbstractRepository<T, K> implemen
     }
     public SqlEntityMetadata metadata() {
         return metadata;
+    }
+
+    @Override
+    public EntityManager entityManager() {
+        return sqlTemplate.entityManager();
     }
 }

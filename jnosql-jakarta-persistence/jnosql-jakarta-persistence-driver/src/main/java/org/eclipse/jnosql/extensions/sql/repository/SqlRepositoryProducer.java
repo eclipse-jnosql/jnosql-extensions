@@ -17,6 +17,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
@@ -57,8 +58,16 @@ class SqlRepositoryProducer {
         Objects.requireNonNull(template, "template is required");
         RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass);
         var entity = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
-        SqlRepositoryAdapter<?, ?> repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
-        var entityMetadata = repositoryAdapter.metadata();
+        PersistenceRepository<?, ?> repositoryAdapter;
+        SqlEntityMetadata entityMetadata;
+        if(entity != null) {
+            repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
+            entityMetadata = ((SqlRepositoryAdapter<?, ?>)repositoryAdapter).metadata();
+        } else {
+            repositoryAdapter = new NoopRepository<>(template);
+            entityMetadata = null;
+        }
+
 
         SqlInvocationHandler<?, ?> repositoryHandler = new SqlInvocationHandler<>(repositoryAdapter,
                 entityMetadata, template,

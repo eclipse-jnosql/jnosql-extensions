@@ -15,11 +15,19 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.page.CursoredPage;
+import jakarta.data.page.Page;
+import jakarta.data.repository.Insert;
+import jakarta.data.repository.Update;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -115,16 +123,53 @@ class RepositoryEntityResolverTest {
 
             assertThatThrownBy(() -> RepositoryEntityResolver.INSTANCE.resolveEntityType(null))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("repositoryClass is required");
+                    .hasMessage("repositoryType is required");
         }
 
-        @Test
-        @DisplayName("Should throw exception when entity cannot be resolved")
-        void shouldThrowWhenEntityCannotBeResolved() {
+    }
 
-            assertThatThrownBy(() -> RepositoryEntityResolver.INSTANCE.resolveEntityType(InvalidRepository.class))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Cannot resolve entity type");
+    @Nested
+    @DisplayName("When resolve entity from custom repository")
+    class WhenResolveEntityFromCustomRepository {
+
+
+        @ParameterizedTest
+        @ValueSource(classes = {CustomRepository.class,
+                CustomInsertRepository.class,
+                CustomUpdateRepository.class,
+                CustomPageRepository.class,
+                CustomCursorRepository.class})
+        void shouldResolveFromCustomRepository(Class<?> repositoryClass) {
+
+            var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
+
+            SoftAssertions.assertSoftly(softly ->
+                    softly.assertThat(result).isEqualTo(Computer.class)
+            );
+
+        }
+        interface CustomRepository {
+            Computer findComputerById(Long id);
+        }
+
+        interface CustomInsertRepository {
+            @Insert
+            Computer[] insert(Long id);
+        }
+
+        interface CustomUpdateRepository {
+            @Update
+            List<Computer> update(Long id);
+        }
+
+        interface CustomPageRepository {
+            @Update
+            Page<Computer> page(Long id);
+        }
+
+        interface CustomCursorRepository {
+            @Update
+            CursoredPage<Computer> cursor(Long id);
         }
     }
 }

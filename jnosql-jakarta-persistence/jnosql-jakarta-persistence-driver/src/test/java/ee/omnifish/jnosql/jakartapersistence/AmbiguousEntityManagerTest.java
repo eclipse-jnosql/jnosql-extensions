@@ -14,10 +14,9 @@ package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.enterprise.inject.spi.DeploymentException;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
-
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

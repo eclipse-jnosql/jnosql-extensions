@@ -26,14 +26,14 @@ import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 
 final class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T, K>  {
 
-    private final SqlRepositoryAdapter<T, K> repository;
+    private final PersistenceRepository<T, K> repository;
     private final SqlEntityMetadata entityMetadata;
     private final SqlTemplate sqlTemplate;
     private final RepositoryMetadata repositoryMetadata;
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
     private final RepositoryOperationProvider repositoryOperationProvider;
 
-    SqlInvocationHandler(SqlRepositoryAdapter<T, K> repository,
+    SqlInvocationHandler(PersistenceRepository<T, K> repository,
                                 SqlEntityMetadata entityMetadata,
                                 SqlTemplate sqlTemplate, RepositoryMetadata repositoryMetadata,
                                 InfrastructureOperatorProvider infrastructureOperatorProvider,

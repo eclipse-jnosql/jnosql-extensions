@@ -14,13 +14,14 @@
  */
 package ee.omnifish.jnosql.jakartapersistence;
 
-import static jakarta.persistence.GenerationType.AUTO;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+
 import java.util.List;
+
+import static jakarta.persistence.GenerationType.AUTO;
 
 @Entity(name = "Person")
 public class Person {

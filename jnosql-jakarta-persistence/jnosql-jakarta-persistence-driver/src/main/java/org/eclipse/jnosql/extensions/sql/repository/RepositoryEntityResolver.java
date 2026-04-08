@@ -15,8 +15,11 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,33 +43,87 @@ INSTANCE;
     /**
      * Resolves the entity type (T) from the given repository class.
      *
-     * @param repositoryClass the repository interface
+     * @param repositoryType the repository interface
      * @return the resolved entity class
-     * @throws NullPointerException if {@code repositoryClass} is null
+     * @throws NullPointerException if {@code repositoryType} is null
      * @throws IllegalArgumentException if the entity type cannot be resolved
      */
-    public Class<?> resolveEntityType(Class<?> repositoryClass) {
-        Objects.requireNonNull(repositoryClass, "repositoryClass is required");
+    public Class<?> resolveEntityType(Class<?> repositoryType) {
+        Objects.requireNonNull(repositoryType, "repositoryType is required");
 
-        return resolveFromClass(repositoryClass)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Cannot resolve entity type from repository: " + repositoryClass.getName()
-                ));
+        Optional<Class<?>> entityType = resolveFromClass(repositoryType);
+        if(entityType.isPresent()) {
+            return entityType.get();
+        }
+        return resolveFromCustomRepository(repositoryType);
+    }
+
+    private Class<?> resolveFromCustomRepository(Class<?> repositoryType) {
+        for (Method method : repositoryType.getDeclaredMethods()) {
+
+            Class<?> entity = extractEntityFromReturnType(method.getGenericReturnType());
+
+            if (entity != null) {
+                return entity;
+            }
+        }
+        return null;
+    }
+
+    private Class<?> extractEntityFromReturnType(Type type) {
+
+        // Case 1: Direct class (e.g., User)
+        if (type instanceof Class<?>) {
+            Class<?> typeEntity = (Class<?>) type;
+
+            // Handle arrays like User[]
+            if (typeEntity.isArray()) {
+                return extractEntityFromReturnType(typeEntity.getComponentType());
+            }
+
+            return isEntity(typeEntity) ? typeEntity : null;
+        }
+
+        // Case 2: Generic array (e.g., T[])
+        if (type instanceof GenericArrayType genericArrayType) {
+            return extractEntityFromReturnType(genericArrayType.getGenericComponentType());
+        }
+
+        // Case 3: Parameterized types (Optional<User>, List<User>, etc.)
+        if (type instanceof ParameterizedType parameterizedType) {
+
+            Type rawType = parameterizedType.getRawType();
+
+            if (rawType instanceof Class<?>) {
+                Class<?> rawClass = (Class<?>) rawType;
+
+                if (Optional.class.isAssignableFrom(rawClass)) {
+                    return extractEntityFromReturnType(
+                            parameterizedType.getActualTypeArguments()[0]
+                    );
+                }
+
+                if (Iterable.class.isAssignableFrom(rawClass) ||
+                        Collection.class.isAssignableFrom(rawClass)) {
+                    return extractEntityFromReturnType(
+                            parameterizedType.getActualTypeArguments()[0]
+                    );
+                }
+            }
+        }
+
+        return null;
     }
 
     private Optional<Class<?>> resolveFromClass(Class<?> clazz) {
 
-        // 1. Inspect interfaces
         for (Type type : clazz.getGenericInterfaces()) {
             Optional<Class<?>> resolved = resolveFromType(type);
             if (resolved.isPresent()) {
                 return resolved;
             }
         }
-
-        // 2. Inspect superclass (important for proxies / abstract layers)
         Type superclass = clazz.getGenericSuperclass();
-
         if (superclass != null) {
             Optional<Class<?>> resolved = resolveFromType(superclass);
             if (resolved.isPresent()) {
@@ -117,5 +174,22 @@ INSTANCE;
                 || name.equals("jakarta.data.repository.CrudRepository")
                 || name.equals("jakarta.data.repository.DataRepository")
                 || name.equals("org.eclipse.jnosql.mapping.NoSQLRepository");
+    }
+
+    private boolean isEntity(Type type) {
+        if (type instanceof Class<?> entityClass) {
+            return entityClass.isAnnotationPresent(jakarta.persistence.Entity.class);
+        }
+
+        if (type instanceof ParameterizedType parameterizedType) {
+            Type rawType = parameterizedType.getRawType();
+            return isEntity(rawType);
+        }
+
+        if (type instanceof GenericArrayType genericArrayType) {
+            return isEntity(genericArrayType.getGenericComponentType());
+        }
+
+        return false;
     }
 }
