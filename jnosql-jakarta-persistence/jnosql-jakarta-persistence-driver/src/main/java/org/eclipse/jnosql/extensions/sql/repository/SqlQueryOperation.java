@@ -17,7 +17,9 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
+import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
@@ -27,6 +29,8 @@ import java.util.logging.Logger;
 class SqlQueryOperation implements QueryOperation {
 
     private static final Logger LOGGER = Logger.getLogger(SqlQueryOperation.class.getName());
+
+    private final SqlReturnType sqlReturnType;
 
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
@@ -41,7 +45,21 @@ class SqlQueryOperation implements QueryOperation {
         var returnType = method.returnType().orElseThrow();
         LOGGER.finest("Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
-
+        var methodReturn = DynamicQueryMethodReturn.builder()
+                .args(params)
+                .methodName(method.name())
+                .returnType(method.returnType().orElseThrow())
+                .querySupplier(() -> queryValue)
+                .paramsSupplier(() -> RepositoryMetadataUtils.INSTANCE.getParams(method, params))
+                .typeClass(type)
+                .pageRequest(pageRequest)
+                .mapper(sqlReturnType.mapper())
+                .prepareConverter(textQuery -> {
+                    var prepare = (org.eclipse.jnosql.mapping.semistructured.PreparedStatement) template.prepare(textQuery, entity);
+                    prepare.setSelectMapper(query -> queryBuilder.updateDynamicQuery(query, context));
+                    return prepare;
+                }).build();
+        return (T) methodReturn.execute();
 
     }
 }
