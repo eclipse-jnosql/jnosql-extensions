@@ -14,22 +14,21 @@
  */
 package ee.omnifish.jnosql.jakartapersistence;
 
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Set;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
-
-import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.persistence.EntityManager;
-
-import java.util.List;
-import java.util.Set;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 public class PersonRepositoryTest {
 
