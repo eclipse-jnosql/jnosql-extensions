@@ -66,8 +66,8 @@ class SqlQueryBuilder {
         List<String> attributes = new ArrayList<>(query.columns());
         attributes.addAll(method.select());
 
-        var skip = specialParameters.limit().map(Limit::startAt).orElse(query.skip());
-        var limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
+        long skip = specialParameters.limit().map(Limit::startAt).orElse(query.skip());
+        int limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
         Optional<Restriction<?>> restriction = specialParameters.restriction();
         var criteriaCondition = query.condition().orElse(null);
         var condition = restriction.map(r -> SqlRestrictionConverter.INSTANCE.parser(r)
