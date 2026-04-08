@@ -56,7 +56,7 @@ class SqlQueryOperation implements QueryOperation {
                 .mapper(sqlReturnType.mapper())
                 .prepareConverter(textQuery -> {
                     var prepare = (org.eclipse.jnosql.mapping.semistructured.PreparedStatement) template.prepare(textQuery, entity);
-                    prepare.setSelectMapper(query -> queryBuilder.updateDynamicQuery(query, context));
+                    prepare.setSelectMapper(query -> SqlQueryBuilder.updateQuery(context, method, query));
                     return prepare;
                 }).build();
         return (T) methodReturn.execute();
