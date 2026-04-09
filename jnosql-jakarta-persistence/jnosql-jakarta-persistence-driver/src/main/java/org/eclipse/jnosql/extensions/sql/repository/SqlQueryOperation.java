@@ -16,6 +16,7 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.nosql.Query;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
@@ -66,7 +67,7 @@ class SqlQueryOperation implements QueryOperation {
                 .pageRequest(pageRequest)
                 .mapper(sqlReturnType.mapper())
                 .prepareConverter(textQuery -> {
-                    var prepare = (org.eclipse.jnosql.mapping.semistructured.PreparedStatement) template.prepare(textQuery, entity);
+                    Query typedQuery = template.query(textQuery);
                     prepare.setSelectMapper(query -> SqlQueryBuilder.updateQuery(context, method, query));
                     return prepare;
                 }).build();
