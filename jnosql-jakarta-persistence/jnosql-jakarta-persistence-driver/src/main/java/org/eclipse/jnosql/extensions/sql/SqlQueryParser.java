@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import org.eclipse.jnosql.SqlSelectQueryParser;
 import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.communication.semistructured.CommunicationEntity;
@@ -32,18 +33,18 @@ final class SqlQueryParser {
 
  static final QueryParser INSTANCE = new QueryParser();
 
- private final SelectQueryParser select = new SelectQueryParser();
+ private final SqlSelectQueryParser select = new SqlSelectQueryParser();
  private final DeleteQueryParser delete = new DeleteQueryParser();
  private final UpdateQueryParser update = new UpdateQueryParser();
 
 
- public <T> Stream<CommunicationEntity> query(String query, String entity, DatabaseManager manager) {
-  validation(query, manager);
+ public <T> Stream<T> query(String query, String entity, SqlTemplate template) {
+  validation(query, template);
   var command = QueryType.parse(query);
   return switch (command) {
-   case DELETE -> delete.query(query, manager, CommunicationObserverParser.EMPTY);
-   case UPDATE -> update.query(query, manager, CommunicationObserverParser.EMPTY);
-   default -> select.query(query, entity, manager, CommunicationObserverParser.EMPTY);
+   case DELETE -> delete.query(query, template, CommunicationObserverParser.EMPTY);
+   case UPDATE -> update.query(query, template, CommunicationObserverParser.EMPTY);
+   default -> select.query(query, entity, template, CommunicationObserverParser.EMPTY);
   };
  }
 
@@ -68,8 +69,8 @@ final class SqlQueryParser {
   };
  }
 
- private void validation(String query, DatabaseManager manager) {
+ private void validation(String query, SqlTemplate template) {
   Objects.requireNonNull(query, "query is required");
-  Objects.requireNonNull(manager, "manager is required");
+  Objects.requireNonNull(template, "template is required");
  }
 }
