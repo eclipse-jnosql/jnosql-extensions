@@ -18,62 +18,28 @@ import jakarta.data.Direction;
 import jakarta.data.Sort;
 import org.eclipse.jnosql.communication.Params;
 import org.eclipse.jnosql.communication.QueryException;
-import org.eclipse.jnosql.communication.query.SelectQuery;
 import org.eclipse.jnosql.communication.query.data.SelectProvider;
-import org.eclipse.jnosql.communication.semistructured.CommunicationEntity;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.Conditions;
-import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
-import org.eclipse.jnosql.communication.semistructured.DatabaseManager;
 import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryParams;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
-public final class SqlSelectQueryParser implements Function<SelectQuery, QueryParams> {
+public final class SqlSelectQueryParser  {
 
-    @Override
-    public QueryParams apply(SelectQuery selectQuery) {
-        Objects.requireNonNull(selectQuery, "selectQuery is required");
-
-        Params params = Params.newParams();
-        var columnQuery = query(params, selectQuery);
-        return new QueryParams(columnQuery, params);
-    }
-
-    <T> Stream<T> query(String query, String entity, SqlTemplate template) {
-        var selectQuery = query(query, entity);
-        return template.select(selectQuery);
+    QueryParams prepare(String query, String entity, SqlTemplate template) {
+        Params params = new Params();
+        var selectQuery = query(query, entity, params);
+        return new QueryParams(selectQuery, params);
     }
 
 
-    private org.eclipse.jnosql.communication.semistructured.SelectQuery query(Params params, org.eclipse.jnosql.communication.query.SelectQuery selectQuery) {
 
-        var entity = CommunicationObserverParser.EMPTY.fireEntity(selectQuery.entity());
-        long limit = selectQuery.limit();
-        long skip = selectQuery.skip();
-        List<String> columns = selectQuery.fields().stream()
-                .map(f -> CommunicationObserverParser.EMPTY.fireSelectField(entity, f))
-                .toList();
-
-        List<Sort<?>> sorts = selectQuery.orderBy().stream().map(s -> toSort(s, entity)).collect(toList());
-        CriteriaCondition condition = selectQuery.where()
-                .map(c -> Conditions.getCondition(c, params, CommunicationObserverParser.EMPTY, entity))
-                .orElse(null);
-
-        boolean count = selectQuery.isCount();
-
-        return new DefaultSelectQuery(limit, skip, entity, columns, sorts, condition, count);
-    }
-
-
-    private org.eclipse.jnosql.communication.semistructured.SelectQuery query(String query, String entity) {
+    private org.eclipse.jnosql.communication.semistructured.SelectQuery query(String query, String entity, Params params) {
 
         var selectQuery = SelectProvider.INSTANCE.apply(query, entity);
         var entityName = CommunicationObserverParser.EMPTY.fireEntity(selectQuery.entity());
@@ -84,7 +50,6 @@ public final class SqlSelectQueryParser implements Function<SelectQuery, QueryPa
         List<Sort<?>> sorts = selectQuery.orderBy().stream().map(s -> toSort(s, entityName))
                 .collect(toList());
 
-        var params = Params.newParams();
         var condition = selectQuery.where()
                 .map(c -> Conditions.getCondition(c, params, CommunicationObserverParser.EMPTY, entityName)).orElse(null);
 
