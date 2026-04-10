@@ -45,7 +45,7 @@ final class SqlQueryParser {
   * @throws IllegalArgumentException when the query has value parameters
   * @throws QueryException           when there is error in the syntax
   */
- public CommunicationPreparedStatement prepare(String query, String entity, SqlTemplate template) {
+ public SqlPreparedStatement prepare(String query, String entity, SqlTemplate template) {
   validation(query, template);
   var command = QueryType.parse(query);
   return switch (command) {
