@@ -652,5 +652,16 @@ class DefaultSqlTemplateTest {
             var result = preparedStatement.result();
             assertThat(result).hasSize(2);
         }
+
+        @Test
+        @DisplayName("Should execute delete")
+        void shouldExecuteDelete(){
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+
+            var preparedStatement = template.prepare("DELETE FROM Computer");
+            preparedStatement.result();
+            assertThat(template.prepare("FROM Computer WHERE release >= 2020").result()).isEmpty();
+        }
     }
 }
