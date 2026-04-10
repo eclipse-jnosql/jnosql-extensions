@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql;
+package org.eclipse.jnosql.extensions.sql;
 
 import jakarta.data.Direction;
 import jakarta.data.Sort;
@@ -23,7 +23,6 @@ import org.eclipse.jnosql.communication.semistructured.CommunicationObserverPars
 import org.eclipse.jnosql.communication.semistructured.Conditions;
 import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryParams;
-import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 
 import java.util.List;
 
@@ -34,7 +33,7 @@ public final class SqlSelectQueryParser  {
     QueryParams prepare(String query, String entity, SqlTemplate template) {
         Params params = new Params();
         var selectQuery = query(query, entity, params);
-        return new QueryParams(selectQuery, params);
+        return new SqlPreparedStatement(new QueryParams(selectQuery, params));
     }
 
 
