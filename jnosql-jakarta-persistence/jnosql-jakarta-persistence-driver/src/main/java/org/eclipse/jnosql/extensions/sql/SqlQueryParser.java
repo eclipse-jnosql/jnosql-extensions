@@ -14,20 +14,15 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
-import org.eclipse.jnosql.SqlSelectQueryParser;
 import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.QueryType;
-import org.eclipse.jnosql.communication.semistructured.CommunicationEntity;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
-import org.eclipse.jnosql.communication.semistructured.DatabaseManager;
 import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.QueryParser;
-import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.communication.semistructured.UpdateQueryParser;
 
 import java.util.Objects;
-import java.util.stream.Stream;
 
 final class SqlQueryParser {
 
@@ -38,34 +33,25 @@ final class SqlQueryParser {
  private final UpdateQueryParser update = new UpdateQueryParser();
 
 
- public <T> Stream<T> query(String query, String entity, SqlTemplate template) {
-  validation(query, template);
-  var command = QueryType.parse(query);
-  return switch (command) {
-   case DELETE -> delete.query(query, template, CommunicationObserverParser.EMPTY);
-   case UPDATE -> update.query(query, template, CommunicationObserverParser.EMPTY);
-   default -> select.query(query, entity, template, CommunicationObserverParser.EMPTY);
-  };
- }
 
  /**
   * Executes a query and returns a {@link CommunicationPreparedStatement}, when the operations are <b>insert</b>, <b>update</b> and <b>select</b>
   * command it will return the result of the operation when the command is <b>delete</b> it will return an empty collection.
   *
   * @param query    the query as {@link String}
-  * @param manager  the manager
+  * @param template  the template
   * @return a {@link CommunicationPreparedStatement} instance
   * @throws NullPointerException     when there is parameter null
   * @throws IllegalArgumentException when the query has value parameters
   * @throws QueryException           when there is error in the syntax
   */
- public CommunicationPreparedStatement prepare(String query, String entity, DatabaseManager manager) {
-  validation(query, manager);
+ public CommunicationPreparedStatement prepare(String query, String entity, SqlTemplate template) {
+  validation(query, template);
   var command = QueryType.parse(query);
   return switch (command) {
-   case DELETE -> delete.prepare(query, manager, CommunicationObserverParser.EMPTY);
-   case UPDATE -> update.prepare(query, manager, CommunicationObserverParser.EMPTY);
-   default -> select.prepare(query, entity, manager, CommunicationObserverParser.EMPTY);
+   case DELETE -> delete.prepare(query, template, CommunicationObserverParser.EMPTY);
+   case UPDATE -> update.prepare(query, template, CommunicationObserverParser.EMPTY);
+   default -> select.prepare(query, entity, template);
   };
  }
 
