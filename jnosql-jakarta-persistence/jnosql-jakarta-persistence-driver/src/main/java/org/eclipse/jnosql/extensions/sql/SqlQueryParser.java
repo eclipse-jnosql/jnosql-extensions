@@ -18,7 +18,6 @@ import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
-import org.eclipse.jnosql.communication.semistructured.DeleteQueryParser;
 import org.eclipse.jnosql.communication.semistructured.QueryParser;
 import org.eclipse.jnosql.communication.semistructured.UpdateQueryParser;
 
@@ -29,7 +28,7 @@ final class SqlQueryParser {
  static final QueryParser INSTANCE = new QueryParser();
 
  private final SqlSelectQueryParser select = new SqlSelectQueryParser();
- private final DeleteQueryParser delete = new DeleteQueryParser();
+ private final SqlDeleteQueryParser delete = new SqlDeleteQueryParser();
  private final UpdateQueryParser update = new UpdateQueryParser();
 
 
@@ -49,7 +48,7 @@ final class SqlQueryParser {
   validation(query, template);
   var command = QueryType.parse(query);
   return switch (command) {
-   case DELETE -> delete.prepare(query, template, CommunicationObserverParser.EMPTY);
+   case DELETE -> delete.prepare(query, template);
    case UPDATE -> update.prepare(query, template, CommunicationObserverParser.EMPTY);
    default -> select.prepare(query, entity, template);
   };
