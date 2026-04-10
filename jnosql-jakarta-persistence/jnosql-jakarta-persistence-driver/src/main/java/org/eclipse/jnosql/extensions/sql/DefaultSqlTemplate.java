@@ -40,6 +40,8 @@ import java.util.stream.Stream;
 
 class DefaultSqlTemplate implements SqlTemplate {
 
+    private static final SqlQueryParser QUERY_PARSER = SqlQueryParser.INSTANCE;
+
     private final EntityManager entityManager;
     private final SelectQueryConverter selectQueryConverter;
     private final DeleteQueryConverter deleteQueryConverter;
