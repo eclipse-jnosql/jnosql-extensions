@@ -145,7 +145,13 @@ public final class SqlPreparedStatement implements PreparedStatement {
 
     @Override
     public long count() {
-        return 0;
+        if (!paramsLeft.isEmpty()) {
+            throw new QueryException("Check all the parameters before execute the query, params left: " + paramsLeft);
+        }
+        if (CommunicationPreparedStatement.PreparedStatementType.COUNT.equals(type)) {
+            return manager.count(selectQuery);
+        }
+        throw new IllegalArgumentException("The count operation is only allowed for COUNT queries");
     }
 
     @Override
