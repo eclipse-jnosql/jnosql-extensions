@@ -105,12 +105,15 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     @Override
     public PreparedStatement prepare(String query) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        return QUERY_PARSER.prepare(query, null, this);
     }
 
     @Override
     public PreparedStatement prepare(String query, String entity) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Objects.requireNonNull(query, "query is null");
+        Objects.requireNonNull(entity, "entity is null");
+        return QUERY_PARSER.prepare(query, entity, this);
     }
 
     @Override
