@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql;
 
 import org.eclipse.jnosql.communication.Params;
+import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
 import org.eclipse.jnosql.communication.semistructured.DatabaseManager;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
@@ -24,6 +25,7 @@ import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -86,12 +88,54 @@ public final class SqlPreparedStatement implements PreparedStatement {
 
     @Override
     public PreparedStatement bind(String name, Object value) {
-        return null;
+        Objects.requireNonNull(name, "name is required");
+        Objects.requireNonNull(value, "value is required");
+
+        paramsLeft.remove(name);
+        params.bind(name, value);
+        return this;
+    }
+
+    public PreparedStatement bind(int index, Object value) {
+        Objects.requireNonNull(value, "value is required");
+
+        if(index < 1) {
+            throw new IllegalArgumentException("The index should be greater than zero");
+        }
+
+        var name = "?" + index;
+        paramsLeft.remove("?" + index);
+        params.bind(name, value);
+        return this;
+    }
+
+    public Optional<SelectQuery> select() {
+        return Optional.ofNullable(selectQuery);
+    }
+
+    public CommunicationPreparedStatement.PreparedStatementType getType() {
+        return type;
     }
 
     @Override
     public <T> Stream<T> result() {
-        return Stream.empty();
+        if (!paramsLeft.isEmpty()) {
+            throw new QueryException("Check all the parameters before execute the query, params left: " + paramsLeft);
+        }
+        switch (type) {
+            case SELECT -> {
+                return manager.select(operator().apply(selectQuery));
+            }
+            case DELETE -> {
+                manager.delete(deleteQuery);
+                return Stream.empty();
+            }
+            case UPDATE -> {
+                manager.update(updateQuery);
+                return Stream.empty();
+            }
+            default -> throw new UnsupportedOperationException("there is not support to operation type: " + type);
+        }
     }
 
     @Override
@@ -107,5 +151,14 @@ public final class SqlPreparedStatement implements PreparedStatement {
     @Override
     public boolean isCount() {
         return false;
+    }
+
+    public UnaryOperator<SelectQuery> operator() {
+        return this.selectMapper;
+    }
+
+    public void setSelectMapper(UnaryOperator<SelectQuery> selectMapper) {
+        Objects.requireNonNull(selectMapper, "selectMapper is required");
+        this.selectMapper = selectMapper;
     }
 }
