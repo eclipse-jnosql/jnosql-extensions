@@ -17,13 +17,12 @@ package org.eclipse.jnosql.extensions.sql;
 import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
-import org.eclipse.jnosql.communication.semistructured.QueryParser;
 
 import java.util.Objects;
 
 final class SqlQueryParser {
 
- static final QueryParser INSTANCE = new QueryParser();
+ static final SqlQueryParser INSTANCE = new SqlQueryParser();
 
  private final SqlSelectQueryParser select = new SqlSelectQueryParser();
  private final SqlDeleteQueryParser delete = new SqlDeleteQueryParser();
