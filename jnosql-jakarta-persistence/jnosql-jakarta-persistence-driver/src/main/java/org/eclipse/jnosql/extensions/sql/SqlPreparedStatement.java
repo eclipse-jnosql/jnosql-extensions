@@ -14,8 +14,10 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.exceptions.NonUniqueResultException;
 import org.eclipse.jnosql.communication.Params;
 import org.eclipse.jnosql.communication.QueryException;
+import org.eclipse.jnosql.communication.semistructured.CommunicationEntity;
 import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
 import org.eclipse.jnosql.communication.semistructured.DatabaseManager;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
@@ -24,6 +26,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -140,7 +143,18 @@ public final class SqlPreparedStatement implements PreparedStatement {
 
     @Override
     public <T> Optional<T> singleResult() {
-        return Optional.empty();
+        Stream<CommunicationEntity> entities = result();
+        final Iterator<CommunicationEntity> iterator = entities.iterator();
+
+        if (!iterator.hasNext()) {
+            return Optional.empty();
+        }
+        final CommunicationEntity next = iterator.next();
+        if (!iterator.hasNext()) {
+            return Optional.of(next);
+        }
+
+        throw new NonUniqueResultException("The select returns more than one entity, select: " + query);
     }
 
     @Override
