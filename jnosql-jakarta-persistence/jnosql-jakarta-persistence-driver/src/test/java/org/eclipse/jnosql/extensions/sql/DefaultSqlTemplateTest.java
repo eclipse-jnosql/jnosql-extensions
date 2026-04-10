@@ -637,4 +637,20 @@ class DefaultSqlTemplateTest {
             });
         }
     }
+
+    @Nested
+    @DisplayName("When executing prepare statement")
+    class WhenExecutePrepareStatement {
+
+        @Test
+        @DisplayName("Should execute select query")
+        void shouldExecuteSelectQuery() {
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+
+            var preparedStatement = template.prepare("FROM Computer WHERE release >= 2020");
+            var result = preparedStatement.result();
+            assertThat(result).hasSize(2);
+        }
+    }
 }
