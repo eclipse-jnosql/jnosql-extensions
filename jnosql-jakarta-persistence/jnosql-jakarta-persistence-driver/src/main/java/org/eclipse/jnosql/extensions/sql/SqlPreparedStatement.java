@@ -143,17 +143,16 @@ public final class SqlPreparedStatement implements PreparedStatement {
 
     @Override
     public <T> Optional<T> singleResult() {
-        Stream<CommunicationEntity> entities = result();
-        final Iterator<CommunicationEntity> iterator = entities.iterator();
+        Stream<T> entities = result();
+        final Iterator<T> iterator = entities.iterator();
 
         if (!iterator.hasNext()) {
             return Optional.empty();
         }
-        final CommunicationEntity next = iterator.next();
+        final T next = iterator.next();
         if (!iterator.hasNext()) {
             return Optional.of(next);
         }
-
         throw new NonUniqueResultException("The select returns more than one entity, select: " + query);
     }
 
