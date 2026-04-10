@@ -16,7 +16,6 @@ package org.eclipse.jnosql.extensions.sql;
 
 import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.QueryType;
-import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
 import org.eclipse.jnosql.communication.semistructured.QueryParser;
 
