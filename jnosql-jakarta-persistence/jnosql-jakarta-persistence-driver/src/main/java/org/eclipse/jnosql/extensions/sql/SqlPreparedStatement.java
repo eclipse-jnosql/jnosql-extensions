@@ -14,10 +14,18 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import org.eclipse.jnosql.communication.Params;
+import org.eclipse.jnosql.communication.semistructured.CommunicationPreparedStatement;
+import org.eclipse.jnosql.communication.semistructured.DatabaseManager;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.QueryParams;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 
@@ -38,17 +46,26 @@ import java.util.stream.Stream;
  */
 public final class SqlPreparedStatement implements PreparedStatement {
 
-    private final QueryParams queryParams;
+    private static final UnaryOperator<SelectQuery> SELECT_MAPPER_DEFAULT = s -> s;
 
-    private final SqlTemplate template;
+    private final SelectQuery selectQuery;
+
+    private final DeleteQuery deleteQuery;
+
+    private final UpdateQuery updateQuery;
+
+    private final CommunicationPreparedStatement.PreparedStatementType type;
+
+    private final Params params;
 
     private final String query;
 
-    public SqlPreparedStatement(QueryParams queryParams, SqlTemplate template, String query) {
-        this.queryParams = queryParams;
-        this.template = template;
-        this.query = query;
-    }
+    private final List<String> paramsLeft;
+
+    private final SqlTemplate manager;
+
+    private UnaryOperator<SelectQuery> selectMapper = SELECT_MAPPER_DEFAULT;
+
 
     @Override
     public PreparedStatement bind(String name, Object value) {
