@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import org.eclipse.jnosql.communication.semistructured.QueryParams;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
 import java.util.Optional;
@@ -36,6 +37,18 @@ import java.util.stream.Stream;
  * in preparation for execution.</p>
  */
 public final class SqlPreparedStatement implements PreparedStatement {
+
+    private final QueryParams queryParams;
+
+    private final SqlTemplate template;
+
+    private final String query;
+
+    public SqlPreparedStatement(QueryParams queryParams, SqlTemplate template, String query) {
+        this.queryParams = queryParams;
+        this.template = template;
+        this.query = query;
+    }
 
     @Override
     public PreparedStatement bind(String name, Object value) {
