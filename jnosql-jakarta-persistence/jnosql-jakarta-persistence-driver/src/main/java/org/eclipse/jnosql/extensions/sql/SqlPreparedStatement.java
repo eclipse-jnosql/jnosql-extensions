@@ -180,4 +180,45 @@ public final class SqlPreparedStatement implements PreparedStatement {
         Objects.requireNonNull(selectMapper, "selectMapper is required");
         this.selectMapper = selectMapper;
     }
+
+    static SqlPreparedStatement select(
+            SelectQuery selectQuery,
+            Params params,
+            String query,
+            SqlTemplate template) {
+        if (selectQuery.isCount()) {
+            return new SqlPreparedStatement(selectQuery,
+                    null, null, CommunicationPreparedStatement.PreparedStatementType.COUNT, params, query,
+                    params.getParametersNames(), template);
+        } else {
+            return new SqlPreparedStatement(selectQuery,
+                    null, null, CommunicationPreparedStatement.PreparedStatementType.SELECT, params, query,
+                    params.getParametersNames(), template);
+        }
+
+    }
+
+    static SqlPreparedStatement delete(DeleteQuery deleteQuery,
+                                                 Params params,
+                                                 String query,
+                                                 DatabaseManager manager) {
+
+        return new SqlPreparedStatement(null,
+                deleteQuery, null, CommunicationPreparedStatement.PreparedStatementType.DELETE, params,
+                query,
+                params.getParametersNames(),
+                manager);
+
+    }
+
+    static SqlPreparedStatement update(UpdateQuery updateQuery,
+                                                 Params params,
+                                                 String query,
+                                                 DatabaseManager manager) {
+        return new SqlPreparedStatement(null, null,
+                updateQuery,
+                CommunicationPreparedStatement.PreparedStatementType.UPDATE, params, query,
+                params.getParametersNames(),  manager);
+
+    }
 }
