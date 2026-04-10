@@ -66,6 +66,23 @@ public final class SqlPreparedStatement implements PreparedStatement {
 
     private UnaryOperator<SelectQuery> selectMapper = SELECT_MAPPER_DEFAULT;
 
+    private SqlPreparedStatement(SelectQuery selectQuery, DeleteQuery deleteQuery,
+                                UpdateQuery updateQuery,
+                                CommunicationPreparedStatement.PreparedStatementType type,
+                                Params params,
+                                String query,
+                                List<String> paramsLeft,
+                                SqlTemplate manager) {
+
+        this.selectQuery = selectQuery;
+        this.deleteQuery = deleteQuery;
+        this.updateQuery = updateQuery;
+        this.type = type;
+        this.params = params;
+        this.query = query;
+        this.paramsLeft = paramsLeft;
+        this.manager = manager;
+    }
 
     @Override
     public PreparedStatement bind(String name, Object value) {
