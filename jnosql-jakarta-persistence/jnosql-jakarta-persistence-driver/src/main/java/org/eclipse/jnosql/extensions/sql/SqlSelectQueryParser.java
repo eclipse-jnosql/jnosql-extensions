@@ -30,10 +30,10 @@ import static java.util.stream.Collectors.toList;
 
 public final class SqlSelectQueryParser  {
 
-    QueryParams prepare(String query, String entity, SqlTemplate template) {
+    SqlPreparedStatement prepare(String query, String entity, SqlTemplate template) {
         Params params = new Params();
         var selectQuery = query(query, entity, params);
-        return new SqlPreparedStatement(new QueryParams(selectQuery, params));
+        return new SqlPreparedStatement(new QueryParams(selectQuery, params), template, query);
     }
 
 
