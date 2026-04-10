@@ -22,7 +22,6 @@ import org.eclipse.jnosql.communication.query.data.SelectProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.Conditions;
 import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
-import org.eclipse.jnosql.communication.semistructured.QueryParams;
 
 import java.util.List;
 
@@ -33,7 +32,7 @@ public final class SqlSelectQueryParser  {
     SqlPreparedStatement prepare(String query, String entity, SqlTemplate template) {
         Params params = new Params();
         var selectQuery = query(query, entity, params);
-        return new SqlPreparedStatement(new QueryParams(selectQuery, params), template, query);
+        return SqlPreparedStatement.select(selectQuery, params, query, template);
     }
 
 
