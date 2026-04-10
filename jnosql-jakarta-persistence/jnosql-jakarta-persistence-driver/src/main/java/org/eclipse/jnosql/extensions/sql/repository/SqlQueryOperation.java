@@ -18,6 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.nosql.Query;
 import org.eclipse.jnosql.communication.query.data.QueryType;
+import org.eclipse.jnosql.extensions.sql.SqlPreparedStatement;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
@@ -43,6 +44,7 @@ class SqlQueryOperation implements QueryOperation {
         this.sqlReturnType = null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
         var entityMetadata = context.entityMetadata();
@@ -67,7 +69,7 @@ class SqlQueryOperation implements QueryOperation {
                 .pageRequest(pageRequest)
                 .mapper(sqlReturnType.mapper())
                 .prepareConverter(textQuery -> {
-                    Query typedQuery = template.query(textQuery);
+                    SqlPreparedStatement prepare = (SqlPreparedStatement) template.prepare(textQuery, entity);
                     prepare.setSelectMapper(query -> SqlQueryBuilder.updateQuery(context, method, query));
                     return prepare;
                 }).build();
