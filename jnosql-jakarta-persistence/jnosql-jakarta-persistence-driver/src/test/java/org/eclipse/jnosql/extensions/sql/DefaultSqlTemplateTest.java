@@ -663,5 +663,14 @@ class DefaultSqlTemplateTest {
             preparedStatement.result();
             assertThat(template.prepare("FROM Computer WHERE release >= 2020").result()).isEmpty();
         }
+
+        @Test
+        void shouldExecuteUpdate(){
+            template.insert(Computer.of("MacBook", 2024));
+            template.insert(Computer.of("ThinkPad", 2023));
+            var preparedStatement = template.prepare("UPDATE Computer SET model = 'Updated' WHERE release >= 2020");
+            preparedStatement.result();
+            assertThat(template.prepare("FROM Computer WHERE release >= 2020").result()).hasSize(2);
+        }
     }
 }
