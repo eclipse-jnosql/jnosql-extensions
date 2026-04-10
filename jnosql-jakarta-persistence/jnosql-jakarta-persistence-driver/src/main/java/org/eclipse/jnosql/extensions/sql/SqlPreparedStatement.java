@@ -35,9 +35,8 @@ import java.util.stream.Stream;
 
 
 /**
- * This class represents a SQL-specific implementation of {@link PreparedStatement}.
- * It provides methods for binding query parameters, retrieving results, and determining
- * if the query is a count query.
+ * This class represents a SQL-specific implementation of {@link PreparedStatement}. It provides methods for binding
+ * query parameters, retrieving results, and determining if the query is a count query.
  *
  * <p>This implementation is designed to integrate with Jakarta Persistence and JNoSQL
  * to support SQL-based query execution in a type-safe manner.</p>
@@ -46,8 +45,7 @@ import java.util.stream.Stream;
  * {@link PreparedStatement} interface.</p>
  *
  * <p>Note: This class does not execute actual queries or interact with a database;
- * rather, it serves as a minimal implementation framework for managing SQL queries
- * in preparation for execution.</p>
+ * rather, it serves as a minimal implementation framework for managing SQL queries in preparation for execution.</p>
  */
 public final class SqlPreparedStatement implements PreparedStatement {
 
@@ -72,12 +70,12 @@ public final class SqlPreparedStatement implements PreparedStatement {
     private UnaryOperator<SelectQuery> selectMapper = SELECT_MAPPER_DEFAULT;
 
     private SqlPreparedStatement(SelectQuery selectQuery, DeleteQuery deleteQuery,
-                                UpdateQuery updateQuery,
-                                CommunicationPreparedStatement.PreparedStatementType type,
-                                Params params,
-                                String query,
-                                List<String> paramsLeft,
-                                SqlTemplate manager) {
+                                 UpdateQuery updateQuery,
+                                 CommunicationPreparedStatement.PreparedStatementType type,
+                                 Params params,
+                                 String query,
+                                 List<String> paramsLeft,
+                                 SqlTemplate manager) {
 
         this.selectQuery = selectQuery;
         this.deleteQuery = deleteQuery;
@@ -102,7 +100,7 @@ public final class SqlPreparedStatement implements PreparedStatement {
     public PreparedStatement bind(int index, Object value) {
         Objects.requireNonNull(value, "value is required");
 
-        if(index < 1) {
+        if (index < 1) {
             throw new IllegalArgumentException("The index should be greater than zero");
         }
 
@@ -199,26 +197,26 @@ public final class SqlPreparedStatement implements PreparedStatement {
     }
 
     static SqlPreparedStatement delete(DeleteQuery deleteQuery,
-                                                 Params params,
-                                                 String query,
-                                                 DatabaseManager manager) {
+                                       Params params,
+                                       String query,
+                                       SqlTemplate template) {
 
         return new SqlPreparedStatement(null,
                 deleteQuery, null, CommunicationPreparedStatement.PreparedStatementType.DELETE, params,
                 query,
                 params.getParametersNames(),
-                manager);
+                template);
 
     }
 
     static SqlPreparedStatement update(UpdateQuery updateQuery,
-                                                 Params params,
-                                                 String query,
-                                                 DatabaseManager manager) {
+                                       Params params,
+                                       String query,
+                                       SqlTemplate template) {
         return new SqlPreparedStatement(null, null,
                 updateQuery,
                 CommunicationPreparedStatement.PreparedStatementType.UPDATE, params, query,
-                params.getParametersNames(),  manager);
+                params.getParametersNames(), template);
 
     }
 }
