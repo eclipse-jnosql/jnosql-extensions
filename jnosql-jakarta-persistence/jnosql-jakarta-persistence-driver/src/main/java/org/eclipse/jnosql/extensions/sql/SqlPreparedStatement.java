@@ -16,5 +16,33 @@ package org.eclipse.jnosql.extensions.sql;
 
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 public final class SqlPreparedStatement implements PreparedStatement {
+
+    @Override
+    public PreparedStatement bind(String name, Object value) {
+        return null;
+    }
+
+    @Override
+    public <T> Stream<T> result() {
+        return Stream.empty();
+    }
+
+    @Override
+    public <T> Optional<T> singleResult() {
+        return Optional.empty();
+    }
+
+    @Override
+    public long count() {
+        return 0;
+    }
+
+    @Override
+    public boolean isCount() {
+        return false;
+    }
 }
