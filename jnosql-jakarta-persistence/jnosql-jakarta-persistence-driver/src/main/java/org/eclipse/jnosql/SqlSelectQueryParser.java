@@ -43,7 +43,7 @@ public final class SqlSelectQueryParser implements Function<SelectQuery, QueryPa
         Objects.requireNonNull(selectQuery, "selectQuery is required");
 
         Params params = Params.newParams();
-        org.eclipse.jnosql.communication.semistructured.SelectQuery columnQuery = query(params, selectQuery);
+        var columnQuery = query(params, selectQuery);
         return new QueryParams(columnQuery, params);
     }
 
