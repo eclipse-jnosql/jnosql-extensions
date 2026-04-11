@@ -27,4 +27,7 @@ public interface ComputerQueryRepository extends BasicRepository<Computer, Long>
 
    @Query("FROM Computer WHERE model = :model")
     List<Computer> findByModel(@Param("model") String model);
+
+   @Query("FROM Computer")
+   List<Computer> computers();
 }
