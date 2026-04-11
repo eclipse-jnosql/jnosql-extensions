@@ -5,6 +5,8 @@ import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
@@ -90,20 +92,11 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     @SuppressWarnings("unchecked")
     @Override
     public T create(CreationalContext<T> context) {
-        PersistenceDatabaseManager databaseManager = findDatabaseManager();
-
-        var entities = databaseManager.getEntitiesMetadata();
-        var template = new PersistenceDocumentTemplate(databaseManager);
-        // converters required by JNoSQL core but are not used because
-        /// JakartaPersistenceEntitiesMetadata doesn't return a converter - lets EntityManager to convert'
-        var dummyConverters = new Converters() {
-        };
-
-        var handler = createInvocationHandler(entities, template, dummyConverters);
-
-        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
-
-        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
+        final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
+                .produceMatchingEntityManager(persistenceUnit, entityManagerQualifiers);
+        var template = SqlTemplate.of(entityManager.orElseThrow(() -> new IllegalStateException("Found no entity manager matching the " + type + " repository declaration")));
+        SqlRepositoryProducer repositoryProducer = getInstance(SqlRepositoryProducer.class);
+        return repositoryProducer.get(type, template);
     }
 
     /**
