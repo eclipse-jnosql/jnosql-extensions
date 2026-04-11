@@ -54,7 +54,7 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         this.beanManager = beanManager;
         this.qualifiersForBean = initializeQualifiers();
         this.persistenceUnit = findPersistenceUnit();
-        entityManagerQualifiers = findEntityManagerQualifiers();
+        this.entityManagerQualifiers = findEntityManagerQualifiers();
     }
 
     /**
