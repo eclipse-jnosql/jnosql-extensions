@@ -38,7 +38,7 @@ import java.lang.reflect.InvocationHandler;
  * @param <T> the type of the repository
  * @see AbstractBean
  */
-public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends JakartaPersistenceExtension.AbstractRepositoryPersistenceBean<T> {
+public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends AbstractRepositoryPersistenceBean<T> {
 
     /**
      * Constructor
