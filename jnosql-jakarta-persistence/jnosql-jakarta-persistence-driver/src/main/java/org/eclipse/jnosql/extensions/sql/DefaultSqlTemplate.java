@@ -47,7 +47,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     private final DeleteQueryConverter deleteQueryConverter;
     private final UpdateQueryConverter updateQueryConverter;
 
-    private DefaultSqlTemplate(EntityManager entityManager) {
+    DefaultSqlTemplate(EntityManager entityManager) {
         this.entityManager = entityManager;
         this.selectQueryConverter = new SelectQueryConverter(entityManager);
         this.deleteQueryConverter = new DeleteQueryConverter(entityManager);
@@ -387,17 +387,5 @@ class DefaultSqlTemplate implements SqlTemplate {
 
             throw e;
         }
-    }
-
-    /**
-     * Creates a new instance of {@link SqlTemplate} using the provided {@link EntityManager}.
-     *
-     * @param entityManager the {@link EntityManager} to be associated with the created {@link SqlTemplate}
-     * @return a new instance of {@link SqlTemplate} configured with the given {@link EntityManager}
-     * @throws NullPointerException if the {@code entityManager} is {@code null}
-     */
-    public static SqlTemplate of(EntityManager entityManager) {
-        Objects.requireNonNull(entityManager, "entityManager is required");
-        return new DefaultSqlTemplate(entityManager);
     }
 }
