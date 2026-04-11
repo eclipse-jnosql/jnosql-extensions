@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.tck.jakartapersistence;
 
+import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 
 import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
@@ -25,7 +26,6 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.tck.jakartapersistence.junit.RunOnly;
 import org.eclipse.jnosql.tck.jakartapersistence.junit.RunOnlyCondition;
 import org.junit.jupiter.api.Disabled;

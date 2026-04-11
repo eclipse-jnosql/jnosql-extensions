@@ -14,12 +14,12 @@
  */
 package org.eclipse.jnosql.tck.jakartapersistence;
 
+import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.jakartapersistence.mapping.spi.JakartaPersistenceExtension;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
