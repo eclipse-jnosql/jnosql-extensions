@@ -30,4 +30,7 @@ public interface ComputerQueryRepository extends BasicRepository<Computer, Long>
 
    @Query("FROM Computer")
    List<Computer> computers();
+
+    @Query("FROM Computer WHERE model = ?1")
+    List<Computer> findByModel2(String model);
 }
