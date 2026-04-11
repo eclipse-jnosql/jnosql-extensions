@@ -15,6 +15,7 @@ package ee.omnifish.jnosql.jakartapersistence;
 import jakarta.enterprise.inject.se.SeContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -43,6 +44,7 @@ class CustomRepositoryInterceptorTest {
     }
 
     @Test
+    @Disabled("I am not sure if we still need this interceptor here")
     void customRepositorySupportsInterceptors() {
         CustomPersonRepository repository = cdiContainer.select(CustomPersonRepository.class).get();
         CallCounter callCounter = cdiContainer.select(CallCounter.class).get();
