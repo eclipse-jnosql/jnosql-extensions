@@ -20,6 +20,8 @@ import jakarta.persistence.PersistenceUnitUtil;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
+import java.util.Objects;
+
 /**
  * Specialization of {@link SemiStructuredTemplate} that integrates JNoSQL
  * operations with Jakarta Persistence.
@@ -86,4 +88,17 @@ public interface SqlTemplate extends SemiStructuredTemplate {
      * @throws NullPointerException if {@code type} or {@code k} is {@code null}
      */
     <T, K> boolean existsById(Class<T> type, K id);
+
+
+    /**
+     * Creates a new instance of {@link SqlTemplate} using the provided {@link EntityManager}.
+     *
+     * @param entityManager the {@link EntityManager} to be associated with the created {@link SqlTemplate}
+     * @return a new instance of {@link SqlTemplate} configured with the given {@link EntityManager}
+     * @throws NullPointerException if the {@code entityManager} is {@code null}
+     */
+    static SqlTemplate of(EntityManager entityManager) {
+        Objects.requireNonNull(entityManager, "entityManager is required");
+        return new DefaultSqlTemplate(entityManager);
+    }
 }
