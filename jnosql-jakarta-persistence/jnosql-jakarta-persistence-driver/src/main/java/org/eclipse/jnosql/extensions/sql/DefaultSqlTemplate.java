@@ -389,7 +389,15 @@ class DefaultSqlTemplate implements SqlTemplate {
         }
     }
 
-    static SqlTemplate of(EntityManager entityManager) {
+    /**
+     * Creates a new instance of {@link SqlTemplate} using the provided {@link EntityManager}.
+     *
+     * @param entityManager the {@link EntityManager} to be associated with the created {@link SqlTemplate}
+     * @return a new instance of {@link SqlTemplate} configured with the given {@link EntityManager}
+     * @throws NullPointerException if the {@code entityManager} is {@code null}
+     */
+    public static SqlTemplate of(EntityManager entityManager) {
+        Objects.requireNonNull(entityManager, "entityManager is required");
         return new DefaultSqlTemplate(entityManager);
     }
 }
