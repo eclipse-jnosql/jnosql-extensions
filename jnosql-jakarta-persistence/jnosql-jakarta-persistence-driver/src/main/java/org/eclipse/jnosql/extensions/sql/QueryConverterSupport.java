@@ -57,9 +57,7 @@ abstract class QueryConverterSupport {
 
         String property = element.name();
         Object value = element.get();
-
-        Path<?> path = resolvePath(root, property);
-
+        Path<?> path = path(root, property, value);
         return switch (condition.condition()) {
 
             case EQUALS ->
@@ -140,12 +138,25 @@ abstract class QueryConverterSupport {
                 );
             }
 
-            case IGNORE_CASE ->
-                    criteriaBuilder.equal(
-                            criteriaBuilder.lower(path.as(String.class)),
-                            value.toString().toLowerCase()
-                    );
+            case IGNORE_CASE -> {
+                var inner = element.get(CriteriaCondition.class);
+                Element innerElement = inner.element();
+                String innerProperty = element.name();
+                Object innerValue = innerElement.get();
+                Path<?> innerPath = path(root, innerProperty, innerValue);
+                yield criteriaBuilder.equal(
+                        criteriaBuilder.lower(innerPath.as(String.class)),
+                        innerValue.toString().toLowerCase()
+                );
+            }
         };
+    }
+
+    private Path<?> path(Root<?> root, String property, Object value) {
+        if(value instanceof CriteriaCondition) {
+            return null;
+        }
+        return resolvePath(root, property);
     }
 
     protected Path<?> resolvePath(Path<?> root, String property) {
