@@ -17,6 +17,7 @@
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
 import jakarta.enterprise.inject.spi.BeanManager;
+import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
@@ -35,7 +36,7 @@ import java.lang.reflect.InvocationHandler;
  * @param <T> the type of the repository
  * @see AbstractBean
  */
-public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersistenceBean<T> {
+public class CustomRepositoryPersistenceBean<T> extends JakartaPersistenceExtension.AbstractRepositoryPersistenceBean<T> {
 
     /**
      * @param type the bean class
