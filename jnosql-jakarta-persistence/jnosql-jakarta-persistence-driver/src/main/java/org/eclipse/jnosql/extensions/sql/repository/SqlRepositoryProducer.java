@@ -58,6 +58,21 @@ class SqlRepositoryProducer {
         Objects.requireNonNull(template, "template is required");
         RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass);
         var entity = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
+        RepositoryResult result = repositoryResult(template, entity);
+
+
+        SqlInvocationHandler<?, ?> repositoryHandler = new SqlInvocationHandler<>(result.repositoryAdapter(),
+                result.entityMetadata(), template,
+                repositoryMetadata,
+                infrastructureOperatorProvider,
+                repositoryOperationProvider);
+
+        return (R) Proxy.newProxyInstance(repositoryClass.getClassLoader(),
+                new Class[]{repositoryClass},
+                repositoryHandler);
+    }
+
+    private static RepositoryResult repositoryResult(SqlTemplate template, Class<?> entity) {
         PersistenceRepository<?, ?> repositoryAdapter;
         SqlEntityMetadata entityMetadata;
         if(entity != null) {
@@ -67,16 +82,9 @@ class SqlRepositoryProducer {
             repositoryAdapter = new NoopRepository<>(template);
             entityMetadata = null;
         }
+        return new RepositoryResult(repositoryAdapter, entityMetadata);
+    }
 
-
-        SqlInvocationHandler<?, ?> repositoryHandler = new SqlInvocationHandler<>(repositoryAdapter,
-                entityMetadata, template,
-                repositoryMetadata,
-                infrastructureOperatorProvider,
-                repositoryOperationProvider);
-
-        return (R) Proxy.newProxyInstance(repositoryClass.getClassLoader(),
-                new Class[]{repositoryClass},
-                repositoryHandler);
+    private record RepositoryResult(PersistenceRepository<?,?> repositoryAdapter, SqlEntityMetadata entityMetadata) {
     }
 }
