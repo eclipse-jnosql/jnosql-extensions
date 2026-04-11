@@ -51,7 +51,7 @@ public class SqlTemplateFactory {
      */
     public SqlTemplate create(EntityManager entityManager) {
         Objects.requireNonNull(entityManager, "entityManager is required");
-        return DefaultSqlTemplate.of(entityManager);
+        return SqlTemplate.of(entityManager);
     }
 
 }

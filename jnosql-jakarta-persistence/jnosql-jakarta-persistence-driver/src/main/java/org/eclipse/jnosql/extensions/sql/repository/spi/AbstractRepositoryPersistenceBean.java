@@ -1,25 +1,26 @@
 /*
- * Copyright (c) 2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2026 Contributors to the Eclipse Foundation
+ *   All rights reserved. This program and the accompanying materials
+ *   are made available under the terms of the Eclipse Public License v1.0
+ *   and Apache License v2.0 which accompanies this distribution.
+ *   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+ *   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  and Apache License v2.0 which accompanies this distribution.
- *  The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
- *  and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+ *   You may elect to redistribute this code under either of these licenses.
  *
- *  You may elect to redistribute this code under either of these licenses.
+ *   Contributors:
  *
- *  Contributors:
- *
- *  Ondro Mihalyi
+ *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.repository;
+package org.eclipse.jnosql.extensions.sql.repository.spi;
 
 import jakarta.data.repository.Repository;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.AmbiguousResolutionException;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.persistence.EntityManager;
+import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.jakartapersistence.CdiUtil;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
@@ -33,7 +34,6 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,13 +69,14 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
         this.beanManager = beanManager;
         this.qualifiersForBean = initializeQualifiers();
         this.persistenceUnit = findPersistenceUnit();
-        entityManagerQualifiers = findEntityManagerQualifiers();
+        this.entityManagerQualifiers = findEntityManagerQualifiers();
     }
 
     /**
      * Invocation handler for invoking repository methods
+     *
      * @param entitiesMetadata
-     * @param template Template for executing queries
+     * @param template         Template for executing queries
      * @param converters
      * @return
      */
@@ -104,32 +105,21 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     @SuppressWarnings("unchecked")
     @Override
     public T create(CreationalContext<T> context) {
-        PersistenceDatabaseManager databaseManager = findDatabaseManager();
-
-        var entities = databaseManager.getEntitiesMetadata();
-        var template = new PersistenceDocumentTemplate(databaseManager);
-        // converters required by JNoSQL core but are not used because
-        /// JakartaPersistenceEntitiesMetadata doesn't return a converter - lets EntityManager to convert'
-        var dummyConverters = new Converters(){};
-
-        var handler = createInvocationHandler(entities, template, dummyConverters);
-
-        T proxy = (T) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{type}, handler);
-
-        return CdiUtil.copyInterceptors(proxy, type, context, beanManager);
+        final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
+                .produceMatchingEntityManager(persistenceUnit, entityManagerQualifiers);
+        var template = SqlTemplate.of(entityManager.orElseThrow(() -> new IllegalStateException("Found no entity manager matching the " + type + " repository declaration")));
+        SqlRepositoryProducer repositoryProducer = getInstance(SqlRepositoryProducer.class);
+        return repositoryProducer.get(type, template);
     }
 
     /**
-     * Finds and returns the {@link EntityManager} that matches this
-     * repository's configuration. Delegates to the injected
-     * {@link EntityManagerProvider#produceMatchingEntityManager} method with
-     * persistence unit defined in the {@link Repository} annotation's dataStore
-     * attribute, and qualifiers present on a non-default interface method that
-     * returns {@link EntityManager}.
+     * Finds and returns the {@link EntityManager} that matches this repository's configuration. Delegates to the
+     * injected {@link EntityManagerProvider#produceMatchingEntityManager} method with persistence unit defined in the
+     * {@link Repository} annotation's dataStore attribute, and qualifiers present on a non-default interface method
+     * that returns {@link EntityManager}.
      *
      * @return the matching {@link EntityManager} instance
-     * @throws IllegalStateException if no matching
-     * {@link EntityManager} is found
+     * @throws IllegalStateException if no matching {@link EntityManager} is found
      */
     protected PersistenceDatabaseManager findDatabaseManager() throws IllegalStateException {
         final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
