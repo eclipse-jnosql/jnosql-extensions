@@ -47,7 +47,6 @@ class QueryOperationRepositoryTest extends AbstractTestRepository {
         this.template.deleteAll(Computer.class);
     }
 
-
     @Nested
     @DisplayName("WhenFindByModelUsingNamedParameter")
     class WhenFindByModelUsingNamedParameter {
