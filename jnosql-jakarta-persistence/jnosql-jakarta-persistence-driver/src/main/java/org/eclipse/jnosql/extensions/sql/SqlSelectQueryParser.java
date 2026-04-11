@@ -17,7 +17,6 @@ package org.eclipse.jnosql.extensions.sql;
 import jakarta.data.Direction;
 import jakarta.data.Sort;
 import org.eclipse.jnosql.communication.Params;
-import org.eclipse.jnosql.communication.QueryException;
 import org.eclipse.jnosql.communication.query.data.SelectProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.Conditions;
