@@ -26,8 +26,19 @@ import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositorySupp
 import java.lang.reflect.Proxy;
 import java.util.Objects;
 
+/**
+ * A class responsible for producing and managing SQL-based repository implementations.
+ * This class uses a combination of infrastructure providers and repository operation
+ * providers to dynamically generate implementations for repository interfaces.
+ *
+ * The generated repositories utilize SQL templates and metadata to map the operations
+ * performed via the repository interface into SQL queries and commands.
+ *
+ * The class is scoped as {@code @ApplicationScoped}, ensuring that only one instance is
+ * created within the application context.
+ */
 @ApplicationScoped
-class SqlRepositoryProducer {
+public class SqlRepositoryProducer {
 
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
     private final SqlRepositoryOperationProvider repositoryOperationProvider;
