@@ -18,7 +18,6 @@ import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Param;
 import jakarta.data.repository.Query;
 import jakarta.data.repository.Repository;
-import jakarta.data.repository.Save;
 
 import java.util.List;
 

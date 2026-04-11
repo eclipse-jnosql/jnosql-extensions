@@ -16,12 +16,11 @@
 package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.enterprise.inject.se.SeContainerInitializer;
-
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
+import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
-import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreBaseRepositoryOperationProvider;
 
 /**
