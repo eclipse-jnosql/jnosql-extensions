@@ -99,6 +99,6 @@ public interface SqlTemplate extends SemiStructuredTemplate {
      */
     static SqlTemplate of(EntityManager entityManager) {
         Objects.requireNonNull(entityManager, "entityManager is required");
-        return new DefaultSqlTemplate(entityManager);
+        return DefaultSqlTemplate.of(entityManager);
     }
 }
