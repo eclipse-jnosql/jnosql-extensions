@@ -156,6 +156,4 @@ class QueryOperationRepositoryTest extends AbstractTestRepository {
             assertThat(result).isEmpty();
         }
     }
-
-
 }
