@@ -21,6 +21,7 @@ import org.eclipse.jnosql.communication.query.data.SelectProvider;
 import org.eclipse.jnosql.communication.semistructured.CommunicationObserverParser;
 import org.eclipse.jnosql.communication.semistructured.Conditions;
 import org.eclipse.jnosql.communication.semistructured.DefaultSelectQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 
 import java.util.List;
 
@@ -34,9 +35,7 @@ public final class SqlSelectQueryParser  {
         return SqlPreparedStatement.select(selectQuery, params, query, template);
     }
 
-
-
-    private org.eclipse.jnosql.communication.semistructured.SelectQuery query(String query, String entity, Params params) {
+    private SelectQuery query(String query, String entity, Params params) {
 
         var selectQuery = SelectProvider.INSTANCE.apply(query, entity);
         var entityName = CommunicationObserverParser.EMPTY.fireEntity(selectQuery.entity());
