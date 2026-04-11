@@ -140,8 +140,8 @@ abstract class QueryConverterSupport {
 
             case IGNORE_CASE -> {
                 var inner = element.get(CriteriaCondition.class);
-                Element innerElement = inner.element();
-                String innerProperty = element.name();
+                var innerElement = inner.element();
+                var innerProperty = innerElement.name();
                 Object innerValue = innerElement.get();
                 Path<?> innerPath = path(root, innerProperty, innerValue);
                 yield criteriaBuilder.equal(
