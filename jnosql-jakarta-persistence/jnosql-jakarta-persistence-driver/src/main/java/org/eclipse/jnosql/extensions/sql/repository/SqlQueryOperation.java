@@ -16,7 +16,6 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.nosql.Query;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.extensions.sql.SqlPreparedStatement;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
