@@ -12,4 +12,4 @@
 #
 #   Ondro Mihalyi
 #
-org.eclipse.jnosql.extensions.sql.repository.JakartaPersistenceExtension
+org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension
