@@ -23,6 +23,7 @@ import java.util.Set;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
+@Disabled("I am not sure if we still need this interceptor here")
 class MixedInterceptorTest {
 
     private SeContainer cdiContainer;
@@ -44,7 +45,6 @@ class MixedInterceptorTest {
     }
 
     @Test
-    @Disabled("I am not sure if we still need this interceptor here")
     void interceptorCalledOnceWhenBothClassAndMethodHaveInterceptor() {
         MixedInterceptorPersonRepository repository = cdiContainer.select(MixedInterceptorPersonRepository.class).get();
         CallCounter callCounter = cdiContainer.select(CallCounter.class).get();
