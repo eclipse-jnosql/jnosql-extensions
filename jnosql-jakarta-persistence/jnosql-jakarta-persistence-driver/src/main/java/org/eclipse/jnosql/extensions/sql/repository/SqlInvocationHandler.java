@@ -16,6 +16,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.nosql.Template;
+import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.query.AbstractRepository;
@@ -24,23 +25,28 @@ import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 
+import java.lang.reflect.Method;
+import java.util.logging.Logger;
+
 final class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHandler<T, K>  {
+
+    private static final Logger LOGGER = Logger.getLogger(SqlInvocationHandler.class.getName());
 
     private final PersistenceRepository<T, K> repository;
     private final SqlEntityMetadata entityMetadata;
-    private final SqlTemplate sqlTemplate;
+    private final SqlTemplate template;
     private final RepositoryMetadata repositoryMetadata;
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
     private final RepositoryOperationProvider repositoryOperationProvider;
 
     SqlInvocationHandler(PersistenceRepository<T, K> repository,
-                                SqlEntityMetadata entityMetadata,
-                                SqlTemplate sqlTemplate, RepositoryMetadata repositoryMetadata,
-                                InfrastructureOperatorProvider infrastructureOperatorProvider,
-                                RepositoryOperationProvider repositoryOperationProvider) {
+                         SqlEntityMetadata entityMetadata,
+                         SqlTemplate template, RepositoryMetadata repositoryMetadata,
+                         InfrastructureOperatorProvider infrastructureOperatorProvider,
+                         RepositoryOperationProvider repositoryOperationProvider) {
         this.repository = repository;
         this.entityMetadata = entityMetadata;
-        this.sqlTemplate = sqlTemplate;
+        this.template = template;
         this.repositoryMetadata = repositoryMetadata;
         this.infrastructureOperatorProvider = infrastructureOperatorProvider;
         this.repositoryOperationProvider = repositoryOperationProvider;
@@ -73,7 +79,16 @@ final class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHand
 
     @Override
     protected Template template() {
-        return sqlTemplate;
+        return template;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] params) throws Throwable {
+        LOGGER.fine(() -> "Invoking method: " + method.getName() + " with params: " + (params != null ? params.length : 0));
+        if(method.getReturnType().equals(EntityManager.class)) {
+            return this.template.entityManager();
+        }
+        return super.invoke(proxy, method, params);
     }
 
 }
