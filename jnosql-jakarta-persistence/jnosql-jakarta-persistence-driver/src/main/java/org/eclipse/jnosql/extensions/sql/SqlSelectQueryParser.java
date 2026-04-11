@@ -51,9 +51,6 @@ public final class SqlSelectQueryParser  {
         var condition = selectQuery.where()
                 .map(c -> Conditions.getCondition(c, params, CommunicationObserverParser.EMPTY, entityName)).orElse(null);
 
-        if (params.isNotEmpty()) {
-            throw new QueryException("To run a query with a parameter use a PrepareStatement instead.");
-        }
         boolean count = selectQuery.isCount();
         return new DefaultSelectQuery(limit, skip, entityName, columns, sorts, condition, count);
     }
