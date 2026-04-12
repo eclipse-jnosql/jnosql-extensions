@@ -151,6 +151,15 @@ public final class SqlEntityMetadata implements EntityMetadata {
     }
 
 
+    /**
+     * Creates a new instance of {@code SqlEntityMetadata} for the given entity type and entity manager.
+     *
+     * @param entityType    the class type of the entity for which metadata is being created. Must not be null.
+     * @param entityManager the {@code EntityManager} used to retrieve the entity's metadata. Must not be null.
+     * @return a {@code SqlEntityMetadata} instance containing metadata for the specified entity type.
+     * @throws NullPointerException if {@code entityType} or {@code entityManager} is null.
+     * @throws IllegalStateException if the specified entity type does not have a field annotated with {@code @Id}.
+     */
     public static SqlEntityMetadata of(Class<?> entityType, EntityManager entityManager) {
         Objects.requireNonNull(entityType, "entityType is required");
         Objects.requireNonNull(entityManager, "entityManager is required");
