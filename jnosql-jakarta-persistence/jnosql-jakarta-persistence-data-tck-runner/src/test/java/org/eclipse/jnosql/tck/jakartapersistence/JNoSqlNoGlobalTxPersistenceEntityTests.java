@@ -14,11 +14,15 @@
  */
 package org.eclipse.jnosql.tck.jakartapersistence;
 
+import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 
 import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
 
+import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
+import org.eclipse.jnosql.mapping.reflection.FieldReader;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
@@ -43,10 +47,11 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
  * @author ondro
  */
 @EnableAutoWeld
-@AddExtensions({JakartaPersistenceExtension.class})
-@AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class})
-@AddPackages(value = {JNoSqlNoGlobalTxPersistenceEntityTests.class, EntityTests.class})
-@ExtendWith(RunOnlyCondition.class)
+@AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
+@AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
+        CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
+@AddPackages({JNoSqlEntityTests.class, EntityTests.class})
+@ExtendWith(TransactionExtension.class)
 @Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
 
