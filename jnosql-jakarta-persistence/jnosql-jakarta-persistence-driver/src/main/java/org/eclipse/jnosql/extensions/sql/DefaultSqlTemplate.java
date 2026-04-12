@@ -360,7 +360,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     }
 
     private <T> T insertExecution(T entity) {
-        SqlEntityMetadata metadata = SqlEntityMetadata.of(entity.getClass(), entityManager);
+        var metadata = SqlEntityMetadata.of(entity.getClass(), entityManager);
         Object idValue = metadata.id().orElseThrow().read(entity);
         if(entityManager().find(entity.getClass(), idValue) != null){
             throw  new EntityExistsException("Entity of type " + entity.getClass().getName() + " with id " + idValue + " already exists.");
