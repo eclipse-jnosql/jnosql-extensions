@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.data.exceptions.EntityExistsException;
 import jakarta.data.exceptions.NonUniqueResultException;
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
@@ -227,8 +228,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     public <T> T insert(T entity) {
         Objects.requireNonNull(entity, "entity is null");
         return executeInTransaction(() -> {
-            entityManager.persist(entity);
-            return entity;
+            return insertExecution(entity);
         });
     }
 
@@ -238,7 +238,7 @@ class DefaultSqlTemplate implements SqlTemplate {
         return executeInTransaction(() -> {
             for (T entity : entities) {
                 Objects.requireNonNull(entity, "entity element is null");
-                entityManager.persist(entity);
+                insertExecution(entity);
             }
             return entities;
         });
@@ -357,6 +357,16 @@ class DefaultSqlTemplate implements SqlTemplate {
         Objects.requireNonNull(query, "query is null");
         Objects.requireNonNull(type, "type is null");
         return new SqlTypedQuery<>(this, entityManager.createQuery(query, type));
+    }
+
+    private <T> T insertExecution(T entity) {
+        var metadata = SqlEntityMetadata.of(entity.getClass(), entityManager);
+        Object idValue = metadata.id().orElseThrow().read(entity);
+        if(entityManager().find(entity.getClass(), idValue) != null){
+            throw  new EntityExistsException("Entity of type " + entity.getClass().getName() + " with id " + idValue + " already exists.");
+        }
+        entityManager.persist(entity);
+        return entity;
     }
 
     <T> T executeInTransaction(Supplier<T> operation) {

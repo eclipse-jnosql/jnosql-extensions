@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022,2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2022,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.spi;
+package org.eclipse.jnosql.extensions.sql.repository.spi;
 
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
@@ -20,8 +20,6 @@ import jakarta.enterprise.inject.spi.AfterDeploymentValidation;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.Extension;
 import org.eclipse.jnosql.jakartapersistence.mapping.metadata.JakartaPersistenceClassScanner;
-import org.eclipse.jnosql.jakartapersistence.mapping.repository.CustomRepositoryPersistenceBean;
-import org.eclipse.jnosql.jakartapersistence.mapping.repository.RepositoryPersistenceBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +38,7 @@ public class JakartaPersistenceExtension implements Extension {
 
     private JakartaPersistenceClassScanner scanner;
 
-    private List<Exception> beanCreationExceptions = new ArrayList();
+    private final List<Exception> beanCreationExceptions = new ArrayList<>();
 
     public void setScanner(JakartaPersistenceClassScanner scanner) {
         this.scanner = scanner;
@@ -80,4 +78,5 @@ public class JakartaPersistenceExtension implements Extension {
     void onAfterDeploymentValidation(@Observes final AfterDeploymentValidation afterDeploymentValidation) {
         beanCreationExceptions.forEach(afterDeploymentValidation::addDeploymentProblem);
     }
+
 }

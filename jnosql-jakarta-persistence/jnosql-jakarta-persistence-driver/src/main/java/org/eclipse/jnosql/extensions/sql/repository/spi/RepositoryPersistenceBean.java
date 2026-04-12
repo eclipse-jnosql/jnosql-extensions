@@ -13,11 +13,12 @@
  *   Otavio Santana
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.repository;
+package org.eclipse.jnosql.extensions.sql.repository.spi;
 
 import jakarta.data.repository.DataRepository;
 import jakarta.enterprise.inject.spi.BeanManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.jakartapersistence.mapping.repository.JakartaPersistenceRepositoryProxy;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;

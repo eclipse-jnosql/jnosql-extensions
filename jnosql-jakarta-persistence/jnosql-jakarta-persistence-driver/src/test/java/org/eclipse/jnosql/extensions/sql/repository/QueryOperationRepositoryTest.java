@@ -18,14 +18,11 @@ import jakarta.inject.Inject;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.extensions.sql.model.ComputerQueryRepository;
-import org.eclipse.jnosql.extensions.sql.model.ComputerSaveRepository;
 import org.jboss.weld.junit5.EnableWeld;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

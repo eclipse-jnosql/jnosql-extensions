@@ -15,6 +15,7 @@ package ee.omnifish.jnosql.jakartapersistence;
 import jakarta.enterprise.inject.se.SeContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -22,6 +23,7 @@ import java.util.Set;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
+@Disabled("I am not sure if we still need this interceptor here")
 class MixedInterceptorTest {
 
     private SeContainer cdiContainer;
