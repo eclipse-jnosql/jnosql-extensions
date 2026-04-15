@@ -60,7 +60,8 @@ class SqlQueryBuilder {
     }
 
     static SelectQuery updateQuery(RepositoryInvocationContext context, RepositoryMethod method, SelectQuery query) {
-        List<Sort<?>> sorts = new ArrayList<>(method.sorts());
+        List<Sort<?>> sorts = new ArrayList<>(query.sorts());
+        sorts.addAll(method.sorts());
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         sorts.addAll(specialParameters.sorts());
         List<String> attributes = new ArrayList<>(query.columns());
