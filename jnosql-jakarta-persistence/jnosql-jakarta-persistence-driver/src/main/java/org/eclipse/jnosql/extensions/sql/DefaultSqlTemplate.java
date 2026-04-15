@@ -167,7 +167,9 @@ class DefaultSqlTemplate implements SqlTemplate {
         Objects.requireNonNull(query, "query is null");
         return executeInTransaction(() -> {
             var typedQuery = selectQueryConverter.convert(query);
-            typedQuery.setMaxResults(2);
+            if(query.limit() == 0) {
+                typedQuery.setMaxResults(2);
+            }
             var results = typedQuery.getResultList();
             if (results.isEmpty()) {
                 return Optional.empty();
