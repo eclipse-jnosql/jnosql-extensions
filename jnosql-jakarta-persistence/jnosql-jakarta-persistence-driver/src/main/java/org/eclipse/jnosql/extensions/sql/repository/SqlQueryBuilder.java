@@ -14,7 +14,6 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.Limit;
 import jakarta.data.Sort;
 import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,6 +28,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQueryParser;
 import org.eclipse.jnosql.extensions.sql.SqlSelectQuery;
 import org.eclipse.jnosql.mapping.DynamicQueryException;
+import org.eclipse.jnosql.mapping.core.NoSQLPage;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
@@ -66,8 +66,7 @@ class SqlQueryBuilder {
         List<String> attributes = new ArrayList<>(query.columns());
         attributes.addAll(method.select());
 
-        long skip = specialParameters.limit().map(l -> l.startAt() -1).orElse(query.skip());
-        int limit = specialParameters.limit().map(Limit::maxResults).orElse((int) query.limit());
+        var pagination = resolvePagination(query, method, specialParameters);
         Optional<Restriction<?>> restriction = specialParameters.restriction();
         var criteriaCondition = query.condition().orElse(null);
         var condition = restriction.map(r -> SqlRestrictionConverter.INSTANCE.parser(r)
@@ -80,8 +79,8 @@ class SqlQueryBuilder {
         return projector
                 .<SelectQuery>map(projection -> new SqlSelectQuery(
                         sorts,
-                        limit,
-                        skip,
+                        pagination.limit,
+                        pagination.skip,
                         condition,
                         query.name(),
                         attributes,
@@ -89,14 +88,40 @@ class SqlQueryBuilder {
                 ))
                 .orElseGet(() -> new MappingQuery(
                         sorts,
-                        limit,
-                        skip,
+                        pagination.limit,
+                        pagination.skip,
                         condition,
                         query.name(),
                         attributes
                 ));
     }
 
+    private static Pagination resolvePagination(SelectQuery query,
+                                                                   RepositoryMethod method,
+                                                                   SpecialParameters specialParameters) {
+
+        long limit = query.limit();
+        long skip = query.skip();
+
+        if (method.first().isPresent()) {
+            return new Pagination(method.first().orElseThrow(), 0);
+        }
+
+        if (specialParameters.limit().isPresent()) {
+            var limitParam = specialParameters.limit().orElseThrow();
+            return new Pagination(limitParam.maxResults(), limitParam.startAt() - 1);
+        }
+
+        if (specialParameters.pageRequest().isPresent()) {
+            var pageRequest = specialParameters.pageRequest().orElseThrow();
+            return new Pagination(pageRequest.size(), NoSQLPage.skip(pageRequest));
+        }
+
+        return new Pagination(limit, skip);
+    }
+
+    private record Pagination(long limit, long skip) {
+    }
 
 
     DeleteQuery deleteQuery(RepositoryInvocationContext context) {
