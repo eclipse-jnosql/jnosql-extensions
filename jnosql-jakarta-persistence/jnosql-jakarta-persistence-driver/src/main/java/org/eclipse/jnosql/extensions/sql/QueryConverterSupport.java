@@ -22,6 +22,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.eclipse.jnosql.communication.TypeReference;
+import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
 
@@ -105,8 +106,8 @@ abstract class QueryConverterSupport {
                 var values = (List<?>) value;
                 yield criteriaBuilder.between(
                         path.as(Comparable.class),
-                        (Comparable) values.get(0),
-                        (Comparable) values.get(1));
+                        (Comparable) value(values.get(0)),
+                        (Comparable) value(values.get(1)));
             }
 
             case AND -> {
@@ -150,6 +151,13 @@ abstract class QueryConverterSupport {
                 );
             }
         };
+    }
+
+    private static Object value(Object value) {
+        if(value instanceof Value paramValue) {
+            return paramValue.get();
+        }
+        return value;
     }
 
     private Path<?> path(Root<?> root, String property, Object value) {
