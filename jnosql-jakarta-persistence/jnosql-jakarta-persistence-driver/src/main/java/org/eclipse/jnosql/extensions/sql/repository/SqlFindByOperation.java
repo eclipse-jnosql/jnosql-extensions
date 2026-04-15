@@ -14,16 +14,11 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
-import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
-import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 @ApplicationScoped
 @Typed(SqlFindByOperation.class)
@@ -46,8 +41,6 @@ class SqlFindByOperation implements FindByOperation {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
-        var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
-        Optional<Restriction<?>> restriction = specialParameters.restriction();
         var selectQuery = sqlQueryBuilder.selectQuery(context);
         return (T) sqlReturnType.executeFindByQuery(context, selectQuery);
     }
