@@ -115,6 +115,7 @@ public final class SqlPreparedStatement implements PreparedStatement {
         return type;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> Stream<T> result() {
         if (!paramsLeft.isEmpty()) {
@@ -131,6 +132,9 @@ public final class SqlPreparedStatement implements PreparedStatement {
             case UPDATE -> {
                 manager.update(updateQuery);
                 return Stream.empty();
+            }
+            case COUNT -> {
+                return Stream.of((T) Long.valueOf(manager.count(selectQuery)));
             }
             default -> throw new UnsupportedOperationException("there is not support to operation type: " + type);
         }
