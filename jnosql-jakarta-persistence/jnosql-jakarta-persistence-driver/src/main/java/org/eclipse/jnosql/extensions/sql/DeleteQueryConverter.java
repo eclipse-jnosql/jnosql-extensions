@@ -55,8 +55,7 @@ final class DeleteQueryConverter extends QueryConverterSupport {
             return;
         }
 
-        Predicate predicate = toPredicate(criteriaCondition, criteriaBuilder, root);
-
+        var predicate = PREDICATE_CONVERTER.toPredicate(criteriaCondition, criteriaBuilder, root);
         if (predicate != null) {
             criteriaDelete.where(predicate);
         }
