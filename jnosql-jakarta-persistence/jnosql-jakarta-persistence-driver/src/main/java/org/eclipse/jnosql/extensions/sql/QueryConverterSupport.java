@@ -98,7 +98,7 @@ abstract class QueryConverterSupport {
 
             case IN -> {
                 CriteriaBuilder.In<Object> in = criteriaBuilder.in(path);
-                ((Iterable<?>) value).forEach(in::value);
+                ((Iterable<?>) value).forEach(v -> in.value(value(v)));
                 yield in;
             }
 
