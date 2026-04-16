@@ -57,53 +57,53 @@ abstract class QueryConverterSupport {
         Element element = condition.element();
 
         String property = element.name();
-        Object value = element.get();
-        Path<?> path = path(root, property, value);
+        Object rawValue = element.get();
+        Path<?> path = path(root, property, rawValue);
         return switch (condition.condition()) {
 
             case EQUALS ->
-                    criteriaBuilder.equal(path, value);
+                    criteriaBuilder.equal(path, rawValue);
 
             case GREATER_THAN ->
                     criteriaBuilder.greaterThan(
                             path.as(Comparable.class),
-                            (Comparable) value);
+                            (Comparable) rawValue);
 
             case GREATER_EQUALS_THAN ->
                     criteriaBuilder.greaterThanOrEqualTo(
                             path.as(Comparable.class),
-                            (Comparable) value);
+                            (Comparable) rawValue);
 
             case LESSER_THAN ->
                     criteriaBuilder.lessThan(
                             path.as(Comparable.class),
-                            (Comparable) value);
+                            (Comparable) rawValue);
 
             case LESSER_EQUALS_THAN ->
                     criteriaBuilder.lessThanOrEqualTo(
                             path.as(Comparable.class),
-                            (Comparable) value);
+                            (Comparable) rawValue);
 
             case LIKE ->
-                    criteriaBuilder.like(path.as(String.class), value.toString());
+                    criteriaBuilder.like(path.as(String.class), rawValue.toString());
 
             case CONTAINS ->
-                    criteriaBuilder.like(path.as(String.class), "%" + value + "%");
+                    criteriaBuilder.like(path.as(String.class), "%" + rawValue + "%");
 
             case STARTS_WITH ->
-                    criteriaBuilder.like(path.as(String.class), value + "%");
+                    criteriaBuilder.like(path.as(String.class), rawValue + "%");
 
             case ENDS_WITH ->
-                    criteriaBuilder.like(path.as(String.class), "%" + value);
+                    criteriaBuilder.like(path.as(String.class), "%" + rawValue);
 
             case IN -> {
                 CriteriaBuilder.In<Object> in = criteriaBuilder.in(path);
-                ((Iterable<?>) value).forEach(v -> in.value(value(v)));
+                ((Iterable<?>) rawValue).forEach(v -> in.value(value(v)));
                 yield in;
             }
 
             case BETWEEN -> {
-                var values = (List<?>) value;
+                var values = (List<?>) rawValue;
                 yield criteriaBuilder.between(
                         path.as(Comparable.class),
                         (Comparable) value(values.get(0)),
@@ -207,5 +207,9 @@ abstract class QueryConverterSupport {
                 .findFirst()
                 .orElseThrow(() ->
                         new IllegalArgumentException("Entity not found: " + name));
+    }
+
+    private boolean isStringPath(Path<?> path) {
+        return path != null && String.class.isAssignableFrom(path.getJavaType());
     }
 }
