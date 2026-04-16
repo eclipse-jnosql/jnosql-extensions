@@ -135,10 +135,8 @@ final class PredicateConverter {
         };
     }
 
-    // ===== OPERATIONS =====
-
     private Predicate equalsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -154,7 +152,7 @@ final class PredicateConverter {
     }
 
     private Predicate likePredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -170,7 +168,7 @@ final class PredicateConverter {
     }
 
     private Predicate containsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -186,7 +184,7 @@ final class PredicateConverter {
     }
 
     private Predicate startsWithPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -202,7 +200,7 @@ final class PredicateConverter {
     }
 
     private Predicate endsWithPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -218,7 +216,7 @@ final class PredicateConverter {
     }
 
     private Predicate greaterThanPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -234,7 +232,7 @@ final class PredicateConverter {
     }
 
     private Predicate greaterEqualsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -250,7 +248,7 @@ final class PredicateConverter {
     }
 
     private Predicate lessThanPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -266,7 +264,7 @@ final class PredicateConverter {
     }
 
     private Predicate lessEqualsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object resolvedValue = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue);
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -289,7 +287,7 @@ final class PredicateConverter {
             in = cb.in(field);
 
             ((Iterable<?>) rawValue).forEach(item -> {
-                Object resolvedValue = value(item, cb, path);
+                Object resolvedValue = value(item);
 
                 if (resolvedValue instanceof Expression<?> expression) {
                     in.value(cb.upper((Expression<String>) expression));
@@ -304,7 +302,7 @@ final class PredicateConverter {
         in = cb.in(path);
 
         ((Iterable<?>) rawValue).forEach(item ->
-                in.value(value(item, cb, path))
+                in.value(value(item))
         );
 
         return in;
@@ -314,8 +312,8 @@ final class PredicateConverter {
 
         List<?> values = (List<?>) rawValue;
 
-        Object lowerBound = value(values.get(0), cb, path);
-        Object upperBound = value(values.get(1), cb, path);
+        Object lowerBound = value(values.get(0));
+        Object upperBound = value(values.get(1));
 
         if (ignoreCase && isStringPath(path)) {
             Expression<String> field = cb.upper(path.as(String.class));
@@ -375,10 +373,7 @@ final class PredicateConverter {
         return cb.literal(value.toString());
     }
 
-    private static Object value(Object value, CriteriaBuilder cb, Path<?> path) {
-        if (value instanceof org.eclipse.jnosql.communication.ParamValue param) {
-            return cb.parameter(path.getJavaType(), param.getName());
-        }
+    private static Object value(Object value) {
         if (value instanceof Value wrapped) {
             return wrapped.get();
         }
