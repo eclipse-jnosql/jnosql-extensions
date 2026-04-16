@@ -64,34 +64,63 @@ final class PredicateConverter {
         Element element = condition.element();
         String property = element.name();
         Object rawValue = element.get();
-        Path<?> path = switch (condition.condition()) {
-            case AND, OR, NOT, IGNORE_CASE -> null;
-            default -> pathResolver.resolvePath(root, property);
-        };
 
         return switch (condition.condition()) {
 
-            case EQUALS -> equalsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case EQUALS -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield equalsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case LIKE -> likePredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case LIKE -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield likePredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case CONTAINS -> containsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case CONTAINS -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield containsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case STARTS_WITH -> startsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case STARTS_WITH -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield startsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case ENDS_WITH -> endsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case ENDS_WITH -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield endsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case GREATER_THAN -> greaterThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case GREATER_THAN -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield greaterThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case GREATER_EQUALS_THAN -> greaterEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case GREATER_EQUALS_THAN -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield greaterEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case LESSER_THAN -> lessThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case LESSER_THAN -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield lessThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case LESSER_EQUALS_THAN -> lessEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case LESSER_EQUALS_THAN -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield lessEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case IN -> inPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case IN -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield inPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
-            case BETWEEN -> betweenPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            case BETWEEN -> {
+                Path<?> path = pathResolver.resolvePath(root, property);
+                yield betweenPredicate(criteriaBuilder, path, rawValue, ignoreCase);
+            }
 
             case AND -> andPredicate(criteriaBuilder, root, element, ignoreCase);
 
@@ -100,7 +129,7 @@ final class PredicateConverter {
             case NOT -> notPredicate(criteriaBuilder, root, element, ignoreCase);
 
             case IGNORE_CASE -> {
-                var inner = element.get(CriteriaCondition.class);
+                CriteriaCondition inner = element.get(CriteriaCondition.class);
                 yield toPredicate(inner, criteriaBuilder, root, true);
             }
         };
@@ -308,11 +337,7 @@ final class PredicateConverter {
         );
     }
 
-    private Predicate andPredicate(CriteriaBuilder cb,
-                                   Root<?> root,
-                                   Element element,
-                                   boolean ignoreCase) {
-
+    private Predicate andPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase) {
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
@@ -323,11 +348,7 @@ final class PredicateConverter {
         );
     }
 
-    private Predicate orPredicate(CriteriaBuilder cb,
-                                  Root<?> root,
-                                  Element element,
-                                  boolean ignoreCase) {
-
+    private Predicate orPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase) {
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
@@ -338,12 +359,8 @@ final class PredicateConverter {
         );
     }
 
-    private Predicate notPredicate(CriteriaBuilder cb,
-                                   Root<?> root,
-                                   Element element,
-                                   boolean ignoreCase) {
-
-        var inner = element.get(CriteriaCondition.class);
+    private Predicate notPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase) {
+        CriteriaCondition inner = element.get(CriteriaCondition.class);
         return cb.not(toPredicate(inner, cb, root, ignoreCase));
     }
 
@@ -366,13 +383,6 @@ final class PredicateConverter {
             return wrapped.get();
         }
         return value;
-    }
-
-    private Path<?> path(Root<?> root, String property, Object value) {
-        if (value instanceof CriteriaCondition) {
-            return null;
-        }
-        return pathResolver.resolvePath(root, property);
     }
 
     interface PathResolver {
