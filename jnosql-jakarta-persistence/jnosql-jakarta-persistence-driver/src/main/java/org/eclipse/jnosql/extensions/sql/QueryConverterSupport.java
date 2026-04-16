@@ -31,7 +31,7 @@ import java.util.List;
 abstract class QueryConverterSupport {
 
     static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
-
+    private static final PredicateConverter PREDICATE_CONVERTER =  new PredicateConverter(QueryConverterSupport::resolvePath);
     protected final EntityManager manager;
 
     QueryConverterSupport(EntityManager manager) {
@@ -40,13 +40,7 @@ abstract class QueryConverterSupport {
 
 
     protected void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<?> root, CriteriaQuery<?> criteriaQuery) {
-        if (criteriaCondition == null) {
-            return;
-        }
-        Predicate predicate = toPredicate(criteriaCondition, criteriaBuilder, root);
-        if (predicate != null) {
-            criteriaQuery.where(predicate);
-        }
+        PREDICATE_CONVERTER.applyCondition(criteriaCondition, criteriaBuilder, root, criteriaQuery);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -167,7 +161,7 @@ abstract class QueryConverterSupport {
         return resolvePath(root, property);
     }
 
-    protected Path<?> resolvePath(Path<?> root, String property) {
+    static Path<?> resolvePath(Path<?> root, String property) {
 
         if(RESERVED_PROPERTIES.contains(property)) {
             return null;
