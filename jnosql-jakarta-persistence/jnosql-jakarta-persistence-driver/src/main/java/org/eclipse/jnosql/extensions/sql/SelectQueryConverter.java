@@ -374,17 +374,24 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         criteriaQuery.orderBy(orders);
     }
 
+    @SuppressWarnings("unchecked")
     private <T> void applyColumns(List<String> columns, Root<T> root, CriteriaQuery<T> criteriaQuery) {
         if (columns == null || columns.isEmpty()) {
             criteriaQuery.select(root);
             return;
         }
 
-        Selection<?>[] selections = columns.stream()
-                .map(column -> resolvePath(root, column))
-                .toArray(Selection[]::new);
+        List<? extends Selection<?>> selections = columns.stream()
+                .map(column -> resolvePath(root, column)) // Path<?> is fine
+                .toList();
 
-        criteriaQuery.multiselect(selections);
+        if (selections.size() == 1) {
+            criteriaQuery.select((Selection<? extends T>) selections.get(0));
+            return;
+        }
+        List<Selection<?>> concreteSelections = new ArrayList<>(selections);
+        criteriaQuery.multiselect(concreteSelections);
+        criteriaQuery.select((Selection<? extends T>) criteriaQuery.getSelection());
     }
 
 }
