@@ -15,5 +15,34 @@
  */
 package org.eclipse.jnosql;
 
-public class CaseNormalizer {
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+
+
+interface CaseNormalizer {
+
+    Expression<String> field(Expression<String> field, CriteriaBuilder cb);
+    String value(String value);
+
+    static CaseNormalizer identity() {
+        return new CaseNormalizer() {
+            public Expression<String> field(Expression<String> field, CriteriaBuilder cb) {
+                return field;
+            }
+            public String value(String value) {
+                return value;
+            }
+        };
+    }
+
+    static CaseNormalizer upper() {
+        return new CaseNormalizer() {
+            public Expression<String> field(Expression<String> field, CriteriaBuilder cb) {
+                return cb.upper(field);
+            }
+            public String value(String value) {
+                return value.toUpperCase();
+            }
+        };
+    }
 }
