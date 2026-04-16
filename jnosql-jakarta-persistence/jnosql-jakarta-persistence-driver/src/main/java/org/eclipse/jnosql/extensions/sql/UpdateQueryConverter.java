@@ -69,7 +69,7 @@ final class UpdateQueryConverter extends QueryConverterSupport {
         }
     }
 
-    protected <T> void applyCondition(
+    <T> void applyCondition(
             CriteriaCondition criteriaCondition,
             CriteriaBuilder criteriaBuilder,
             Root<T> root,
@@ -79,7 +79,7 @@ final class UpdateQueryConverter extends QueryConverterSupport {
             return;
         }
 
-        Predicate predicate = toPredicate(criteriaCondition, criteriaBuilder, root);
+        var predicate = PREDICATE_CONVERTER.toPredicate(criteriaCondition, criteriaBuilder, root);
 
         if (predicate != null) {
             criteriaUpdate.where(predicate);
