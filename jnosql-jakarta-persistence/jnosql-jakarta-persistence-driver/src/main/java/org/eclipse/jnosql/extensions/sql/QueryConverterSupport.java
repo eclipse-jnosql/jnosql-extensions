@@ -19,7 +19,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 
@@ -28,7 +27,7 @@ import java.util.List;
 abstract class QueryConverterSupport {
 
     static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
-    private static final PredicateConverter PREDICATE_CONVERTER =  new PredicateConverter(QueryConverterSupport::resolvePath);
+    static final PredicateConverter PREDICATE_CONVERTER =  new PredicateConverter(QueryConverterSupport::resolvePath);
     protected final EntityManager manager;
 
     QueryConverterSupport(EntityManager manager) {
@@ -40,15 +39,7 @@ abstract class QueryConverterSupport {
         PREDICATE_CONVERTER.applyCondition(criteriaCondition, criteriaBuilder, root, criteriaQuery);
     }
 
-    protected Predicate toPredicate(CriteriaCondition condition,
-                                 CriteriaBuilder criteriaBuilder,
-                                 Root<?> root) {
-        return PREDICATE_CONVERTER.toPredicate(condition, criteriaBuilder, root);
-    }
-
-
     static Path<?> resolvePath(Path<?> root, String property) {
-
         if(RESERVED_PROPERTIES.contains(property)) {
             return null;
         }
