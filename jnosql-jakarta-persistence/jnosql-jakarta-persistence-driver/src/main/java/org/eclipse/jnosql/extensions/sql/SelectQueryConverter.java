@@ -110,6 +110,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         return typedQuery;
     }
 
+    @SuppressWarnings("unchecked")
     private <T> void appendProjector(SelectQuery query, SqlSelectQuery sqlSelectQuery, Root<T> root, CriteriaQuery<T> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         Class<?> projector = sqlSelectQuery.projector();
 
