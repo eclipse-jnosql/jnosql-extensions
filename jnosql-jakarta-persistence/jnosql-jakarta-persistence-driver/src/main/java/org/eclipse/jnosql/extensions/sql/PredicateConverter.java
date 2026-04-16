@@ -51,237 +51,260 @@ final class PredicateConverter {
     }
 
     Predicate toPredicate(CriteriaCondition condition,
-                                    CriteriaBuilder cb,
-                                    Root<?> root) {
-        return toPredicate(condition, cb, root, false);
+                          CriteriaBuilder criteriaBuilder,
+                          Root<?> root) {
+        return toPredicate(condition, criteriaBuilder, root, false);
     }
 
     private Predicate toPredicate(CriteriaCondition condition,
-                                  CriteriaBuilder cb,
+                                  CriteriaBuilder criteriaBuilder,
                                   Root<?> root,
                                   boolean ignoreCase) {
 
         Element element = condition.element();
         String property = element.name();
         Object rawValue = element.get();
-        Path<?> path = path(root, property, rawValue);
+        Path<?> path = switch (condition.condition()) {
+            case AND, OR, NOT, IGNORE_CASE -> null;
+            default -> pathResolver.resolvePath(root, property);
+        };
 
         return switch (condition.condition()) {
 
-            case EQUALS -> equalsPredicate(cb, path, rawValue, ignoreCase);
+            case EQUALS -> equalsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case LIKE -> likePredicate(cb, path, rawValue, ignoreCase);
+            case LIKE -> likePredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case CONTAINS -> containsPredicate(cb, path, rawValue, ignoreCase);
+            case CONTAINS -> containsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case STARTS_WITH -> startsWithPredicate(cb, path, rawValue, ignoreCase);
+            case STARTS_WITH -> startsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case ENDS_WITH -> endsWithPredicate(cb, path, rawValue, ignoreCase);
+            case ENDS_WITH -> endsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case GREATER_THAN -> greaterThanPredicate(cb, path, rawValue, ignoreCase);
+            case GREATER_THAN -> greaterThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case GREATER_EQUALS_THAN -> greaterEqualsPredicate(cb, path, rawValue, ignoreCase);
+            case GREATER_EQUALS_THAN -> greaterEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case LESSER_THAN -> lessThanPredicate(cb, path, rawValue, ignoreCase);
+            case LESSER_THAN -> lessThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case LESSER_EQUALS_THAN -> lessEqualsPredicate(cb, path, rawValue, ignoreCase);
+            case LESSER_EQUALS_THAN -> lessEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case IN -> inPredicate(cb, path, rawValue, ignoreCase);
+            case IN -> inPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case BETWEEN -> betweenPredicate(cb, path, rawValue, ignoreCase);
+            case BETWEEN -> betweenPredicate(criteriaBuilder, path, rawValue, ignoreCase);
 
-            case AND -> andPredicate(cb, root, element, ignoreCase);
+            case AND -> andPredicate(criteriaBuilder, root, element, ignoreCase);
 
-            case OR -> orPredicate(cb, root, element, ignoreCase);
+            case OR -> orPredicate(criteriaBuilder, root, element, ignoreCase);
 
-            case NOT -> notPredicate(cb, root, element, ignoreCase);
+            case NOT -> notPredicate(criteriaBuilder, root, element, ignoreCase);
 
             case IGNORE_CASE -> {
                 var inner = element.get(CriteriaCondition.class);
-                yield toPredicate(inner, cb, root, true);
+                yield toPredicate(inner, criteriaBuilder, root, true);
             }
         };
     }
 
+    // ===== OPERATIONS =====
+
     private Predicate equalsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.equal(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.equal(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.equal(field, v.toString().toUpperCase());
+            return cb.equal(field, resolvedValue.toString().toUpperCase());
         }
 
-        return cb.equal(path, v);
+        return cb.equal(path, resolvedValue);
     }
 
     private Predicate likePredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.like(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.like(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.like(field, v.toString().toUpperCase());
+            return cb.like(field, resolvedValue.toString().toUpperCase());
         }
 
-        return cb.like(path.as(String.class), v.toString());
+        return cb.like(path.as(String.class), resolvedValue.toString());
     }
 
     private Predicate containsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.like(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.like(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.like(field, "%" + v.toString().toUpperCase() + "%");
+            return cb.like(field, "%" + resolvedValue.toString().toUpperCase() + "%");
         }
 
-        return cb.like(path.as(String.class), "%" + v + "%");
+        return cb.like(path.as(String.class), "%" + resolvedValue + "%");
     }
 
     private Predicate startsWithPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.like(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.like(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.like(field, v.toString().toUpperCase() + "%");
+            return cb.like(field, resolvedValue.toString().toUpperCase() + "%");
         }
 
-        return cb.like(path.as(String.class), v + "%");
+        return cb.like(path.as(String.class), resolvedValue + "%");
     }
 
     private Predicate endsWithPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.like(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.like(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.like(field, "%" + v.toString().toUpperCase());
+            return cb.like(field, "%" + resolvedValue.toString().toUpperCase());
         }
 
-        return cb.like(path.as(String.class), "%" + v);
+        return cb.like(path.as(String.class), "%" + resolvedValue);
     }
 
     private Predicate greaterThanPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.greaterThan(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.greaterThan(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.greaterThan(field, v.toString().toUpperCase());
+            return cb.greaterThan(field, resolvedValue.toString().toUpperCase());
         }
 
-        return cb.greaterThan(path.as(Comparable.class), (Comparable) v);
+        return cb.greaterThan(path.as(Comparable.class), (Comparable) resolvedValue);
     }
 
     private Predicate greaterEqualsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.greaterThanOrEqualTo(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.greaterThanOrEqualTo(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.greaterThanOrEqualTo(field, v.toString().toUpperCase());
+            return cb.greaterThanOrEqualTo(field, resolvedValue.toString().toUpperCase());
         }
 
-        return cb.greaterThanOrEqualTo(path.as(Comparable.class), (Comparable) v);
+        return cb.greaterThanOrEqualTo(path.as(Comparable.class), (Comparable) resolvedValue);
     }
 
     private Predicate lessThanPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.lessThan(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.lessThan(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.lessThan(field, v.toString().toUpperCase());
+            return cb.lessThan(field, resolvedValue.toString().toUpperCase());
         }
 
-        return cb.lessThan(path.as(Comparable.class), (Comparable) v);
+        return cb.lessThan(path.as(Comparable.class), (Comparable) resolvedValue);
     }
 
     private Predicate lessEqualsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        Object v = value(rawValue, cb, path);
+        Object resolvedValue = value(rawValue, cb, path);
 
         if (ignoreCase && isStringPath(path)) {
-            var field = cb.upper(path.as(String.class));
+            Expression<String> field = cb.upper(path.as(String.class));
 
-            if (v instanceof Expression<?> expr) {
-                return cb.lessThanOrEqualTo(field, cb.upper((Expression<String>) expr));
+            if (resolvedValue instanceof Expression<?> expression) {
+                return cb.lessThanOrEqualTo(field, cb.upper((Expression<String>) expression));
             }
 
-            return cb.lessThanOrEqualTo(field, v.toString().toUpperCase());
+            return cb.lessThanOrEqualTo(field, resolvedValue.toString().toUpperCase());
         }
 
-        return cb.lessThanOrEqualTo(path.as(Comparable.class), (Comparable) v);
+        return cb.lessThanOrEqualTo(path.as(Comparable.class), (Comparable) resolvedValue);
     }
 
     private Predicate inPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
         CriteriaBuilder.In<Object> in;
 
         if (ignoreCase && isStringPath(path)) {
-            in = cb.in(cb.upper(path.as(String.class)));
+            Expression<String> field = cb.upper(path.as(String.class));
+            in = cb.in(field);
 
-            ((Iterable<?>) rawValue).forEach(v ->
-                    in.value(v.toString().toUpperCase())
-            );
+            ((Iterable<?>) rawValue).forEach(item -> {
+                Object resolvedValue = value(item, cb, path);
+
+                if (resolvedValue instanceof Expression<?> expression) {
+                    in.value(cb.upper((Expression<String>) expression));
+                } else {
+                    in.value(resolvedValue.toString().toUpperCase());
+                }
+            });
 
             return in;
         }
 
         in = cb.in(path);
-        ((Iterable<?>) rawValue).forEach(v ->
-                in.value(value(v, cb, path))
+
+        ((Iterable<?>) rawValue).forEach(item ->
+                in.value(value(item, cb, path))
         );
+
         return in;
     }
 
     private Predicate betweenPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {
-        var values = (List<?>) rawValue;
+
+        List<?> values = (List<?>) rawValue;
+
+        Object lowerBound = value(values.get(0), cb, path);
+        Object upperBound = value(values.get(1), cb, path);
 
         if (ignoreCase && isStringPath(path)) {
+            Expression<String> field = cb.upper(path.as(String.class));
+
+            Expression<String> lowerExpression = toStringExpression(cb, lowerBound);
+            Expression<String> upperExpression = toStringExpression(cb, upperBound);
+
             return cb.between(
-                    cb.upper(path.as(String.class)),
-                    values.get(0).toString().toUpperCase(),
-                    values.get(1).toString().toUpperCase()
+                    field,
+                    cb.upper(lowerExpression),
+                    cb.upper(upperExpression)
             );
         }
 
         return cb.between(
                 path.as(Comparable.class),
-                (Comparable) value(values.get(0), cb, path),
-                (Comparable) value(values.get(1), cb, path)
+                (Comparable) lowerBound,
+                (Comparable) upperBound
         );
     }
 
@@ -289,6 +312,7 @@ final class PredicateConverter {
                                    Root<?> root,
                                    Element element,
                                    boolean ignoreCase) {
+
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
@@ -303,6 +327,7 @@ final class PredicateConverter {
                                   Root<?> root,
                                   Element element,
                                   boolean ignoreCase) {
+
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
@@ -317,12 +342,20 @@ final class PredicateConverter {
                                    Root<?> root,
                                    Element element,
                                    boolean ignoreCase) {
+
         var inner = element.get(CriteriaCondition.class);
         return cb.not(toPredicate(inner, cb, root, ignoreCase));
     }
 
     private boolean isStringPath(Path<?> path) {
         return path != null && String.class.isAssignableFrom(path.getJavaType());
+    }
+
+    private Expression<String> toStringExpression(CriteriaBuilder cb, Object value) {
+        if (value instanceof Expression<?> expression) {
+            return (Expression<String>) expression;
+        }
+        return cb.literal(value.toString());
     }
 
     private static Object value(Object value, CriteriaBuilder cb, Path<?> path) {
