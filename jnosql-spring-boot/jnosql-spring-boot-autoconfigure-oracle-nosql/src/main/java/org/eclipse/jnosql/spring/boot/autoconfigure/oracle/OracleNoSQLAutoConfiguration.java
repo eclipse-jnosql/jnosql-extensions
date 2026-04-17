@@ -28,16 +28,20 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManager;
 import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLDatabaseProviderCondition;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 
 import java.util.function.Predicate;
 
 import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUMENT_DATABASE;
+import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUMENT_PROVIDER;
 
 /**
  * Spring Boot auto-configuration for Eclipse JNoSQL Oracle NoSQL integration.
@@ -63,7 +67,8 @@ import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUM
  * {@link BeanCreationException} if it is absent.
  */
 @AutoConfiguration
-@AutoConfigureAfter(JNoSQLCoreAutoConfiguration.class)
+@AutoConfigureAfter({JNoSQLCoreAutoConfiguration.class, JNoSQLSemistructuredAutoConfiguration.class})
+//@ConditionalOnClass(OracleNoSQLTemplate.class)
 public class OracleNoSQLAutoConfiguration {
 
     /**
@@ -74,6 +79,7 @@ public class OracleNoSQLAutoConfiguration {
      * @return a configured {@link OracleDocumentManagerFactory}
      */
     @Bean
+    @Lazy
     @ConditionalOnMissingBean
     public OracleDocumentManagerFactory oracleDocumentManagerFactory(Settings settings) {
         return new OracleDocumentConfiguration().apply(settings);
@@ -105,8 +111,13 @@ public class OracleNoSQLAutoConfiguration {
      * Assembles the fully wired {@link OracleNoSQLTemplate} from all required infrastructure beans.
      */
     @Bean
+    @Lazy
     @Database(DatabaseType.DOCUMENT)
     @ConditionalOnMissingBean
+    @JNoSQLDatabaseProviderCondition(
+            propertyName = DOCUMENT_PROVIDER,
+            providerClass = OracleDocumentConfiguration.class
+    )
     public OracleNoSQLTemplate oracleNoSQLTemplate(Converters converters,
                                                     EntitiesMetadata entitiesMetadata,
                                                     OracleNoSQLDocumentManager oracleNoSQLDocumentManager,

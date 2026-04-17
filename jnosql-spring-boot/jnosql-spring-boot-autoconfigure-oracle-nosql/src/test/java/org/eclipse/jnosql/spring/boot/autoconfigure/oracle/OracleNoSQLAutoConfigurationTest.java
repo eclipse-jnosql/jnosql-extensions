@@ -17,6 +17,8 @@ package org.eclipse.jnosql.spring.boot.autoconfigure.oracle;
 import org.eclipse.jnosql.databases.oracle.communication.OracleDocumentManagerFactory;
 import org.eclipse.jnosql.databases.oracle.communication.OracleNoSQLDocumentManager;
 import org.eclipse.jnosql.databases.oracle.mapping.OracleNoSQLTemplate;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -40,7 +42,8 @@ class OracleNoSQLAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
-                    org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLSemistructuredAutoConfiguration.class,
                     OracleNoSQLAutoConfiguration.class));
 
     // ------------------------------------------------------------------
