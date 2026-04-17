@@ -40,46 +40,83 @@ import java.util.Objects;
  * </p>
  */
 public sealed interface SemistructuredCursorPaginationOperationBuilder
-        permits SemistructuredCursorPaginationOperationBuilder.Step1,
-        SemistructuredCursorPaginationOperationBuilder.Step2 {
+        permits SemistructuredCursorPaginationOperationBuilder.Step0,
+        SemistructuredCursorPaginationOperationBuilder.Step1,
+        SemistructuredCursorPaginationOperationBuilder.Step2,
+        SemistructuredCursorPaginationOperationBuilder.Step3 {
 
-    static Step1 builder() {
-        return new Step1(null, null, null);
+    static Step0 builder() {
+        return new Step0();
     }
 
-    record Step1(SemistructuredQueryBuilder queryBuilder,
-                 SemistructuredReturnType returnType,
-                 Converters converters) implements SemistructuredCursorPaginationOperationBuilder {
+    record Step0() implements SemistructuredCursorPaginationOperationBuilder {
+        public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            return new Step1(queryBuilder);
+        }
+    }
+
+    record Step1(SemistructuredQueryBuilder queryBuilder) implements SemistructuredCursorPaginationOperationBuilder {
+
+        public Step1 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+        }
 
         public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            return new Step1(queryBuilder, returnType, converters);
+            return new Step1(queryBuilder);
         }
 
         public Step2 withReturnType(SemistructuredReturnType returnType) {
-            Objects.requireNonNull(returnType, "returnType is required");
-            return new Step2(queryBuilder, returnType, converters);
+            return new Step2(queryBuilder, returnType);
         }
+
     }
 
     record Step2(SemistructuredQueryBuilder queryBuilder,
-                 SemistructuredReturnType returnType,
-                 Converters converters) implements SemistructuredCursorPaginationOperationBuilder {
+                 SemistructuredReturnType returnType) implements SemistructuredCursorPaginationOperationBuilder {
 
-        public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            return new Step1(queryBuilder, returnType, converters);
+        public Step2 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+            returnType = Objects.requireNonNull(returnType, "returnType is required");
+        }
+
+        public Step2 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            return new Step2(queryBuilder, returnType);
         }
 
         public Step2 withReturnType(SemistructuredReturnType returnType) {
-            Objects.requireNonNull(returnType, "returnType is required");
-            return new Step2(queryBuilder, returnType, converters);
+            return new Step2(queryBuilder, returnType);
+        }
+
+        public Step3 withConverters(Converters converters) {
+            return new Step3(queryBuilder, returnType, converters);
+        }
+    }
+
+    record Step3(SemistructuredQueryBuilder queryBuilder,
+                 SemistructuredReturnType returnType,
+                 Converters converters) implements SemistructuredCursorPaginationOperationBuilder {
+
+        public Step3 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+            returnType = Objects.requireNonNull(returnType, "returnType is required");
+            converters = Objects.requireNonNull(converters, "converters is required");
+        }
+
+        public Step3 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            return new Step3(queryBuilder, returnType, converters);
+        }
+
+        public Step3 withReturnType(SemistructuredReturnType returnType) {
+            return new Step3(queryBuilder, returnType, converters);
+        }
+
+        public Step3 withConverters(Converters converters) {
+            return new Step3(queryBuilder, returnType, converters);
         }
 
         public CursorPaginationOperation build() {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            Objects.requireNonNull(returnType, "returnType is required");
-            return new SemistructuredCursorPaginationOperation(queryBuilder, returnType);
+            return new SemistructuredCursorPaginationOperation(queryBuilder, returnType, converters);
         }
     }
+
 }
