@@ -17,6 +17,8 @@ package org.eclipse.jnosql.spring.boot.autoconfigure.mongodb;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import org.eclipse.jnosql.databases.mongodb.mapping.MongoDBTemplate;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -36,7 +38,8 @@ class MongoDBAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
-                    org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLSemistructuredAutoConfiguration.class,
                     MongoDBAutoConfiguration.class));
 
     // ------------------------------------------------------------------
