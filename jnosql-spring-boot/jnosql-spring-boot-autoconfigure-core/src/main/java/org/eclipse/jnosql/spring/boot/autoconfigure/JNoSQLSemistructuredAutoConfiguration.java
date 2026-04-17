@@ -294,6 +294,7 @@ public class JNoSQLSemistructuredAutoConfiguration {
                                 .build()
                 )
                 .withEntities(entitiesMetadata)
+                .withConverters(converters)
                 .build();
     }
 
@@ -313,6 +314,7 @@ public class JNoSQLSemistructuredAutoConfiguration {
                                 .withProjector(projector)
                                 .build()
                 )
+                .withConverters(converters)
                 .build();
     }
 
