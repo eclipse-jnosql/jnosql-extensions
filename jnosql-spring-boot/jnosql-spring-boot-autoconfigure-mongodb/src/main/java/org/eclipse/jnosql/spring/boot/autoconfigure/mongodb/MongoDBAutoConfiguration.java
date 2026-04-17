@@ -28,16 +28,21 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManager;
 import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLDatabaseProviderCondition;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 
 import java.util.function.Predicate;
 
 import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUMENT_DATABASE;
+import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUMENT_PROVIDER;
 
 /**
  * Spring Boot auto-configuration for Eclipse JNoSQL MongoDB integration.
@@ -57,7 +62,8 @@ import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUM
  * created from {@code jnosql.mongodb.*} properties.
  */
 @AutoConfiguration
-@AutoConfigureAfter(JNoSQLCoreAutoConfiguration.class)
+@AutoConfigureAfter({JNoSQLCoreAutoConfiguration.class, JNoSQLSemistructuredAutoConfiguration.class})
+@ConditionalOnClass(MongoDBTemplate.class)
 public class MongoDBAutoConfiguration {
 
     /**
@@ -79,6 +85,7 @@ public class MongoDBAutoConfiguration {
      * @return a configured {@link MongoDBDocumentManagerFactory}
      */
     @Bean
+    @Lazy
     @ConditionalOnMissingBean
     public MongoDBDocumentManagerFactory mongoDBDocumentManagerFactory(
             ObjectProvider<MongoClient> mongoClientProvider,
@@ -94,8 +101,8 @@ public class MongoDBAutoConfiguration {
      * Creates the {@link MongoDBDocumentManager} for the database specified by
      * {@code jnosql.document.database}.
      *
-     * @param factory     the document manager factory
-     * @param settings    the JNoSQL {@link Settings} built from Spring properties for reading the document database name
+     * @param factory  the document manager factory
+     * @param settings the JNoSQL {@link Settings} built from Spring properties for reading the document database name
      * @throws BeanCreationException if {@code jnosql.document.database} is not configured
      */
     @Bean
@@ -116,8 +123,13 @@ public class MongoDBAutoConfiguration {
      * Assembles the fully wired {@link MongoDBTemplate} from all required infrastructure beans.
      */
     @Bean
+    @Lazy
     @Database(DatabaseType.DOCUMENT)
     @ConditionalOnMissingBean
+    @JNoSQLDatabaseProviderCondition(
+            propertyName = DOCUMENT_PROVIDER,
+            providerClass = MongoDBDocumentConfiguration.class
+    )
     public MongoDBTemplate mongoDBTemplate(Converters converters,
                                            EntitiesMetadata entitiesMetadata,
                                            MongoDBDocumentManager mongoDBDocumentManager,
@@ -131,4 +143,5 @@ public class MongoDBAutoConfiguration {
                 .withEventPersistManager(eventPersistManager)
                 .build();
     }
+
 }

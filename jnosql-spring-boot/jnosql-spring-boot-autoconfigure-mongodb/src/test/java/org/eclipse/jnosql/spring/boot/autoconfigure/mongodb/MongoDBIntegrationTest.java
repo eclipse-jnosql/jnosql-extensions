@@ -16,6 +16,8 @@ package org.eclipse.jnosql.spring.boot.autoconfigure.mongodb;
 
 import jakarta.nosql.Template;
 import org.eclipse.jnosql.databases.mongodb.mapping.MongoDBTemplate;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -43,7 +45,8 @@ class MongoDBIntegrationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
-                    org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLSemistructuredAutoConfiguration.class,
                     MongoDBAutoConfiguration.class));
 
     @Test
@@ -75,6 +78,7 @@ class MongoDBIntegrationTest {
                         "jnosql.document.database=integrationtest2"
                 )
                 .run(context -> {
+
                     Template template = context.getBean(Template.class);
 
                     String id = UUID.randomUUID().toString();
@@ -83,6 +87,28 @@ class MongoDBIntegrationTest {
                     template.insert(book);
 
                     Optional<BookEntity> found = template.find(BookEntity.class, id);
+                    assertThat(found).isPresent();
+                    assertThat(found.get().getTitle()).isEqualTo("Clean Code");
+                });
+    }
+
+    @Test
+    void shouldInsertAndFindDocumentRepository() {
+        contextRunner
+                .withPropertyValues(
+                        "jnosql.mongodb.url=" + MONGODB.getReplicaSetUrl(),
+                        "jnosql.document.database=integrationtest2"
+                )
+                .run(context -> {
+
+                    Library library = context.getBean(Library.class);
+
+                    String id = UUID.randomUUID().toString();
+                    BookEntity book = new BookEntity(id, "Clean Code");
+
+                    library.save(book);
+
+                    Optional<BookEntity> found = library.findById(id);
                     assertThat(found).isPresent();
                     assertThat(found.get().getTitle()).isEqualTo("Clean Code");
                 });
