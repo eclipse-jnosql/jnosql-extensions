@@ -299,7 +299,7 @@ public sealed interface SemistructuredRepositoryProducerBuilder
          * @return a new, unmanaged {@link SemistructuredRepositoryProducer} instance
          * @throws NullPointerException if any dependency is {@code null}
          */
-        public SemistructuredRepositoryProducer build() {
+         public SemistructuredRepositoryProducer build() {
             Objects.requireNonNull(entities, "entities is required");
             Objects.requireNonNull(repositories, "repositories is required");
             Objects.requireNonNull(infrastructure, "infrastructure is required");

@@ -29,6 +29,7 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverterFactory;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverterFactoryBuilder;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManager;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManagerBuilder;
+import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
@@ -201,5 +202,14 @@ public class JNoSQLCoreAutoConfiguration {
                 .withPrePersist(eventPublisher::publishEvent)
                 .withPostPersist(eventPublisher::publishEvent)
                 .build();
+    }
+
+    /**
+     * Creates the {@link ProjectorConverter} for mapping entities to projections, using the provided metadata.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ProjectorConverter projectorConverter(EntitiesMetadata entitiesMetadata) {
+        return new ProjectorConverter(entitiesMetadata);
     }
 }
