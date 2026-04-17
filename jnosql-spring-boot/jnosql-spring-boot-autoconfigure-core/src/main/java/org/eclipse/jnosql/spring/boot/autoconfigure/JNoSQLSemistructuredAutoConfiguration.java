@@ -80,7 +80,6 @@ import org.springframework.context.annotation.Bean;
  * This configuration wires all 14 repository operation beans, the infrastructure operator provider,
  * and the repository producer using step builders to enable Spring Boot integration with CDI-backed
  * JNoSQL libraries without modifying the original CDI classes.
- * </p>
  *
  * <p>
  * The wiring chain is:
@@ -101,7 +100,6 @@ import org.springframework.context.annotation.Bean;
  * <p>
  * Every bean is annotated with {@link ConditionalOnMissingBean} so that any
  * application-provided bean of the same type takes precedence.
- * </p>
  */
 @AutoConfiguration
 @AutoConfigureAfter(JNoSQLCoreAutoConfiguration.class)

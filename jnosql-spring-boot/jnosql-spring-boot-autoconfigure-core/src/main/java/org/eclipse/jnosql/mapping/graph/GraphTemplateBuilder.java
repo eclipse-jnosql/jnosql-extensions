@@ -46,19 +46,16 @@ import java.util.function.Consumer;
  * <p>
  * All steps are immutable records. Each {@code withXxx()} call returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
  *
  * <p>
  * The {@code build()} method is available once {@link Converters},
  * {@link EntitiesMetadata}, and {@link GraphDatabaseManager} have been provided
  * (from {@link ManagerStep} onward). Event consumers are optional and default to
  * no-op implementations if not provided.
- * </p>
  *
  * <p>
  * <strong>Note:</strong> Instances created by this builder are not managed by
  * any CDI container. The caller is responsible for lifecycle management.
- * </p>
  */
 public sealed interface GraphTemplateBuilder permits GraphTemplateBuilder.ConvertersStep,
         GraphTemplateBuilder.EntitiesStep,

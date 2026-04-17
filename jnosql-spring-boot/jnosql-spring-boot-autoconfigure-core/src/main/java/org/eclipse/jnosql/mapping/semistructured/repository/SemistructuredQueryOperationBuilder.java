@@ -31,12 +31,12 @@ import java.util.Objects;
  *         .withEntities(entitiesMetadata)
  *         .build();
  * }</pre>
- * </p>
+
  *
  * <p>
  * Each step is immutable. Calling {@code withXxx()} returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
+
  */
 public sealed interface SemistructuredQueryOperationBuilder
         permits SemistructuredQueryOperationBuilder.Step1,

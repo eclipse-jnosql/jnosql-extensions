@@ -36,20 +36,17 @@ import java.util.function.Consumer;
  * All steps are immutable records. Each {@code withXxx()} call returns a new
  * record
  * with the updated value, leaving the original step unchanged.
- * </p>
  *
  * <p>
  * The {@code build()} method is available from the first step
  * ({@link PrePersistStep})
  * onward. Any consumer not explicitly supplied defaults to a no-op
  * ({@code t -> {}}).
- * </p>
  *
  * <p>
  * <strong>Note:</strong> Instances created by this builder are not managed by
  * any CDI
  * container. The caller is responsible for lifecycle management.
- * </p>
  */
 public sealed interface EventPersistManagerBuilder permits EventPersistManagerBuilder.PrePersistStep,
         EventPersistManagerBuilder.PostPersistStep {

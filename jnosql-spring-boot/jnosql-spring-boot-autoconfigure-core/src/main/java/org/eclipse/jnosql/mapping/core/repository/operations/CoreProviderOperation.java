@@ -31,7 +31,6 @@ import java.util.List;
  * <p>
  * This class is a copy of the CDI-based {@code CoreProviderOperation} from
  * {@code jnosql-mapping-core}, adapted to work outside a CDI container.
- * </p>
  *
  * @see ProviderQueryHandlerResolver
  */

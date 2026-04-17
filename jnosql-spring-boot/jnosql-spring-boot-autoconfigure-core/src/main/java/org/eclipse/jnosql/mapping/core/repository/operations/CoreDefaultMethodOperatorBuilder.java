@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.core.repository.DefaultMethodOperator;
  * <p>
  * This interface provides a static factory method to construct
  * {@code DefaultMethodOperator} implementations that have no external dependencies.
- * </p>
  *
  * @see DefaultMethodOperator
  */

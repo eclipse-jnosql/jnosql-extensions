@@ -43,18 +43,15 @@ import java.util.function.Consumer;
  * <p>
  * All steps are immutable records. Each {@code withXxx()} call returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
  *
  * <p>
  * The {@code build()} method is available from {@link ManagerStep} onward.
  * The two event consumers ({@link EntityPrePersist} and {@link EntityPostPersist})
  * are optional — when not provided they default to no-op.
- * </p>
  *
  * <p>
  * <strong>Note:</strong> Instances created by this builder are not managed by
  * any CDI container. The caller is responsible for lifecycle management.
- * </p>
  */
 public sealed interface ColumnTemplateBuilder permits ColumnTemplateBuilder.ConvertersStep,
         ColumnTemplateBuilder.EntitiesStep,

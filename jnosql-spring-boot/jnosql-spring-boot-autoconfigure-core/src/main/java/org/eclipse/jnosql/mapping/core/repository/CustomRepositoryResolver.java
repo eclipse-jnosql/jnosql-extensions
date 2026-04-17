@@ -22,7 +22,6 @@ package org.eclipse.jnosql.mapping.core.repository;
  * pattern used by {@code DefaultCustomRepositoryMethodOperator}, enabling
  * Spring Boot environments to provide a resolver implementation without
  * coupling to CDI APIs.
- * </p>
  *
  * @see jakarta.enterprise.inject.Instance
  */

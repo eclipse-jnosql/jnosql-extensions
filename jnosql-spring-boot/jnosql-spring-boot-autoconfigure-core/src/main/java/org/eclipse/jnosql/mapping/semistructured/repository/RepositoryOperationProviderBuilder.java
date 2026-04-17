@@ -55,12 +55,12 @@ import java.util.Objects;
  *         .withProvider(providerOp)
  *         .build();
  * }</pre>
- * </p>
+
  *
  * <p>
  * Each step is immutable. Calling {@code withXxx()} returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
+
  */
 public sealed interface RepositoryOperationProviderBuilder
         permits RepositoryOperationProviderBuilder.InsertStep,

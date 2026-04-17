@@ -25,12 +25,12 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
  * <pre>{@code
  * CountAllOperation operation = SemistructuredCountAllOperationBuilder.build();
  * }</pre>
- * </p>
+
  *
  * <p>
  * Each step is immutable. Calling {@code withTemplate()} returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
+
  */
 public interface SemistructuredCountAllOperationBuilder {
 

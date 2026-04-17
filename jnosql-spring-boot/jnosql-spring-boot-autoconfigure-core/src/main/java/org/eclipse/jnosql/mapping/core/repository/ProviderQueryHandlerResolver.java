@@ -23,7 +23,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.ProviderQueryHandler;
  * This interface abstracts the CDI {@code Instance<ProviderQueryHandler>} lookup
  * pattern used by {@code CoreProviderOperation}, enabling Spring Boot environments
  * to provide a resolver implementation without coupling to CDI APIs.
- * </p>
  *
  * @see ProviderQueryHandler
  */

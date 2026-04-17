@@ -30,12 +30,12 @@ import java.util.Objects;
  *         .withResolver(resolver)
  *         .build();
  * }</pre>
- * </p>
+
  *
  * <p>
  * Each step is immutable. Calling {@code withResolver()} returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
+
  */
 public sealed interface CoreProviderOperationBuilder
         permits CoreProviderOperationBuilder.Step1 {

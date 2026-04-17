@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.InsertOperation;
  * <p>
  * This interface provides a static factory method to construct
  * {@code InsertOperation} implementations that have no external dependencies.
- * </p>
  *
  * @see InsertOperation
  */
