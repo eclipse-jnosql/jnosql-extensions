@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
  * <p>
  * This class is a copy of the CDI-based {@code DefaultCustomRepositoryMethodOperator} from
  * {@code jnosql-mapping-core}, adapted to work outside a CDI container.
- * </p>
  *
  * @see CustomRepositoryResolver
  */

@@ -40,7 +40,6 @@ import java.util.Objects;
  * <p>
  * All steps are immutable records. Each {@code withXxx()} call returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
  *
  * Required dependencies (in order):
  * <ol>
@@ -53,14 +52,12 @@ import java.util.Objects;
  * <p>
  * The {@code build()} method is available only from {@link OperationsStep}, once all
  * four required dependencies have been provided.
- * </p>
  *
  * <p>
  * <strong>Note:</strong> Instances created by this builder are not managed by
  * any CDI container. The caller is responsible for lifecycle management.
  * If a repository method uses a custom CDI-backed operator, invocation may
  * fail at runtime if no CDI context is active.
- * </p>
  */
 public sealed interface SemistructuredRepositoryProducerBuilder
         permits SemistructuredRepositoryProducerBuilder.EntitiesStep,

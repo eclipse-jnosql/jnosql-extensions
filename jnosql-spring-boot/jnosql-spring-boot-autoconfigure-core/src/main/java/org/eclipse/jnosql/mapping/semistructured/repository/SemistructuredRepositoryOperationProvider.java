@@ -38,7 +38,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
  * <p>
  * This class is a copy of the CDI-based {@code SemistructuredRepositoryOperationProvider} from
  * {@code jnosql-mapping-semistructured}, adapted to work outside a CDI container.
- * </p>
  */
 @ApplicationScoped
 public class SemistructuredRepositoryOperationProvider implements RepositoryOperationProvider {

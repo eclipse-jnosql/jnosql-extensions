@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.core.repository.ObjectMethodOperator;
  * <p>
  * This interface provides a static factory method to construct
  * {@code ObjectMethodOperator} implementations that have no external dependencies.
- * </p>
  *
  * @see ObjectMethodOperator
  */

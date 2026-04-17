@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
  * <p>
  * This interface provides a static factory method to construct
  * {@code UpdateOperation} implementations that have no external dependencies.
- * </p>
  *
  * @see UpdateOperation
  */

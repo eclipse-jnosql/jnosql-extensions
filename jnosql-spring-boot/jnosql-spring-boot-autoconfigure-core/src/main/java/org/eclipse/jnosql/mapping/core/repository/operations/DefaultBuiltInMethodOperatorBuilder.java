@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.core.repository.BuiltInMethodOperator;
  * <p>
  * This interface provides a static factory method to construct
  * {@code BuiltInMethodOperator} implementations that have no external dependencies.
- * </p>
  *
  * @see BuiltInMethodOperator
  */

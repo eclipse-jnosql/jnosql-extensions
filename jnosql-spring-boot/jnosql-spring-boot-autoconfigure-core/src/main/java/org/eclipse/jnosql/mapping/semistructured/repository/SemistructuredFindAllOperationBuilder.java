@@ -30,12 +30,12 @@ import java.util.Objects;
  *         .withReturnType(returnType)
  *         .build();
  * }</pre>
- * </p>
+
  *
  * <p>
  * Each step is immutable. Calling {@code withXxx()} returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
+
  */
 public sealed interface SemistructuredFindAllOperationBuilder
         permits SemistructuredFindAllOperationBuilder.Step1,

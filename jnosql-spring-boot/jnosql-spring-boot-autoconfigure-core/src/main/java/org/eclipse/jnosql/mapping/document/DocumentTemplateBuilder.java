@@ -47,26 +47,22 @@ import java.util.function.Consumer;
  * <p>
  * All steps are immutable records. Each {@code withXxx()} call returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
  *
  * <p>
  * Required dependencies: {@link Converters}, {@link EntitiesMetadata},
  * and {@link DatabaseManager}.
  * Optional dependencies: event consumers for {@link EntityPrePersist}
  * and {@link EntityPostPersist}. If not provided, no-op consumers are used.
- * </p>
  *
  * <p>
  * The {@code build()} method is available from {@link ManagerStep} onward.
  * Once all required dependencies are provided, the builder creates
  * an instance of {@link DocumentTemplate} internally using
  * {@link EventPersistManager} and {@link EntityConverterFactory}.
- * </p>
  *
  * <p>
  * <strong>Note:</strong> Instances created by this builder are not managed by
  * any CDI container. The caller is responsible for lifecycle management.
- * </p>
  */
 public sealed interface DocumentTemplateBuilder
         permits DocumentTemplateBuilder.ConvertersStep,

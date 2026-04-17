@@ -29,12 +29,12 @@ import java.util.Objects;
  *         .withQueryBuilder(queryBuilder)
  *         .build();
  * }</pre>
- * </p>
+
  *
  * <p>
  * Each step is immutable. Calling {@code withQueryBuilder()} returns a new
  * record with the updated value, leaving the original step unchanged.
- * </p>
+
  */
 public sealed interface SemistructuredDeleteByOperationBuilder
         permits SemistructuredDeleteByOperationBuilder.Step1 {

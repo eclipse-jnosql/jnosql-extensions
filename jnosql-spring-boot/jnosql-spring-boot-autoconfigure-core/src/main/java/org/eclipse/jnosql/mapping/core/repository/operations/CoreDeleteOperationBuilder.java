@@ -22,7 +22,6 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
  * <p>
  * This interface provides a static factory method to construct
  * {@code DeleteOperation} implementations that have no external dependencies.
- * </p>
  *
  * @see DeleteOperation
  */
