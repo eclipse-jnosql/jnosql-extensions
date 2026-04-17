@@ -42,82 +42,118 @@ import java.util.Objects;
  * </p>
  */
 public sealed interface SemistructuredParameterBasedOperationBuilder
-        permits SemistructuredParameterBasedOperationBuilder.Step1,
+        permits SemistructuredParameterBasedOperationBuilder.Step0,
+        SemistructuredParameterBasedOperationBuilder.Step1,
         SemistructuredParameterBasedOperationBuilder.Step2,
-        SemistructuredParameterBasedOperationBuilder.Step3 {
+        SemistructuredParameterBasedOperationBuilder.Step3,
+        SemistructuredParameterBasedOperationBuilder.Step4 {
 
-    static Step1 builder() {
-        return new Step1(null, null, null, null);
+    static Step0 builder() {
+        return new Step0();
     }
 
-    record Step1(SemistructuredQueryBuilder queryBuilder,
-                 SemistructuredReturnType returnType,
-                 EntitiesMetadata entitiesMetadata,
-                 Converters converters) implements SemistructuredParameterBasedOperationBuilder {
+    record Step0() implements SemistructuredParameterBasedOperationBuilder {
 
         public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            return new Step1(queryBuilder, returnType, entitiesMetadata, converters);
+            return new Step1(queryBuilder);
+        }
+    }
+
+    record Step1(SemistructuredQueryBuilder queryBuilder) implements SemistructuredParameterBasedOperationBuilder {
+
+        public Step1 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+        }
+
+        public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            return new Step1(queryBuilder);
         }
 
         public Step2 withReturnType(SemistructuredReturnType returnType) {
-            Objects.requireNonNull(returnType, "returnType is required");
-            return new Step2(queryBuilder, returnType, entitiesMetadata, converters);
-        }
-
-        public Step3 withEntities(EntitiesMetadata entitiesMetadata) {
-            Objects.requireNonNull(entitiesMetadata, "entitiesMetadata is required");
-            return new Step3(queryBuilder, returnType, entitiesMetadata, converters);
+            return new Step2(queryBuilder, returnType);
         }
 
     }
 
     record Step2(SemistructuredQueryBuilder queryBuilder,
-                 SemistructuredReturnType returnType,
-                 EntitiesMetadata entitiesMetadata,
-                 Converters converters) implements SemistructuredParameterBasedOperationBuilder {
+                 SemistructuredReturnType returnType) implements SemistructuredParameterBasedOperationBuilder {
 
-        public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            return new Step1(queryBuilder, returnType, entitiesMetadata, converters);
+        public Step2 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+            returnType = Objects.requireNonNull(returnType, "returnType is required");
+        }
+
+        public Step2 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            return new Step2(queryBuilder, returnType);
         }
 
         public Step2 withReturnType(SemistructuredReturnType returnType) {
-            Objects.requireNonNull(returnType, "returnType is required");
-            return new Step2(queryBuilder, returnType, entitiesMetadata, converters);
+            return new Step2(queryBuilder, returnType);
         }
 
         public Step3 withEntities(EntitiesMetadata entitiesMetadata) {
-            Objects.requireNonNull(entitiesMetadata, "entitiesMetadata is required");
-            return new Step3(queryBuilder, returnType, entitiesMetadata, converters);
+            return new Step3(queryBuilder, returnType, entitiesMetadata);
         }
     }
 
     record Step3(SemistructuredQueryBuilder queryBuilder,
                  SemistructuredReturnType returnType,
-                 EntitiesMetadata entitiesMetadata,
-                 Converters converters) implements SemistructuredParameterBasedOperationBuilder {
+                 EntitiesMetadata entitiesMetadata) implements SemistructuredParameterBasedOperationBuilder {
 
-        public Step1 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            return new Step1(queryBuilder, returnType, entitiesMetadata, converters);
+        public Step3 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+            returnType = Objects.requireNonNull(returnType, "returnType is required");
+            entitiesMetadata = Objects.requireNonNull(entitiesMetadata, "entitiesMetadata is required");
         }
 
-        public Step2 withReturnType(SemistructuredReturnType returnType) {
-            Objects.requireNonNull(returnType, "returnType is required");
-            return new Step2(queryBuilder, returnType, entitiesMetadata, converters);
+        public Step3 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+            return new Step3(queryBuilder, returnType, entitiesMetadata);
+        }
+
+        public Step3 withReturnType(SemistructuredReturnType returnType) {
+            return new Step3(queryBuilder, returnType, entitiesMetadata);
         }
 
         public Step3 withEntities(EntitiesMetadata entitiesMetadata) {
-            Objects.requireNonNull(entitiesMetadata, "entitiesMetadata is required");
-            return new Step3(queryBuilder, returnType, entitiesMetadata, converters);
+            return new Step3(queryBuilder, returnType, entitiesMetadata);
+        }
+
+        public Step4 withConverters(Converters converters) {
+            return new Step4(queryBuilder, returnType, entitiesMetadata, converters);
+        }
+    }
+
+    record Step4(SemistructuredQueryBuilder queryBuilder,
+                 SemistructuredReturnType returnType,
+                 EntitiesMetadata entitiesMetadata,
+                 Converters converters) implements SemistructuredParameterBasedOperationBuilder {
+
+        public Step4 {
+            queryBuilder = Objects.requireNonNull(queryBuilder, "queryBuilder is required");
+            returnType = Objects.requireNonNull(returnType, "returnType is required");
+            entitiesMetadata = Objects.requireNonNull(entitiesMetadata, "entitiesMetadata is required");
+            converters = Objects.requireNonNull(converters, "converters is required");
+        }
+
+        public Step4 withQueryBuilder(SemistructuredQueryBuilder queryBuilder) {
+            return new Step4(queryBuilder, returnType, entitiesMetadata, converters);
+        }
+
+        public Step4 withReturnType(SemistructuredReturnType returnType) {
+            return new Step4(queryBuilder, returnType, entitiesMetadata, converters);
+        }
+
+        public Step4 withEntities(EntitiesMetadata entitiesMetadata) {
+            return new Step4(queryBuilder, returnType, entitiesMetadata, converters);
+        }
+
+        public Step4 withConverters(Converters converters) {
+            return new Step4(queryBuilder, returnType, entitiesMetadata, converters);
         }
 
         public ParameterBasedOperation build() {
-            Objects.requireNonNull(queryBuilder, "queryBuilder is required");
-            Objects.requireNonNull(returnType, "returnType is required");
-            Objects.requireNonNull(entitiesMetadata, "entitiesMetadata is required");
-            return new SemistructuredParameterBasedOperation(queryBuilder, returnType, entitiesMetadata);
+            return new SemistructuredParameterBasedOperation(queryBuilder, returnType, entitiesMetadata, converters);
         }
     }
 }
