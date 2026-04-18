@@ -21,6 +21,7 @@ import jakarta.data.repository.Delete;
 import jakarta.data.repository.Insert;
 import jakarta.data.repository.Repository;
 import jakarta.data.repository.Update;
+import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.junit.jupiter.api.DisplayName;
@@ -144,15 +145,11 @@ class RepositoryEntityResolverTest {
                 CustomCursorRepository.class,
                 CustomInsertListRepository.class,
                 CustomDeleteListRepository.class})
-        void shouldResolveFromCustomRepository(Class<?> repositoryType) {
-
-            var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryType);
-
-            SoftAssertions.assertSoftly(softly ->
-                    softly.assertThat(result).isEqualTo(Computer.class)
-            );
-
+        void shouldResolveFromCustomRepository(Class<?> type) {
+            var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(type);
+            Assertions.assertThat(result).isEqualTo(Computer.class);
         }
+        
         interface CustomRepository {
             Computer findComputerById(Long id);
         }
