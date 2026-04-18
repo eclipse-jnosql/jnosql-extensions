@@ -144,9 +144,9 @@ class RepositoryEntityResolverTest {
                 CustomCursorRepository.class,
                 CustomInsertListRepository.class,
                 CustomDeleteListRepository.class})
-        void shouldResolveFromCustomRepository(Class<?> repositoryClass) {
+        void shouldResolveFromCustomRepository(Class<?> repositoryType) {
 
-            var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
+            var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryType);
 
             SoftAssertions.assertSoftly(softly ->
                     softly.assertThat(result).isEqualTo(Computer.class)
