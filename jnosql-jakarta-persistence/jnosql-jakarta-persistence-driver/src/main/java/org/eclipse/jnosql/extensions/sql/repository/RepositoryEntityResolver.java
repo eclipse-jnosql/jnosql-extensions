@@ -65,12 +65,21 @@ INSTANCE;
             if (entity != null) {
                 return entity;
             }
-            if(method.getParameters().length > 0) {
-                for (Type parameterType : method.getGenericParameterTypes()) {
-                    entity = extractEntityFromReturnType(parameterType);
-                    if (entity != null) {
-                        return entity;
-                    }
+            entity = extractEntityFromParameters(method);
+            if (entity != null) {
+                return entity;
+            }
+        }
+        return null;
+    }
+
+    private Class<?> extractEntityFromParameters(Method method) {
+        Class<?> entity;
+        if(method.getParameters().length > 0) {
+            for (Type parameterType : method.getGenericParameterTypes()) {
+                entity = extractEntityFromReturnType(parameterType);
+                if (entity != null) {
+                    return entity;
                 }
             }
         }
