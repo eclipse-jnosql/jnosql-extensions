@@ -38,7 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
-public class JNoSqlPersistenceEntityTests extends PersistenceEntityTests {
+public class JakartaPersistenceEntityTests extends PersistenceEntityTests {
 
 
     @Override

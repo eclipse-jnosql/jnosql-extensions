@@ -40,7 +40,7 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 /**
  * This is a group of PersistenceEntityTests tests that must run outside of a global transaction,
  * otherwise the test scenario doesn't make sense and would always fail. The rest of the tests
- * are executed in {@link JNoSqlPersistenceEntityTests}, with global transactions created with
+ * are executed in {@link JakartaPersistenceEntityTests}, with global transactions created with
  * {@link TransactionExtension}
  *
  * @author ondro
