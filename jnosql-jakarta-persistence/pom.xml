@@ -111,10 +111,34 @@
                         </execution>
                     </executions>
                 </plugin>
- 
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>3.4.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.5</version>
+                    <configuration>
+                        <trimStackTrace>false</trimStackTrace>
+                        <failIfNoTests>true</failIfNoTests>
+                        <statelessTestsetReporter
+                                implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5Xml30StatelessReporter">
+                            <usePhrasedTestCaseMethodName>true</usePhrasedTestCaseMethodName>
+                            <usePhrasedTestCaseClassName>true</usePhrasedTestCaseClassName>
+                        </statelessTestsetReporter>
+                        <systemPropertyVariables>
+                            <java.util.logging.config.file>${logging.config}</java.util.logging.config.file>
+                            <jimage.dir>target/tck-classes</jimage.dir>
+                            <signature.sigTestClasspath>
+                                ${project.build.directory}/dependency/jakarta.data-api-${jakarta.data.api.version}.jar
+                            </signature.sigTestClasspath>
+                            <jakarta.tck.skip.deployment>true</jakarta.tck.skip.deployment>
+                            <jakarta.tck.database.type>DOCUMENT</jakarta.tck.database.type>
+                            <jakarta.tck.consistency.delay>0</jakarta.tck.consistency.delay>
+                        </systemPropertyVariables>
+                        <groups>${included.groups}</groups>
+                        <reportNameSuffix>standalone</reportNameSuffix>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

@@ -12,7 +12,7 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.tck;
 
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
@@ -30,10 +30,7 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.tck.jakartapersistence.junit.RunOnly;
-import org.eclipse.jnosql.tck.jakartapersistence.junit.RunOnlyCondition;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
@@ -41,7 +38,7 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 /**
  * This is a group of PersistenceEntityTests tests that must run outside of a global transaction,
  * otherwise the test scenario doesn't make sense and would always fail. The rest of the tests
- * are executed in {@link JNoSqlPersistenceEntityTests}, with global transactions created with
+ * are executed in {@link JakartaPersistenceEntityTests}, with global transactions created with
  * {@link TransactionExtension}
  *
  * @author ondro
@@ -50,23 +47,31 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 @AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
-@AddPackages({JNoSqlEntityTests.class, EntityTests.class})
+@AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
-@Disabled("Disable due the migration of the Reflection engine")
-public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
+public class JakartaPersistenceEntityEntityTests extends PersistenceEntityTests {
 
     @Override
-    @RunOnly
-    @Test
+    @Disabled
     public void testVersionedInsertUpdateDelete() {
         super.testVersionedInsertUpdateDelete();
     }
 
     @Override
-    @RunOnly
-    @Test
+    @Disabled
     public void testMultipleInsertUpdateDelete() {
         super.testMultipleInsertUpdateDelete();
     }
 
+    @Override
+    @Disabled
+    public void testQueryWithNamedParameters() {
+        super.testQueryWithNamedParameters();
+    }
+
+    @Override
+    @Disabled
+    public void testQueryWithPositionalParameters() {
+        super.testQueryWithPositionalParameters();
+    }
 }

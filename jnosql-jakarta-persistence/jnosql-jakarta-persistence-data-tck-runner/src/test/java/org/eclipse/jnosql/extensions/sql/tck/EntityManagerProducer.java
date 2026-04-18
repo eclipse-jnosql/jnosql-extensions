@@ -12,7 +12,7 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
+package org.eclipse.jnosql.extensions.sql.tck;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Disposes;
@@ -22,6 +22,7 @@ import jakarta.persistence.Persistence;
 
 @ApplicationScoped
 public class EntityManagerProducer {
+
     @Produces
     @ApplicationScoped
     public EntityManager createEntityManager() {
@@ -32,5 +33,4 @@ public class EntityManagerProducer {
     public void closeEntityManager(@Disposes EntityManager entityManager) {
         entityManager.close();
     }
-
 }

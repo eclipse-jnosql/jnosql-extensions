@@ -62,7 +62,10 @@ INSTANCE;
         for (Method method : repositoryType.getDeclaredMethods()) {
 
             Class<?> entity = extractEntityFromReturnType(method.getGenericReturnType());
-
+            if (entity != null) {
+                return entity;
+            }
+            entity = extractEntityFromParameters(method);
             if (entity != null) {
                 return entity;
             }
@@ -70,26 +73,32 @@ INSTANCE;
         return null;
     }
 
+    private Class<?> extractEntityFromParameters(Method method) {
+        Class<?> entity;
+        if(method.getParameters().length > 0) {
+            for (Type parameterType : method.getGenericParameterTypes()) {
+                entity = extractEntityFromReturnType(parameterType);
+                if (entity != null) {
+                    return entity;
+                }
+            }
+        }
+        return null;
+    }
+
     private Class<?> extractEntityFromReturnType(Type type) {
 
-        // Case 1: Direct class (e.g., User)
-        if (type instanceof Class<?>) {
-            Class<?> typeEntity = (Class<?>) type;
-
-            // Handle arrays like User[]
+        if (type instanceof Class<?> typeEntity) {
             if (typeEntity.isArray()) {
                 return extractEntityFromReturnType(typeEntity.getComponentType());
             }
-
             return isEntity(typeEntity) ? typeEntity : null;
         }
 
-        // Case 2: Generic array (e.g., T[])
         if (type instanceof GenericArrayType genericArrayType) {
             return extractEntityFromReturnType(genericArrayType.getGenericComponentType());
         }
 
-        // Case 3: Parameterized types (Optional<User>, List<User>, etc.)
         if (type instanceof ParameterizedType parameterizedType) {
 
             Type rawType = parameterizedType.getRawType();

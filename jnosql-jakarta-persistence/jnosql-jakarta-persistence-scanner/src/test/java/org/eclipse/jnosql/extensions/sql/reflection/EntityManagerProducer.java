@@ -12,7 +12,7 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.reflection;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Disposes;
@@ -32,4 +32,5 @@ public class EntityManagerProducer {
     public void closeEntityManager(@Disposes EntityManager entityManager) {
         entityManager.close();
     }
+
 }

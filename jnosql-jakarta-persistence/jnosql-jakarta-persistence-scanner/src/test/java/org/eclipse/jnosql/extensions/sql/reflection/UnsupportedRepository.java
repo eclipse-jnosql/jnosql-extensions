@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2025 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -12,12 +12,12 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.reflection;
 
-import ee.jakarta.tck.data.standalone.signature.SignatureTests;
-import org.junit.jupiter.api.Disabled;
+import jakarta.data.repository.Repository;
 
-@Disabled("Disable due the migration of the Reflection engine")
-public class JNoSqlSignatureTests extends SignatureTests {
 
+@Repository(provider = "unknown")
+public interface UnsupportedRepository {
 }
+

@@ -12,13 +12,14 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.tck;
 
+import ee.jakarta.tck.data.standalone.entity.EntityTests;
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 
-import ee.jakarta.tck.data.standalone.entity.EntityTests;
+import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
@@ -28,16 +29,40 @@ import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.Disabled;
-
 import org.junit.jupiter.api.extension.ExtendWith;
+
 
 @EnableAutoWeld
 @AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
-@AddPackages({JNoSqlEntityTests.class, EntityTests.class})
+@AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
-@Disabled("Disable due the migration of the Reflection engine")
-public class JNoSqlEntityTests extends EntityTests {
+public class JakartaPersistenceEntityTests extends PersistenceEntityTests {
 
+
+    @Override
+    @Disabled
+    public void testVersionedInsertUpdateDelete() {
+        super.testVersionedInsertUpdateDelete();
+    }
+
+    @Override
+    @Disabled
+    public void testMultipleInsertUpdateDelete() {
+        super.testMultipleInsertUpdateDelete();
+    }
+
+
+    @Override
+    @Disabled
+    public void testQueryWithPositionalParameters() {
+        super.testQueryWithPositionalParameters();
+    }
+
+    @Disabled
+    @Override
+    public void testQueryWithNamedParameters() {
+        super.testQueryWithNamedParameters();
+    }
 }

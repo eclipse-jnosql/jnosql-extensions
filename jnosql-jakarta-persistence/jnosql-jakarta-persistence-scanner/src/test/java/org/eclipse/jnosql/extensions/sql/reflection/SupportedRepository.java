@@ -12,12 +12,13 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
+package org.eclipse.jnosql.extensions.sql.reflection;
 
 import jakarta.data.repository.Repository;
 
+import org.eclipse.jnosql.jakartapersistence.JNoSQLJakartaPersistence;
 
-@Repository(provider = "unknown")
-public interface UnsupportedRepository {
+@Repository(provider = JNoSQLJakartaPersistence.PROVIDER)
+public interface SupportedRepository {
 }
 

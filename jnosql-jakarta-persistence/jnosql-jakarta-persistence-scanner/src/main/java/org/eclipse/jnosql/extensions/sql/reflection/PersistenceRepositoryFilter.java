@@ -13,7 +13,7 @@
  *   Otavio Santana
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
+package org.eclipse.jnosql.extensions.sql.reflection;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
