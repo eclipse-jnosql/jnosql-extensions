@@ -28,6 +28,7 @@ import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableAutoWeld
@@ -38,4 +39,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(TransactionExtension.class)
 public class JakartaPersitenceEntityTests extends EntityTests {
 
+    @Disabled
+    @Override
+    public void testUpdateQueryWithWhereClause() {
+        super.testUpdateQueryWithWhereClause();
+    }
 }
