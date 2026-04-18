@@ -19,7 +19,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
