@@ -73,14 +73,10 @@ INSTANCE;
     private Class<?> extractEntityFromReturnType(Type type) {
 
         // Case 1: Direct class (e.g., User)
-        if (type instanceof Class<?>) {
-            Class<?> typeEntity = (Class<?>) type;
-
-            // Handle arrays like User[]
+        if (type instanceof Class<?> typeEntity) {
             if (typeEntity.isArray()) {
                 return extractEntityFromReturnType(typeEntity.getComponentType());
             }
-
             return isEntity(typeEntity) ? typeEntity : null;
         }
 
