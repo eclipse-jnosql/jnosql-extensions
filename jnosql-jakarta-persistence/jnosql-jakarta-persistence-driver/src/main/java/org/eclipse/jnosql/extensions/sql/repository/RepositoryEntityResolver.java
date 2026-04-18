@@ -72,7 +72,6 @@ INSTANCE;
 
     private Class<?> extractEntityFromReturnType(Type type) {
 
-        // Case 1: Direct class (e.g., User)
         if (type instanceof Class<?> typeEntity) {
             if (typeEntity.isArray()) {
                 return extractEntityFromReturnType(typeEntity.getComponentType());
@@ -80,12 +79,10 @@ INSTANCE;
             return isEntity(typeEntity) ? typeEntity : null;
         }
 
-        // Case 2: Generic array (e.g., T[])
         if (type instanceof GenericArrayType genericArrayType) {
             return extractEntityFromReturnType(genericArrayType.getGenericComponentType());
         }
 
-        // Case 3: Parameterized types (Optional<User>, List<User>, etc.)
         if (type instanceof ParameterizedType parameterizedType) {
 
             Type rawType = parameterizedType.getRawType();
