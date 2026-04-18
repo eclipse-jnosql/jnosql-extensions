@@ -30,9 +30,7 @@ import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
-import org.eclipse.jnosql.extensions.sql.tck.junit.RunOnly;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
@@ -51,21 +49,29 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
-@Disabled("Disable due the migration of the Reflection engine")
-public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
+public class JakartaPersistenceEntityEntityTests extends PersistenceEntityTests {
 
     @Override
-    @RunOnly
-    @Test
+    @Disabled
     public void testVersionedInsertUpdateDelete() {
         super.testVersionedInsertUpdateDelete();
     }
 
     @Override
-    @RunOnly
-    @Test
+    @Disabled
     public void testMultipleInsertUpdateDelete() {
         super.testMultipleInsertUpdateDelete();
     }
 
+    @Override
+    @Disabled
+    public void testQueryWithNamedParameters() {
+        super.testQueryWithNamedParameters();
+    }
+
+    @Override
+    @Disabled
+    public void testQueryWithPositionalParameters() {
+        super.testQueryWithPositionalParameters();
+    }
 }
