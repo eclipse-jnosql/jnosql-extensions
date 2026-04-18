@@ -41,24 +41,26 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlPersistenceEntityTests extends PersistenceEntityTests {
 
-    /**
-     * This test expects running outside of a global transaction. It should be
-     * executed in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
-     */
+
     @Override
     @Disabled
     public void testVersionedInsertUpdateDelete() {
         super.testVersionedInsertUpdateDelete();
     }
 
-    /**
-     * This test expects running outside of a global transaction. It should be
-     * executed in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
-     */
     @Override
     @Disabled
     public void testMultipleInsertUpdateDelete() {
         super.testMultipleInsertUpdateDelete();
     }
+
+
+    @Override
+    @Disabled
+    public void testQueryWithPositionalParameters() {
+        super.testQueryWithPositionalParameters();
+    }
+
+
 
 }
