@@ -149,7 +149,7 @@ class RepositoryEntityResolverTest {
             var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(type);
             Assertions.assertThat(result).isEqualTo(Computer.class);
         }
-        
+
         interface CustomRepository {
             Computer findComputerById(Long id);
         }
