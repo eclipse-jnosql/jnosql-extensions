@@ -27,7 +27,6 @@ import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtensi
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.Disabled;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -37,7 +36,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
-@Disabled("Disable due the migration of the Reflection engine")
 public class JakartaPersitenceEntityTests extends EntityTests {
 
 }
