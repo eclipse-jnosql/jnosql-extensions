@@ -49,7 +49,7 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 @AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
-@AddPackages({JNoSqlEntityTests.class, EntityTests.class})
+@AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
 @Disabled("Disable due the migration of the Reflection engine")
 public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
