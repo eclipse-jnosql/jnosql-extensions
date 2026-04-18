@@ -17,7 +17,9 @@ package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.data.page.CursoredPage;
 import jakarta.data.page.Page;
+import jakarta.data.repository.Delete;
 import jakarta.data.repository.Insert;
+import jakarta.data.repository.Repository;
 import jakarta.data.repository.Update;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
@@ -28,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -172,4 +175,21 @@ class RepositoryEntityResolverTest {
             CursoredPage<Computer> cursor(Long id);
         }
     }
+
+    @Repository
+    public interface CustomInsertListRepository {
+
+        @Insert
+        void add(List<Computer> computers);
+
+    }
+
+    @Repository
+    public interface CustomDeleteListRepository {
+
+
+        @Delete
+        void remove(List<Computer> computers);
+    }
+
 }
