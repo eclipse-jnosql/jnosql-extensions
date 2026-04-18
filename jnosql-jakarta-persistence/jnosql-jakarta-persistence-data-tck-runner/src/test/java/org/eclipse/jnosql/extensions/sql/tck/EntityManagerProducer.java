@@ -12,7 +12,7 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.tck;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Disposes;

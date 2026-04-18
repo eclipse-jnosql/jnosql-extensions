@@ -12,7 +12,7 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.tck;
 
 import ee.jakarta.tck.data.standalone.signature.SignatureTests;
 import org.junit.jupiter.api.Disabled;

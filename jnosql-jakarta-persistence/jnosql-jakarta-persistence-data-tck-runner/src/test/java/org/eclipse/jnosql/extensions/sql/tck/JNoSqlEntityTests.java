@@ -12,14 +12,13 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.tck;
 
-import ee.jakarta.tck.data.standalone.entity.EntityTests;
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 
-import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
+import ee.jakarta.tck.data.standalone.entity.EntityTests;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
@@ -29,8 +28,8 @@ import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableAutoWeld
 @AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
@@ -39,26 +38,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({JNoSqlEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
 @Disabled("Disable due the migration of the Reflection engine")
-public class JNoSqlPersistenceEntityTests extends PersistenceEntityTests {
-
-    /**
-     * This test expects running outside of a global transaction. It should be
-     * executed in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
-     */
-    @Override
-    @Disabled
-    public void testVersionedInsertUpdateDelete() {
-        super.testVersionedInsertUpdateDelete();
-    }
-
-    /**
-     * This test expects running outside of a global transaction. It should be
-     * executed in {@link JNoSqlPersistenceEntityTestsNoGlobalTx}
-     */
-    @Override
-    @Disabled
-    public void testMultipleInsertUpdateDelete() {
-        super.testMultipleInsertUpdateDelete();
-    }
+public class JNoSqlEntityTests extends EntityTests {
 
 }

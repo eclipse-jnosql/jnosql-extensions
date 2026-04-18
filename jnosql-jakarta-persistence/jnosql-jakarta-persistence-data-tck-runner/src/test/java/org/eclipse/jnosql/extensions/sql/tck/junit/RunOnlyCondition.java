@@ -13,7 +13,7 @@
  *
  *  Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence.junit;
+package org.eclipse.jnosql.extensions.sql.tck.junit;
 
 import java.lang.reflect.Method;
 import java.util.Optional;

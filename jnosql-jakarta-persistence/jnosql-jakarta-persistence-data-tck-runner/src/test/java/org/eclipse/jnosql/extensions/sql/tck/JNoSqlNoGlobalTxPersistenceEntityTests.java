@@ -12,25 +12,39 @@
  *
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.tck.jakartapersistence;
+package org.eclipse.jnosql.extensions.sql.tck;
 
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
 
-import ee.jakarta.tck.data.standalone.entity.EntityTests;
+import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
 
-import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.eclipse.jnosql.mapping.reflection.FieldReader;
 import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.Disabled;
 
+
+
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.extensions.sql.tck.junit.RunOnly;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import ee.jakarta.tck.data.standalone.entity.EntityTests;
+
+/**
+ * This is a group of PersistenceEntityTests tests that must run outside of a global transaction,
+ * otherwise the test scenario doesn't make sense and would always fail. The rest of the tests
+ * are executed in {@link JNoSqlPersistenceEntityTests}, with global transactions created with
+ * {@link TransactionExtension}
+ *
+ * @author ondro
+ */
 @EnableAutoWeld
 @AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
@@ -38,6 +52,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({JNoSqlEntityTests.class, EntityTests.class})
 @ExtendWith(TransactionExtension.class)
 @Disabled("Disable due the migration of the Reflection engine")
-public class JNoSqlEntityTests extends EntityTests {
+public class JNoSqlNoGlobalTxPersistenceEntityTests extends PersistenceEntityTests {
+
+    @Override
+    @RunOnly
+    @Test
+    public void testVersionedInsertUpdateDelete() {
+        super.testVersionedInsertUpdateDelete();
+    }
+
+    @Override
+    @RunOnly
+    @Test
+    public void testMultipleInsertUpdateDelete() {
+        super.testMultipleInsertUpdateDelete();
+    }
 
 }
