@@ -13,7 +13,7 @@
  *   Otavio Santana
  *   Ondro Mihalyi
  */
-package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
+package org.eclipse.jnosql.extensions.sql.reflection;
 
 
 import io.github.classgraph.ClassGraph;
