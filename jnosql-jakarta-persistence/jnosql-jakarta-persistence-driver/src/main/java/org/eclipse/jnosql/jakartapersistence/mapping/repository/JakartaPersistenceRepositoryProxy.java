@@ -76,9 +76,10 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     private final Class<?> repositoryType;
 
+    @SuppressWarnings("unchecked")
     public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntitiesMetadata entities, Class<?> repositoryType, Converters converters) {
         this.template = template;
-        Class<T> typeClass = (Class) ((ParameterizedType) repositoryType.getGenericInterfaces()[0])
+        Class<T> typeClass = (Class<T>) ((ParameterizedType) repositoryType.getGenericInterfaces()[0])
                 .getActualTypeArguments()[0];
         this.entitiesMetadata = entities;
         this.entityMetadata = entities.get(typeClass);
