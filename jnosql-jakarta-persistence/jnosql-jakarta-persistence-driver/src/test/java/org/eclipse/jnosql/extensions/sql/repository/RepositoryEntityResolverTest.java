@@ -141,7 +141,9 @@ class RepositoryEntityResolverTest {
                 CustomInsertRepository.class,
                 CustomUpdateRepository.class,
                 CustomPageRepository.class,
-                CustomCursorRepository.class})
+                CustomCursorRepository.class,
+                CustomInsertListRepository.class,
+                CustomDeleteListRepository.class})
         void shouldResolveFromCustomRepository(Class<?> repositoryClass) {
 
             var result = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
