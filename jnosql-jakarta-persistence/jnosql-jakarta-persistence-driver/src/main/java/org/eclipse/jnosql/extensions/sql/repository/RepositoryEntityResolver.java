@@ -62,9 +62,16 @@ INSTANCE;
         for (Method method : repositoryType.getDeclaredMethods()) {
 
             Class<?> entity = extractEntityFromReturnType(method.getGenericReturnType());
-
             if (entity != null) {
                 return entity;
+            }
+            if(method.getParameters().length > 0) {
+                for (Type parameterType : method.getGenericParameterTypes()) {
+                    entity = extractEntityFromReturnType(parameterType);
+                    if (entity != null) {
+                        return entity;
+                    }
+                }
             }
         }
         return null;
