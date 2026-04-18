@@ -22,6 +22,7 @@ import jakarta.persistence.Persistence;
 
 @ApplicationScoped
 public class EntityManagerProducer {
+
     @Produces
     @ApplicationScoped
     public EntityManager createEntityManager() {
