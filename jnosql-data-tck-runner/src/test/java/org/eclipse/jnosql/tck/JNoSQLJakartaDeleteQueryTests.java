@@ -11,7 +11,7 @@
  */
 package org.eclipse.jnosql.tck;
 
-import ee.jakarta.tck.data.standalone.entity.JakartaDeleteQueryTests;
+import ee.jakarta.tck.data.standalone.entity.JakartaQueryDeleteTests;
 import org.eclipse.jnosql.databases.mongodb.communication.MongoDBDocumentConfigurations;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.config.MappingConfigurations;
@@ -32,7 +32,7 @@ import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
 @AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
-public class JNoSQLJakartaDeleteQueryTests extends JakartaDeleteQueryTests {
+public class JNoSQLJakartaDeleteQueryTests extends JakartaQueryDeleteTests {
 
     public static final String DATABASE_NAME = "tck";
 
