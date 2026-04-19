@@ -32,7 +32,7 @@ import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
 @AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
-public class JNoSQLJakartaDeleteQueryTests extends JakartaQueryDeleteTests {
+public class JNoSQLJakartaQueryDeleteTests extends JakartaQueryDeleteTests {
 
     public static final String DATABASE_NAME = "tck";
 
