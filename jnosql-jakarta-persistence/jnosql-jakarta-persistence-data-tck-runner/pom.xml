@@ -32,7 +32,6 @@
 
         <!-- Dependency versions -->
         <jakarta.data.version>1.0.1</jakarta.data.version>
-        <jakarta.data.tck.version>1.0.1</jakarta.data.tck.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
         <jakarta.enterprise.cdi.version>4.1.0</jakarta.enterprise.cdi.version>
         <eclipselink.version>5.0.0-B05</eclipselink.version>
