@@ -7,14 +7,11 @@
  *   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
  *
  *   You may elect to redistribute this code under either of these licenses.
- *
- *   Contributors:
- *
- *   Ondro Mihalyi
  */
 package org.eclipse.jnosql.extensions.sql.tck;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
+import ee.jakarta.tck.data.standalone.entity.JakartaQueryDeleteTests;
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
