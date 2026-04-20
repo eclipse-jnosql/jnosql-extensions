@@ -27,7 +27,7 @@ enum SqlValueConverter {
     static Object of(Supplier<Expression<?, ?>> supplier, BasicAttribute<?, ?> basicAttribute) {
         var expression = supplier.get();
         var literal = getLiteral(expression);
-        return Value.of(literal.value()).get(basicAttribute.attributeType());
+        return Value.of(literal.value()).get(basicAttribute.type());
     }
 
     private static Literal<?> getLiteral(Expression<?, ?> expression) {
