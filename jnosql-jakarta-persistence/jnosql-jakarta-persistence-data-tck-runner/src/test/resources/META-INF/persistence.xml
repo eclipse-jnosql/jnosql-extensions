@@ -25,6 +25,9 @@
     <class>ee.jakarta.tck.data.standalone.entity.Coordinate</class>
     <class>ee.jakarta.tck.data.standalone.persistence.Product</class>
     <class>ee.jakarta.tck.data.web.validation.Rectangle</class>
+    <class>ee.jakarta.tck.data.standalone.entity.Vegetable</class>
+    <class>ee.jakarta.tck.data.framework.read.only.Fruit</class>
+    <class>ee.jakarta.tck.data.framework.read.only.Country</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <!-- Common properties -->

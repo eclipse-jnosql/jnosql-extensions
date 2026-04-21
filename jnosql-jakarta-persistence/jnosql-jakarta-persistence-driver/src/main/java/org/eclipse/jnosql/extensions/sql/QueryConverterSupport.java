@@ -20,6 +20,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 
 import java.util.List;
@@ -28,6 +30,7 @@ abstract class QueryConverterSupport {
 
     static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
     static final PredicateConverter PREDICATE_CONVERTER =  new PredicateConverter(QueryConverterSupport::resolvePath);
+    private static final String ID_FUNCTION_PATH = "id(this)";
     protected final EntityManager manager;
 
     QueryConverterSupport(EntityManager manager) {
@@ -36,12 +39,19 @@ abstract class QueryConverterSupport {
 
 
     protected void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<?> root, CriteriaQuery<?> criteriaQuery) {
-        PREDICATE_CONVERTER.applyCondition(criteriaCondition, criteriaBuilder, root, criteriaQuery);
+        PREDICATE_CONVERTER.applyCondition(criteriaCondition, criteriaBuilder, root, criteriaQuery, manager);
     }
 
-    static Path<?> resolvePath(Path<?> root, String property) {
+    static Path<?> resolvePath(Path<?> root, String property, EntityManager manager) {
         if(RESERVED_PROPERTIES.contains(property)) {
             return null;
+        }
+        if (ID_FUNCTION_PATH.equalsIgnoreCase(property)) {
+            EntityType<?> entity = manager.getMetamodel()
+                    .entity(root.getJavaType());
+
+            SingularAttribute<?, ?> attribute = itAttribute(entity);
+            return root.get(attribute.getName());
         }
         if (!property.contains(".")) {
             return root.get(property);
@@ -56,6 +66,14 @@ abstract class QueryConverterSupport {
         return path;
     }
 
+    private static SingularAttribute<?, ?> itAttribute(EntityType<?> entity) {
+        return entity.getSingularAttributes()
+                .stream()
+                .filter(SingularAttribute::isId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No @Id attribute found"));
+    }
+
     protected static Object readProperty(Object entity, String property) {
         try {
             var field = entity.getClass().getDeclaredField(property);
@@ -67,6 +85,7 @@ abstract class QueryConverterSupport {
         }
     }
 
+    @SuppressWarnings("unchecked")
     protected  <T> Class<T> resolveEntity(String name) {
         return manager.getMetamodel()
                 .getEntities()

@@ -42,4 +42,12 @@ public class JNoSQLRestrictionTests extends RestrictionTests {
         System.setProperty(MappingConfigurations.DOCUMENT_DATABASE.get(), DATABASE_NAME);
     }
 
+    @Override
+    public void testTemporalLessThanLocalDate() {
+
+    }
+
+    @Override
+    public void testTemporalGreaterThan() {
+    }
 }

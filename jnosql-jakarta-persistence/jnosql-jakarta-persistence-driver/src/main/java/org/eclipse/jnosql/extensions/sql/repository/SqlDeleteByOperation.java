@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
@@ -22,6 +23,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 @ApplicationScoped
+@Typed(SqlDeleteByOperation.class)
 class SqlDeleteByOperation implements DeleteByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;

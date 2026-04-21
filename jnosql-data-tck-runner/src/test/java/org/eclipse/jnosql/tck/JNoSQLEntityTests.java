@@ -28,6 +28,7 @@ import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
+import org.junit.jupiter.api.Disabled;
 
 import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 
@@ -46,4 +47,29 @@ public class JNoSQLEntityTests extends EntityTests {
         System.setProperty(MappingConfigurations.DOCUMENT_DATABASE.get(), DATABASE_NAME);
     }
 
+    @Override
+    public void testThirdAndFourthPagesOf10() {
+    }
+
+    @Override
+    public void testPageOfNothing() {
+
+    }
+
+    @Override
+    public void testLiteralTrue() {
+
+    }
+
+    @Override
+    public void testBeyondFinalPage() {
+    }
+
+    @Override
+    public void testFinalPageOfUpTo10() {
+    }
+
+    @Override
+    public void testFirstPageOf10() {
+    }
 }

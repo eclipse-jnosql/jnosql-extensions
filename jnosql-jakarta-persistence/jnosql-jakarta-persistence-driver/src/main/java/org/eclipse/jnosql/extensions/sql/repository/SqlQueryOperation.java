@@ -15,18 +15,25 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.query.data.QueryType;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlPreparedStatement;
+import org.eclipse.jnosql.extensions.sql.SqlSelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.core.repository.DynamicQueryMethodReturn;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
+import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
+
+@Typed(SqlQueryOperation.class)
 @ApplicationScoped
 class SqlQueryOperation implements QueryOperation {
 
@@ -34,13 +41,17 @@ class SqlQueryOperation implements QueryOperation {
 
     private final SqlReturnType sqlReturnType;
 
+    private final EntitiesMetadata entitiesMetadata;
+
     @Inject
-    SqlQueryOperation(SqlReturnType sqlReturnType) {
+    SqlQueryOperation(SqlReturnType sqlReturnType, EntitiesMetadata entitiesMetadata) {
         this.sqlReturnType = sqlReturnType;
+        this.entitiesMetadata = entitiesMetadata;
     }
 
      SqlQueryOperation() {
-        this.sqlReturnType = null;
+         this.entitiesMetadata = null;
+         this.sqlReturnType = null;
     }
 
     @SuppressWarnings("unchecked")
@@ -55,6 +66,7 @@ class SqlQueryOperation implements QueryOperation {
         var queryValue = method.query().orElseThrow();
         var queryType = QueryType.parse(queryValue);
         var returnType = method.returnType().orElseThrow();
+        Optional<Class<?>> returnElementType = method.elementType();
         LOGGER.finest("Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
         var entity = entityMetadata.name();
@@ -69,7 +81,13 @@ class SqlQueryOperation implements QueryOperation {
                 .mapper(sqlReturnType.mapper())
                 .prepareConverter(textQuery -> {
                     SqlPreparedStatement prepare = (SqlPreparedStatement) template.prepare(textQuery, entity);
-                    prepare.setSelectMapper(query -> SqlQueryBuilder.updateQuery(context, method, query));
+                    prepare.setSelectMapper(query -> {
+                        SelectQuery selectQuery = SqlQueryBuilder.updateQuery(context, method, query);
+                        if(returnElementType.isPresent() && entitiesMetadata.projection(returnElementType.orElseThrow()).isPresent()) {
+                            return SqlSelectQuery.of(selectQuery, returnElementType.orElseThrow());
+                        }
+                        return selectQuery;
+                    });
                     return prepare;
                 }).build();
         return (T) methodReturn.execute();

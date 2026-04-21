@@ -32,6 +32,7 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -97,16 +98,18 @@ public final class SelectQueryConverter extends QueryConverterSupport {
 
         Root<T> root = criteriaQuery.from(type);
 
-        applyColumns(query.columns(), root, criteriaQuery);
+        if(query instanceof SqlSelectQuery sqlSelectQuery) {
+            appendProjector(query, sqlSelectQuery, root, criteriaQuery, criteriaBuilder);
+        } else {
+            applyColumns(query.columns(), root, criteriaQuery);
+        }
         applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaQuery);
-        applySort(query.sorts(), criteriaBuilder, root, criteriaQuery);
+        applySort(query.sorts(), criteriaBuilder, root, criteriaQuery, manager);
         long limit = query.limit();
         TypedQuery<T> typedQuery = manager.createQuery(criteriaQuery);
         applySkip(query.skip(), typedQuery);
         applyLimit(limit, typedQuery);
-        if(query instanceof SqlSelectQuery sqlSelectQuery) {
-            appendProjector(query, sqlSelectQuery, root, criteriaQuery, criteriaBuilder);
-        }
+
         return typedQuery;
     }
 
@@ -130,7 +133,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
             }
 
             Selection<?>[] selections = columns.stream()
-                    .map(column -> resolvePath(root, column))
+                    .map(column -> resolvePath(root, column, manager))
                     .toArray(Selection[]::new);
             criteriaQuery.select((Selection<? extends T>) criteriaBuilder.construct(projector, selections));
         }
@@ -263,7 +266,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
             PageRequest.Cursor cursor,
             PageRequest.Mode mode) {
 
-        List<Sort<?>> sorts = query.sorts();
+        List<Sort<?>> sorts = new ArrayList<>(new HashSet<>(query.sorts()));
 
         if (cursor.size() != sorts.size()) {
             throw new IllegalArgumentException(
@@ -358,13 +361,13 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         }
     }
 
-    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery, EntityManager entityManager) {
         if(sorts.isEmpty()) {
             return;
         }
         List<Order> orders = new ArrayList<>();
         for (Sort<?> sort : sorts) {
-            Path<?> path = resolvePath(root, sort.property());
+            Path<?> path = resolvePath(root, sort.property(), entityManager);
             if (sort.isAscending()) {
                 orders.add(criteriaBuilder.asc(path));
             } else {
@@ -382,7 +385,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         }
 
         List<? extends Selection<?>> selections = columns.stream()
-                .map(column -> resolvePath(root, column)) // Path<?> is fine
+                .map(column -> resolvePath(root, column, manager))
                 .toList();
 
         if (selections.size() == 1) {

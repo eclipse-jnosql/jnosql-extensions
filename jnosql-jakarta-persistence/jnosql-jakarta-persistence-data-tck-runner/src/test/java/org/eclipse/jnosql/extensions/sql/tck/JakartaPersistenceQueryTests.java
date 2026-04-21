@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License v1.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -15,12 +15,10 @@
 package org.eclipse.jnosql.extensions.sql.tck;
 
 import ee.jakarta.tck.data.standalone.entity.EntityTests;
+import ee.jakarta.tck.data.standalone.entity.JakartaQueryTests;
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
-
-import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
-
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.eclipse.jnosql.mapping.reflection.FieldReader;
@@ -30,7 +28,6 @@ import org.jboss.weld.junit5.auto.AddBeanClasses;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 
@@ -41,31 +38,5 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @AddBeanClasses(ProjectorConverter.class)
 @ExtendWith(TransactionExtension.class)
-public class JakartaPersistenceEntityTests extends PersistenceEntityTests {
-
-
-    @Override
-    @Disabled
-    public void testVersionedInsertUpdateDelete() {
-        super.testVersionedInsertUpdateDelete();
-    }
-
-    @Override
-    @Disabled
-    public void testMultipleInsertUpdateDelete() {
-        super.testMultipleInsertUpdateDelete();
-    }
-
-
-    @Override
-    @Disabled
-    public void testQueryWithPositionalParameters() {
-        super.testQueryWithPositionalParameters();
-    }
-
-    @Disabled
-    @Override
-    public void testQueryWithNamedParameters() {
-        super.testQueryWithNamedParameters();
-    }
+class JakartaPersistenceQueryTests extends JakartaQueryTests {
 }

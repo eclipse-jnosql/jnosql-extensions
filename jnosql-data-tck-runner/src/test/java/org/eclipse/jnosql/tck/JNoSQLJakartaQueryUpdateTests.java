@@ -11,7 +11,8 @@
  */
 package org.eclipse.jnosql.tck;
 
-import ee.jakarta.tck.data.standalone.entity.JakartaUpdateQueryTests;
+import ee.jakarta.tck.data.standalone.entity.JakartaQueryUpdateTests;
+
 import org.eclipse.jnosql.databases.mongodb.communication.MongoDBDocumentConfigurations;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.config.MappingConfigurations;
@@ -32,7 +33,7 @@ import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
 @AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
-public class JNoSQLJakartaUpdateQueryTests extends JakartaUpdateQueryTests {
+public class JNoSQLJakartaQueryUpdateTests extends JakartaQueryUpdateTests {
 
     public static final String DATABASE_NAME = "tck";
     static {

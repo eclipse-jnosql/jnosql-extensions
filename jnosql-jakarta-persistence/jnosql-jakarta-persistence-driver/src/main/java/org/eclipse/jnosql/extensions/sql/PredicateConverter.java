@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -40,11 +41,12 @@ final class PredicateConverter {
     void applyCondition(CriteriaCondition criteriaCondition,
                         CriteriaBuilder criteriaBuilder,
                         Root<?> root,
-                        CriteriaQuery<?> criteriaQuery) {
+                        CriteriaQuery<?> criteriaQuery,
+                        EntityManager entityManager) {
         if (criteriaCondition == null) {
             return;
         }
-        Predicate predicate = toPredicate(criteriaCondition, criteriaBuilder, root);
+        Predicate predicate = toPredicate(criteriaCondition, criteriaBuilder, root, entityManager);
         if (predicate != null) {
             criteriaQuery.where(predicate);
         }
@@ -52,14 +54,15 @@ final class PredicateConverter {
 
     Predicate toPredicate(CriteriaCondition condition,
                           CriteriaBuilder criteriaBuilder,
-                          Root<?> root) {
-        return toPredicate(condition, criteriaBuilder, root, false);
+                          Root<?> root, EntityManager entityManager) {
+        return toPredicate(condition, criteriaBuilder, root, false, entityManager);
     }
 
     private Predicate toPredicate(CriteriaCondition condition,
                                   CriteriaBuilder criteriaBuilder,
                                   Root<?> root,
-                                  boolean ignoreCase) {
+                                  boolean ignoreCase,
+                                  EntityManager entityManager) {
 
         Element element = condition.element();
         String property = element.name();
@@ -68,69 +71,69 @@ final class PredicateConverter {
         return switch (condition.condition()) {
 
             case EQUALS -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield equalsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case LIKE -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield likePredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case CONTAINS -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield containsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case STARTS_WITH -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield startsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case ENDS_WITH -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield endsWithPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case GREATER_THAN -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield greaterThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case GREATER_EQUALS_THAN -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield greaterEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case LESSER_THAN -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield lessThanPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case LESSER_EQUALS_THAN -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield lessEqualsPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case IN -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield inPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
             case BETWEEN -> {
-                Path<?> path = pathResolver.resolvePath(root, property);
+                Path<?> path = pathResolver.resolvePath(root, property, entityManager);
                 yield betweenPredicate(criteriaBuilder, path, rawValue, ignoreCase);
             }
 
-            case AND -> andPredicate(criteriaBuilder, root, element, ignoreCase);
+            case AND -> andPredicate(criteriaBuilder, root, element, ignoreCase, entityManager);
 
-            case OR -> orPredicate(criteriaBuilder, root, element, ignoreCase);
+            case OR -> orPredicate(criteriaBuilder, root, element, ignoreCase, entityManager);
 
-            case NOT -> notPredicate(criteriaBuilder, root, element, ignoreCase);
+            case NOT -> notPredicate(criteriaBuilder, root, element, ignoreCase, entityManager);
 
             case IGNORE_CASE -> {
                 CriteriaCondition inner = element.get(CriteriaCondition.class);
-                yield toPredicate(inner, criteriaBuilder, root, true);
+                yield toPredicate(inner, criteriaBuilder, root, true, entityManager);
             }
         };
     }
@@ -301,8 +304,14 @@ final class PredicateConverter {
 
         in = cb.in(path);
 
-        ((Iterable<?>) rawValue).forEach(item ->
-                in.value(value(item))
+        ((Iterable<?>) rawValue).forEach(item -> {
+                    var rawItemValue = value(item);
+                    if (rawItemValue instanceof Iterable<?> iterable) {
+                        iterable.forEach(inner ->in.value(value(inner)));
+                    } else {
+                        in.value(value(item));
+                    }
+                }
         );
 
         return in;
@@ -335,31 +344,31 @@ final class PredicateConverter {
         );
     }
 
-    private Predicate andPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase) {
+    private Predicate andPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase, EntityManager entityManager) {
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
         return cb.and(
                 conditions.stream()
-                        .map(c -> toPredicate(c, cb, root, ignoreCase))
+                        .map(c -> toPredicate(c, cb, root, ignoreCase, entityManager))
                         .toArray(Predicate[]::new)
         );
     }
 
-    private Predicate orPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase) {
+    private Predicate orPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase, EntityManager entityManager) {
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
         return cb.or(
                 conditions.stream()
-                        .map(c -> toPredicate(c, cb, root, ignoreCase))
+                        .map(c -> toPredicate(c, cb, root, ignoreCase, entityManager))
                         .toArray(Predicate[]::new)
         );
     }
 
-    private Predicate notPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase) {
+    private Predicate notPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase, EntityManager entityManager) {
         CriteriaCondition inner = element.get(CriteriaCondition.class);
-        return cb.not(toPredicate(inner, cb, root, ignoreCase));
+        return cb.not(toPredicate(inner, cb, root, ignoreCase, entityManager));
     }
 
     private boolean isStringPath(Path<?> path) {
@@ -380,7 +389,8 @@ final class PredicateConverter {
         return value;
     }
 
+
     interface PathResolver {
-        Path<?> resolvePath(Path<?> root, String property);
+        Path<?> resolvePath(Path<?> root, String property, EntityManager entityManager);
     }
 }

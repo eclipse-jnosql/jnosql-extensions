@@ -39,7 +39,7 @@ final class DeleteQueryConverter extends QueryConverterSupport {
 
         Root<T> root = criteriaDelete.from(type);
 
-        applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaDelete);
+        applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaDelete, manager);
 
         return manager.createQuery(criteriaDelete);
     }
@@ -48,13 +48,13 @@ final class DeleteQueryConverter extends QueryConverterSupport {
             CriteriaCondition criteriaCondition,
             CriteriaBuilder criteriaBuilder,
             Root<T> root,
-            CriteriaDelete<T> criteriaDelete) {
+            CriteriaDelete<T> criteriaDelete, EntityManager entityManager) {
 
         if (criteriaCondition == null) {
             return;
         }
 
-        var predicate = PREDICATE_CONVERTER.toPredicate(criteriaCondition, criteriaBuilder, root);
+        var predicate = PREDICATE_CONVERTER.toPredicate(criteriaCondition, criteriaBuilder, root, entityManager);
         if (predicate != null) {
             criteriaDelete.where(predicate);
         }
