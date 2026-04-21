@@ -301,9 +301,14 @@ final class PredicateConverter {
 
         in = cb.in(path);
 
-        ((Iterable<?>) rawValue).forEach(item ->
-
-                in.value(valueIn(value(item)))
+        ((Iterable<?>) rawValue).forEach(item -> {
+                    var rawItemValue = value(item);
+                    if (rawItemValue instanceof Iterable<?> iterable) {
+                        iterable.forEach(inner ->in.value(value(inner)));
+                    } else {
+                        in.value(value(item));
+                    }
+                }
         );
 
         return in;
@@ -381,12 +386,6 @@ final class PredicateConverter {
         return value;
     }
 
-    private static Object valueIn(Object rawValue) {
-        if(rawValue instanceof List<?> items) {
-            return items.stream().map(PredicateConverter::value).toList();
-        }
-        return value(rawValue);
-    }
 
     interface PathResolver {
         Path<?> resolvePath(Path<?> root, String property);
