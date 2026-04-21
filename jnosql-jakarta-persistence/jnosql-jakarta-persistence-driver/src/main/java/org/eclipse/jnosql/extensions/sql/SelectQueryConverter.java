@@ -97,16 +97,18 @@ public final class SelectQueryConverter extends QueryConverterSupport {
 
         Root<T> root = criteriaQuery.from(type);
 
-        applyColumns(query.columns(), root, criteriaQuery);
+        if(query instanceof SqlSelectQuery sqlSelectQuery) {
+            appendProjector(query, sqlSelectQuery, root, criteriaQuery, criteriaBuilder);
+        } else {
+            applyColumns(query.columns(), root, criteriaQuery);
+        }
         applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaQuery);
         applySort(query.sorts(), criteriaBuilder, root, criteriaQuery, manager);
         long limit = query.limit();
         TypedQuery<T> typedQuery = manager.createQuery(criteriaQuery);
         applySkip(query.skip(), typedQuery);
         applyLimit(limit, typedQuery);
-        if(query instanceof SqlSelectQuery sqlSelectQuery) {
-            appendProjector(query, sqlSelectQuery, root, criteriaQuery, criteriaBuilder);
-        }
+
         return typedQuery;
     }
 
