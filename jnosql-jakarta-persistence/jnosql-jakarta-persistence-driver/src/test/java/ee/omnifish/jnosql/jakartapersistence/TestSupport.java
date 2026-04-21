@@ -22,6 +22,9 @@ import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseMa
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreBaseRepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.reflection.FieldReader;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
+import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
 
 /**
  *
@@ -34,9 +37,10 @@ public class TestSupport {
     static SeContainerInitializer cdiInitializerWithDefaultEmProducer() {
         return SeContainerInitializer.newInstance()
                 .disableDiscovery()
-                .addExtensions(JakartaPersistenceExtension.class)
+                .addExtensions(JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class)
                 .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addPackages(CoreBaseRepositoryOperationProvider.class, SqlRepositoryProducer.class)
+                .addPackages(CoreBaseRepositoryOperationProvider.class, SqlRepositoryProducer.class, FieldReader.class)
+                .addBeanClasses(ProjectorConverter.class)
                 .addBeanClasses(EntityManagerProducer.class, PersistenceUnitCacheProvider.class);
     }
 
