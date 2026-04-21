@@ -26,6 +26,7 @@
     <class>ee.jakarta.tck.data.standalone.persistence.Product</class>
     <class>ee.jakarta.tck.data.web.validation.Rectangle</class>
     <class>ee.jakarta.tck.data.standalone.entity.Vegetable</class>
+    <class>ee.jakarta.tck.data.framework.read.only.Fruit</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>
       <!-- Common properties -->
