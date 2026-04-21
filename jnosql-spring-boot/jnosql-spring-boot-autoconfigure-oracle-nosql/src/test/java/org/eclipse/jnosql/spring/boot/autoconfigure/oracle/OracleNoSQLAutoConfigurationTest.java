@@ -95,7 +95,10 @@ class OracleNoSQLAutoConfigurationTest {
     @Test
     void contextShouldFailWhenDatabasePropertyIsAbsent() {
         contextRunner
-                .withUserConfiguration(MockOracleFactoryConfig.class)
+                .withUserConfiguration(
+                        MockOracleFactoryConfig.class,
+                        UserConfigForContextShouldFailWhenDatabasePropertyIsAbsentTest.class
+                )
                 // no jnosql.document.database property
                 .run(context -> assertThat(context)
                         .hasFailed()
@@ -130,6 +133,23 @@ class OracleNoSQLAutoConfigurationTest {
         @Bean(BEAN_ID)
         OracleNoSQLTemplate userOracleNoSQLTemplate() {
             return mock(OracleNoSQLTemplate.class);
+        }
+    }
+
+    @Configuration
+    static class UserConfigForContextShouldFailWhenDatabasePropertyIsAbsentTest {
+
+        static final String BEAN_ID = "userOracleNoSQLTemplate";
+        static final String QUALIFIED_MANAGER_NAME = "qualifiedManagerName";
+
+        @Bean(BEAN_ID)
+        OracleNoSQLTemplate userOracleNoSQLTemplate() {
+            return mock(OracleNoSQLTemplate.class);
+        }
+
+        @Bean(QUALIFIED_MANAGER_NAME)
+        String qualifiedManagerName(OracleNoSQLDocumentManager manager) {
+            return manager.name();
         }
     }
 }

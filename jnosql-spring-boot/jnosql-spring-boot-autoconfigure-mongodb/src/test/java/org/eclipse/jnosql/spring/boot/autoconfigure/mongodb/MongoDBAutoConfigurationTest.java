@@ -16,6 +16,7 @@ package org.eclipse.jnosql.spring.boot.autoconfigure.mongodb;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import org.eclipse.jnosql.databases.mongodb.communication.MongoDBDocumentManager;
 import org.eclipse.jnosql.databases.mongodb.mapping.MongoDBTemplate;
 import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
 import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
@@ -89,7 +90,10 @@ class MongoDBAutoConfigurationTest {
     @Test
     void contextShouldFailWhenDatabasePropertyIsAbsent() {
         contextRunner
-                .withUserConfiguration(MongoClientConfig.class)
+                .withUserConfiguration(
+                        MongoClientConfig.class,
+                        UserConfigForContextShouldFailWhenDatabasePropertyIsAbsentTest.class
+                )
                 // no jnosql.document.database property
                 .run(context -> assertThat(context)
                         .hasFailed()
@@ -127,6 +131,22 @@ class MongoDBAutoConfigurationTest {
         @Bean(BEAN_ID)
         MongoDBTemplate userMongoDBTemplate() {
             return org.mockito.Mockito.mock(MongoDBTemplate.class);
+        }
+    }
+
+    @Configuration
+    static class UserConfigForContextShouldFailWhenDatabasePropertyIsAbsentTest {
+        static final String BEAN_ID = "userMongoDBTemplate";
+        static final String QUALIFIED_MANAGER_NAME = "qualifiedManagerName";
+
+        @Bean(BEAN_ID)
+        MongoDBTemplate userMongoDBTemplate() {
+            return org.mockito.Mockito.mock(MongoDBTemplate.class);
+        }
+
+        @Bean(QUALIFIED_MANAGER_NAME)
+        String qualifiedManagerName(MongoDBDocumentManager manager) {
+            return manager.name();
         }
     }
 }

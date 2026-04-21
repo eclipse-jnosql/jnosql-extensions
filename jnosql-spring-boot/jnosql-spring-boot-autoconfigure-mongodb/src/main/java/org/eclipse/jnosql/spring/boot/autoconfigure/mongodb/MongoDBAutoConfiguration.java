@@ -106,6 +106,7 @@ public class MongoDBAutoConfiguration {
      * @throws BeanCreationException if {@code jnosql.document.database} is not configured
      */
     @Bean
+    @Lazy
     @ConditionalOnMissingBean
     public MongoDBDocumentManager mongoDBDocumentManager(MongoDBDocumentManagerFactory factory,
                                                          Settings settings) {

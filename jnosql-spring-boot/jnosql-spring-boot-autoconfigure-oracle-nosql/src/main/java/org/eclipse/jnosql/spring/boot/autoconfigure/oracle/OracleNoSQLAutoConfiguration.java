@@ -94,6 +94,7 @@ public class OracleNoSQLAutoConfiguration {
      * @throws BeanCreationException if {@code jnosql.document.database} is not configured
      */
     @Bean
+    @Lazy
     @ConditionalOnMissingBean
     public OracleNoSQLDocumentManager oracleNoSQLDocumentManager(OracleDocumentManagerFactory factory,
                                                                    Settings settings) {
