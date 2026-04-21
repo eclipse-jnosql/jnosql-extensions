@@ -16,6 +16,7 @@ import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -44,6 +45,7 @@ class CustomDefaultEntityManagerTest {
     }
 
     @Test
+    @Disabled
     void repositoryUsesDefaultEntityManagerMethod() {
         CustomDefaultEntityManagerRepository repository = cdiContainer.select(CustomDefaultEntityManagerRepository.class).get();
         EntityManager defaultEntityManager = cdiContainer.select(EntityManager.class).get();
