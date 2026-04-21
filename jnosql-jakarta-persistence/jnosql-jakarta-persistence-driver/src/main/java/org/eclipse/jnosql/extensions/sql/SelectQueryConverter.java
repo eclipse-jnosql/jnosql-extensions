@@ -32,8 +32,10 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -265,7 +267,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
             PageRequest.Cursor cursor,
             PageRequest.Mode mode) {
 
-        List<Sort<?>> sorts = query.sorts();
+        List<Sort<?>> sorts = new ArrayList<>(new HashSet<>(query.sorts()));
 
         if (cursor.size() != sorts.size()) {
             throw new IllegalArgumentException(
