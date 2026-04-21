@@ -50,9 +50,8 @@ abstract class QueryConverterSupport {
             EntityType<?> entity = manager.getMetamodel()
                     .entity(root.getJavaType());
 
-            SingularAttribute<?, ?> idAttr = entity.getId(entity.getIdType().getJavaType());
-
-            return root.get(idAttr.getName());
+            SingularAttribute<?, ?> attribute = itAttribute(entity);
+            return root.get(attribute.getName());
         }
         if (!property.contains(".")) {
             return root.get(property);
@@ -65,6 +64,22 @@ abstract class QueryConverterSupport {
         }
 
         return path;
+    }
+
+    private static SingularAttribute<?, ?> itAttribute(EntityType<?> entity) {
+        SingularAttribute<?, ?> idAttr;
+        var idAttrs = entity.getIdClassAttributes();
+
+        if (!idAttrs.isEmpty()) {
+            idAttr = idAttrs.iterator().next(); // still lossy for composite IDs
+        } else {
+            idAttr = entity.getSingularAttributes()
+                    .stream()
+                    .filter(SingularAttribute::isId)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No @Id attribute found"));
+        }
+        return idAttr;
     }
 
     protected static Object readProperty(Object entity, String property) {
