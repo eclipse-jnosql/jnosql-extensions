@@ -48,6 +48,11 @@ class SqlReturnType {
         this.projectorConverter = projectorConverter;
     }
 
+    public SqlReturnType() {
+        this.entitiesMetadata = null;
+        this.projectorConverter = null;
+    }
+
     @SuppressWarnings("unchecked")
     protected Object executeFindByQuery(RepositoryInvocationContext context, SelectQuery query) {
 
