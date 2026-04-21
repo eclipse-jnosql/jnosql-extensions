@@ -114,11 +114,15 @@ class SqlReturnType {
         };
     }
 
+    @SuppressWarnings("unchecked")
     private <E> E projectionMapper(Object value, ProjectionMetadata projectionMetadata,
                                    List<String> attributes,
                                    RepositoryMethod method,
                                    EntityMetadata entityMetadata) {
 
+        if(value.getClass().equals(projectionMetadata.type())) {
+            return (E) value;
+        }
         if(!attributes.isEmpty()) {
             return projectorConverter.map(value, projectionMetadata, attributes);
         }
