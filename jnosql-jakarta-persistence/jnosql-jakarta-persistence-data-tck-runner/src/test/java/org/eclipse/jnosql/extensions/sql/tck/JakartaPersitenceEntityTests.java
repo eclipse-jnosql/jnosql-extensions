@@ -40,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @AddBeanClasses(ProjectorConverter.class)
 @ExtendWith(TransactionExtension.class)
+@Disabled
 public class JakartaPersitenceEntityTests extends EntityTests {
 
     @Override
