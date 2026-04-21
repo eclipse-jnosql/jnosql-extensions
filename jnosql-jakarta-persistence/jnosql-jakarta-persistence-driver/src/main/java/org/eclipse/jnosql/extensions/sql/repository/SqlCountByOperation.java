@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
@@ -25,6 +26,7 @@ import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import java.util.function.Function;
 
 @ApplicationScoped
+@Typed(SqlCountByOperation.class)
 class SqlCountByOperation implements CountByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;
