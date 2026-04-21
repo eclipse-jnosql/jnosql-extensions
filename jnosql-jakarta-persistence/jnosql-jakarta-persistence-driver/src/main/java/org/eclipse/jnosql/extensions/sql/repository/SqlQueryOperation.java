@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.query.data.QueryType;
 import org.eclipse.jnosql.extensions.sql.SqlPreparedStatement;
@@ -27,6 +28,8 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 
 import java.util.logging.Logger;
 
+
+@Typed(SqlQueryOperation.class)
 @ApplicationScoped
 class SqlQueryOperation implements QueryOperation {
 
