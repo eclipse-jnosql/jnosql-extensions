@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2026 Contributors to the Eclipse Foundation
+  ~   All rights reserved. This program and the accompanying materials
+  ~   are made available under the terms of the Eclipse Public License v1.0
+  ~   and Apache License v2.0 which accompanies this distribution.
+  ~   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+  ~   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+  ~
+  ~   You may elect to redistribute this code under either of these licenses.
+  ~
+  ~   Contributors:
+  ~
+  ~   Maximillian Arruda
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.eclipse.jnosql.spring</groupId>
+		<artifactId>jnosql-spring-boot</artifactId>
+		<version>1.2.0-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>jnosql-spring-boot-starter-mongodb-test</artifactId>
+	<version>1.2.0-SNAPSHOT</version>
+	<name>JNoSQL Spring Boot Starter MongoDB Test</name>
+	<description>Integration test project for JNoSQL Spring Boot MongoDB starter</description>
+
+	<properties>
+		<java.version>21</java.version>
+		<checkstyle.skip>true</checkstyle.skip>
+	</properties>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jnosql.spring</groupId>
+			<artifactId>jnosql-spring-boot-starter-mongodb</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Testcontainers dependencies for MongoDB integration testing -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>mongodb</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+</project>
