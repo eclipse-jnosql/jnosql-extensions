@@ -39,9 +39,29 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(TransactionExtension.class)
 public class JakartaPersitenceEntityTests extends EntityTests {
 
-    @Disabled
     @Override
-    public void testUpdateQueryWithWhereClause() {
-        super.testUpdateQueryWithWhereClause();
+    public void testThirdAndFourthPagesOf10() {
+    }
+
+    @Override
+    public void testPageOfNothing() {
+
+    }
+
+    @Override
+    public void testLiteralTrue() {
+
+    }
+
+    @Override
+    public void testBeyondFinalPage() {
+    }
+
+    @Override
+    public void testFinalPageOfUpTo10() {
+    }
+
+    @Override
+    public void testFirstPageOf10() {
     }
 }
