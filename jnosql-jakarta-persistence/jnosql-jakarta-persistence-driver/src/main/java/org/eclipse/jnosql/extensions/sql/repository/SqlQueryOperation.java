@@ -66,7 +66,7 @@ class SqlQueryOperation implements QueryOperation {
                 .paramsSupplier(() -> RepositoryMetadataUtils.INSTANCE.getParams(method, params))
                 .typeClass(type)
                 .pageRequest(pageRequest)
-                .mapper(sqlReturnType.mapper())
+                .mapper(sqlReturnType.mapper(method, entityMetadata))
                 .prepareConverter(textQuery -> {
                     SqlPreparedStatement prepare = (SqlPreparedStatement) template.prepare(textQuery, entity);
                     prepare.setSelectMapper(query -> SqlQueryBuilder.updateQuery(context, method, query));
