@@ -23,6 +23,8 @@ import ee.jakarta.tck.data.standalone.persistence.PersistenceEntityTests;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.eclipse.jnosql.mapping.reflection.FieldReader;
 import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
+import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
+import org.jboss.weld.junit5.auto.AddBeanClasses;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
@@ -48,6 +50,7 @@ import ee.jakarta.tck.data.standalone.entity.EntityTests;
 @AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
         CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
+@AddBeanClasses(ProjectorConverter.class)
 @ExtendWith(TransactionExtension.class)
 public class JakartaPersistenceEntityEntityTests extends PersistenceEntityTests {
 
