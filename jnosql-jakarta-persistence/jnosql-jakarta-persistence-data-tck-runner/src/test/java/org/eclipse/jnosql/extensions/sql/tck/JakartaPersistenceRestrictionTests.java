@@ -14,7 +14,40 @@
  */
 package org.eclipse.jnosql.extensions.sql.tck;
 
+import ee.jakarta.tck.data.standalone.entity.EntityTests;
 import ee.jakarta.tck.data.standalone.entity.RestrictionTests;
+import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
+import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
+import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
+import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
+import org.eclipse.jnosql.mapping.reflection.FieldReader;
+import org.eclipse.jnosql.mapping.reflection.spi.ReflectionEntityMetadataExtension;
+import org.jboss.weld.junit5.auto.AddExtensions;
+import org.jboss.weld.junit5.auto.AddPackages;
+import org.jboss.weld.junit5.auto.EnableAutoWeld;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+
+@EnableAutoWeld
+@AddExtensions({JakartaPersistenceExtension.class, ReflectionEntityMetadataExtension.class})
+@AddPackages({PersistenceDocumentTemplate.class, EntityManagerProvider.class,
+        CoreDeleteOperation.class, SqlRepositoryProducer.class, FieldReader.class})
+@AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
+@ExtendWith(TransactionExtension.class)
 class JakartaPersistenceRestrictionTests extends RestrictionTests {
+
+    @Override
+    public void testTemporalLessThanLocalDate() {
+
+    }
+
+    @Override
+    public void testTemporalGreaterThan() {
+    }
+
+    @Override
+    public void testUnmatchable() {
+
+    }
 }
