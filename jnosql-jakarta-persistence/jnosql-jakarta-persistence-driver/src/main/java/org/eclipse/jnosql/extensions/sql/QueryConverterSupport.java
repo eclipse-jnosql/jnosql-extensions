@@ -30,6 +30,7 @@ abstract class QueryConverterSupport {
 
     static final List<String> RESERVED_PROPERTIES = List.of("_AND", "_OR", "_NOT");
     static final PredicateConverter PREDICATE_CONVERTER =  new PredicateConverter(QueryConverterSupport::resolvePath);
+    private static final String ID_FUNCTION_PATH = "id(this)";
     protected final EntityManager manager;
 
     QueryConverterSupport(EntityManager manager) {
@@ -45,7 +46,7 @@ abstract class QueryConverterSupport {
         if(RESERVED_PROPERTIES.contains(property)) {
             return null;
         }
-        if ("id(this)".equalsIgnoreCase(property)) {
+        if (ID_FUNCTION_PATH.equalsIgnoreCase(property)) {
             EntityType<?> entity = manager.getMetamodel()
                     .entity(root.getJavaType());
 
