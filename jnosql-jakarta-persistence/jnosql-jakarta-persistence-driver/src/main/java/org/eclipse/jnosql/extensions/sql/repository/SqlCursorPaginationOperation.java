@@ -15,10 +15,12 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 @ApplicationScoped
+@Typed(SqlCursorPaginationOperation.class)
 class SqlCursorPaginationOperation implements CursorPaginationOperation {
     @Override
     public <T> T execute(RepositoryInvocationContext context) {
