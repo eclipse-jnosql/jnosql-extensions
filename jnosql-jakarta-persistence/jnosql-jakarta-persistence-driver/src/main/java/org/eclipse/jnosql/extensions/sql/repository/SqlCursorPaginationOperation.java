@@ -103,7 +103,7 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
     private <T> T mapper(RepositoryInvocationContext context, CursoredPage<?> cursoredPage) {
         RepositoryMethod method = context.method();
         EntityMetadata entityMetadata = context.entityMetadata();
-        var mappedResult = cursoredPage.content().stream().map(returnType.mapper(method, entityMetadata)).toList();
+        var mappedResult = cursoredPage.content().stream().map(returnType.mapper()).toList();
         var cursorPage = (CursoredPageRecord<?>) cursoredPage;
         return (T) new CursoredPageRecord<>(mappedResult, cursorPage.cursors(),
                 -1,
