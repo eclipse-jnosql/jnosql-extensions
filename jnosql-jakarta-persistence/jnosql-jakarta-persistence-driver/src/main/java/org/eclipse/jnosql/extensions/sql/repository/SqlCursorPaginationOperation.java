@@ -21,7 +21,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
-import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryMetadataUtils;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
@@ -29,11 +28,9 @@ import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
-import org.eclipse.jnosql.mapping.semistructured.PreparedStatement;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
-import org.eclipse.jnosql.mapping.semistructured.query.SemiStructuredParameterBasedQuery;
+import org.eclipse.jnosql.extensions.sql.SqlPreparedStatement;
 
-import java.util.Collections;
 import java.util.function.Function;
 
 @ApplicationScoped
@@ -92,10 +89,10 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
 
         var entity = entityMetadata.name();
         var textQuery = method.query().orElseThrow();
-        var prepare = (PreparedStatement) template.prepare(textQuery, entity);
+        var prepare = (SqlPreparedStatement) template.prepare(textQuery, entity);
         var argsParams = RepositoryMetadataUtils.INSTANCE.getParams(method, context.parameters());
         argsParams.forEach(prepare::bind);
-        var query = SqlQueryBuilder.updateQuery(context, method, prepare.selectQuery().orElseThrow());
+        var query = SqlQueryBuilder.updateQuery(context, method, prepare.select().orElseThrow());
         var special = DynamicReturn.findSpecialParameters(context.parameters(), Function.identity());
         var pageRequest = pageRequest(method, special);
         return template.selectCursor(query, pageRequest);
