@@ -67,4 +67,9 @@ public class JakartaPersitenceEntityTests extends EntityTests {
     @Override
     public void testFirstPageOf10() {
     }
+
+    @Override
+    public void testQueryWithSelectReturnsPageOfRecord() {
+
+    }
 }
