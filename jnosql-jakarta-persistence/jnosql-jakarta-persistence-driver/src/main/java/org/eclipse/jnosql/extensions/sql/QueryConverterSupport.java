@@ -67,19 +67,11 @@ abstract class QueryConverterSupport {
     }
 
     private static SingularAttribute<?, ?> itAttribute(EntityType<?> entity) {
-        SingularAttribute<?, ?> idAttr;
-        var idAttrs = entity.getIdClassAttributes();
-
-        if (!idAttrs.isEmpty()) {
-            idAttr = idAttrs.iterator().next(); // still lossy for composite IDs
-        } else {
-            idAttr = entity.getSingularAttributes()
-                    .stream()
-                    .filter(SingularAttribute::isId)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("No @Id attribute found"));
-        }
-        return idAttr;
+        return entity.getSingularAttributes()
+                .stream()
+                .filter(SingularAttribute::isId)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No @Id attribute found"));
     }
 
     protected static Object readProperty(Object entity, String property) {
