@@ -20,6 +20,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 
 import java.util.List;
@@ -36,12 +38,20 @@ abstract class QueryConverterSupport {
 
 
     protected void applyCondition(CriteriaCondition criteriaCondition, CriteriaBuilder criteriaBuilder, Root<?> root, CriteriaQuery<?> criteriaQuery) {
-        PREDICATE_CONVERTER.applyCondition(criteriaCondition, criteriaBuilder, root, criteriaQuery);
+        PREDICATE_CONVERTER.applyCondition(criteriaCondition, criteriaBuilder, root, criteriaQuery, manager);
     }
 
-    static Path<?> resolvePath(Path<?> root, String property) {
+    static Path<?> resolvePath(Path<?> root, String property, EntityManager manager) {
         if(RESERVED_PROPERTIES.contains(property)) {
             return null;
+        }
+        if ("id(this)".equals(property)) {
+            EntityType<?> entity = manager.getMetamodel()
+                    .entity(root.getJavaType());
+
+            SingularAttribute<?, ?> idAttr = entity.getId(entity.getIdType().getJavaType());
+
+            return root.get(idAttr.getName());
         }
         if (!property.contains(".")) {
             return root.get(property);
