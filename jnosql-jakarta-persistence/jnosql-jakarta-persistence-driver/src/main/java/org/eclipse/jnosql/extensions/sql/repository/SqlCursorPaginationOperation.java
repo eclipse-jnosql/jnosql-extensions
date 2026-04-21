@@ -44,19 +44,15 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
 
     private final SqlReturnType returnType;
 
-    private final Converters converters;
-
     @Inject
-    SqlCursorPaginationOperation(SqlQueryBuilder queryBuilder, SqlReturnType returnType, Converters converters) {
+    SqlCursorPaginationOperation(SqlQueryBuilder queryBuilder, SqlReturnType returnType) {
         this.queryBuilder = queryBuilder;
         this.returnType = returnType;
-        this.converters = converters;
     }
 
     SqlCursorPaginationOperation() {
         this.queryBuilder = null;
         this.returnType = null;
-        this.converters = null;
     }
 
     @Override
@@ -75,7 +71,7 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
 
     private CursoredPage<?> executeFindAnnotation(RepositoryInvocationContext context, RepositoryMethod method, EntityMetadata entityMetadata, SemiStructuredTemplate template) {
         var paramValueMap = RepositoryMetadataUtils.INSTANCE.getBy(method, context.parameters());
-        var query = SemiStructuredParameterBasedQuery.INSTANCE.toQuery(paramValueMap, Collections.emptyList(), entityMetadata, converters);
+        var query = SqlParameterBasedQuery.INSTANCE.toQuery(paramValueMap, entityMetadata);
         var updateDynamicQuery = SqlQueryBuilder.updateQuery(context, method, query);
         var special = DynamicReturn.findSpecialParameters(context.parameters(), Function.identity());
         var pageRequest = pageRequest(method, special);
