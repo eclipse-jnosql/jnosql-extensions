@@ -99,7 +99,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
 
         applyColumns(query.columns(), root, criteriaQuery);
         applyCondition(query.condition().orElse(null), criteriaBuilder, root, criteriaQuery);
-        applySort(query.sorts(), criteriaBuilder, root, criteriaQuery);
+        applySort(query.sorts(), criteriaBuilder, root, criteriaQuery, manager);
         long limit = query.limit();
         TypedQuery<T> typedQuery = manager.createQuery(criteriaQuery);
         applySkip(query.skip(), typedQuery);
@@ -130,7 +130,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
             }
 
             Selection<?>[] selections = columns.stream()
-                    .map(column -> resolvePath(root, column))
+                    .map(column -> resolvePath(root, column, manager))
                     .toArray(Selection[]::new);
             criteriaQuery.select((Selection<? extends T>) criteriaBuilder.construct(projector, selections));
         }
@@ -358,13 +358,13 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         }
     }
 
-    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery) {
+    private <T> void applySort(List<Sort<?>> sorts, CriteriaBuilder criteriaBuilder, Root<T> root, CriteriaQuery<T> criteriaQuery, EntityManager entityManager) {
         if(sorts.isEmpty()) {
             return;
         }
         List<Order> orders = new ArrayList<>();
         for (Sort<?> sort : sorts) {
-            Path<?> path = resolvePath(root, sort.property());
+            Path<?> path = resolvePath(root, sort.property(), entityManager);
             if (sort.isAscending()) {
                 orders.add(criteriaBuilder.asc(path));
             } else {
@@ -382,7 +382,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
         }
 
         List<? extends Selection<?>> selections = columns.stream()
-                .map(column -> resolvePath(root, column)) // Path<?> is fine
+                .map(column -> resolvePath(root, column, manager))
                 .toList();
 
         if (selections.size() == 1) {
