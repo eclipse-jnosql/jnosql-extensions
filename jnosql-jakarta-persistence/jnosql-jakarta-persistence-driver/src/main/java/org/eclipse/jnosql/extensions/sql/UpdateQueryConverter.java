@@ -62,7 +62,7 @@ final class UpdateQueryConverter extends QueryConverterSupport {
             String property = element.name();
             Object value = element.get();
 
-            Path<?> path = resolvePath(root, property);
+            Path<?> path = resolvePath(root, property, manager);
 
             criteriaUpdate.set((Path<Object>) path, value);
         }
@@ -78,7 +78,7 @@ final class UpdateQueryConverter extends QueryConverterSupport {
             return;
         }
 
-        var predicate = PREDICATE_CONVERTER.toPredicate(criteriaCondition, criteriaBuilder, root);
+        var predicate = PREDICATE_CONVERTER.toPredicate(criteriaCondition, criteriaBuilder, root, manager);
 
         if (predicate != null) {
             criteriaUpdate.where(predicate);
