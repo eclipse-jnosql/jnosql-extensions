@@ -45,7 +45,7 @@ abstract class QueryConverterSupport {
         if(RESERVED_PROPERTIES.contains(property)) {
             return null;
         }
-        if ("id(this)".equals(property)) {
+        if ("id(this)".equalsIgnoreCase(property)) {
             EntityType<?> entity = manager.getMetamodel()
                     .entity(root.getJavaType());
 
@@ -77,6 +77,7 @@ abstract class QueryConverterSupport {
         }
     }
 
+    @SuppressWarnings("unchecked")
     protected  <T> Class<T> resolveEntity(String name) {
         return manager.getMetamodel()
                 .getEntities()
