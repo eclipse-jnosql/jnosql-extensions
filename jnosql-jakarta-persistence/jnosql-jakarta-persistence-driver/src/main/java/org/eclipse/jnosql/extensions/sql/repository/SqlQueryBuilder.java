@@ -46,6 +46,9 @@ class SqlQueryBuilder {
 
     private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
     private static final DeleteQueryParser DELETE_PARSER = new DeleteQueryParser();
+    private static final Predicate<Class<?>> IS_NOT_VOID = r -> !void.class.equals(r);
+    private static final Predicate<Class<?>> IS_RECORD = Class::isRecord;
+    private static final Predicate<Class<?>> IS_PROJECTOR = IS_NOT_VOID.and(IS_RECORD);
 
     SelectQuery selectQuery(RepositoryInvocationContext context) {
         var method = context.method();
@@ -76,13 +79,9 @@ class SqlQueryBuilder {
                 .orElse(criteriaCondition)).orElse(criteriaCondition);
 
 
-        Predicate<Class<?>> isNotVoid = r -> !void.class.equals(r);
-        Predicate<Class<?>> isRecord = Class::isRecord;
-        Predicate<Class<?>> isProjector = isNotVoid.and(isRecord);
-        Optional<Class<?>> projector =
-                method.elementType()
-                        .filter(isProjector)
-                        .or(() -> method.returnType().filter(isProjector));
+        var projector = method.elementType()
+                .filter(IS_PROJECTOR)
+                .or(() -> method.returnType().filter(IS_PROJECTOR));
 
         return projector
                 .<SelectQuery>map(projection -> new SqlSelectQuery(
