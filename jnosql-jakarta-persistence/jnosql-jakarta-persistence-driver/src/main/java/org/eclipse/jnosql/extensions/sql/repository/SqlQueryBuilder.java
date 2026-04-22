@@ -74,7 +74,7 @@ class SqlQueryBuilder {
                 .map(c -> appendCriteriaCondition(criteriaCondition, c))
                 .orElse(criteriaCondition)).orElse(criteriaCondition);
 
-        Optional<Class<?>> projector = method.returnType().filter(r -> !void.class.equals(r))
+        Optional<Class<?>> projector = method.elementType().filter(r -> !void.class.equals(r))
                 .filter(Class::isRecord);
 
         return projector
