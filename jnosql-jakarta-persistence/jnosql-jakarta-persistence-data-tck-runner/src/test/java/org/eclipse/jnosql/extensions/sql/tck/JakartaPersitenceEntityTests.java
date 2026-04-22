@@ -31,6 +31,7 @@ import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableAutoWeld
@@ -42,6 +43,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(TransactionExtension.class)
 @Disabled
 public class JakartaPersitenceEntityTests extends EntityTests {
+
+    @Test
+    @Override
+    public void testRecordComponentsChooseAttributeReturnArray() {
+        super.testRecordComponentsChooseAttributeReturnArray();
+    }
 
     @Override
     public void testThirdAndFourthPagesOf10() {
