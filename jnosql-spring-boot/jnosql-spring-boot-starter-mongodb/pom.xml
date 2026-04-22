@@ -37,10 +37,6 @@
             <groupId>org.eclipse.jnosql.spring</groupId>
             <artifactId>jnosql-spring-boot-autoconfigure-mongodb</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-        </dependency>
     </dependencies>
 
 </project>
