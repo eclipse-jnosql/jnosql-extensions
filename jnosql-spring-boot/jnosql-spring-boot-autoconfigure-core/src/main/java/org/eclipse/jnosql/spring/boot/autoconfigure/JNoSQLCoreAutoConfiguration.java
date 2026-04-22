@@ -22,6 +22,7 @@ import org.eclipse.jnosql.mapping.metadata.ClassConverter;
 import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.GroupEntityMetadata;
+import org.eclipse.jnosql.mapping.reflection.JNoSQLSpringContext;
 import org.eclipse.jnosql.mapping.reflection.ReflectionEntitiesMetadataBuilder;
 import org.eclipse.jnosql.mapping.reflection.ReflectionGroupEntityMetadataBuilder;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
@@ -30,9 +31,11 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverterFactoryBuilder;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManager;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManagerBuilder;
 import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
+import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -62,7 +65,7 @@ import java.util.Optional;
  * shared beans are available when they run.
  */
 @AutoConfiguration
-public class JNoSQLCoreAutoConfiguration {
+public class JNoSQLCoreAutoConfiguration implements ApplicationContextAware {
 
     private static final String DEFAULT_ID_FIELD = "_id";
 
@@ -85,7 +88,9 @@ public class JNoSQLCoreAutoConfiguration {
         if (env instanceof ConfigurableEnvironment environment) {
             environment.getPropertySources().forEach(ps -> {
                 if (ps instanceof MapPropertySource mapPropertySource) {
-                    mapPropertySource.getSource().forEach((key, value) -> builder.put(key, value.toString()));
+                    mapPropertySource.getSource().forEach((key, value) -> {
+                        builder.put(key, env.getProperty(key));
+                    });
                 }
             });
         }
@@ -211,5 +216,10 @@ public class JNoSQLCoreAutoConfiguration {
     @ConditionalOnMissingBean
     public ProjectorConverter projectorConverter(EntitiesMetadata entitiesMetadata) {
         return new ProjectorConverter(entitiesMetadata);
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        JNoSQLSpringContext.setContext(applicationContext);
     }
 }
