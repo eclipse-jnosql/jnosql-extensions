@@ -44,12 +44,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Disabled
 public class JakartaPersitenceEntityTests extends EntityTests {
 
-    @Test
-    @Override
-    public void testRecordComponentsChooseAttributeReturnArray() {
-        super.testRecordComponentsChooseAttributeReturnArray();
-    }
-
     @Override
     public void testThirdAndFourthPagesOf10() {
     }
