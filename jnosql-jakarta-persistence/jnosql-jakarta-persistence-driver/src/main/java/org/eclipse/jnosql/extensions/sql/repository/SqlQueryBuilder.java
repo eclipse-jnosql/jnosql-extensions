@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @ApplicationScoped
 class SqlQueryBuilder {
@@ -74,8 +75,14 @@ class SqlQueryBuilder {
                 .map(c -> appendCriteriaCondition(criteriaCondition, c))
                 .orElse(criteriaCondition)).orElse(criteriaCondition);
 
-        Optional<Class<?>> projector = method.elementType().filter(r -> !void.class.equals(r))
-                .filter(Class::isRecord);
+
+        Predicate<Class<?>> isNotVoid = r -> !void.class.equals(r);
+        Predicate<Class<?>> isRecord = Class::isRecord;
+        Predicate<Class<?>> isProjector = isNotVoid.and(isRecord);
+        Optional<Class<?>> projector =
+                method.elementType()
+                        .filter(isProjector)
+                        .or(() -> method.returnType().filter(isProjector));
 
         return projector
                 .<SelectQuery>map(projection -> new SqlSelectQuery(
