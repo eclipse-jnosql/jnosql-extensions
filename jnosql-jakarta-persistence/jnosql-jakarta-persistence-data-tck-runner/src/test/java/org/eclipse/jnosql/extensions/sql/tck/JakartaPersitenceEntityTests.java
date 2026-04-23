@@ -14,12 +14,10 @@
  */
 package org.eclipse.jnosql.extensions.sql.tck;
 
+import ee.jakarta.tck.data.standalone.entity.EntityTests;
 import org.eclipse.jnosql.extensions.sql.repository.SqlRepositoryProducer;
 import org.eclipse.jnosql.extensions.sql.repository.spi.JakartaPersistenceExtension;
 import org.eclipse.jnosql.jakartapersistence.communication.EntityManagerProvider;
-
-import ee.jakarta.tck.data.standalone.entity.EntityTests;
-
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.eclipse.jnosql.mapping.reflection.FieldReader;
@@ -29,9 +27,6 @@ import org.jboss.weld.junit5.auto.AddBeanClasses;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @EnableAutoWeld
@@ -41,12 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @AddPackages({JakartaPersitenceEntityTests.class, EntityTests.class})
 @AddBeanClasses(ProjectorConverter.class)
 @ExtendWith(TransactionExtension.class)
-@Disabled
 public class JakartaPersitenceEntityTests extends EntityTests {
-
-    @Override
-    public void testQueryWithOr() {
-    }
 
     @Override
     public void testThirdAndFourthPagesOf10() {
