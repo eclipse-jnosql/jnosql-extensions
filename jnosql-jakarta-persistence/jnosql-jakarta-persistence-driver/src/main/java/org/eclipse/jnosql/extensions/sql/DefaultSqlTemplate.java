@@ -39,6 +39,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static org.eclipse.jnosql.communication.Configurations.CURSOR_PAGINATION_MULTIPLE_SORTING;
+
 class DefaultSqlTemplate implements SqlTemplate {
 
     private static final SqlQueryParser QUERY_PARSER = SqlQueryParser.INSTANCE;
@@ -185,6 +187,10 @@ class DefaultSqlTemplate implements SqlTemplate {
     public <T> CursoredPage<T> selectCursor(SelectQuery query, PageRequest pageRequest) {
         Objects.requireNonNull(query, "query is null");
         Objects.requireNonNull(pageRequest, "pageRequest is null");
+        if (query.sorts().size() > 1) {
+            throw new UnsupportedOperationException("Cursor pagination with multiple sorting is not supported, " +
+                    "enable it by setting the property " + CURSOR_PAGINATION_MULTIPLE_SORTING.get() + " to true");
+        }
         return executeInTransaction(() -> selectQueryConverter.executeQueryWithPagination(query, pageRequest));
     }
 
