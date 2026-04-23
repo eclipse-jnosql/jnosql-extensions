@@ -212,6 +212,7 @@
                             ${project.build.directory}/dependency/jakarta.data-api-${jakarta.data.api.version}.jar
                         </signature.sigTestClasspath>
                         <jakarta.tck.skip.deployment>true</jakarta.tck.skip.deployment>
+                        <jakarta.tck.database.type>DOCUMENT</jakarta.tck.database.type>
                     </systemPropertyVariables>
                     <groups>${included.groups}</groups>
                     <reportNameSuffix>standalone</reportNameSuffix>
