@@ -266,7 +266,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
             PageRequest.Cursor cursor,
             PageRequest.Mode mode) {
 
-        List<Sort<?>> sorts = new ArrayList<>(new HashSet<>(query.sorts()));
+        List<Sort<?>> sorts = new ArrayList<>(query.sorts());
 
         if (cursor.size() != sorts.size()) {
             throw new IllegalArgumentException(
