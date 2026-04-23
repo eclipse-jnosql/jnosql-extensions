@@ -31,7 +31,6 @@ import org.eclipse.jnosql.communication.semistructured.Element;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 @SuppressWarnings("unchecked")
 final class PredicateConverter {
