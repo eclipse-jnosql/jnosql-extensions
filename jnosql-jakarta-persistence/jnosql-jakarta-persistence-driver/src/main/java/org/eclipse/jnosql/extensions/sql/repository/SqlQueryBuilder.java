@@ -35,9 +35,11 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -64,7 +66,7 @@ class SqlQueryBuilder {
     }
 
     static SelectQuery updateQuery(RepositoryInvocationContext context, RepositoryMethod method, SelectQuery query) {
-        List<Sort<?>> sorts = new ArrayList<>(query.sorts());
+        Set<Sort<?>> sorts = new LinkedHashSet<>(query.sorts());
         sorts.addAll(method.sorts());
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         sorts.addAll(specialParameters.sorts());
@@ -85,7 +87,7 @@ class SqlQueryBuilder {
 
         return projector
                 .<SelectQuery>map(projection -> new SqlSelectQuery(
-                        sorts,
+                        sorts.stream().toList(),
                         pagination.limit,
                         pagination.skip,
                         condition,
@@ -94,7 +96,7 @@ class SqlQueryBuilder {
                         projection
                 ))
                 .orElseGet(() -> new MappingQuery(
-                        sorts,
+                        sorts.stream().toList(),
                         pagination.limit,
                         pagination.skip,
                         condition,
