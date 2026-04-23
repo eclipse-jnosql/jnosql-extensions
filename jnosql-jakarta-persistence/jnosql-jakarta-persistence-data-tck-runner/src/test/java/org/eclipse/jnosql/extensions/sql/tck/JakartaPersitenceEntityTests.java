@@ -45,6 +45,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class JakartaPersitenceEntityTests extends EntityTests {
 
     @Override
+    public void testQueryWithOr() {
+        super.testQueryWithOr();
+    }
+
+    @Override
     public void testThirdAndFourthPagesOf10() {
     }
 
