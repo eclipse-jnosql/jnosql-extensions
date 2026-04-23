@@ -14,7 +14,5 @@
  */
 package org.eclipse.jnosql.extensions.sql.model;
 
-import jakarta.data.repository.Select;
-
-public record ComputerSummary(@Select("overwrite") long id, String model) {
+public record ComputerSummary( long id, String model) {
 }
