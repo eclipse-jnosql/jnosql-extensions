@@ -44,12 +44,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Disabled
 public class JakartaPersitenceEntityTests extends EntityTests {
 
-    @Test
-    @Override
-    public void testFirstCursoredPageOf8AndNextPages() {
-        super.testFirstCursoredPageOf8AndNextPages();
-    }
-
     @Override
     public void testThirdAndFourthPagesOf10() {
     }
