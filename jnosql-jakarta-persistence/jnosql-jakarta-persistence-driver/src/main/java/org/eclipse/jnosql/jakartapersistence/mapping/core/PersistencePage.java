@@ -82,7 +82,7 @@ public class PersistencePage<T> implements Page<T> {
             suppliedCountQuery = countQuerySupplier.get();
         }
         if (totalElements == null) {
-            totalElements = suppliedCountQuery.getResultList().get(0);
+            totalElements = suppliedCountQuery.getResultList().getFirst();
         }
         return totalElements;
     }
