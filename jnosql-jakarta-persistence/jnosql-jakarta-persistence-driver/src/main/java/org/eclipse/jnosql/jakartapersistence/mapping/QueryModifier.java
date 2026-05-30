@@ -47,7 +47,7 @@ interface QueryModifier<FROM, RESULT> extends Function<SelectQueryParser.SelectQ
 
     static <FROM, RESULT> QueryModifier<FROM, RESULT> selectColumns(List<String> columns) {
         if (columns.isEmpty()) {
-            return ctx -> ctx.query();
+            return SelectQueryParser.SelectQueryContext::query;
         }
         return ctx -> {
             Path<?> path = ctx.root();
