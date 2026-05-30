@@ -63,7 +63,7 @@ import org.junit.jupiter.api.Test;
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("ThinkPad");
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("ThinkPad");
             });
 
             // cleanup
@@ -88,7 +88,7 @@ import org.junit.jupiter.api.Test;
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(deleted).isEqualTo(2);
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("Dell XPS");
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("Dell XPS");
             });
 
             // cleanup
@@ -110,7 +110,7 @@ import org.junit.jupiter.api.Test;
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("MacBook Pro");
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("MacBook Pro");
             });
 
             // cleanup
