@@ -120,7 +120,7 @@ class FindByOperationRepositoryTest extends AbstractTestRepository {
             // then
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getRelease()).isEqualTo(2023);
+                softly.assertThat(result.getFirst().getRelease()).isEqualTo(2023);
             });
 
             // cleanup
@@ -171,8 +171,8 @@ class FindByOperationRepositoryTest extends AbstractTestRepository {
             // then
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getModel()).isEqualTo("MacBook Pro");
-                softly.assertThat(result.get(0).getRelease()).isEqualTo(2023);
+                softly.assertThat(result.getFirst().getModel()).isEqualTo("MacBook Pro");
+                softly.assertThat(result.getFirst().getRelease()).isEqualTo(2023);
             });
 
             // cleanup
