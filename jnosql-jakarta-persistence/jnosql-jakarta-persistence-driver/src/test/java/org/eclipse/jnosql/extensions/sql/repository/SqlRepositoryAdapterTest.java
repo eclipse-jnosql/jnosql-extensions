@@ -410,7 +410,7 @@ class SqlRepositoryAdapterTest {
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getId()).isEqualTo(computer.getId());
+                softly.assertThat(result.getFirst().getId()).isEqualTo(computer.getId());
             });
         }
 
@@ -532,7 +532,7 @@ class SqlRepositoryAdapterTest {
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(result).hasSize(1);
-                softly.assertThat(result.get(0).getId()).isEqualTo(computer.getId());
+                softly.assertThat(result.getFirst().getId()).isEqualTo(computer.getId());
             });
         }
 
