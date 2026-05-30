@@ -86,12 +86,16 @@ class SqlQueryOperation implements QueryOperation {
                     prepare.setSelectMapper(query -> {
                         SelectQuery selectQuery = SqlQueryBuilder.updateQuery(context, method, query);
                         if(returnElementType.isPresent() && entitiesMetadata.projection(returnElementType.orElseThrow()).isPresent()) {
-                            return SqlSelectQuery.of(selectQuery, returnElementType.orElseThrow());
+                            var updateQuery =  SqlSelectQuery.of(selectQuery, returnElementType.orElseThrow());
+                            selectQueryAtomic.set(updateQuery);
+                            return updateQuery;
                         }
+                        selectQueryAtomic.set(selectQuery);
                         return selectQuery;
                     });
                     return prepare;
-                }).build();
+                }).totalSupplier(() -> template.count(selectQueryAtomic.get()))
+                .build();
         return (T) methodReturn.execute();
 
     }
