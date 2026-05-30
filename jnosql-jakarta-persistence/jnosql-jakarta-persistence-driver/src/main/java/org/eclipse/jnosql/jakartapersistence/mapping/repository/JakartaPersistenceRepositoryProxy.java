@@ -266,7 +266,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                     long startAt = pageRequest.size() * pageRequest.page();
                     return new Limit(Math.toIntExact(size), startAt);
                 })
-                .or(() -> special.limit())
+                .or(special::limit)
                 .orElse(null);
         prepare.setLimit(limit);
         prepare.setSorts(special.sorts());
