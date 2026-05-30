@@ -103,8 +103,7 @@ INSTANCE;
 
             Type rawType = parameterizedType.getRawType();
 
-            if (rawType instanceof Class<?>) {
-                Class<?> rawClass = (Class<?>) rawType;
+            if (rawType instanceof Class<?> rawClass) {
 
                 if (Optional.class.isAssignableFrom(rawClass)) {
                     return extractEntityFromReturnType(
