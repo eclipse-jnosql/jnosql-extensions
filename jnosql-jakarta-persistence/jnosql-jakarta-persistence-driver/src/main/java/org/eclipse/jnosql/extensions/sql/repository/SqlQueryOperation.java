@@ -30,6 +30,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 
@@ -70,6 +71,7 @@ class SqlQueryOperation implements QueryOperation {
         LOGGER.finest("Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
         var entity = entityMetadata.name();
+        var selectQueryAtomic = new AtomicReference<SelectQuery>();
         var methodReturn = DynamicQueryMethodReturn.builder()
                 .args(params)
                 .methodName(method.name())
