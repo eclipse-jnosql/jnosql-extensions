@@ -120,7 +120,7 @@ public class PersonRepositoryTest {
         getEntityManager().createQuery("UPDATE Person SET age = age + 1");
     }
 
-    private class PersonBuilder {
+    private static class PersonBuilder {
 
         Person p = new Person();
 
