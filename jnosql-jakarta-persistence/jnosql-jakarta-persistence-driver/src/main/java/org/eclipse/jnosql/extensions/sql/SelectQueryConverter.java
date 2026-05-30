@@ -389,7 +389,7 @@ public final class SelectQueryConverter extends QueryConverterSupport {
                 .toList();
 
         if (selections.size() == 1) {
-            criteriaQuery.select((Selection<? extends T>) selections.get(0));
+            criteriaQuery.select((Selection<? extends T>) selections.getFirst());
             return;
         }
         List<Selection<?>> concreteSelections = new ArrayList<>(selections);
