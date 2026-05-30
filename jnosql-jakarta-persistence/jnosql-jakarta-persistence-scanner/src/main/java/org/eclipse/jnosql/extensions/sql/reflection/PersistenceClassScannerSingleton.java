@@ -150,10 +150,7 @@ enum PersistenceClassScannerSingleton implements ClassScanner {
                 .filter(c -> {
                     final Object provider = c.getAnnotationInfo(Repository.class).getParameterValues().getValue("provider");
                     if (provider instanceof String providerName) {
-                        if (providerName.equals(Repository.ANY_PROVIDER)
-                                || providerName.equals(JNoSQLJakartaPersistence.PROVIDER)) {
-                            return true;
-                        }
+                        return providerName.equals(Repository.ANY_PROVIDER) || providerName.equals(JNoSQLJakartaPersistence.PROVIDER);
                     }
                     return false;
                 });
