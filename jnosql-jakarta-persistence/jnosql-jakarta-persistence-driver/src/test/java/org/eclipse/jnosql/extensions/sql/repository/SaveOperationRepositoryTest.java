@@ -174,7 +174,7 @@ class SaveOperationRepositoryTest extends AbstractTestRepository {
             var result = repository.save(computers);
 
             // then
-            assertThat(result.get(0).getId()).isNotZero();
+            assertThat(result.getFirst().getId()).isNotZero();
         }
 
         @Test
@@ -211,7 +211,7 @@ class SaveOperationRepositoryTest extends AbstractTestRepository {
             repository.saveVoid(computers);
 
             // then
-            assertThat(computers.get(0).getId()).isNotZero();
+            assertThat(computers.getFirst().getId()).isNotZero();
         }
     }
 

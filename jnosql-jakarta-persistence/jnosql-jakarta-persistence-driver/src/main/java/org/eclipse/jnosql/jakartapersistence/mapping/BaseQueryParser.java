@@ -207,7 +207,7 @@ abstract class BaseQueryParser {
     private static <FROM> Predicate parseIn(CriteriaCondition criteria, QueryContext<FROM> ctx, boolean ignoreCase) {
         MultiValueContext valueContext = MultiValueContext.from(ctx, criteria, ignoreCase);
         CriteriaBuilder.In<Object> inExpr = ctx.builder().in(valueContext.field());
-        valueContext.fieldValues().forEach(v -> inExpr.value(v));
+        valueContext.fieldValues().forEach(inExpr::value);
         return inExpr;
     }
 

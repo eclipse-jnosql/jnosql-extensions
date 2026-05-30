@@ -45,12 +45,9 @@ final class QLUtil {
         while (startIndex <= lastPossibleStartIndex && Character.isWhitespace(firstNonWhiteChar = query.charAt(startIndex))) {
             startIndex++;
         }
-        if (startIndex <= lastPossibleStartIndex
+        return startIndex <= lastPossibleStartIndex
                 && query.regionMatches(true, startIndex, word, 0, lengthOfWord - 1)
-                && Character.isWhitespace(query.charAt(startIndex + lengthOfWord))) {
-            return true;
-        }
-        return false;
+                && Character.isWhitespace(query.charAt(startIndex + lengthOfWord));
     }
 
     public static String convertToCount(String originalJpql) {

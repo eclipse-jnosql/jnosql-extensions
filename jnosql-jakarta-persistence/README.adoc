@@ -50,5 +50,3 @@ Then you need to configure the persistence unit ("testPersistenceUnit") via stan
   </persistence-unit>
 </persistence>
 ----
-
-For an example configuration, with EclipseLink and DerbyDB, look into the test setup of the link:jnosql-jakarta-persistence-connector[Jakarta Persistence Connector] project.

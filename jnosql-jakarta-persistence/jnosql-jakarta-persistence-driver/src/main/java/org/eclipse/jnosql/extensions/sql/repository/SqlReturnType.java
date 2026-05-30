@@ -24,7 +24,9 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.LongSupplier;
 import java.util.stream.Stream;
 
 @ApplicationScoped
@@ -54,6 +56,7 @@ class SqlReturnType {
                 .streamPagination(streamPagination(query, template))
                 .singleResultPagination(getSingleResult(query, template))
                 .page(getPage(query, template))
+                .totalSupplier(() -> template.count(query))
                 .build();
         return dynamicReturn.execute();
     }
@@ -68,11 +71,11 @@ class SqlReturnType {
         return p -> template.singleResult(query).map(mapper());
     }
 
-    protected <T>  Function<PageRequest, Page<T>> getPage(SelectQuery query,
-                                                          SemiStructuredTemplate template) {
-        return p -> {
+    protected <T> BiFunction<PageRequest, LongSupplier, Page<T>> getPage(SelectQuery query,
+                                                                         SemiStructuredTemplate template) {
+        return (p, l) -> {
             Stream<T> entities = template.select(query).map(mapper());
-            return NoSQLPage.of(entities.toList(), p);
+            return NoSQLPage.of(entities.toList(), p, l);
         };
     }
 

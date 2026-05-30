@@ -134,9 +134,7 @@ public class PersistencePreparedStatement implements PreparedStatement {
                         applyParameters(query);
                         applyProjections(query);
                     },
-                    query -> {
-                        applyParameters(query);
-                    });
+                    this::applyParameters);
         } else {
             throw new IllegalStateException("The current parser " + queryParser.getClass() + " is not suitable for select queries. Likely a defect to fix.");
         }

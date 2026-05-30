@@ -52,7 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import java.util.function.LongSupplier;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -222,8 +223,8 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     }
 
     @Override
-    protected Function<PageRequest, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query, Method method) {
-        return p -> template().selectOffSet(query, p, mapper(method));
+    protected BiFunction<PageRequest, LongSupplier, Page<T>> getPage(org.eclipse.jnosql.communication.semistructured.SelectQuery query, Method method) {
+        return (p, l) -> template().selectOffSet(query, p, mapper(method));
     }
 
     @Override
@@ -265,7 +266,7 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
                     long startAt = pageRequest.size() * pageRequest.page();
                     return new Limit(Math.toIntExact(size), startAt);
                 })
-                .or(() -> special.limit())
+                .or(special::limit)
                 .orElse(null);
         prepare.setLimit(limit);
         prepare.setSorts(special.sorts());

@@ -30,8 +30,6 @@ class AmbiguousEntityManagerTest {
         TestJakartaPersistenceClassScanner.standardRepositories = Set.of(AmbiguousEntityManagerRepository.class);
 
         final SeContainerInitializer cdiInitializer = TestSupport.cdiInitializerWithDefaultEmProducer();
-        assertThrows(DeploymentException.class, () -> {
-            cdiInitializer.initialize();
-        });
+        assertThrows(DeploymentException.class, cdiInitializer::initialize);
     }
 }

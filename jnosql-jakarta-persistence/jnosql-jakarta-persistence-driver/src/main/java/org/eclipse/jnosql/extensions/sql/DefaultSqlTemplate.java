@@ -177,7 +177,7 @@ class DefaultSqlTemplate implements SqlTemplate {
             if (results.size() > 1) {
                 throw new NonUniqueResultException("Expected a single result but found " + results.size());
             }
-            return Optional.of((T) results.get(0));
+            return Optional.of((T) results.getFirst());
         });
     }
 

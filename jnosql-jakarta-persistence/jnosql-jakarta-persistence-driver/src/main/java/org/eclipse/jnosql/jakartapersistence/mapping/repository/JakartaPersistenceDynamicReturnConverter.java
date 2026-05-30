@@ -82,7 +82,7 @@ public enum JakartaPersistenceDynamicReturnConverter {
                     params.entrySet().stream()
                         .filter(namedParameters ?
                                         (parameter -> !isOrdinalParameter(parameter))
-                                        : parameter -> isOrdinalParameter(parameter))
+                                        : JakartaPersistenceDynamicReturnConverter::isOrdinalParameter)
                         .forEach(param -> prepare.bind(param.getKey(), param.getValue()));
 
         if (prepare.isCount()) {
@@ -95,12 +95,12 @@ public enum JakartaPersistenceDynamicReturnConverter {
                 .classSource(typeClass)
                 .methodName(method.getName())
                 .returnType(method.getReturnType())
-                .result(() -> prepare.result())
-                .singleResult(() -> prepare.singleResult())
+                .result(prepare::result)
+                .singleResult(prepare::singleResult)
                 .pagination(pageRequest)
                 .streamPagination(p -> prepare.result())
                 .singleResultPagination(p -> prepare.singleResult())
-                .page(p -> {
+                .page((p, l) -> {
                     return prepare.selectOffset(pageRequest);
                 }).build();
 

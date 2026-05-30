@@ -59,7 +59,7 @@ final class SqlTypedQuery<T> implements TypedQuery<T> {
                     "Query returned more than one result: " + results.size());
         }
 
-        return Optional.of(results.get(0));
+        return Optional.of(results.getFirst());
     }
 
     @Override

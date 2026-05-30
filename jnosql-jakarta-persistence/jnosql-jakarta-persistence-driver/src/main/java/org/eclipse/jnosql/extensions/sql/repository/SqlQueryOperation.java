@@ -30,6 +30,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 
@@ -70,6 +71,7 @@ class SqlQueryOperation implements QueryOperation {
         LOGGER.finest("Query: " + queryValue + " with type: " + queryType + " and return type: " + returnType);
         queryType.checkValidReturn(returnType, queryValue);
         var entity = entityMetadata.name();
+        var selectQueryAtomic = new AtomicReference<SelectQuery>();
         var methodReturn = DynamicQueryMethodReturn.builder()
                 .args(params)
                 .methodName(method.name())
@@ -84,12 +86,16 @@ class SqlQueryOperation implements QueryOperation {
                     prepare.setSelectMapper(query -> {
                         SelectQuery selectQuery = SqlQueryBuilder.updateQuery(context, method, query);
                         if(returnElementType.isPresent() && entitiesMetadata.projection(returnElementType.orElseThrow()).isPresent()) {
-                            return SqlSelectQuery.of(selectQuery, returnElementType.orElseThrow());
+                            var updateQuery =  SqlSelectQuery.of(selectQuery, returnElementType.orElseThrow());
+                            selectQueryAtomic.set(updateQuery);
+                            return updateQuery;
                         }
+                        selectQueryAtomic.set(selectQuery);
                         return selectQuery;
                     });
                     return prepare;
-                }).build();
+                }).totalSupplier(() -> template.count(selectQueryAtomic.get()))
+                .build();
         return (T) methodReturn.execute();
 
     }
