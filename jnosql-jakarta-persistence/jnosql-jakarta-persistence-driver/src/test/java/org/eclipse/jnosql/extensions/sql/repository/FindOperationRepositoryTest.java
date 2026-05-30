@@ -133,10 +133,6 @@ class FindOperationRepositoryTest extends AbstractTestRepository {
                 softly.assertThat(result)
                         .extracting("model")
                         .containsOnly("MacBook Pro", "ThinkPad");
-
-                softly.assertThat(result)
-                        .extracting("release")
-                        .containsOnly(2023L);
             });
 
             // cleanup

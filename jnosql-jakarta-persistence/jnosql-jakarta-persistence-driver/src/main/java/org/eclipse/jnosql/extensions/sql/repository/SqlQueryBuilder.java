@@ -35,16 +35,22 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 @ApplicationScoped
 class SqlQueryBuilder {
 
     private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
     private static final DeleteQueryParser DELETE_PARSER = new DeleteQueryParser();
+    private static final Predicate<Class<?>> IS_NOT_VOID = r -> !void.class.equals(r);
+    private static final Predicate<Class<?>> IS_RECORD = Class::isRecord;
+    private static final Predicate<Class<?>> IS_PROJECTOR = IS_NOT_VOID.and(IS_RECORD);
 
     SelectQuery selectQuery(RepositoryInvocationContext context) {
         var method = context.method();
@@ -60,7 +66,7 @@ class SqlQueryBuilder {
     }
 
     static SelectQuery updateQuery(RepositoryInvocationContext context, RepositoryMethod method, SelectQuery query) {
-        List<Sort<?>> sorts = new ArrayList<>(query.sorts());
+        Set<Sort<?>> sorts = new LinkedHashSet<>(query.sorts());
         sorts.addAll(method.sorts());
         var specialParameters = SpecialParameters.of(context.parameters(), Function.identity());
         sorts.addAll(specialParameters.sorts());
@@ -74,12 +80,14 @@ class SqlQueryBuilder {
                 .map(c -> appendCriteriaCondition(criteriaCondition, c))
                 .orElse(criteriaCondition)).orElse(criteriaCondition);
 
-        Optional<Class<?>> projector = method.returnType().filter(r -> !void.class.equals(r))
-                .filter(Class::isRecord);
+
+        var projector = method.elementType()
+                .filter(IS_PROJECTOR)
+                .or(() -> method.returnType().filter(IS_PROJECTOR));
 
         return projector
                 .<SelectQuery>map(projection -> new SqlSelectQuery(
-                        sorts,
+                        sorts.stream().toList(),
                         pagination.limit,
                         pagination.skip,
                         condition,
@@ -88,7 +96,7 @@ class SqlQueryBuilder {
                         projection
                 ))
                 .orElseGet(() -> new MappingQuery(
-                        sorts,
+                        sorts.stream().toList(),
                         pagination.limit,
                         pagination.skip,
                         condition,
