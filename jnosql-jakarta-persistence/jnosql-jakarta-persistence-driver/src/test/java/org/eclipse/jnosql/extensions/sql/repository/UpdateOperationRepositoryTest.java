@@ -154,7 +154,7 @@ import static org.assertj.core.api.Assertions.assertThat;
             var result = repository.update(computers);
 
             // then
-            assertThat(result.get(0).getModel()).isEqualTo("updated");
+            assertThat(result.getFirst().getModel()).isEqualTo("updated");
         }
 
         @Test
