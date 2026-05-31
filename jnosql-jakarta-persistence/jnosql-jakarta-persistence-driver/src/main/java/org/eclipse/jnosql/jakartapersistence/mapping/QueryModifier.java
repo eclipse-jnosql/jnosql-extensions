@@ -90,6 +90,7 @@ interface QueryModifier<FROM, RESULT> extends Function<SelectQueryParser.SelectQ
         };
     }
 
+    @SafeVarargs
     static <FROM, RESULT> QueryModifier<FROM, RESULT> combine(QueryModifier<FROM, RESULT>... modifiers) {
         return ctx -> {
             CriteriaQuery<RESULT> query = ctx.query();
