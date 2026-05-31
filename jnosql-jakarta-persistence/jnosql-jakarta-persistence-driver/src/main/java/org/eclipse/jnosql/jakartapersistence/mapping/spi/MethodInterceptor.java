@@ -66,12 +66,17 @@ public interface MethodInterceptor {
         }
     }
 
+
     /**
-     * Called to intercept any methods.
+     * Intercepts and processes a method invocation represented by the given {@link InvocationContext}.
+     * This method allows implementing custom logic before or after the invocation proceeds
+     * or can alter the behavior of the method invocation entirely.
      *
-     * @param context Invocation context
-     * @return value returned by the context invocation
-     * @throws Exception
+     * @param context the invocation context representing details about the target method call,
+     *                including the target object, method, parameters, and more.
+     * @return the result of the intercepted invocation, which could either be the outcome of
+     *         the original method execution or a custom value provided by the interceptor.
+     * @throws Exception if an error occurs during the interception or method execution process.
      */
     Object intercept(InvocationContext context) throws Exception;
 
