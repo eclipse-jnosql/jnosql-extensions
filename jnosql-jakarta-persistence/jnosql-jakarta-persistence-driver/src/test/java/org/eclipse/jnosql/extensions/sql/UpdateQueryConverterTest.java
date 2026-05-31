@@ -92,11 +92,9 @@ class UpdateQueryConverterTest {
             var result = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(result)
-                        .extracting(Computer::getModel)
-                        .containsExactlyInAnyOrder("Updated", "Updated");
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(result)
+                    .extracting(Computer::getModel)
+                    .containsExactlyInAnyOrder("Updated", "Updated"));
         }
     }
 
@@ -124,14 +122,12 @@ class UpdateQueryConverterTest {
             var result = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(result)
-                        .extracting(Computer::getModel, Computer::getRelease)
-                        .containsExactlyInAnyOrder(
-                                tuple("Updated", 2024L),
-                                tuple("ThinkPad", 2023L)
-                        );
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(result)
+                    .extracting(Computer::getModel, Computer::getRelease)
+                    .containsExactlyInAnyOrder(
+                            tuple("Updated", 2024L),
+                            tuple("ThinkPad", 2023L)
+                    ));
         }
 
         @Test
@@ -155,15 +151,13 @@ class UpdateQueryConverterTest {
             var result = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(result)
-                        .extracting(Computer::getModel, Computer::getRelease)
-                        .containsExactlyInAnyOrder(
-                                tuple("Modern", 2024L),
-                                tuple("Modern", 2023L),
-                                tuple("XPS", 2022L)
-                        );
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(result)
+                    .extracting(Computer::getModel, Computer::getRelease)
+                    .containsExactlyInAnyOrder(
+                            tuple("Modern", 2024L),
+                            tuple("Modern", 2023L),
+                            tuple("XPS", 2022L)
+                    ));
         }
 
         @Test
@@ -187,15 +181,13 @@ class UpdateQueryConverterTest {
             var result = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(result)
-                        .extracting(Computer::getModel, Computer::getRelease)
-                        .containsExactlyInAnyOrder(
-                                tuple("Recent", 2024L),
-                                tuple("Recent", 2023L),
-                                tuple("XPS", 2022L)
-                        );
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(result)
+                    .extracting(Computer::getModel, Computer::getRelease)
+                    .containsExactlyInAnyOrder(
+                            tuple("Recent", 2024L),
+                            tuple("Recent", 2023L),
+                            tuple("XPS", 2022L)
+                    ));
         }
     }
 
