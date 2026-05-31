@@ -73,12 +73,17 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
     }
 
     /**
-     * Invocation handler for invoking repository methods
+     * Creates an {@link InvocationHandler} that facilitates the interaction between
+     * the repository interface and the persistence layer.
      *
-     * @param entitiesMetadata
-     * @param template         Template for executing queries
-     * @param converters
-     * @return
+     * @param entitiesMetadata Metadata about the entities being managed, which contains
+     *                         details about entity relationships, mappings, and constraints.
+     * @param template         The persistence document template used to execute
+     *                         persistence operations, such as storing or retrieving data.
+     * @param converters       The utility that handles conversions between entity objects
+     *                         and their database representations, ensuring compatibility
+     *                         between application and persistence formats.
+     * @return An {@link InvocationHandler} responsible for delegating repository method invocations to the persistence layer.
      */
     abstract protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters);
 
