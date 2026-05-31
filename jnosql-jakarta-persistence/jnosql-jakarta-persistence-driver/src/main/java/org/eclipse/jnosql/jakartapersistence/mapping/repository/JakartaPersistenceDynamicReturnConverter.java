@@ -100,9 +100,7 @@ public enum JakartaPersistenceDynamicReturnConverter {
                 .pagination(pageRequest)
                 .streamPagination(p -> prepare.result())
                 .singleResultPagination(p -> prepare.singleResult())
-                .page((p, l) -> {
-                    return prepare.selectOffset(pageRequest);
-                }).build();
+                .page((p, l) -> prepare.selectOffset(pageRequest)).build();
 
         return convert(dynamicReturn);
     }

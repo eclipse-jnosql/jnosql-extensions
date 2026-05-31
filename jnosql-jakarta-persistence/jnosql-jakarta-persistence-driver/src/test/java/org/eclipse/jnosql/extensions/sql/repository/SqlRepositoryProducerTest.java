@@ -67,9 +67,7 @@ class SqlRepositoryProducerTest extends AbstractTestRepository {
             var repository = producer.get(ComputerRepository.class, template);
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(Proxy.isProxyClass(repository.getClass())).isTrue();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(Proxy.isProxyClass(repository.getClass())).isTrue());
         }
 
         @Test
@@ -160,9 +158,7 @@ class SqlRepositoryProducerTest extends AbstractTestRepository {
             // then
             var result = repository.findById(computer.getId());
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -177,11 +173,9 @@ class SqlRepositoryProducerTest extends AbstractTestRepository {
             var result = repository.findAll().toList();
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result)
-                        .extracting(Computer::getModel)
-                        .contains("MacBook Pro", "ThinkPad");
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result)
+                    .extracting(Computer::getModel)
+                    .contains("MacBook Pro", "ThinkPad"));
 
             // cleanup (important: isolate test)
             repository.deleteById(c1.getId());

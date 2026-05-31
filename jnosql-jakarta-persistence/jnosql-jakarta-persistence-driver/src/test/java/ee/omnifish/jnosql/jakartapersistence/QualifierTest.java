@@ -51,8 +51,6 @@ public class QualifierTest {
 
     @Test
     void repositoryCannotBeInjectedWithoutQualifier() {
-        assertThrows(Exception.class, () -> {
-            CDI.current().select(QualifiedPersonRepository.class).get();
-        });
+        assertThrows(Exception.class, () -> CDI.current().select(QualifiedPersonRepository.class).get());
     }
 }

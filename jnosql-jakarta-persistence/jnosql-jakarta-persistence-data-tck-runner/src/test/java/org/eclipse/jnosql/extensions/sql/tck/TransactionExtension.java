@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class TransactionExtension implements BeforeEachCallback, AfterEachCallback {
 
     @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) {
         getEntityManager().getTransaction().begin();
     }
 
@@ -32,7 +32,7 @@ public class TransactionExtension implements BeforeEachCallback, AfterEachCallba
     }
 
     @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) {
         getEntityManager().getTransaction().commit();
     }
 

@@ -59,9 +59,7 @@ class FindOperationRepositoryTest extends AbstractTestRepository {
             var result = repository.allComputers();
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).hasSize(2);
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).hasSize(2));
 
             // cleanup
             repository.deleteById(c1.getId());
@@ -156,9 +154,7 @@ class FindOperationRepositoryTest extends AbstractTestRepository {
             var result = repository.computersBy("NonExisting");
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
 
             // cleanup
             repository.deleteById(c1.getId());

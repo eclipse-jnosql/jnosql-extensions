@@ -43,9 +43,13 @@ public class CdiUtil {
     }
 
     /**
-     * Find all qualifiers in the list of annotations, including qualifiers nested in stereotypes
-     * @param annotations
-     * @return
+     * Retrieves all qualifiers from the given annotations, including those nested within stereotypes.
+     * This method resolves qualifiers recursively by processing stereotypes to find any associated
+     * qualifiers, avoiding duplicate processing of already visited stereotypes.
+     *
+     * @param beanManager the CDI bean manager used to determine whether an annotation is a qualifier or stereotype
+     * @param annotations the initial set of annotations to retrieve qualifiers from
+     * @return a set of qualifiers extracted from the provided annotations and any nested stereotypes
      */
     public static Set<Annotation> getAllQualifiersRecursively(BeanManager beanManager, Annotation... annotations) {
         Set<Annotation> qualifiers = new HashSet<>();
@@ -81,10 +85,15 @@ public class CdiUtil {
         }
     }
 
+
     /**
-     * Find all interceptor bindings in the list of annotations, including interceptor bindings nested in stereotypes
-     * @param annotations
-     * @return
+     * Retrieves all interceptor bindings from the given annotations, including those nested within stereotypes.
+     * This method resolves interceptor bindings recursively by processing stereotypes to find any associated
+     * interceptor bindings, avoiding duplicate processing of already visited stereotypes.
+     *
+     * @param beanManager the CDI bean manager used to determine whether an annotation is an interceptor binding or stereotype
+     * @param annotations the initial set of annotations to retrieve interceptor bindings from
+     * @return a set of interceptor bindings extracted from the provided annotations and any nested stereotypes
      */
     public static Set<Annotation> getAllInterceptorBindingsRecursively(BeanManager beanManager, Annotation... annotations) {
         Set<Annotation> interceptorBindings = new HashSet<>();

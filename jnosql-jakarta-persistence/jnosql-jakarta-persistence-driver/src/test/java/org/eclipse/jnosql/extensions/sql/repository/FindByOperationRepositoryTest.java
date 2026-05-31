@@ -192,9 +192,7 @@ class FindByOperationRepositoryTest extends AbstractTestRepository {
             var result = repository.findByModel("NonExisting");
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
 
             // cleanup
             repository.deleteById(c1.getId());

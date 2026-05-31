@@ -84,9 +84,7 @@ class DeleteQueryConverterTest {
             var remaining = template.select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining).isEmpty();
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining).isEmpty());
         }
     }
 
@@ -114,11 +112,9 @@ class DeleteQueryConverterTest {
             var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getRelease)
-                        .containsExactly(2023L);
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getRelease)
+                    .containsExactly(2023L));
         }
 
         @Test
@@ -142,11 +138,9 @@ class DeleteQueryConverterTest {
             var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getRelease)
-                        .containsExactly(2022L);
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getRelease)
+                    .containsExactly(2022L));
         }
 
         @Test
@@ -170,11 +164,9 @@ class DeleteQueryConverterTest {
             var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getRelease)
-                        .containsExactly(2022L);
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getRelease)
+                    .containsExactly(2022L));
         }
 
         @Test
@@ -198,11 +190,9 @@ class DeleteQueryConverterTest {
             var remaining = template.<Computer>select(SelectQuery.select().from("Computer").build()).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getModel)
-                        .containsExactlyInAnyOrder("ThinkPad", "XPS");
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getModel)
+                    .containsExactlyInAnyOrder("ThinkPad", "XPS"));
         }
     }
 
@@ -235,14 +225,12 @@ class DeleteQueryConverterTest {
             ).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getModel, Computer::getRelease)
-                        .containsExactlyInAnyOrder(
-                                tuple("MacBook", 2024L),
-                                tuple("ThinkPad", 2023L)
-                        );
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getModel, Computer::getRelease)
+                    .containsExactlyInAnyOrder(
+                            tuple("MacBook", 2024L),
+                            tuple("ThinkPad", 2023L)
+                    ));
         }
 
         @Test
@@ -270,11 +258,9 @@ class DeleteQueryConverterTest {
             ).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getModel)
-                        .containsExactly("XPS");
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getModel)
+                    .containsExactly("XPS"));
         }
 
         @Test
@@ -301,11 +287,9 @@ class DeleteQueryConverterTest {
             ).toList();
 
             // then
-            SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(remaining)
-                        .extracting(Computer::getRelease)
-                        .containsExactly(2024L);
-            });
+            SoftAssertions.assertSoftly(soft -> soft.assertThat(remaining)
+                    .extracting(Computer::getRelease)
+                    .containsExactly(2024L));
         }
     }
 

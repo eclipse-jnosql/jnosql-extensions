@@ -38,9 +38,14 @@ import java.lang.reflect.InvocationHandler;
  */
 public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersistenceBean<T> {
 
+
     /**
-     * @param type the bean class
-     * @param beanManager
+     * Constructs an instance of {@code CustomRepositoryPersistenceBean}. This constructor is
+     * used to initialize and manage custom repository beans within the Jakarta Persistence
+     * context, extending the capabilities of the {@code AbstractRepositoryPersistenceBean}.
+     *
+     * @param type the class of the custom repository to be managed.
+     * @param beanManager the {@code BeanManager} instance responsible for handling the CDI context.
      */
     public CustomRepositoryPersistenceBean(Class<?> type, BeanManager beanManager) {
         super(type, beanManager);

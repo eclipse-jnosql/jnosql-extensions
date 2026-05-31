@@ -40,11 +40,15 @@ import java.lang.reflect.InvocationHandler;
  */
 public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends AbstractRepositoryPersistenceBean<T> {
 
+
     /**
-     * Constructor
+     * Constructs an instance of {@code RepositoryPersistenceBean}. This constructor
+     * is used to initialize and manage repository beans within the Jakarta
+     * Persistence context, extending the capabilities of the
+     * {@code AbstractRepositoryPersistenceBean}.
      *
-     * @param type The bean class
-     * @param beanManager
+     * @param type the class of the repository to be managed.
+     * @param beanManager the {@code BeanManager} instance responsible for handling the CDI context.
      */
     public RepositoryPersistenceBean(Class<?> type, BeanManager beanManager) {
         super(type, beanManager);

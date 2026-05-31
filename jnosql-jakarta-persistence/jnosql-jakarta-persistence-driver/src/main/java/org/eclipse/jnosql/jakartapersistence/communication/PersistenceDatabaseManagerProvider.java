@@ -48,9 +48,7 @@ public class PersistenceDatabaseManagerProvider {
 
     private Map<String, EntityType<?>> collectEntityTypesByName(EntityManagerFactory entityManagerFactory) {
         Map<String, EntityType<?>> entityTypesByName = new ConcurrentHashMap<>();
-        entityManagerFactory.getMetamodel().getEntities().forEach(type -> {
-            entityTypesByName.put(type.getName(), type);
-        });
+        entityManagerFactory.getMetamodel().getEntities().forEach(type -> entityTypesByName.put(type.getName(), type));
         return entityTypesByName;
     }
 

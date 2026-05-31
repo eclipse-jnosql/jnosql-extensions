@@ -63,9 +63,7 @@ class DeleteQueryParser extends BaseUpdateQueryParser {
             return deleteAll(type);
         } else {
             final CriteriaCondition criteria = deleteQuery.condition().get();
-            Query query = buildDeleteQuery(type, ctx -> {
-                return ctx.query().where(parseCriteria(criteria, ctx.queryContext()));
-            });
+            Query query = buildDeleteQuery(type, ctx -> ctx.query().where(parseCriteria(criteria, ctx.queryContext())));
             return query.executeUpdate();
         }
     }

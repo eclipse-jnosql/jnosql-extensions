@@ -171,9 +171,7 @@ class SqlRepositoryAdapterTest {
             var exists = repository.existsById(computer.getId());
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(exists).isTrue();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(exists).isTrue());
         }
 
         @Test
@@ -184,9 +182,7 @@ class SqlRepositoryAdapterTest {
             var exists = repository.existsById(999L);
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(exists).isFalse();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(exists).isFalse());
         }
 
         @Test
@@ -228,9 +224,7 @@ class SqlRepositoryAdapterTest {
             var result = repository.findByIdIn(List.<Long>of()).toList();
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -263,9 +257,7 @@ class SqlRepositoryAdapterTest {
             var exists = repository.existsById(computer.getId());
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(exists).isTrue();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(exists).isTrue());
         }
 
         @Test
@@ -276,9 +268,7 @@ class SqlRepositoryAdapterTest {
             var exists = repository.existsById(999L);
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(exists).isFalse();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(exists).isFalse());
         }
 
         @Test
@@ -351,9 +341,7 @@ class SqlRepositoryAdapterTest {
             var result = repository.findByIdIn(List.<Long>of()).toList();
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -390,9 +378,7 @@ class SqlRepositoryAdapterTest {
             var result = repository.findAll().toList();
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -437,9 +423,7 @@ class SqlRepositoryAdapterTest {
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -455,9 +439,7 @@ class SqlRepositoryAdapterTest {
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -482,9 +464,7 @@ class SqlRepositoryAdapterTest {
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -512,9 +492,7 @@ class SqlRepositoryAdapterTest {
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -628,9 +606,7 @@ class SqlRepositoryAdapterTest {
             var result = repository.updateAll(List.of());
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
     }
 
@@ -712,9 +688,7 @@ class SqlRepositoryAdapterTest {
             var result = repository.insertAll(List.of());
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
     }
 
@@ -834,9 +808,7 @@ class SqlRepositoryAdapterTest {
             var result = repository.saveAll(List.of());
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
