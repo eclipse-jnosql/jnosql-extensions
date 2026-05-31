@@ -229,9 +229,7 @@ class DefaultSqlTemplate implements SqlTemplate {
     @Override
     public <T> T insert(T entity) {
         Objects.requireNonNull(entity, "entity is null");
-        return executeInTransaction(() -> {
-            return insertExecution(entity);
-        });
+        return executeInTransaction(() -> insertExecution(entity));
     }
 
     @Override
