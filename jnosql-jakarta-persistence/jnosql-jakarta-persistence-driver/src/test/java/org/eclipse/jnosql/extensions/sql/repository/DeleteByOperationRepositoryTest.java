@@ -128,9 +128,7 @@ import org.junit.jupiter.api.Test;
             int deleted = repository.deleteByRelease(1999);
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(deleted).isZero();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(deleted).isZero());
 
             // cleanup
             repository.deleteById(c1.getId());
