@@ -71,7 +71,7 @@ public class OptionalPartsParser {
         if (startsWith(FROM)) {
             fromClause();
         } else {
-            updatedQueryString.append(FROM + " " + entity);
+            updatedQueryString.append(FROM + " ").append(entity);
         }
         skipSpace();
         // do not care about the rest
