@@ -62,9 +62,7 @@ import java.util.List;
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -81,9 +79,7 @@ import java.util.List;
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -100,9 +96,7 @@ import java.util.List;
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
 
         @Test
@@ -120,11 +114,9 @@ import java.util.List;
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result)
-                        .extracting(Computer::getModel)
-                        .containsExactly("ThinkPad");
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result)
+                    .extracting(Computer::getModel)
+                    .containsExactly("ThinkPad"));
 
             // cleanup
             repository.deleteById(c2.getId());
@@ -140,9 +132,7 @@ import java.util.List;
             // then
             var result = repository.findAll().toList();
 
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(result).isEmpty();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(result).isEmpty());
         }
     }
 }
