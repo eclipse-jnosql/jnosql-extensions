@@ -145,7 +145,7 @@ public class {{className}} implements {{repository}} {
         pageRequest.size(), NoSQLPage.skip(pageRequest), null, metadata.name(), java.util.Collections.emptyList());
 
         List<{{entityType}}> entities = template().<{{entityType}}>select(query).toList();
-        return NoSQLPage.of(entities, pageRequest);
+        return NoSQLPage.of(entities, pageRequest, () -> template.count(query));
     }
 
    @Override
