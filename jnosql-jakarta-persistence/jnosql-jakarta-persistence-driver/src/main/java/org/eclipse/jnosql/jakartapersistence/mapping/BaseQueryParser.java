@@ -243,6 +243,7 @@ abstract class BaseQueryParser {
         }
     }
 
+    @SafeVarargs
     static void requireComparisonSupportsIgnoreCase(CriteriaCondition criteria, Expression<? extends Comparable>... operands) {
             if (!Stream.of(operands).allMatch(BaseQueryParser::isStringExpression)) {
                 throw new UnsupportedOperationException("IgnoreCase supported only for String values. Criteria: " + criteria);
