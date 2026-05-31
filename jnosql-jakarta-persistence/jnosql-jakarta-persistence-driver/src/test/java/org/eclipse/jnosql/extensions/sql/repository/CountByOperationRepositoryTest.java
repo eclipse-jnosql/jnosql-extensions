@@ -85,9 +85,7 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
             long count = repository.countByRelease(2023);
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(count).isEqualTo(2);
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(count).isEqualTo(2));
 
             // cleanup
             repository.deleteById(c1.getId());
@@ -106,9 +104,7 @@ class CountByOperationRepositoryTest extends AbstractTestRepository {
             long count = repository.countByModel("NonExisting");
 
             // then
-            SoftAssertions.assertSoftly(softly -> {
-                softly.assertThat(count).isZero();
-            });
+            SoftAssertions.assertSoftly(softly -> softly.assertThat(count).isZero());
 
             // cleanup
             repository.deleteById(c1.getId());
