@@ -21,11 +21,14 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import java.util.Set;
+import java.util.logging.Logger;
 
 @SupportedAnnotationTypes("jakarta.nosql.Converter")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class AutoApplyConverterProcessor extends AbstractProcessor {
-    
+
+    private static final Logger LOGGER = Logger.getLogger(AutoApplyConverterProcessor.class.getName());
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         return false;
