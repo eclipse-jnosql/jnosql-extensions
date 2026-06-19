@@ -45,8 +45,7 @@ import java.util.logging.Logger;
 public class AutoApplyConverterProcessor extends AbstractProcessor {
 
 
-    private static final Logger LOGGER =
-            Logger.getLogger(AutoApplyConverterProcessor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(AutoApplyConverterProcessor.class.getName());
     private static final String AUTO_APPLY_CONVERTERS_FQN = "org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters";
     private static final String TEMPLATE = "auto_apply_converter.mustache";
 
