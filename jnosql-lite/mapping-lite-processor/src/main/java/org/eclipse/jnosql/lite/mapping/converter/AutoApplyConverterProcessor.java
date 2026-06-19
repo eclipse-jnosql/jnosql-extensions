@@ -63,7 +63,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
                 .filter(this::isAutoApply)
                 .forEach(e -> generateMetadata(e, services));
 
-        if (roundEnv.processingOver() && !services.isEmpty()) {
+        if (!services.isEmpty()) {
             generateServiceFile(services);
         }
         return false;
