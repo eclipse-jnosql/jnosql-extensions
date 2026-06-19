@@ -70,13 +70,21 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
         var model = new AutoApplyConverterModel(converterTypes, converterInstances);
 
-        LOGGER.info(() -> "Found " + converterTypes.size() + " auto-apply converters");
+        LOGGER.info(() -> "Found " + model.getConverterEntryInstances().size() + " auto-apply converters");
+
+        if(model.getConverterEntryInstances().isEmpty()) {
+            return false;
+        }
+        generateAutoApplyClass(model);
+        return false;
+    }
+
+    private void generateAutoApplyClass(AutoApplyConverterModel model) {
         try {
             createEntitiesMetadata(model);
         } catch (IOException e) {
             throw new MappingException("Error creating auto-apply converters", e);
         }
-        return false;
     }
 
     private Consumer<TypeElement> processConverters(List<ConverterEntryType> converterTypes,
