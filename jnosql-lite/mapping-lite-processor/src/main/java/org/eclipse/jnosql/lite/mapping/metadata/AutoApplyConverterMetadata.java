@@ -27,7 +27,7 @@ import jakarta.nosql.AttributeConverter;
  * encountered during mapping.</p>
  *
  * <p>Implementations are typically generated at compile time from classes
- * annotated with {@link Converter} where {@code autoApply=true}.</p>
+ * annotated with {@link jakarta.nosql.Converter} where {@code autoApply=true}.</p>
  *
  * <p>For example, given the converter:</p>
  *
