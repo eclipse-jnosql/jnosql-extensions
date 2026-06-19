@@ -14,5 +14,40 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
+
+/**
+ * Metadata describing an auto-apply {@link AttributeConverter}.
+ *
+ * <p>This interface is intended for generated implementations that are
+ * discovered through the {@link java.util.ServiceLoader} mechanism.
+ * Each implementation associates a Java attribute type with a converter
+ * instance that should be automatically applied whenever that type is
+ * encountered during mapping.</p>
+ *
+ * <p>Implementations are typically generated at compile time from classes
+ * annotated with {@link Converter} where {@code autoApply=true}.</p>
+ *
+ * <p>For example, given the converter:</p>
+ *
+ * <pre>{@code
+ * @Converter(autoApply = true)
+ * public class UUIDConverter
+ *         implements AttributeConverter<UUID, String> {
+ *     ...
+ * }
+ * }</pre>
+ *
+ * <p>A generated implementation may return:</p>
+ *
+ * <pre>{@code
+ * type()      -> UUID.class
+ * converter() -> new UUIDConverter()
+ * }</pre>
+ *
+ * <p>The mapping layer uses this metadata to automatically register
+ * converters without requiring runtime classpath scanning or generic
+ * type inspection.</p>
+ *
+ */
 public interface AutoApplyConverterMetadata {
 }
