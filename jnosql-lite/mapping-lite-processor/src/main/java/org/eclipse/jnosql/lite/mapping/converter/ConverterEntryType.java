@@ -24,4 +24,12 @@ public class ConverterEntryType {
         this.type = type;
         this.converter = converter;
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getConverter() {
+        return converter;
+    }
 }
