@@ -14,5 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
-public class AutoApplyConverters {
+public enum AutoApplyConverters {
+
+
 }
