@@ -148,13 +148,17 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
             }
 
             var element = declaredType.asElement();
-            if (element instanceof TypeElement typeElement && typeElement.getQualifiedName()
-                    .contentEquals(AttributeConverter.class.getName())) {
+            if (isAttributeConverter(element)) {
                 return declaredType;
             }
         }
 
         return null;
+    }
+
+    private boolean isAttributeConverter(Element element) {
+        return element instanceof TypeElement typeElement
+                && typeElement.getQualifiedName().contentEquals(AttributeConverter.class.getName());
     }
 
     private String attributeType(DeclaredType converter) {
