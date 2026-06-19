@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import jakarta.nosql.AttributeConverter;
+import jakarta.nosql.Convert;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,4 +31,11 @@ public enum AutoApplyConverters {
         this.converters = new HashMap<>();
         this.convertersInstance = new HashMap<>();
      }
+
+    Class<? extends AttributeConverter<?, ?>> converter(Class<?> convert, Class<?> type) {
+        if (convert != null) {
+            return convert;
+        }
+        return convertersInstance.get(type);
+    }
 }
