@@ -36,14 +36,17 @@ public enum AutoApplyConverters {
         this.converters = new HashMap<>();
         this.convertersInstance = new HashMap<>();
         {{#converterEntryInstances}}
-            convertersInstance.put({{type}}, {{instance}});
+            convertersInstance.put({{type}},
+                    {{instance}});
         {{/converterEntryInstances}}
         {{#converterEntryTypes}}
-            converters.put({{type}}, {{converter}});
+            converters.put({{type}},
+                    {{converter}});
         {{/converterEntryTypes}}
      }
 
-    Class<? extends AttributeConverter<?, ?>> converter(Class<? extends AttributeConverter<?, ?>> convert, Class<?> type) {
+    Class<? extends AttributeConverter<?, ?>> converter(Class<? extends AttributeConverter<?, ?>> convert,
+                                                        Class<?> type) {
         if (convert != null) {
             return convert;
         }
