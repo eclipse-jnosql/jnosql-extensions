@@ -18,6 +18,7 @@ import java.lang.annotation.Annotation;
 
 import org.eclipse.jnosql.communication.Value;
 import jakarta.nosql.AttributeConverter;
+import org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 
@@ -36,7 +37,7 @@ public final class {{className}} implements FieldMetadata {
     private final Map<Class<? extends Annotation>, String> valueByAnnotation;
 
     public {{className}}() {
-        this.converter = {{converter}};
+        this.converter = AutoApplyConverters.INSTANCE.instanceConverter({{converter}});
         this.typeConverter = {{typeConverter}};
         {{#valueByAnnotation.isEmpty}}
          this.valueByAnnotation = java.util.Collections.emptyMap();
