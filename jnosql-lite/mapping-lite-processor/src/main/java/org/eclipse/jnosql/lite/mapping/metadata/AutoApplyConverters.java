@@ -15,7 +15,6 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 import jakarta.nosql.AttributeConverter;
-import jakarta.nosql.Convert;
 
 import java.util.HashMap;
 import java.util.Map;
