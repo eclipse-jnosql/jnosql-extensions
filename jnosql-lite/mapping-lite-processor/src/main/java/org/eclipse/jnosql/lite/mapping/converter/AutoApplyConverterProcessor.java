@@ -14,5 +14,12 @@
  */
 package org.eclipse.jnosql.lite.mapping.converter;
 
-public class AutoApplyConverterProcessor {
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
+
+@SupportedAnnotationTypes("jakarta.nosql.Converter")
+@SupportedSourceVersion(SourceVersion.RELEASE_21)
+public class AutoApplyConverterProcessor extends AbstractProcessor {
 }
