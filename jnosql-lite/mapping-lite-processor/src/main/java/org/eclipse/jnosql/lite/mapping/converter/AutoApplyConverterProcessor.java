@@ -14,6 +14,9 @@
  */
 package org.eclipse.jnosql.lite.mapping.converter;
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import jakarta.nosql.AttributeConverter;
 import jakarta.nosql.Converter;
 import org.eclipse.jnosql.lite.mapping.EntitiesMetadataModel;
@@ -45,6 +48,13 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
     private static final Logger LOGGER =
             Logger.getLogger(AutoApplyConverterProcessor.class.getName());
     private static final String AUTO_APPLY_CONVERTERS_FQN = "org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters";
+    private static final String TEMPLATE = "auto_apply_converter.mustache";
+
+    private final Mustache template;
+
+    public AutoApplyConverterProcessor() {
+        this.template = createTemplate();
+    }
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations,
@@ -127,5 +137,10 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
                 .toString();
     }
 
+
+    private Mustache createTemplate() {
+        MustacheFactory factory = new DefaultMustacheFactory();
+        return factory.compile(TEMPLATE);
+    }
 
 }
