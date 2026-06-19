@@ -20,6 +20,7 @@ import com.github.mustachejava.MustacheFactory;
 import jakarta.nosql.AttributeConverter;
 import jakarta.nosql.Converter;
 import jakarta.nosql.MappingException;
+import org.eclipse.jnosql.lite.mapping.metadata.AutoApplyConverterMetadata;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -32,9 +33,11 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -57,66 +60,83 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-
-        List<ConverterEntryType> converterTypes = new ArrayList<>();
-        List<ConverterEntryInstance> converterInstances = new ArrayList<>();
+        Set<String> services = new HashSet<>();
 
         roundEnv.getElementsAnnotatedWith(Converter.class)
                 .stream()
                 .filter(TypeElement.class::isInstance)
                 .map(TypeElement.class::cast)
                 .filter(this::isAutoApply)
-                .forEach(processConverters(converterTypes, converterInstances));
+                .forEach(e -> generateMetadata(e, services));
 
-        var model = new AutoApplyConverterModel(converterTypes, converterInstances);
-
-        if(model.isEmpty()) {
-            return false;
+        if (roundEnv.processingOver() && !services.isEmpty()) {
+            generateServiceFile(services);
         }
-
-        LOGGER.info(() -> "Found " + model.getConverterEntryInstances().size() + " auto-apply converters");
-
-        generateAutoApplyClass(model);
         return false;
     }
 
-    private void generateAutoApplyClass(AutoApplyConverterModel model) {
+    private void generateMetadata(TypeElement converter, Set<String> services) {
+
+        DeclaredType attributeConverter =
+                attributeConverter(converter);
+
+        if (attributeConverter == null) {
+            LOGGER.warning(() ->
+                    "Ignoring converter "
+                            + converter.getQualifiedName()
+                            + " because it does not implement "
+                            + AttributeConverter.class.getName());
+            return;
+        }
+
+        var attributeType = attributeType(attributeConverter);
+        var converterType = converter.getQualifiedName().toString();
+        var className = converter.getSimpleName() + "AutoApplyMetadata";
+
+        var model = new AutoApplyConverterModel(className, attributeType, converterType);
+
+        generateMetadataClass(model);
+        services.add(model.getQualified());
+    }
+
+    private void generateMetadataClass(
+            AutoApplyConverterModel model) {
+
         try {
-            createEntitiesMetadata(model);
+            var filer = processingEnv.getFiler();
+            var fileObject = filer.createSourceFile(model.getQualified());
+
+            try (var writer = fileObject.openWriter()) {
+                template.execute(writer, model);
+            }
+
         } catch (IOException e) {
-            throw new MappingException("Error creating auto-apply converters", e);
+            throw new MappingException(
+                    "Error creating auto apply metadata",
+                    e);
         }
     }
 
-    private Consumer<TypeElement> processConverters(List<ConverterEntryType> converterTypes,
-                                                    List<ConverterEntryInstance> converterInstances) {
-        return converter -> {
+    private void generateServiceFile(Set<String> services) {
 
-            DeclaredType attributeConverter =
-                    attributeConverter(converter);
+        try {
 
-            if (attributeConverter == null) {
-                LOGGER.warning(() -> "Ignoring converter " + converter.getQualifiedName() + " because it does not implement "
-                        + AttributeConverter.class.getName());
-                return;
+            var resource = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT,
+                                    "",
+                                    "META-INF/services/" + AutoApplyConverterMetadata.class.getName());
+
+            try (Writer writer = resource.openWriter()) {
+
+                for (String service : services) {
+                    writer.write(service);
+                    writer.write(System.lineSeparator());
+                }
             }
 
-            String attributeType = attributeType(attributeConverter);
-            String converterType = converter.getQualifiedName().toString();
-
-            converterTypes.add(new ConverterEntryType(attributeType + ".class",
-                    converterType + ".class"));
-            converterInstances.add(new ConverterEntryInstance(attributeType + ".class",
-                    "new " + converterType + "()"));
-        };
-    }
-
-    private void createEntitiesMetadata(AutoApplyConverterModel metadata) throws IOException {
-        LOGGER.fine("Creating the default AutoApplyConverterModel class");
-        Filer filer = processingEnv.getFiler();
-        JavaFileObject fileObject = filer.createSourceFile(AUTO_APPLY_CONVERTERS);
-        try (Writer writer = fileObject.openWriter()) {
-            template.execute(writer, metadata);
+        } catch (IOException e) {
+            throw new MappingException(
+                    "Error creating service file",
+                    e);
         }
     }
 
