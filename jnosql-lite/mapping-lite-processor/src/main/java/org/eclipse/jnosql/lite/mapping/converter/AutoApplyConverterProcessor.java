@@ -69,7 +69,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
         var model = new AutoApplyConverterModel(converterTypes, converterInstances);
 
-        LOGGER.fine(() -> "Found " + converterTypes.size() + " auto-apply converters");
+        LOGGER.info(() -> "Found " + converterTypes.size() + " auto-apply converters");
         try {
             createEntitiesMetadata(model);
         } catch (IOException e) {
