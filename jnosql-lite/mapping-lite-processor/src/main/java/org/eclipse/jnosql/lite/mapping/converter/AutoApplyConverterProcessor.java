@@ -19,6 +19,7 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import jakarta.nosql.AttributeConverter;
 import jakarta.nosql.Converter;
+import jakarta.nosql.MappingException;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -73,7 +74,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
         try {
             createEntitiesMetadata(model);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new MappingException("Error creating auto-apply converters", e);
         }
         return false;
     }
