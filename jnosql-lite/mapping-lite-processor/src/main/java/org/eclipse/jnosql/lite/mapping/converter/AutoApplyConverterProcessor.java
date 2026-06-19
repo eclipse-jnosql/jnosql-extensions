@@ -31,6 +31,20 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        roundEnv.getElementsAnnotatedWith(jakarta.nosql.Converter.class)
+                .stream()
+                .filter(TypeElement.class::isInstance)
+                .map(TypeElement.class::cast)
+                .filter(this::isAutoApply)
+                .forEach(converter -> LOGGER.fine(() ->
+                        "Auto-apply converter found: " + converter.getQualifiedName()));
+
+
         return false;
+    }
+
+    private boolean isAutoApply(TypeElement converter) {
+        var annotation = converter.getAnnotation(jakarta.nosql.Converter.class);
+        return annotation != null && annotation.autoApply();
     }
 }
