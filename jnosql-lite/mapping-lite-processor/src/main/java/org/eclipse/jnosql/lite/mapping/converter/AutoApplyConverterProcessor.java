@@ -78,7 +78,8 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
         return false;
     }
 
-    private Consumer<TypeElement> processConverters(List<ConverterEntryType> converterTypes, List<ConverterEntryInstance> converterInstances) {
+    private Consumer<TypeElement> processConverters(List<ConverterEntryType> converterTypes,
+                                                    List<ConverterEntryInstance> converterInstances) {
         return converter -> {
 
             DeclaredType attributeConverter =
@@ -93,8 +94,10 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
             String attributeType = attributeType(attributeConverter);
             String converterType = converter.getQualifiedName().toString();
 
-            converterTypes.add(new ConverterEntryType(attributeType + ".class", converterType + ".class"));
-            converterInstances.add(new ConverterEntryInstance(attributeType + ".class", "new " + converterType + "()"));
+            converterTypes.add(new ConverterEntryType(attributeType + ".class",
+                    converterType + ".class"));
+            converterInstances.add(new ConverterEntryInstance(attributeType + ".class",
+                    "new " + converterType + "()"));
         };
     }
 
