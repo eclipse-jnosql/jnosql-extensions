@@ -110,9 +110,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
             }
 
         } catch (IOException e) {
-            throw new MappingException(
-                    "Error creating auto apply metadata",
-                    e);
+            throw new MappingException("Error creating auto apply metadata", e);
         }
     }
 
@@ -133,29 +131,24 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
             }
 
         } catch (IOException e) {
-            throw new MappingException(
-                    "Error creating service file",
-                    e);
+            throw new MappingException("Error creating service file", e);
         }
     }
 
     private boolean isAutoApply(TypeElement converter) {
-        Converter annotation = converter.getAnnotation(Converter.class);
+        var annotation = converter.getAnnotation(Converter.class);
         return annotation != null && annotation.autoApply();
     }
 
     private DeclaredType attributeConverter(TypeElement converter) {
 
         for (TypeMirror mirror : converter.getInterfaces()) {
-
             if (!(mirror instanceof DeclaredType declaredType)) {
                 continue;
             }
 
-            Element element = declaredType.asElement();
-
-            if (element instanceof TypeElement typeElement
-                    && typeElement.getQualifiedName()
+            var element = declaredType.asElement();
+            if (element instanceof TypeElement typeElement && typeElement.getQualifiedName()
                     .contentEquals(AttributeConverter.class.getName())) {
                 return declaredType;
             }
