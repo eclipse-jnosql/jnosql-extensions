@@ -16,8 +16,18 @@ package org.eclipse.jnosql.lite.mapping.converter;
 
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.util.List;
 
 public class AutoApplyConverterModel {
+
+    private final List<ConverterEntryType> converterEntryTypes;
+    private final  List<ConverterEntryInstance> converterEntryInstances;
+
+    public AutoApplyConverterModel(List<ConverterEntryType> converterEntryTypes,
+                                   List<ConverterEntryInstance> converterEntryInstances) {
+        this.converterEntryTypes = converterEntryTypes;
+        this.converterEntryInstances = converterEntryInstances;
+    }
 
     public LocalDateTime getNow() {
         return LocalDateTime.now();
