@@ -37,8 +37,12 @@ public final class {{className}} implements FieldMetadata {
     private final Map<Class<? extends Annotation>, String> valueByAnnotation;
 
     public {{className}}() {
-        this.converter = AutoApplyConverters.INSTANCE.instanceConverter({{converter}}, {{type}}.class);
-        this.typeConverter = AutoApplyConverters.INSTANCE.typeConverter({{typeConverter}}, {{type}}.class);
+        this.converter = AutoApplyConverters.INSTANCE.instanceConverter(
+                {{converter}},
+                {{type}}.class);
+        this.typeConverter = AutoApplyConverters.INSTANCE.typeConverter(
+                {{typeConverter}},
+                {{type}}.class);
         {{#valueByAnnotation.isEmpty}}
          this.valueByAnnotation = java.util.Collections.emptyMap();
         {{/valueByAnnotation.isEmpty}}
