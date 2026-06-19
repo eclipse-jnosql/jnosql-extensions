@@ -44,7 +44,8 @@ import java.util.logging.Logger;
 public class AutoApplyConverterProcessor extends AbstractProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(AutoApplyConverterProcessor.class.getName());
-    private static final String AUTO_APPLY_CONVERTERS_FQN = "org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters";
+    private static final String AUTO_APPLY_CONVERTERS
+            = "org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters";
     private static final String TEMPLATE = "auto_apply_converter.mustache";
 
     private final Mustache template;
@@ -100,7 +101,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
     private void createEntitiesMetadata(AutoApplyConverterModel metadata) throws IOException {
         LOGGER.fine("Creating the default AutoApplyConverterModel class");
         Filer filer = processingEnv.getFiler();
-        JavaFileObject fileObject = filer.createSourceFile(AUTO_APPLY_CONVERTERS_FQN);
+        JavaFileObject fileObject = filer.createSourceFile(AUTO_APPLY_CONVERTERS);
         try (Writer writer = fileObject.openWriter()) {
             template.execute(writer, metadata);
         }
