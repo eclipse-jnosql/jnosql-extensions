@@ -15,9 +15,11 @@
 package org.eclipse.jnosql.lite.mapping.entities.converter;
 
 import jakarta.nosql.AttributeConverter;
+import jakarta.nosql.Converter;
 
 import java.util.UUID;
 
+@Converter(autoApply = true)
 public class UUIDConverter implements AttributeConverter<UUID, String> {
 
     @Override
