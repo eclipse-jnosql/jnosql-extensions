@@ -44,6 +44,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
     private static final Logger LOGGER =
             Logger.getLogger(AutoApplyConverterProcessor.class.getName());
+    private static final String AUTO_APPLY_CONVERTERS_FQN = "org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters";
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations,
@@ -78,14 +79,18 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
         var model = new AutoApplyConverterModel(converterTypes, converterInstances);
 
         LOGGER.fine(() -> "Found " + converterTypes.size() + " auto-apply converters");
-        // TODO generate source file using model
+        try {
+            createEntitiesMetadata(model);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return false;
     }
 
     private void createEntitiesMetadata(AutoApplyConverterModel metadata) throws IOException {
         LOGGER.fine("Creating the default AutoApplyConverterModel class");
         Filer filer = processingEnv.getFiler();
-        JavaFileObject fileObject = filer.createSourceFile("org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters");
+        JavaFileObject fileObject = filer.createSourceFile(AUTO_APPLY_CONVERTERS_FQN);
         try (Writer writer = fileObject.openWriter()) {
             template.execute(writer, metadata);
         }
