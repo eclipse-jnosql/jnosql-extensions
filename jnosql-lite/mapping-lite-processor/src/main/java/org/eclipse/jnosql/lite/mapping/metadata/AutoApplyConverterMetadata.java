@@ -15,6 +15,8 @@
 package org.eclipse.jnosql.lite.mapping.metadata;
 
 
+import jakarta.nosql.AttributeConverter;
+
 /**
  * Metadata describing an auto-apply {@link AttributeConverter}.
  *
@@ -50,4 +52,26 @@ package org.eclipse.jnosql.lite.mapping.metadata;
  *
  */
 public interface AutoApplyConverterMetadata {
+
+    /**
+     * Returns the Java attribute type that should trigger
+     * the auto-application of the converter.
+     *
+     * @return the attribute type
+     */
+    Class<?> type();
+
+    /**
+     * Returns the converter implementation type.
+     *
+     * @return the converter class
+     */
+    Class<? extends AttributeConverter<?, ?>> converterType();
+
+    /**
+     * Returns a converter instance.
+     *
+     * @return the converter instance
+     */
+    AttributeConverter<?, ?> converter();
 }
