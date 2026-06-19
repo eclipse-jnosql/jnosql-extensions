@@ -16,15 +16,17 @@ package org.eclipse.jnosql.lite.mapping.entities.converter;
 
 import jakarta.nosql.AttributeConverter;
 
-public class UUIDConverter implements AttributeConverter<java.util.UUID, String> {
+import java.util.UUID;
+
+public class UUIDConverter implements AttributeConverter<UUID, String> {
 
     @Override
-    public String convertToDatabaseColumn(java.util.UUID attribute) {
+    public String convertToDatabaseColumn(UUID attribute) {
         return attribute.toString();
     }
 
     @Override
-    public java.util.UUID convertToEntityAttribute(String dbData) {
+    public UUID convertToEntityAttribute(String dbData) {
         return java.util.UUID.fromString(dbData);
     }
 }
