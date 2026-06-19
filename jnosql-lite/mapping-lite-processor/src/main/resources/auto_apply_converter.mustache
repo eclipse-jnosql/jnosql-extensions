@@ -16,47 +16,30 @@ package org.eclipse.jnosql.lite.mapping.converter;
 
 import javax.annotation.processing.Generated;
 import jakarta.nosql.AttributeConverter;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.eclipse.jnosql.lite.mapping.metadata.AutoApplyConverterMetadata;
 
 /**
  * This class is responsible for storing the auto apply converters found in the classpath. It is a singleton
  * that is initialized at the application startup and is used to store the converters found in the classpath.
  */
  @Generated(value= "JNoSQL Lite ConstructorMetadata Generator", date = "{{now}}")
-public enum AutoApplyConverters {
+public class {{className}} implements  AutoApplyConverterMetadata {
 
-    INSTANCE;
+    private static final {{typeConverter}} CONVERTER =
+        new {{typeConverter}}();
 
-    private Map<Class<?>, Class<? extends AttributeConverter<?, ?>>> converters;
-    private Map<Class<?>, AttributeConverter<?, ?>> convertersInstance;
-
-     AutoApplyConverters() {
-        this.converters = new HashMap<>();
-        this.convertersInstance = new HashMap<>();
-        {{#converterEntryInstances}}
-            convertersInstance.put({{type}},
-                    {{instance}});
-        {{/converterEntryInstances}}
-        {{#converterEntryTypes}}
-            converters.put({{type}},
-                    {{converter}});
-        {{/converterEntryTypes}}
-     }
-
-    public Class<? extends AttributeConverter<?, ?>> typeConverter(Class<? extends AttributeConverter<?, ?>> convert,
-                                                        Class<?> type) {
-        if (convert != null) {
-            return convert;
-        }
-        return converters.get(type);
+    @Override
+    public Class<?> type() {
+        return {{type}}.class;
     }
 
-    public AttributeConverter<?, ?> instanceConverter(AttributeConverter<?, ?> convert, Class<?> type) {
-        if (convert != null) {
-            return convert;
-        }
-        return convertersInstance.get(type);
+    @Override
+    public Class<? extends AttributeConverter<?, ?>> converterType() {
+        return {{typeConverter}}.class;
+    }
+
+     @Override
+    public AttributeConverter<?, ?> converter() {
+        return CONVERTER;
     }
 }
