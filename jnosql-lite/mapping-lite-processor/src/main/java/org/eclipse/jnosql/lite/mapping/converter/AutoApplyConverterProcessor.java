@@ -70,11 +70,12 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
         var model = new AutoApplyConverterModel(converterTypes, converterInstances);
 
-        LOGGER.info(() -> "Found " + model.getConverterEntryInstances().size() + " auto-apply converters");
-
-        if(model.getConverterEntryInstances().isEmpty()) {
+        if(model.isEmpty()) {
             return false;
         }
+
+        LOGGER.info(() -> "Found " + model.getConverterEntryInstances().size() + " auto-apply converters");
+
         generateAutoApplyClass(model);
         return false;
     }
