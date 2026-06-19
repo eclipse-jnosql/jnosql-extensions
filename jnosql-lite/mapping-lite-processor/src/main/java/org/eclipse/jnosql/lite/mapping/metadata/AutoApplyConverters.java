@@ -18,17 +18,21 @@ import jakarta.nosql.AttributeConverter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.logging.Logger;
 
 public enum AutoApplyConverters {
 
     INSTANCE;
 
+    private static final Logger LOGGER = Logger.getLogger(AutoApplyConverters.class.getName());
     private final Map<Class<?>, Class<? extends AttributeConverter<?, ?>>> converters;
     private final Map<Class<?>, AttributeConverter<?, ?>> convertersInstance;
 
     AutoApplyConverters() {
         this.converters = new HashMap<>();
         this.convertersInstance = new HashMap<>();
+        loadConverters();
     }
 
 
@@ -47,5 +51,21 @@ public enum AutoApplyConverters {
         return convertersInstance.get(type);
     }
 
+    private void loadConverters() {
+        ServiceLoader.load(AutoApplyConverterMetadata.class)
+                .forEach(metadata -> {
+                    converters.put(
+                            metadata.type(),
+                            metadata.converterType()
+                    );
+
+                    convertersInstance.put(
+                            metadata.type(),
+                            metadata.converter()
+                    );
+                });
+
+        LOGGER.fine(() -> "Auto-apply converters loaded. Types: " + converters.size());
+    }
 
 }
