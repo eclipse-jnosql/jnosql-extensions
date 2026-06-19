@@ -16,8 +16,11 @@ package org.eclipse.jnosql.lite.mapping.converter;
 
 import jakarta.nosql.AttributeConverter;
 import jakarta.nosql.Converter;
+import org.eclipse.jnosql.lite.mapping.EntitiesMetadataModel;
+import org.eclipse.jnosql.lite.mapping.MappingResult;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
@@ -26,6 +29,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -74,6 +80,15 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
         LOGGER.fine(() -> "Found " + converterTypes.size() + " auto-apply converters");
         // TODO generate source file using model
         return false;
+    }
+
+    private void createEntitiesMetadata(AutoApplyConverterModel metadata) throws IOException {
+        LOGGER.fine("Creating the default AutoApplyConverterModel class");
+        Filer filer = processingEnv.getFiler();
+        JavaFileObject fileObject = filer.createSourceFile("org.eclipse.jnosql.lite.mapping.converter.AutoApplyConverters");
+        try (Writer writer = fileObject.openWriter()) {
+            template.execute(writer, metadata);
+        }
     }
 
     private boolean isAutoApply(TypeElement converter) {
