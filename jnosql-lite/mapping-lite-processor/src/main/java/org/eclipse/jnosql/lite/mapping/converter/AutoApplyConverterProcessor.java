@@ -14,12 +14,16 @@
  */
 package org.eclipse.jnosql.lite.mapping.converter;
 
+import jakarta.nosql.Converter;
+
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -46,5 +50,39 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
     private boolean isAutoApply(TypeElement converter) {
         var annotation = converter.getAnnotation(jakarta.nosql.Converter.class);
         return annotation != null && annotation.autoApply();
+    }
+
+    private AutoApplyConverterModel buildModel(RoundEnvironment roundEnv) {
+
+        List<ConverterEntryType> converterTypes = new ArrayList<>();
+        List<ConverterEntryInstance> converterInstances = new ArrayList<>();
+
+        roundEnv.getElementsAnnotatedWith(Converter.class)
+                .stream()
+                .filter(TypeElement.class::isInstance)
+                .map(TypeElement.class::cast)
+                .filter(this::isAutoApply)
+                .filter(this::implementsAttributeConverter)
+                .forEach(converter -> {
+
+                    String attributeType = attributeType(converter);
+                    String converterType = converter.getQualifiedName().toString();
+
+                    converterTypes.add(
+                            new ConverterEntryType(
+                                    attributeType + ".class",
+                                    converterType + ".class"
+                            )
+                    );
+
+                    converterInstances.add(
+                            new ConverterEntryInstance(
+                                    attributeType + ".class",
+                                    "new " + converterType + "()"
+                            )
+                    );
+                });
+
+        return new AutoApplyConverterModel(converterTypes, converterInstances);
     }
 }
