@@ -19,8 +19,6 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import jakarta.nosql.AttributeConverter;
 import jakarta.nosql.Converter;
-import org.eclipse.jnosql.lite.mapping.EntitiesMetadataModel;
-import org.eclipse.jnosql.lite.mapping.MappingResult;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
