@@ -77,13 +77,10 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
 
     private void generateMetadata(TypeElement converter, Set<String> services) {
 
-        DeclaredType attributeConverter =
-                attributeConverter(converter);
+        var attributeConverter = attributeConverter(converter);
 
         if (attributeConverter == null) {
-            LOGGER.warning(() ->
-                    "Ignoring converter "
-                            + converter.getQualifiedName()
+            LOGGER.warning(() -> "Ignoring converter " + converter.getQualifiedName()
                             + " because it does not implement "
                             + AttributeConverter.class.getName());
             return;
