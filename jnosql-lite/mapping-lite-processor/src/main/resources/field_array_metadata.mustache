@@ -44,8 +44,8 @@ public final class {{className}} implements ArrayFieldMetadata {
     private final TypeSupplier<{{{supplierElement}}}> typeSupplier = new TypeReference<>(){};
 
     public {{className}}() {
-        this.converter = AutoApplyConverters.INSTANCE.instanceConverter({{converter}});
-        this.typeConverter = {{typeConverter}};
+        this.converter = AutoApplyConverters.INSTANCE.instanceConverter({{converter}}, {{type}}.class);
+        this.typeConverter = AutoApplyConverters.INSTANCE.typeConverter({{typeConverter}}, {{type}}.class);
         {{#valueByAnnotation.isEmpty}}
         this.valueByAnnotation = java.util.Collections.emptyMap();
         {{/valueByAnnotation.isEmpty}}
