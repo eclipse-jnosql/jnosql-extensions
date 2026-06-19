@@ -18,12 +18,8 @@ import javax.annotation.processing.Generated;
 import jakarta.nosql.AttributeConverter;
 import org.eclipse.jnosql.lite.mapping.metadata.AutoApplyConverterMetadata;
 
-/**
- * This class is responsible for storing the auto apply converters found in the classpath. It is a singleton
- * that is initialized at the application startup and is used to store the converters found in the classpath.
- */
- @Generated(value= "JNoSQL Lite ConstructorMetadata Generator", date = "{{now}}")
-public class {{className}} implements  AutoApplyConverterMetadata {
+@Generated(value= "JNoSQL Lite AutoApplyConverterMetadata Generator", date = "{{now}}")
+public class {{className}} implements AutoApplyConverterMetadata {
 
     private static final {{typeConverter}} CONVERTER =
         new {{typeConverter}}();
