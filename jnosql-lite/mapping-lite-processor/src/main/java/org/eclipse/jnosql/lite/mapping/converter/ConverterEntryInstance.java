@@ -18,18 +18,18 @@ public class ConverterEntryInstance {
 
     private final String type;
 
-    private final String converter;
+    private final String instance;
 
-    public ConverterEntryInstance(String type, String converter) {
+    public ConverterEntryInstance(String type, String instance) {
         this.type = type;
-        this.converter = converter;
+        this.instance = instance;
     }
 
     public String getType() {
         return type;
     }
 
-    public String getConverter() {
-        return converter;
+    public String getInstance() {
+        return instance;
     }
 }
