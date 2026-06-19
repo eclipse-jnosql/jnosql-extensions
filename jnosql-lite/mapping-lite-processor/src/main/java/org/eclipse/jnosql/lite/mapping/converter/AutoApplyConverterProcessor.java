@@ -99,8 +99,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
         services.add(model.getQualified());
     }
 
-    private void generateMetadataClass(
-            AutoApplyConverterModel model) {
+    private void generateMetadataClass(AutoApplyConverterModel model) {
 
         try {
             var filer = processingEnv.getFiler();
