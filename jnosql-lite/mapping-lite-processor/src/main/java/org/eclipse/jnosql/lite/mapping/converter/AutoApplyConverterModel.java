@@ -19,6 +19,8 @@ import java.time.Year;
 
 public class AutoApplyConverterModel {
 
+    private static final String PACKAGE = "org.eclipse.jnosql.lite.mapping.converter";
+
     private final String className;
     private final String type;
     private final String typeConverter;
@@ -49,5 +51,7 @@ public class AutoApplyConverterModel {
         return Year.now().toString();
     }
 
-
+    public String getQualified() {
+        return PACKAGE + "." + className;
+    }
 }
