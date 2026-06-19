@@ -36,6 +36,13 @@ public enum AutoApplyConverters {
         if (convert != null) {
             return convert;
         }
+        return converters.get(type);
+    }
+
+    AttributeConverter<?, ?> converter(AttributeConverter<?, ?> convert, Class<?> type) {
+        if (convert != null) {
+            return convert;
+        }
         return convertersInstance.get(type);
     }
 }
