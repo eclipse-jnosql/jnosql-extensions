@@ -36,7 +36,7 @@ public enum AutoApplyConverters {
         this.converters = new HashMap<>();
         this.convertersInstance = new HashMap<>();
         {{#converterEntryInstances}}
-            converters.put({{type}}, {{instance}});
+            convertersInstance.put({{type}}, {{instance}});
         {{/converterEntryInstances}}
         {{#converterEntryInstances}}
             converters.put({{type}}, {{instance}});
