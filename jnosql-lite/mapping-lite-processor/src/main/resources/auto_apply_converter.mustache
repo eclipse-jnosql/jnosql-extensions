@@ -38,9 +38,9 @@ public enum AutoApplyConverters {
         {{#converterEntryInstances}}
             convertersInstance.put({{type}}, {{instance}});
         {{/converterEntryInstances}}
-        {{#converterEntryInstances}}
-            converters.put({{type}}, {{instance}});
-        {{/converterEntryInstances}}
+        {{#converterEntryTypes}}
+            converters.put({{type}}, {{converter}});
+        {{/converterEntryTypes}}
      }
 
     Class<? extends AttributeConverter<?, ?>> converter(Class<? extends AttributeConverter<?, ?>> convert, Class<?> type) {
