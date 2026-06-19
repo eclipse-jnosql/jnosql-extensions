@@ -32,7 +32,7 @@ public enum AutoApplyConverters {
         this.convertersInstance = new HashMap<>();
      }
 
-    Class<? extends AttributeConverter<?, ?>> converter(lass<? extends AttributeConverter<?, ?> convert, Class<?> type) {
+    Class<? extends AttributeConverter<?, ?>> converter(Class<? extends AttributeConverter<?, ?>> convert, Class<?> type) {
         if (convert != null) {
             return convert;
         }
