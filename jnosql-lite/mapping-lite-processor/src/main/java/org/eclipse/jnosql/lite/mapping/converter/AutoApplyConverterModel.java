@@ -36,4 +36,12 @@ public class AutoApplyConverterModel {
     public String getCurrentYear(){
         return Year.now().toString();
     }
+
+    public List<ConverterEntryType> getConverterEntryTypes() {
+        return converterEntryTypes;
+    }
+
+    public List<ConverterEntryInstance> getConverterEntryInstances() {
+        return converterEntryInstances;
+    }
 }
