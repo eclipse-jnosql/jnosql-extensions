@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping.metadata;
+package org.eclipse.jnosql.lite.mapping.converter;
 
 import jakarta.nosql.AttributeConverter;
 
