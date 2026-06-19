@@ -38,6 +38,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 @SupportedAnnotationTypes("jakarta.nosql.Converter")
@@ -65,23 +66,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
                 .filter(TypeElement.class::isInstance)
                 .map(TypeElement.class::cast)
                 .filter(this::isAutoApply)
-                .forEach(converter -> {
-
-                    DeclaredType attributeConverter =
-                            attributeConverter(converter);
-
-                    if (attributeConverter == null) {
-                        LOGGER.warning(() -> "Ignoring converter " + converter.getQualifiedName() + " because it does not implement "
-                                + AttributeConverter.class.getName());
-                        return;
-                    }
-
-                    String attributeType = attributeType(attributeConverter);
-                    String converterType = converter.getQualifiedName().toString();
-
-                    converterTypes.add(new ConverterEntryType(attributeType + ".class", converterType + ".class"));
-                    converterInstances.add(new ConverterEntryInstance(attributeType + ".class", "new " + converterType + "()"));
-                });
+                .forEach(processConverters(converterTypes, converterInstances));
 
         var model = new AutoApplyConverterModel(converterTypes, converterInstances);
 
@@ -92,6 +77,26 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
             throw new RuntimeException(e);
         }
         return false;
+    }
+
+    private Consumer<TypeElement> processConverters(List<ConverterEntryType> converterTypes, List<ConverterEntryInstance> converterInstances) {
+        return converter -> {
+
+            DeclaredType attributeConverter =
+                    attributeConverter(converter);
+
+            if (attributeConverter == null) {
+                LOGGER.warning(() -> "Ignoring converter " + converter.getQualifiedName() + " because it does not implement "
+                        + AttributeConverter.class.getName());
+                return;
+            }
+
+            String attributeType = attributeType(attributeConverter);
+            String converterType = converter.getQualifiedName().toString();
+
+            converterTypes.add(new ConverterEntryType(attributeType + ".class", converterType + ".class"));
+            converterInstances.add(new ConverterEntryInstance(attributeType + ".class", "new " + converterType + "()"));
+        };
     }
 
     private void createEntitiesMetadata(AutoApplyConverterModel metadata) throws IOException {
