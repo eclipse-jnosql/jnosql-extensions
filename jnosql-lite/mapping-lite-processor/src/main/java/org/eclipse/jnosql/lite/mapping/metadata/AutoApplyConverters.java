@@ -19,6 +19,10 @@ import jakarta.nosql.AttributeConverter;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class is responsible for storing the auto apply converters found in the classpath. It is a singleton
+ * that is initialized at the application startup and is used to store the converters found in the classpath.
+ */
 public enum AutoApplyConverters {
 
     INSTANCE;
