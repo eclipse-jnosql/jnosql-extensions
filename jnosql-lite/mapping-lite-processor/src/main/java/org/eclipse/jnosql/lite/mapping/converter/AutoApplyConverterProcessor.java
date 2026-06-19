@@ -141,7 +141,6 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
                 .toString();
     }
 
-
     private Mustache createTemplate() {
         MustacheFactory factory = new DefaultMustacheFactory();
         return factory.compile(TEMPLATE);
