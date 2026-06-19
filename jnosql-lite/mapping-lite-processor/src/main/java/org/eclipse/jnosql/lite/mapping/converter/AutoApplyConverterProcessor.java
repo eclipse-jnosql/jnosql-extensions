@@ -69,7 +69,7 @@ public class AutoApplyConverterProcessor extends AbstractProcessor {
                     converterInstances.add(new ConverterEntryInstance(attributeType + ".class", "new " + converterType + "()"));
                 });
 
-        AutoApplyConverterModel model = new AutoApplyConverterModel(converterTypes, converterInstances);
+        var model = new AutoApplyConverterModel(converterTypes, converterInstances);
 
         LOGGER.fine(() -> "Found " + converterTypes.size() + " auto-apply converters");
         // TODO generate source file using model
