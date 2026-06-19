@@ -44,4 +44,8 @@ public class AutoApplyConverterModel {
     public List<ConverterEntryInstance> getConverterEntryInstances() {
         return converterEntryInstances;
     }
+
+    public boolean isEmpty() {
+        return converterEntryTypes.isEmpty() && converterEntryInstances.isEmpty();
+    }
 }
