@@ -16,17 +16,29 @@ package org.eclipse.jnosql.lite.mapping.converter;
 
 import java.time.LocalDateTime;
 import java.time.Year;
-import java.util.List;
 
 public class AutoApplyConverterModel {
 
-    private final List<ConverterEntryType> converterEntryTypes;
-    private final  List<ConverterEntryInstance> converterEntryInstances;
+    private final String className;
+    private final String type;
+    private final String typeConverter;
 
-    public AutoApplyConverterModel(List<ConverterEntryType> converterEntryTypes,
-                                   List<ConverterEntryInstance> converterEntryInstances) {
-        this.converterEntryTypes = converterEntryTypes;
-        this.converterEntryInstances = converterEntryInstances;
+    public AutoApplyConverterModel(String className, String type, String typeConverter) {
+        this.className = className;
+        this.type = type;
+        this.typeConverter = typeConverter;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getTypeConverter() {
+        return typeConverter;
     }
 
     public LocalDateTime getNow() {
@@ -37,15 +49,5 @@ public class AutoApplyConverterModel {
         return Year.now().toString();
     }
 
-    public List<ConverterEntryType> getConverterEntryTypes() {
-        return converterEntryTypes;
-    }
 
-    public List<ConverterEntryInstance> getConverterEntryInstances() {
-        return converterEntryInstances;
-    }
-
-    public boolean isEmpty() {
-        return converterEntryTypes.isEmpty() && converterEntryInstances.isEmpty();
-    }
 }
