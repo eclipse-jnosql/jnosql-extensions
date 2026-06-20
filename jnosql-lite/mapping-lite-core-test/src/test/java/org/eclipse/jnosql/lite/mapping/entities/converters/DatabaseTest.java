@@ -12,9 +12,8 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping.entities;
+package org.eclipse.jnosql.lite.mapping.entities.converters;
 
-import org.eclipse.jnosql.lite.mapping.entities.converters.Database;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
