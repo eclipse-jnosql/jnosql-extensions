@@ -15,6 +15,7 @@
 package {{packageName}};
 
 import jakarta.nosql.AttributeConverter;
+import org.eclipse.jnosql.lite.mapping.metadata.AutoApplyConverters;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
 
@@ -30,8 +31,12 @@ public final class {{className}} implements ParameterMetaData {
 
 
     public {{className}}() {
-        this.converter = {{converter}};
-        this.typeConverter = {{typeConverter}};
+        this.converter = AutoApplyConverters.INSTANCE.instanceConverter(
+                {{converter}},
+                {{type}}.class);
+        this.typeConverter = AutoApplyConverters.INSTANCE.typeConverter(
+                {{typeConverter}},
+               {{type}}.class);
     }
 
     @Override

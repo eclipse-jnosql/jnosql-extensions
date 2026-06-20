@@ -17,6 +17,7 @@ package {{packageName}};
 import java.lang.annotation.Annotation;
 
 import jakarta.nosql.AttributeConverter;
+import org.eclipse.jnosql.lite.mapping.metadata.AutoApplyConverters;
 import org.eclipse.jnosql.mapping.metadata.CollectionParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 import org.eclipse.jnosql.communication.TypeSupplier;
@@ -38,8 +39,12 @@ public final class {{className}} implements CollectionParameterMetaData {
     private final TypeSupplier<{{{supplierElement}}}> typeSupplier = new TypeReference<>(){};
 
     public {{className}}() {
-        this.converter = {{converter}};
-        this.typeConverter = {{typeConverter}};
+        this.converter = AutoApplyConverters.INSTANCE.instanceConverter(
+               {{converter}},
+               {{type}}.class);
+        this.typeConverter = AutoApplyConverters.INSTANCE.typeConverter(
+               {{typeConverter}},
+               {{type}}.class);
         {{#valueByAnnotation.isEmpty}}
         this.valueByAnnotation = java.util.Collections.emptyMap();
         {{/valueByAnnotation.isEmpty}}

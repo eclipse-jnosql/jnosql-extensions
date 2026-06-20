@@ -18,6 +18,7 @@ import java.lang.annotation.Annotation;
 
 import org.eclipse.jnosql.communication.Value;
 import jakarta.nosql.AttributeConverter;
+import org.eclipse.jnosql.lite.mapping.metadata.AutoApplyConverters;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 
@@ -26,7 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-@Generated(value= "JNoSQL Lite FieldMetadata Generator", date = "{{now}}")
+@Generated(value= "JNoSQL Lite FieldMetadata Generator for {{className}}", date = "{{now}}")
 public final class {{className}} implements FieldMetadata {
 
     private final AttributeConverter<?, ?> converter;
@@ -36,8 +37,12 @@ public final class {{className}} implements FieldMetadata {
     private final Map<Class<? extends Annotation>, String> valueByAnnotation;
 
     public {{className}}() {
-        this.converter = {{converter}};
-        this.typeConverter = {{typeConverter}};
+        this.converter = AutoApplyConverters.INSTANCE.instanceConverter(
+                {{converter}},
+                {{type}}.class);
+        this.typeConverter = AutoApplyConverters.INSTANCE.typeConverter(
+                {{typeConverter}},
+                {{type}}.class);
         {{#valueByAnnotation.isEmpty}}
          this.valueByAnnotation = java.util.Collections.emptyMap();
         {{/valueByAnnotation.isEmpty}}
