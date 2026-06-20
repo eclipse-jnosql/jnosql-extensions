@@ -20,7 +20,7 @@ import jakarta.nosql.Converter;
 import java.util.UUID;
 
 
-@Converter(autoApply = true
+@Converter(autoApply = true)
 public class UUIDConverter implements AttributeConverter<UUID, String> {
 
     @Override
