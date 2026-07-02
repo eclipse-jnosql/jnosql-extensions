@@ -8,6 +8,10 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 == [Unreleased]
 
+=== Fixed
+
+- Fixes the CDI Lite Repository Annotation processor to generate the correct code for the Repository implementation class.
+
 == [1.1.14] - 2026-06-01
 
 == [1.1.12] - 2026-01-05
