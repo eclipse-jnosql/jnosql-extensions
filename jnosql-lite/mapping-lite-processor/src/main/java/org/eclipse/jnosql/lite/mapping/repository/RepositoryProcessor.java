@@ -46,6 +46,7 @@ public class RepositoryProcessor extends AbstractProcessor {
         final List<String> repositories = new ArrayList<>();
         try {
             Set<DatabaseType> types = DatabaseSupport.types(processingEnv);
+            LOGGER.info("Repository processor has found the following databases: " + types);
             for (TypeElement annotation : annotations) {
                 for (DatabaseType type : types) {
                     roundEnv.getElementsAnnotatedWith(annotation)
