@@ -11,6 +11,7 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 === Fixed
 
 - Fixes the Jakarta Data Query to execute the query with the correct parameters at JNoSQL Lite.
+- Fixes the CDI Lite Repository Annotation processor to generate the correct code for the Repository implementation class.
 
 === Changed
 
