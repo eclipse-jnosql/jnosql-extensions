@@ -42,9 +42,10 @@ public class RepositoryProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations,
                            RoundEnvironment roundEnv) {
 
+        LOGGER.info("Repository processor has started");
         final List<String> repositories = new ArrayList<>();
         try {
-            Set<DatabaseType> types = DatabaseSupport.types();
+            Set<DatabaseType> types = DatabaseSupport.types(processingEnv);
             for (TypeElement annotation : annotations) {
                 for (DatabaseType type : types) {
                     roundEnv.getElementsAnnotatedWith(annotation)
