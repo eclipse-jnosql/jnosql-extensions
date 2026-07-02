@@ -59,6 +59,7 @@ public class RepositoryProcessor extends AbstractProcessor {
             error(exception);
         }
         LOGGER.info("Repository processor has finished with those classes generated: " + repositories.size());
+        LOGGER.fine("Repository processor has finished with those classes generated: " + repositories);
         return false;
     }
 
