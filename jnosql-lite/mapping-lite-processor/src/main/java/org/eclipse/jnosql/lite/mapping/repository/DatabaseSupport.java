@@ -16,6 +16,7 @@ package org.eclipse.jnosql.lite.mapping.repository;
 
 import org.eclipse.jnosql.mapping.DatabaseType;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
@@ -36,23 +37,20 @@ enum DatabaseSupport {
         this.databaseType = databaseType;
     }
 
-    boolean isSupported() {
-        try {
-            Class.forName(requiredClassName);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
+    boolean isSupported(ProcessingEnvironment processingEnv) {
+        return processingEnv.getElementUtils()
+                .getTypeElement(requiredClassName) != null;
     }
 
+
+    static Set<DatabaseType> types(ProcessingEnvironment processingEnv) {
+        return Arrays.stream(values())
+                .filter(databaseSupport -> databaseSupport.isSupported(processingEnv))
+                .map(DatabaseSupport::getDatabaseType)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(DatabaseType.class)));
+    }
     DatabaseType getDatabaseType() {
         return databaseType;
     }
 
-    static Set<DatabaseType> types() {
-        return Arrays.stream(values())
-                .filter(DatabaseSupport::isSupported)
-                .map(DatabaseSupport::getDatabaseType)
-                .collect(Collectors.toCollection(() -> EnumSet.noneOf(DatabaseType.class)));
-    }
 }
