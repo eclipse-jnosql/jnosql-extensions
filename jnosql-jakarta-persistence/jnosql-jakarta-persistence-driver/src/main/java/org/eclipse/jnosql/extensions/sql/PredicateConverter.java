@@ -22,12 +22,15 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.eclipse.jnosql.communication.Condition;
 import org.eclipse.jnosql.communication.TypeReference;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.communication.semistructured.Element;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("unchecked")
 final class PredicateConverter {
@@ -348,22 +351,63 @@ final class PredicateConverter {
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
-        return cb.and(
-                conditions.stream()
-                        .map(c -> toPredicate(c, cb, root, ignoreCase, entityManager))
-                        .toArray(Predicate[]::new)
-        );
+
+        List<Predicate> predicates = conditions.stream()
+                .map(c -> toPredicate(c, cb, root, ignoreCase, entityManager))
+                .filter(Objects::nonNull)
+                .toList();
+        if (predicates.size() == 1) {
+            return cb.and(cb.conjunction(), predicates.getFirst());
+        }
+        return cb.and(predicates.toArray(new Predicate[0]));
     }
 
     private Predicate orPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase, EntityManager entityManager) {
         List<CriteriaCondition> conditions =
                 element.value().get(new TypeReference<>() {});
 
-        return cb.or(
-                conditions.stream()
-                        .map(c -> toPredicate(c, cb, root, ignoreCase, entityManager))
-                        .toArray(Predicate[]::new)
-        );
+        List<Predicate> predicates = normalizeOrConditions(conditions).stream()
+                .map(c -> toPredicate(c, cb, root, ignoreCase, entityManager))
+                .filter(Objects::nonNull)
+                .toList();
+        if (predicates.size() == 1) {
+            return cb.or(cb.disjunction(), predicates.getFirst());
+        }
+        return cb.or(predicates.toArray(new Predicate[0]));
+    }
+
+
+    private List<CriteriaCondition> normalizeOrConditions(List<CriteriaCondition> conditions) {
+        if (conditions.size() <= 1) {
+            return conditions;
+        }
+
+        List<CriteriaCondition> normalized = new ArrayList<>();
+
+        for (int index = 0; index < conditions.size(); index++) {
+            CriteriaCondition current = conditions.get(index);
+
+            if (index + 1 < conditions.size()) {
+                CriteriaCondition next = conditions.get(index + 1);
+
+                if (next.condition() == Condition.AND) {
+                    List<CriteriaCondition> andConditions = new ArrayList<>();
+                    andConditions.add(current);
+
+                    List<CriteriaCondition> nested =
+                            next.element().get(new TypeReference<List<CriteriaCondition>>() {});
+                    andConditions.addAll(nested);
+
+                    normalized.add(CriteriaCondition.and(andConditions.toArray(new CriteriaCondition[0])));
+                    index++;
+                    continue;
+                }
+            }
+
+            normalized.add(current);
+        }
+
+        return normalized;
     }
 
     private Predicate notPredicate(CriteriaBuilder cb, Root<?> root, Element element, boolean ignoreCase, EntityManager entityManager) {
