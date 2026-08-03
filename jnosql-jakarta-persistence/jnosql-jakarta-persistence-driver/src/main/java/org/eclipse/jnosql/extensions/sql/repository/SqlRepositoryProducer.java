@@ -24,6 +24,7 @@ import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
 import org.eclipse.jnosql.mapping.reflection.ProjectionFound;
 import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositorySupplier;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.lang.reflect.Proxy;
 import java.util.Objects;
@@ -43,16 +44,25 @@ public class SqlRepositoryProducer {
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
     private final SqlRepositoryOperationProvider repositoryOperationProvider;
     private final Event<ProjectionFound> projectionFoundEvent;
+    private final LifecycleEventHandler lifeCycle;
 
     @Inject
     SqlRepositoryProducer(InfrastructureOperatorProvider infrastructureOperatorProvider,
                           SqlRepositoryOperationProvider repositoryOperationProvider,
-                          Event<ProjectionFound> projectionFoundEvent) {
+                          Event<ProjectionFound> projectionFoundEvent,
+                          LifecycleEventHandler lifeCycle) {
         this.infrastructureOperatorProvider = infrastructureOperatorProvider;
         this.repositoryOperationProvider = repositoryOperationProvider;
         this.projectionFoundEvent = projectionFoundEvent;
+        this.lifeCycle = lifeCycle;
     }
 
+    SqlRepositoryProducer() {
+        this.infrastructureOperatorProvider = null;
+        this.repositoryOperationProvider = null;
+        this.projectionFoundEvent = null;
+        this.lifeCycle = null;
+    }
 
     /**
      * Returns a fully functional repository implementation for the given
@@ -72,7 +82,7 @@ public class SqlRepositoryProducer {
         Objects.requireNonNull(template, "template is required");
         RepositoryMetadata repositoryMetadata = ReflectionRepositorySupplier.INSTANCE.apply(repositoryClass, projectionFoundEvent);
         var entity = RepositoryEntityResolver.INSTANCE.resolveEntityType(repositoryClass);
-        RepositoryResult result = repositoryResult(template, entity);
+        var result = repositoryResult(template, lifeCycle, entity);
 
 
         SqlInvocationHandler<?, ?> repositoryHandler = new SqlInvocationHandler<>(result.repositoryAdapter(),
@@ -86,14 +96,14 @@ public class SqlRepositoryProducer {
                 repositoryHandler);
     }
 
-    private static RepositoryResult repositoryResult(SqlTemplate template, Class<?> entity) {
+    private static RepositoryResult repositoryResult(SqlTemplate template, LifecycleEventHandler lifeCycle, Class<?> entity) {
         PersistenceRepository<?, ?> repositoryAdapter;
         SqlEntityMetadata entityMetadata;
         if(entity != null) {
-            repositoryAdapter = new SqlRepositoryAdapter<>(entity, template);
+            repositoryAdapter = new SqlRepositoryAdapter<>(entity, template, lifeCycle);
             entityMetadata = ((SqlRepositoryAdapter<?, ?>)repositoryAdapter).metadata();
         } else {
-            repositoryAdapter = new NoopRepository<>(template);
+            repositoryAdapter = new NoopRepository<>(template, lifeCycle);
             entityMetadata = null;
         }
         return new RepositoryResult(repositoryAdapter, entityMetadata);
