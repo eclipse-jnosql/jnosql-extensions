@@ -17,11 +17,13 @@ package org.eclipse.jnosql.extensions.sql.repository;
 import jakarta.data.restrict.Restriction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Typed;
+import jakarta.inject.Inject;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreDeleteOperation;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.DeleteOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.MappingDeleteQuery;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import java.util.Optional;
@@ -30,6 +32,11 @@ import java.util.Optional;
 @Typed(SqlDeleteOperation.class)
 class SqlDeleteOperation extends CoreDeleteOperation implements DeleteOperation {
 
+
+    @Inject
+    protected SqlDeleteOperation(LifecycleEventHandler lifecycleEventHandler) {
+        super(lifecycleEventHandler);
+    }
 
     @Override
     protected void deleteByRestriction(RepositoryInvocationContext context, Restriction<?> restriction) {
