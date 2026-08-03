@@ -42,6 +42,7 @@ import org.eclipse.jnosql.mapping.core.repository.ParamValue;
 import org.eclipse.jnosql.mapping.core.repository.SpecialParameters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepository;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
@@ -78,23 +79,24 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
     private final Class<?> repositoryType;
 
     @SuppressWarnings("unchecked")
-    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntitiesMetadata entities, Class<?> repositoryType, Converters converters) {
+    public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntitiesMetadata entities,
+                                             Class<?> repositoryType, Converters converters, LifecycleEventHandler lifeCycle) {
         this.template = template;
         Class<T> typeClass = (Class<T>) ((ParameterizedType) repositoryType.getGenericInterfaces()[0])
                 .getActualTypeArguments()[0];
         this.entitiesMetadata = entities;
         this.entityMetadata = entities.get(typeClass);
-        this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
+        this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata, lifeCycle);
         this.converters = converters;
         this.repositoryType = repositoryType;
     }
 
     public JakartaPersistenceRepositoryProxy(PersistenceDocumentTemplate template, EntityMetadata entity, Class<?> repositoryType,
-                                             Converters converters, EntitiesMetadata entities) {
+                                             Converters converters, EntitiesMetadata entities, LifecycleEventHandler lifeCycle) {
         this.template = template;
         this.entitiesMetadata = entities;
         this.entityMetadata = entity;
-        this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata);
+        this.repository = new JakartaPersistenceStructuredRepository<>(template, entityMetadata, lifeCycle);
         this.converters = converters;
         this.repositoryType = repositoryType;
     }
@@ -284,9 +286,12 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
         private final EntityMetadata entityMetadata;
 
-        JakartaPersistenceStructuredRepository(PersistenceDocumentTemplate template, EntityMetadata entityMetadata) {
+        private final LifecycleEventHandler lifeCycle;
+
+        JakartaPersistenceStructuredRepository(PersistenceDocumentTemplate template, EntityMetadata entityMetadata, LifecycleEventHandler lifeCycle) {
             this.template = template;
             this.entityMetadata = entityMetadata;
+            this.lifeCycle = lifeCycle;
         }
 
         /**
@@ -297,14 +302,16 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
          * @param template The SemistructuredTemplate used for column database
          * operations. Must not be {@code null}.
          * @param metadata The metadata of the entity. Must not be {@code null}.
+         * @param lifeCycle The lifecycle event handler. Must not be {@code null}.
          * @return A new instance of ColumnRepository.
-         * @throws NullPointerException If either the template or metadata is
+         * @throws NullPointerException If either the template, metadata, or lifeCycle is
          * {@code null}.
          */
-        public static <T, K> JakartaPersistenceStructuredRepository<T, K> of(PersistenceDocumentTemplate template, EntityMetadata metadata) {
+        public static <T, K> JakartaPersistenceStructuredRepository<T, K> of(PersistenceDocumentTemplate template, EntityMetadata metadata, LifecycleEventHandler lifeCycle) {
             Objects.requireNonNull(template, "template is required");
             Objects.requireNonNull(metadata, "metadata is required");
-            return new JakartaPersistenceStructuredRepository<>(template, metadata);
+            Objects.requireNonNull(lifeCycle, "lifeCycle is required");
+            return new JakartaPersistenceStructuredRepository<>(template, metadata, lifeCycle);
         }
 
         @Override
@@ -315,6 +322,11 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
         @Override
         protected EntityMetadata entityMetadata() {
             return entityMetadata;
+        }
+
+        @Override
+        protected LifecycleEventHandler lifeCycle() {
+            return lifeCycle;
         }
 
         @Override
