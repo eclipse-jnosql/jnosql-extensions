@@ -23,6 +23,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import org.eclipse.jnosql.mapping.semistructured.query.AbstractSemiStructuredRepositoryProxy;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
@@ -42,8 +43,11 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
     private EntitiesMetadata entitiesMetadata;
 
     public CustomRepositoryPersistenceHandler(EntitiesMetadata entitiesMetadata,
-            PersistenceDocumentTemplate template, Class<?> customRepositoryType, Converters converters) {
-        super(entitiesMetadata, template, customRepositoryType, converters);
+            PersistenceDocumentTemplate template,
+                                              LifecycleEventHandler lifeCycle,
+                                              Class<?> customRepositoryType,
+                                              Converters converters) {
+        super(entitiesMetadata, template, lifeCycle, customRepositoryType, converters);
         this.entityManager = template.entityManager();
         this.entitiesMetadata = entitiesMetadata;
     }
@@ -58,8 +62,9 @@ public class CustomRepositoryPersistenceHandler extends CustomRepositoryHandler 
     }
 
     protected AbstractSemiStructuredRepositoryProxy<Object, Object> createRepositoryProxy(
-            SemiStructuredTemplate template, EntityMetadata entityMetadata, Class<?> entityType, Converters converters) {
-        return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate) template, entityMetadata, entityType, converters, entitiesMetadata);
+            SemiStructuredTemplate template, EntityMetadata entityMetadata, Class<?> entityType,
+            Converters converters, LifecycleEventHandler lifeCycle) {
+        return new JakartaPersistenceRepositoryProxy<>((PersistenceDocumentTemplate) template, entityMetadata, entityType, converters, entitiesMetadata, lifeCycle);
     }
 
     @Override
