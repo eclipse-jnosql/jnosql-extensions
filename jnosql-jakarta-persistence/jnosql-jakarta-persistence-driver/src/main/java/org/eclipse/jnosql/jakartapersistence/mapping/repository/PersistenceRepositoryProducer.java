@@ -23,6 +23,7 @@ import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider
 import org.eclipse.jnosql.mapping.core.repository.operations.CoreBaseRepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.repository.SemistructuredRepository;
 
 import java.lang.reflect.Proxy;
@@ -40,6 +41,9 @@ public class PersistenceRepositoryProducer {
     @Inject
     private RepositoriesMetadata repositoriesMetadata;
 
+    @Inject
+    private LifecycleEventHandler lifecycleEventHandler;
+
 
 
     @SuppressWarnings("unchecked")
@@ -51,7 +55,7 @@ public class PersistenceRepositoryProducer {
         var template = new PersistenceDocumentTemplate(manager);
         var entityMetadata = entities.get(repositoryMetadata.entity().orElseThrow());
 
-        var executor = SemistructuredRepository.of(template, entityMetadata);
+        var executor = SemistructuredRepository.of(template, entityMetadata, lifecycleEventHandler);
 
         var repositoryHandler = PersistenceRepositoryInvocationHandler.of(executor,
                 entityMetadata,
