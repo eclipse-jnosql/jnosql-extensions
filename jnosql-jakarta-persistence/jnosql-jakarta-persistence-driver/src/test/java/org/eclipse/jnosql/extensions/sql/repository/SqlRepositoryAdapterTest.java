@@ -29,6 +29,7 @@ import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.SqlTemplateFactory;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
 import org.jboss.weld.junit5.WeldSetup;
@@ -54,6 +55,9 @@ class SqlRepositoryAdapterTest {
     @Inject
     private SqlTemplate template;
 
+    @Inject
+    private LifecycleEventHandler lifecycleEventHandler;
+
     private NoSQLRepository<Computer, Long> repository;
 
     @Produces
@@ -67,7 +71,7 @@ class SqlRepositoryAdapterTest {
 
     @BeforeEach
     void setUp() {
-        repository = new SqlRepositoryAdapter<>(Computer.class, template);
+        repository = new SqlRepositoryAdapter<>(Computer.class, template, lifecycleEventHandler);
     }
 
     @Nested
