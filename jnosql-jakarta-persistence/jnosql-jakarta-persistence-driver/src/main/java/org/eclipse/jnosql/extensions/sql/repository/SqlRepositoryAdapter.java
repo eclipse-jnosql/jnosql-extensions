@@ -24,6 +24,7 @@ import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.util.List;
 import java.util.Objects;
@@ -39,10 +40,18 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
 
     private final SqlEntityMetadata metadata;
 
-    SqlRepositoryAdapter(Class<T> entityType, SqlTemplate sqlTemplate) {
+    private final LifecycleEventHandler lifecycleEventHandler;
+
+    SqlRepositoryAdapter(
+            Class<T> entityType,
+            SqlTemplate sqlTemplate,
+            LifecycleEventHandler lifecycleEventHandler) {
         this.entityType = entityType;
         this.sqlTemplate = sqlTemplate;
-        this.metadata = SqlEntityMetadata.of(entityType, this.sqlTemplate.entityManager());
+        this.metadata = SqlEntityMetadata.of(
+                entityType,
+                this.sqlTemplate.entityManager());
+        this.lifecycleEventHandler = lifecycleEventHandler;
     }
 
     @Override
@@ -67,7 +76,8 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
         var query = DeleteQuery.delete()
                 .from(metadata.name())
                 .where(metadata.idName())
-                .in(ids).build();
+                .in(ids)
+                .build();
 
         sqlTemplate.delete(query);
     }
@@ -86,7 +96,12 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
     @Override
     public void delete(T entity) {
         Objects.requireNonNull(entity, "entity is required");
+
+        lifecycleEventHandler.preDelete(entity);
+
         sqlTemplate.delete(entity);
+
+        lifecycleEventHandler.postDelete(entity);
     }
 
     @Override
@@ -97,72 +112,104 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
             return;
         }
 
+        entities.forEach(lifecycleEventHandler::preDelete);
+
         sqlTemplate.delete(entities);
+
+        entities.forEach(lifecycleEventHandler::postDelete);
     }
 
     @Override
     public <S extends T> S insert(S entity) {
         Objects.requireNonNull(entity, "entity is required");
-        return sqlTemplate.insert(entity);
+
+        lifecycleEventHandler.preInsert(entity);
+
+        S result = sqlTemplate.insert(entity);
+
+        lifecycleEventHandler.postInsert(result);
+
+        return result;
     }
 
     @Override
     public <S extends T> List<S> insertAll(List<S> entities) {
         Objects.requireNonNull(entities, "entities are required");
 
-        var result = sqlTemplate.insert(entities);
-        return (result instanceof List)
-                ? (List<S>) result
-                : StreamSupport.stream(result.spliterator(), false)
-                .toList();
+        if (entities.isEmpty()) {
+            return List.of();
+        }
+
+        entities.forEach(lifecycleEventHandler::preInsert);
+
+        Iterable<S> inserted = sqlTemplate.insert(entities);
+        List<S> result = toList(inserted);
+
+        result.forEach(lifecycleEventHandler::postInsert);
+
+        return result;
     }
 
     @Override
     public <S extends T> S update(S entity) {
         Objects.requireNonNull(entity, "entity is required");
-        return sqlTemplate.update(entity);
+
+        lifecycleEventHandler.preUpdate(entity);
+
+        S result = sqlTemplate.update(entity);
+
+        lifecycleEventHandler.postUpdate(result);
+
+        return result;
     }
 
     @Override
     public <S extends T> List<S> updateAll(List<S> entities) {
         Objects.requireNonNull(entities, "entities are required");
 
-        var result = sqlTemplate.update(entities);
+        if (entities.isEmpty()) {
+            return List.of();
+        }
 
-        return (result instanceof List)
-                ? (List<S>) result
-                : StreamSupport.stream(result.spliterator(), false)
-                .toList();
-    }
+        entities.forEach(lifecycleEventHandler::preUpdate);
 
-    @Override
-    protected Template template() {
-        return sqlTemplate;
-    }
+        Iterable<S> updated = sqlTemplate.update(entities);
+        List<S> result = toList(updated);
 
-    @Override
-    protected org.eclipse.jnosql.mapping.metadata.EntityMetadata entityMetadata() {
-        return null;
+        result.forEach(lifecycleEventHandler::postUpdate);
+
+        return result;
     }
 
     @Override
     public <S extends T> S save(S entity) {
         Objects.requireNonNull(entity, "entity is required");
-        return sqlTemplate.update(entity);
+
+        lifecycleEventHandler.preUpsert(entity);
+
+        S result = sqlTemplate.update(entity);
+
+        lifecycleEventHandler.postUpsert(result);
+
+        return result;
     }
 
     @Override
     public <S extends T> List<S> saveAll(List<S> entities) {
         Objects.requireNonNull(entities, "entities are required");
+
         if (entities.isEmpty()) {
             return List.of();
         }
-        var result = sqlTemplate.update(entities);
 
-        return (result instanceof List)
-                ? (List<S>) result
-                : StreamSupport.stream(result.spliterator(), false)
-                .toList();
+        entities.forEach(lifecycleEventHandler::preUpsert);
+
+        Iterable<S> saved = sqlTemplate.update(entities);
+        List<S> result = toList(saved);
+
+        result.forEach(lifecycleEventHandler::postUpsert);
+
+        return result;
     }
 
     @Override
@@ -182,7 +229,8 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
         var query = SelectQuery.select()
                 .from(metadata.name())
                 .where(metadata.idName())
-                .in(ids).build();
+                .in(ids)
+                .build();
 
         return sqlTemplate.select(query);
     }
@@ -193,15 +241,27 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
     }
 
     @Override
-    public Page<T> findAll(PageRequest pageRequest, Order<T> sortBy) {
-        Objects.requireNonNull(pageRequest, "pageRequest is required");
-        Objects.requireNonNull(sortBy, "sortBy is required");
+    public Page<T> findAll(
+            PageRequest pageRequest,
+            Order<T> sortBy) {
+        Objects.requireNonNull(
+                pageRequest,
+                "pageRequest is required");
+        Objects.requireNonNull(
+                sortBy,
+                "sortBy is required");
 
-        SelectQuery selectQuery = SelectQuery.builder().from(metadata.name())
-                .sort(sortBy.sorts().toArray(new jakarta.data.Sort[0]))
+        SelectQuery selectQuery = SelectQuery.builder()
+                .from(metadata.name())
+                .sort(sortBy.sorts()
+                        .toArray(new jakarta.data.Sort[0]))
                 .build();
-        return sqlTemplate.selectOffSet(selectQuery, pageRequest);
+
+        return sqlTemplate.selectOffSet(
+                selectQuery,
+                pageRequest);
     }
+
     public SqlEntityMetadata metadata() {
         return metadata;
     }
@@ -209,5 +269,34 @@ final class SqlRepositoryAdapter<T, K> extends PersistenceRepository<T, K> {
     @Override
     public EntityManager entityManager() {
         return sqlTemplate.entityManager();
+    }
+
+    @Override
+    protected Template template() {
+        return sqlTemplate;
+    }
+
+    @Override
+    protected org.eclipse.jnosql.mapping.metadata.EntityMetadata
+    entityMetadata() {
+        return metadata;
+    }
+
+    @Override
+    protected LifecycleEventHandler lifeCycle() {
+        return lifecycleEventHandler;
+    }
+
+    private <S extends T> List<S> toList(Iterable<S> entities) {
+        if (entities instanceof List<?> list) {
+            @SuppressWarnings("unchecked")
+            List<S> result = (List<S>) list;
+            return result;
+        }
+
+        return StreamSupport.stream(
+                        entities.spliterator(),
+                        false)
+                .toList();
     }
 }
