@@ -29,6 +29,7 @@ import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.extensions.sql.SqlTemplateFactory;
 import org.eclipse.jnosql.extensions.sql.model.Computer;
 import org.eclipse.jnosql.mapping.NoSQLRepository;
+import org.eclipse.jnosql.mapping.reflection.InstanceSupplier;
 import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
@@ -43,14 +44,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @EnableWeld
-class SqlRepositoryAdapterTest {
+class SqlRepositoryAdapterTest extends AbstractTestRepository{
 
-    @WeldSetup
-    WeldInitiator weld = WeldInitiator.from(
-                    SqlTemplateFactory.class,
-                    SqlRepositoryAdapterTest.class
-            )
-            .build();
 
     @Inject
     private SqlTemplate template;
