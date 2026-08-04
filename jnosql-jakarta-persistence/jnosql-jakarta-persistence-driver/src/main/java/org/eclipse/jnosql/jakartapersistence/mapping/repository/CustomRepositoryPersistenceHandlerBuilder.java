@@ -19,6 +19,7 @@ package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandler;
 import org.eclipse.jnosql.mapping.semistructured.query.CustomRepositoryHandlerBuilder;
@@ -41,6 +42,7 @@ public class CustomRepositoryPersistenceHandlerBuilder extends CustomRepositoryH
 
     private Converters converters;
 
+    private LifecycleEventHandler lifeCycle;
     /**
      * Sets the entities metadata for the custom repository handler.
      *
@@ -89,13 +91,25 @@ public class CustomRepositoryPersistenceHandlerBuilder extends CustomRepositoryH
     }
 
     /**
+     * Sets the lifecycle event handler for the custom repository handler.
+     *
+     * @param lifeCycle the {@link LifecycleEventHandler} instance
+     * @return the current instance of {@link CustomRepositoryPersistenceHandlerBuilder}
+     * @throws NullPointerException if the lifeCycle is null
+     */
+    public CustomRepositoryPersistenceHandlerBuilder lifeCycle(LifecycleEventHandler lifeCycle) {
+        this.lifeCycle = Objects.requireNonNull(lifeCycle, "lifeCycle is required");
+        return this;
+    }
+
+    /**
      * Builds and returns a {@link CustomRepositoryHandler} instance configured
      * with the provided components.
      *
      * @return a new instance of {@link CustomRepositoryHandler}
-     * @throws IllegalStateException if the entitiesMetadata, template, customRepositoryType, or converters are null
+     * @throws IllegalStateException if the entitiesMetadata, template, customRepositoryType, converters, or lifeCycle are null
      */
     public CustomRepositoryPersistenceHandler build() {
-        return new CustomRepositoryPersistenceHandler(entitiesMetadata, template, customRepositoryType, converters);
+        return new CustomRepositoryPersistenceHandler(entitiesMetadata, template, lifeCycle, customRepositoryType, converters);
     }
 }

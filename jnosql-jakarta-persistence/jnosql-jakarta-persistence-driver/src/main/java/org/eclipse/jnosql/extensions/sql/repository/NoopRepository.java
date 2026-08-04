@@ -22,6 +22,7 @@ import jakarta.nosql.Template;
 import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,9 +31,11 @@ import java.util.stream.Stream;
 final class NoopRepository<T, K>  extends PersistenceRepository<T, K> {
 
     private final SqlTemplate sqlTemplate;
+    private final LifecycleEventHandler lifeCycle;
 
-    NoopRepository(SqlTemplate sqlTemplate) {
+    NoopRepository(SqlTemplate sqlTemplate, LifecycleEventHandler lifeCycle) {
         this.sqlTemplate = sqlTemplate;
+        this.lifeCycle = lifeCycle;
     }
 
     @Override
@@ -88,6 +91,11 @@ final class NoopRepository<T, K>  extends PersistenceRepository<T, K> {
     @Override
     protected EntityMetadata entityMetadata() {
         throw new UnsupportedOperationException("The operation is not supported when entity is not defined");
+    }
+
+    @Override
+    protected LifecycleEventHandler lifeCycle() {
+        return lifeCycle;
     }
 
     @Override

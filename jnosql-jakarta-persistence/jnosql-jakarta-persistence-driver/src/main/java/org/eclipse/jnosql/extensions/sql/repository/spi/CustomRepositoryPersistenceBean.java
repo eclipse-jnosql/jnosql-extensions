@@ -22,6 +22,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.repository.CustomRepository
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.lang.reflect.InvocationHandler;
 
@@ -52,10 +53,12 @@ public class CustomRepositoryPersistenceBean<T> extends AbstractRepositoryPersis
     }
 
     @Override
-    protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters) {
+    protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template,
+                                                        Converters converters, LifecycleEventHandler lifeCycle) {
         return CustomRepositoryPersistenceHandler.builder()
                 .entitiesMetadata(entitiesMetadata)
                 .template(template)
+                .lifeCycle(lifeCycle)
                 .customRepositoryType(type)
                 .converters(converters)
                 .build();

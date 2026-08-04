@@ -22,6 +22,7 @@ import org.eclipse.jnosql.jakartapersistence.mapping.repository.JakartaPersisten
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.lang.reflect.InvocationHandler;
 
@@ -55,8 +56,9 @@ public class RepositoryPersistenceBean<T extends DataRepository<T, ?>> extends A
     }
 
     @Override
-    protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters) {
-        return new JakartaPersistenceRepositoryProxy<>(template, entitiesMetadata, type, converters);
+    protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template,
+                                                        Converters converters, LifecycleEventHandler lifeCycle) {
+        return new JakartaPersistenceRepositoryProxy<>(template, entitiesMetadata, type, converters, lifeCycle);
     }
 
 }

@@ -30,6 +30,7 @@ import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.spi.AbstractBean;
 import org.eclipse.jnosql.mapping.core.util.AnnotationLiteralUtil;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
@@ -83,9 +84,11 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
      * @param converters       The utility that handles conversions between entity objects
      *                         and their database representations, ensuring compatibility
      *                         between application and persistence formats.
+     * @param lifeCycle        The lifecycle event handler responsible for managing entity lifecycle events.
      * @return An {@link InvocationHandler} responsible for delegating repository method invocations to the persistence layer.
      */
-    abstract protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template, Converters converters);
+    abstract protected InvocationHandler createInvocationHandler(EntitiesMetadata entitiesMetadata, PersistenceDocumentTemplate template,
+                                                                 Converters converters, LifecycleEventHandler lifeCycle);
 
     @Override
     public Class<?> getBeanClass() {
