@@ -14,6 +14,16 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
+import jakarta.data.event.PostDeleteEvent;
+import jakarta.data.event.PostInsertEvent;
+import jakarta.data.event.PostUpdateEvent;
+import jakarta.data.event.PostUpsertEvent;
+import jakarta.data.event.PreDeleteEvent;
+import jakarta.data.event.PreInsertEvent;
+import jakarta.data.event.PreUpdateEvent;
+import jakarta.data.event.PreUpsertEvent;
+import jakarta.enterprise.util.TypeLiteral;
+
 public interface LiteLifecycleEventTypeProviderElement<T> {
 
     Class<T> type();
