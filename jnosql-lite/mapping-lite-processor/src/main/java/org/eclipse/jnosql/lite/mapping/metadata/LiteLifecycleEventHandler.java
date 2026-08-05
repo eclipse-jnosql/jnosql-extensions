@@ -96,7 +96,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
     public <T> void preDelete(T entity) {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
-        fire(new PreDeleteEvent<>(safeEntity), provider.preDelete());
+        fire("PreDeleteEvent", safeEntity, new PreDeleteEvent<>(safeEntity), provider.preDelete());
     }
 
     @Override
@@ -104,7 +104,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PreInsertEvent<>(safeEntity), provider.preInsert());
+        fire("PreInsertEvent", safeEntity, new PreInsertEvent<>(safeEntity), provider.preInsert());
     }
 
     @Override
@@ -112,7 +112,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PreUpdateEvent<>(safeEntity), provider.preUpdate());
+        fire("PreUpdateEvent", safeEntity, new PreUpdateEvent<>(safeEntity), provider.preUpdate());
     }
 
     @Override
@@ -120,7 +120,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PreUpsertEvent<>(safeEntity), provider.preUpsert());
+        fire("PreUpsertEvent", safeEntity, new PreUpsertEvent<>(safeEntity), provider.preUpsert());
     }
 
     @Override
@@ -128,7 +128,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PostDeleteEvent<>(safeEntity), provider.postDelete());
+        fire("PostDeleteEvent", safeEntity, new PostDeleteEvent<>(safeEntity), provider.postDelete());
     }
 
     @Override
@@ -136,7 +136,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PostInsertEvent<>(safeEntity), provider.postInsert());
+        fire("PostInsertEvent", safeEntity, new PostInsertEvent<>(safeEntity), provider.postInsert());
     }
 
     @Override
@@ -144,7 +144,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PostUpdateEvent<>(safeEntity), provider.postUpdate());
+        fire("PostUpdateEvent", safeEntity, new PostUpdateEvent<>(safeEntity), provider.postUpdate());
     }
 
     @Override
@@ -152,13 +152,18 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         T safeEntity = requireEntity(entity);
         var provider = provider(safeEntity);
 
-        fire(new PostUpsertEvent<>(safeEntity), provider.postUpsert());
+        fire("PostUpsertEvent", safeEntity, new PostUpsertEvent<>(safeEntity), provider.postUpsert());
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void fire(
+    private <T> void fire(
+            String lifecycleEvent,
+            T entity,
             Object event,
             TypeLiteral<?> eventType) {
+
+        LOGGER.finest(() -> "Firing " + lifecycleEvent
+                + " for entity type: " + entity.getClass().getName());
 
         /*
          * The generated provider guarantees that the TypeLiteral and event
@@ -168,19 +173,29 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
          */
         events.select((TypeLiteral) eventType)
                 .fire(event);
+
+        LOGGER.finest(() -> "Fired " + lifecycleEvent
+                + " for entity type: " + entity.getClass().getName());
     }
 
     @SuppressWarnings("unchecked")
     private <T> LiteLifecycleEventTypeProviderElement<T> provider(T entity) {
 
+        Class<?> entityType = entity.getClass();
         LiteLifecycleEventTypeProviderElement<?> provider =
-                providers.get(entity.getClass());
+                providers.get(entityType);
 
         if (provider == null) {
+            LOGGER.warning(() -> "No lifecycle event type provider was found for entity "
+                    + entityType.getName());
             throw new IllegalStateException(
                     "No lifecycle event type provider was found for entity "
-                            + entity.getClass().getName());
+                            + entityType.getName());
         }
+
+        LOGGER.finest(() -> "Resolved lifecycle event type provider "
+                + provider.getClass().getName()
+                + " for entity " + entityType.getName());
 
         /*
          * The cast is safe because every provider is indexed using the class
@@ -196,6 +211,8 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         ServiceLoader.load(LiteLifecycleEventTypeProviderElement.class,
                         classLoader).forEach(provider -> register(providers, provider));
 
+        LOGGER.fine(() -> "Loaded " + providers.size() + " lifecycle event type providers");
+
         return Map.copyOf(providers);
     }
 
@@ -209,6 +226,12 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
                 providers.putIfAbsent(entityType, provider);
 
         if (previous != null) {
+            LOGGER.warning(() -> "Multiple lifecycle event type providers were found for "
+                    + entityType.getName()
+                    + ": "
+                    + previous.getClass().getName()
+                    + " and "
+                    + provider.getClass().getName());
             throw new IllegalStateException(
                     "Multiple lifecycle event type providers were found for "
                             + entityType.getName()
@@ -217,6 +240,10 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
                             + " and "
                             + provider.getClass().getName());
         }
+
+        LOGGER.finest(() -> "Registered lifecycle event type provider "
+                + provider.getClass().getName()
+                + " for entity " + entityType.getName());
     }
 
     private static ClassLoader contextClassLoader() {
