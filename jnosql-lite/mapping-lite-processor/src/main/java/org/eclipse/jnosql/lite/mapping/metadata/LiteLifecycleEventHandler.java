@@ -18,7 +18,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 @ApplicationScoped
-public class LifeLifecycleEventHandler implements LifecycleEventHandler {
+public class LiteLifecycleEventHandler implements LifecycleEventHandler {
     @Override
     public <T> void preDelete(T entity) {
 
