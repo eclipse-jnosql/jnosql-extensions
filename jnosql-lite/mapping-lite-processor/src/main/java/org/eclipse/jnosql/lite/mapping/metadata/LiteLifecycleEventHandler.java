@@ -71,6 +71,10 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         this(events, contextClassLoader());
     }
 
+    LiteLifecycleEventHandler() {
+        this.events = null;
+        this.providers = null;
+    }
 
     /**
      * Creates the handler using the supplied class loader.
