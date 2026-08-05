@@ -14,5 +14,23 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
-public interface LiteLifecycleEventTypeProviderElement {
+public interface LiteLifecycleEventTypeProviderElement<T> {
+
+    Class<T> type();
+
+    TypeLiteral<PreInsertEvent<T>> preInsert();
+
+    TypeLiteral<PostInsertEvent<T>> postInsert();
+
+    TypeLiteral<PreUpdateEvent<T>> preUpdate();
+
+    TypeLiteral<PostUpdateEvent<T>> postUpdate();
+
+    TypeLiteral<PreUpsertEvent<T>> preUpsert();
+
+    TypeLiteral<PostUpsertEvent<T>> postUpsert();
+
+    TypeLiteral<PreDeleteEvent<T>> preDelete();
+
+    TypeLiteral<PostDeleteEvent<T>> postDelete();
 }
