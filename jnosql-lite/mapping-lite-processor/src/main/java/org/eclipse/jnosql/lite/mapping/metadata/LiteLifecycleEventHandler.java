@@ -53,12 +53,9 @@ import java.util.ServiceLoader;
 @ApplicationScoped
 class LiteLifecycleEventHandler implements LifecycleEventHandler {
 
-
     private final Event<Object> events;
 
-    private final Map<Class<?>, LiteLifecycleEventTypeProviderElement<?>>
-            providers;
-
+    private final Map<Class<?>, LiteLifecycleEventTypeProviderElement<?>> providers;
 
     /**
      * Creates the handler and loads generated lifecycle event providers using
