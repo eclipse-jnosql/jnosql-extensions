@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
+import java.util.logging.Logger;
 
 /**
  * Fires strongly typed Jakarta Data lifecycle events using event type
@@ -52,6 +53,8 @@ import java.util.ServiceLoader;
  */
 @ApplicationScoped
 class LiteLifecycleEventHandler implements LifecycleEventHandler {
+
+    private static final Logger LOGGER = Logger.getLogger(LiteLifecycleEventHandler.class.getName());
 
     private final Event<Object> events;
 
