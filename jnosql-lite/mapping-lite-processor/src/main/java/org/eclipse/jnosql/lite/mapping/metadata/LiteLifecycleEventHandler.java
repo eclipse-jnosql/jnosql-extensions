@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  * Fires strongly typed Jakarta Data lifecycle events using event type
  * information generated at compile time.
  * <p>
- * The handler discovers {@link LiteLifecycleEventTypeProviderElement}
+ * The handler discovers {@link LifecycleEventTypes}
  * implementations through the Java Service Provider Interface. Providers are
  * loaded once when this application-scoped bean is created and indexed by
  * their supported entity type.
@@ -58,7 +58,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
 
     private final Event<Object> events;
 
-    private final Map<Class<?>, LiteLifecycleEventTypeProviderElement<?>> providers;
+    private final Map<Class<?>, LifecycleEventTypes<?>> providers;
 
     /**
      * Creates the handler and loads generated lifecycle event providers using
@@ -179,10 +179,10 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> LiteLifecycleEventTypeProviderElement<T> provider(T entity) {
+    private <T> LifecycleEventTypes<T> provider(T entity) {
 
         Class<?> entityType = entity.getClass();
-        LiteLifecycleEventTypeProviderElement<?> provider =
+        LifecycleEventTypes<?> provider =
                 providers.get(entityType);
 
         if (provider == null) {
@@ -201,14 +201,14 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
          * The cast is safe because every provider is indexed using the class
          * returned by that same provider's type() method.
          */
-        return (LiteLifecycleEventTypeProviderElement<T>) provider;
+        return (LifecycleEventTypes<T>) provider;
     }
 
-    private static Map<Class<?>, LiteLifecycleEventTypeProviderElement<?>> loadProviders(ClassLoader classLoader) {
+    private static Map<Class<?>, LifecycleEventTypes<?>> loadProviders(ClassLoader classLoader) {
 
-        Map<Class<?>, LiteLifecycleEventTypeProviderElement<?>> providers = new HashMap<>();
+        Map<Class<?>, LifecycleEventTypes<?>> providers = new HashMap<>();
 
-        ServiceLoader.load(LiteLifecycleEventTypeProviderElement.class,
+        ServiceLoader.load(LifecycleEventTypes.class,
                         classLoader).forEach(provider -> register(providers, provider));
 
         LOGGER.fine(() -> "Loaded " + providers.size() + " lifecycle event type providers");
@@ -216,13 +216,13 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
         return Map.copyOf(providers);
     }
 
-    private static void register(Map<Class<?>, LiteLifecycleEventTypeProviderElement<?>> providers, LiteLifecycleEventTypeProviderElement<?> provider) {
+    private static void register(Map<Class<?>, LifecycleEventTypes<?>> providers, LifecycleEventTypes<?> provider) {
 
         Objects.requireNonNull(provider, "provider is required");
 
         Class<?> entityType = Objects.requireNonNull(provider.type(), "provider entity type is required");
 
-        LiteLifecycleEventTypeProviderElement<?> previous =
+        LifecycleEventTypes<?> previous =
                 providers.putIfAbsent(entityType, provider);
 
         if (previous != null) {
