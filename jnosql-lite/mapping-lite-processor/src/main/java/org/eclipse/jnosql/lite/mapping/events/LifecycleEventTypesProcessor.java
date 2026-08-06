@@ -14,9 +14,6 @@
  */
 package org.eclipse.jnosql.lite.mapping.events;
 
-import org.eclipse.jnosql.lite.mapping.MappingIntrospector;
-import org.eclipse.jnosql.lite.mapping.MappingResult;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -44,11 +41,11 @@ public class LifecycleEventTypesProcessor  extends AbstractProcessor {
                     .stream()
                     .filter(e -> !references.contains(e.toString()))
                     .peek(e -> references.add(e.toString()))
-                    .map(e -> new MappingIntrospector(e, processingEnv))
-                    .map(MappingIntrospector::get)
-                    .filter(MappingResult::isNotEmpty)
-                    .forEach(mappingResults::add);
+                    .map(e -> new LifecycleEventTypesIntrospect(e, processingEnv))
+                    .map(LifecycleEventTypesIntrospect::get)
+                    .forEach(references::add);
         }
+
         if (!references.isEmpty()) {
             LOGGER.info("LifecycleEventTypesProcessor: " + references.size() + " references found.");
         }
