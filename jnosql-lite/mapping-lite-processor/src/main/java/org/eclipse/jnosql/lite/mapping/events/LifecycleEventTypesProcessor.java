@@ -20,14 +20,25 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 @SupportedAnnotationTypes("jakarta.nosql.Entity")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class LifecycleEventTypesProcessor  extends AbstractProcessor {
 
+    private static final Logger LOGGER = Logger.getLogger(LifecycleEventTypesProcessor.class.getName());
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+
+        final List<String> references = new ArrayList<>();
+
+        if (!references.isEmpty()) {
+            LOGGER.info("LifecycleEventTypesProcessor: " + references.size() + " references found.");
+        }
         return false;
     }
 }
