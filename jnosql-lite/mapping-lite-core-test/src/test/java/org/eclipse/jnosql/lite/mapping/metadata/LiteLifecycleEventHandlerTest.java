@@ -14,5 +14,23 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
-class LiteLifecycleEventHandler {
+import jakarta.inject.Inject;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
+import org.jboss.weld.junit5.auto.AddBeanClasses;
+import org.jboss.weld.junit5.auto.EnableAutoWeld;
+import org.junit.jupiter.api.DisplayName;
+
+@EnableAutoWeld
+@AddBeanClasses({
+        LiteLifecycleEventHandler.class,
+        CarLifecycleEventObserver.class
+})
+@DisplayName("Lite lifecycle event handler")
+class LiteLifecycleEventHandlerTest {
+
+    @Inject
+    private LifecycleEventHandler listener;
+
+
+
 }
