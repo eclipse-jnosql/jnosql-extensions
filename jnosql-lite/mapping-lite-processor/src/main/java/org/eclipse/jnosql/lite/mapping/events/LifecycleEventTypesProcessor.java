@@ -14,12 +14,21 @@
  */
 package org.eclipse.jnosql.lite.mapping.events;
 
+import org.eclipse.jnosql.lite.mapping.metadata.LifecycleEventTypes;
+
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +57,22 @@ public class LifecycleEventTypesProcessor  extends AbstractProcessor {
 
         if (!references.isEmpty()) {
             LOGGER.info("LifecycleEventTypesProcessor: " + references.size() + " references found.");
+            try {
+                createResource(references);
+            } catch (IOException e) {
+                LOGGER.severe("Failed to create resource: " + e.getMessage());
+            }
         }
         return false;
+    }
+
+    private void createResource(List<String> implementations) throws IOException {
+        Filer filer = processingEnv.getFiler();
+        FileObject file = filer.createResource(StandardLocation.CLASS_OUTPUT, "", "META-INF/services/" + LifecycleEventTypes.class.getName());
+        try (var printWriter = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), StandardCharsets.UTF_8))) {
+            for (String implementation : implementations) {
+                printWriter.println(implementation);
+            }
+        }
     }
 }
