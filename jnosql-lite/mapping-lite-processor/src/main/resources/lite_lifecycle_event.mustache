@@ -27,11 +27,8 @@ import org.eclipse.jnosql.mapping.repository.LiteLifecycleEventTypeProviderEleme
 
 import javax.annotation.processing.Generated;
 
-@Generated(
-value = "JNoSQL Lite LifecycleEventTypeProviderElement Generator",
-date = "{{now}}")
-public final class {{className}}
-implements LiteLifecycleEventTypeProviderElement<{{entityType}}> {
+@Generated(value = "JNoSQL Lite LifecycleEventTypeProviderElement Generator",date = "{{now}}")
+public final class {{className}} implements LiteLifecycleEventTypeProviderElement<{{entityType}}> {
 
 private static final TypeLiteral<PreInsertEvent<{{entityType}}>>
 PRE_INSERT = new TypeLiteral<>() {
