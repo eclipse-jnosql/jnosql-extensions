@@ -14,5 +14,41 @@
  */
 package org.eclipse.jnosql.lite.mapping.events;
 
+import java.time.LocalDateTime;
+import java.time.Year;
+
 public class EventModel {
+
+    private final String packageName;
+
+    private final String entityType;
+
+    public EventModel(String packageName,String entityType) {
+        this.packageName = packageName;
+        this.entityType = entityType;
+    }
+
+    public String getClassName() {
+        return entityType + "LiteLifecycleEventType";
+    }
+
+    public String getQualified() {
+        return packageName + "." + getClassName();
+    }
+
+    public LocalDateTime getNow() {
+        return LocalDateTime.now();
+    }
+
+    public String getCurrentYear(){
+        return Year.now().toString();
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
 }
