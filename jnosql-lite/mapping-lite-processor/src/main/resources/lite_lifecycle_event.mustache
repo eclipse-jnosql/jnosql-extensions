@@ -23,12 +23,12 @@ import jakarta.data.event.PreInsertEvent;
 import jakarta.data.event.PreUpdateEvent;
 import jakarta.data.event.PreUpsertEvent;
 import jakarta.enterprise.util.TypeLiteral;
-import org.eclipse.jnosql.mapping.repository.LiteLifecycleEventTypeProviderElement;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventTypes;
 
 import javax.annotation.processing.Generated;
 
-@Generated(value = "JNoSQL Lite LifecycleEventTypeProviderElement Generator", date = "{{now}}")
-public final class {{className}} implements LiteLifecycleEventTypeProviderElement<{{entityType}}> {
+@Generated(value = "JNoSQL Lite LifecycleEventTypes Generator", date = "{{now}}")
+public final class {{className}} implements LifecycleEventTypes<{{entityType}}> {
 
     private static final TypeLiteral<PreInsertEvent<{{entityType}}>>
             PRE_INSERT = new TypeLiteral<>() {
