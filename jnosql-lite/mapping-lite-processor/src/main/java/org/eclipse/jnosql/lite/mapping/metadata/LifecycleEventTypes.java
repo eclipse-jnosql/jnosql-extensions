@@ -40,7 +40,7 @@ import jakarta.enterprise.util.TypeLiteral;
  *
  * @param <T> the entity type supported by this provider
  */
-public interface LiteLifecycleEventTypeProviderElement<T> {
+public interface LifecycleEventTypes<T> {
 
     /**
      * Returns the entity type supported by this provider.
