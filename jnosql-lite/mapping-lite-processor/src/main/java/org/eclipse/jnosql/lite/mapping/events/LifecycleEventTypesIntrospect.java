@@ -15,9 +15,11 @@
 package org.eclipse.jnosql.lite.mapping.events;
 
 
+import org.eclipse.jnosql.lite.mapping.ProcessorUtil;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -36,6 +38,15 @@ final class LifecycleEventTypesIntrospect implements Supplier<String> {
 
     @Override
     public String get() {
-        return "";
+        if (ProcessorUtil.isTypeElement(entity)) {
+            TypeElement typeElement = (TypeElement) entity;
+            LOGGER.info("Processing the class: " + typeElement);
+            LOGGER.finest("Processing as an entity: " + typeElement);
+            var mappingResult = entityMapping(typeElement);
+            if (mappingResult != null) {
+                return mappingResult;
+            }
+        }
     }
+
 }
