@@ -15,11 +15,13 @@
 package org.eclipse.jnosql.lite.mapping.events;
 
 
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-final class LifecycleEventTypesIntrospect {
+final class LifecycleEventTypesIntrospect implements Supplier<String> {
 
     private static final Logger LOGGER = Logger.getLogger(LifecycleEventTypesIntrospect.class.getName());
 
@@ -30,5 +32,10 @@ final class LifecycleEventTypesIntrospect {
     LifecycleEventTypesIntrospect(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
+    }
+
+    @Override
+    public String get() {
+        return "";
     }
 }
