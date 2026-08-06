@@ -30,6 +30,10 @@ public class Car {
     Car() {
     }
 
+    public Car(String name, String model) {
+        this.name = name;
+        this.model = model;
+    }
 
     String getName() {
         return name;
