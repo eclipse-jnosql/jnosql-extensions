@@ -44,7 +44,7 @@ public class LifecycleEventTypesProcessor  extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 
         final List<String> references = new ArrayList<>();
-
+        final List<String> events = new ArrayList<>();
         for (TypeElement annotation : annotations) {
             roundEnv.getElementsAnnotatedWith(annotation)
                     .stream()
@@ -52,13 +52,13 @@ public class LifecycleEventTypesProcessor  extends AbstractProcessor {
                     .peek(e -> references.add(e.toString()))
                     .map(e -> new LifecycleEventTypesIntrospect(e, processingEnv))
                     .map(LifecycleEventTypesIntrospect::get)
-                    .forEach(references::add);
+                    .forEach(events::add);
         }
 
-        if (!references.isEmpty()) {
-            LOGGER.info("LifecycleEventTypesProcessor: " + references.size() + " references found.");
+        if (!events.isEmpty()) {
+            LOGGER.info("LifecycleEventTypesProcessor: " + events.size() + " events found.");
             try {
-                createResource(references);
+                createResource(events);
             } catch (IOException e) {
                 LOGGER.severe("Failed to create resource: " + e.getMessage());
             }
