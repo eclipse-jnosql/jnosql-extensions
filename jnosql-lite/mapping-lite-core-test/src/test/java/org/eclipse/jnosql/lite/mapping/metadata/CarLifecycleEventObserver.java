@@ -10,6 +10,7 @@ import jakarta.data.event.PreUpdateEvent;
 import jakarta.data.event.PreUpsertEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import org.eclipse.jnosql.lite.mapping.entities.Car;
 
 import java.util.ArrayList;
 import java.util.List;
