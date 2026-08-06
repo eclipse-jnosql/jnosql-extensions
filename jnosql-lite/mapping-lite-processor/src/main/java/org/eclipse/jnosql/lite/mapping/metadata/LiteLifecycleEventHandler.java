@@ -86,7 +86,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
      * @param events      the CDI event dispatcher
      * @param classLoader the class loader used to discover providers
      */
-    LiteLifecycleEventHandler(Event<Object> events, ClassLoader classLoader) {
+    private LiteLifecycleEventHandler(Event<Object> events, ClassLoader classLoader) {
 
         this.events = Objects.requireNonNull(events, "events is required");
         this.providers = loadProviders(Objects.requireNonNull(classLoader, "classLoader is required"));
