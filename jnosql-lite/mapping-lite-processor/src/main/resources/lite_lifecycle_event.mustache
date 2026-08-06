@@ -27,83 +27,83 @@ import org.eclipse.jnosql.mapping.repository.LiteLifecycleEventTypeProviderEleme
 
 import javax.annotation.processing.Generated;
 
-@Generated(value = "JNoSQL Lite LifecycleEventTypeProviderElement Generator",date = "{{now}}")
+@Generated(value = "JNoSQL Lite LifecycleEventTypeProviderElement Generator", date = "{{now}}")
 public final class {{className}} implements LiteLifecycleEventTypeProviderElement<{{entityType}}> {
 
-private static final TypeLiteral<PreInsertEvent<{{entityType}}>>
-PRE_INSERT = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PreInsertEvent<{{entityType}}>>
+            PRE_INSERT = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PostInsertEvent<{{entityType}}>>
-POST_INSERT = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PostInsertEvent<{{entityType}}>>
+            POST_INSERT = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PreUpdateEvent<{{entityType}}>>
-PRE_UPDATE = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PreUpdateEvent<{{entityType}}>>
+            PRE_UPDATE = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PostUpdateEvent<{{entityType}}>>
-POST_UPDATE = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PostUpdateEvent<{{entityType}}>>
+            POST_UPDATE = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PreUpsertEvent<{{entityType}}>>
-PRE_UPSERT = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PreUpsertEvent<{{entityType}}>>
+            PRE_UPSERT = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PostUpsertEvent<{{entityType}}>>
-POST_UPSERT = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PostUpsertEvent<{{entityType}}>>
+            POST_UPSERT = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PreDeleteEvent<{{entityType}}>>
-PRE_DELETE = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PreDeleteEvent<{{entityType}}>>
+            PRE_DELETE = new TypeLiteral<>() {
+    };
 
-private static final TypeLiteral<PostDeleteEvent<{{entityType}}>>
-POST_DELETE = new TypeLiteral<>() {
-};
+    private static final TypeLiteral<PostDeleteEvent<{{entityType}}>>
+            POST_DELETE = new TypeLiteral<>() {
+    };
 
-@Override
-public Class<{{entityType}}> type() {
-return {{entityType}}.class;
-}
+    @Override
+    public Class<{{entityType}}> type() {
+        return {{entityType}}.class;
+    }
 
-@Override
-public TypeLiteral<PreInsertEvent<{{entityType}}>> preInsert() {
-return PRE_INSERT;
-}
+    @Override
+    public TypeLiteral<PreInsertEvent<{{entityType}}>> preInsert() {
+        return PRE_INSERT;
+    }
 
-@Override
-public TypeLiteral<PostInsertEvent<{{entityType}}>> postInsert() {
-return POST_INSERT;
-}
+    @Override
+    public TypeLiteral<PostInsertEvent<{{entityType}}>> postInsert() {
+        return POST_INSERT;
+    }
 
-@Override
-public TypeLiteral<PreUpdateEvent<{{entityType}}>> preUpdate() {
-return PRE_UPDATE;
-}
+    @Override
+    public TypeLiteral<PreUpdateEvent<{{entityType}}>> preUpdate() {
+        return PRE_UPDATE;
+    }
 
-@Override
-public TypeLiteral<PostUpdateEvent<{{entityType}}>> postUpdate() {
-return POST_UPDATE;
-}
+    @Override
+    public TypeLiteral<PostUpdateEvent<{{entityType}}>> postUpdate() {
+        return POST_UPDATE;
+    }
 
-@Override
-public TypeLiteral<PreUpsertEvent<{{entityType}}>> preUpsert() {
-return PRE_UPSERT;
-}
+    @Override
+    public TypeLiteral<PreUpsertEvent<{{entityType}}>> preUpsert() {
+        return PRE_UPSERT;
+    }
 
-@Override
-public TypeLiteral<PostUpsertEvent<{{entityType}}>> postUpsert() {
-return POST_UPSERT;
-}
+    @Override
+    public TypeLiteral<PostUpsertEvent<{{entityType}}>> postUpsert() {
+        return POST_UPSERT;
+    }
 
-@Override
-public TypeLiteral<PreDeleteEvent<{{entityType}}>> preDelete() {
-return PRE_DELETE;
-}
+    @Override
+    public TypeLiteral<PreDeleteEvent<{{entityType}}>> preDelete() {
+        return PRE_DELETE;
+    }
 
-@Override
-public TypeLiteral<PostDeleteEvent<{{entityType}}>> postDelete() {
-return POST_DELETE;
-}
+    @Override
+    public TypeLiteral<PostDeleteEvent<{{entityType}}>> postDelete() {
+        return POST_DELETE;
+    }
 }
