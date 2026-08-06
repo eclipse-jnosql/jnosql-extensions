@@ -171,8 +171,7 @@ class LiteLifecycleEventHandler implements LifecycleEventHandler {
          * because Event<Object> cannot express that relationship at compile
          * time.
          */
-        events.select((TypeLiteral) eventType)
-                .fire(event);
+        events.select((TypeLiteral) eventType).fire(event);
 
         LOGGER.finest(() -> "Fired " + lifecycleEvent
                 + " for entity type: " + entity.getClass().getName());
