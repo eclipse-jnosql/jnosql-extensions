@@ -1,0 +1,112 @@
+/*
+*   Copyright (c) {{currentYear}} Otávio Santana and others
+*   All rights reserved. This program and the accompanying materials
+*   are made available under the terms of the Eclipse Public License v1.0
+*   and Apache License v2.0 which accompanies this distribution.
+*   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+*   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+*
+*   You may elect to redistribute this code under either of these licenses.
+*
+*   Contributors:
+*
+*   Otavio Santana
+*/
+package {{packageName}};
+
+import jakarta.data.event.PostDeleteEvent;
+import jakarta.data.event.PostInsertEvent;
+import jakarta.data.event.PostUpdateEvent;
+import jakarta.data.event.PostUpsertEvent;
+import jakarta.data.event.PreDeleteEvent;
+import jakarta.data.event.PreInsertEvent;
+import jakarta.data.event.PreUpdateEvent;
+import jakarta.data.event.PreUpsertEvent;
+import jakarta.enterprise.util.TypeLiteral;
+import org.eclipse.jnosql.mapping.repository.LiteLifecycleEventTypeProviderElement;
+
+import javax.annotation.processing.Generated;
+
+@Generated(
+value = "JNoSQL Lite LifecycleEventTypeProviderElement Generator",
+date = "{{now}}")
+public final class {{className}}
+implements LiteLifecycleEventTypeProviderElement<{{entityType}}> {
+
+private static final TypeLiteral<PreInsertEvent<{{entityType}}>>
+PRE_INSERT = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PostInsertEvent<{{entityType}}>>
+POST_INSERT = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PreUpdateEvent<{{entityType}}>>
+PRE_UPDATE = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PostUpdateEvent<{{entityType}}>>
+POST_UPDATE = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PreUpsertEvent<{{entityType}}>>
+PRE_UPSERT = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PostUpsertEvent<{{entityType}}>>
+POST_UPSERT = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PreDeleteEvent<{{entityType}}>>
+PRE_DELETE = new TypeLiteral<>() {
+};
+
+private static final TypeLiteral<PostDeleteEvent<{{entityType}}>>
+POST_DELETE = new TypeLiteral<>() {
+};
+
+@Override
+public Class<{{entityType}}> type() {
+return {{entityType}}.class;
+}
+
+@Override
+public TypeLiteral<PreInsertEvent<{{entityType}}>> preInsert() {
+return PRE_INSERT;
+}
+
+@Override
+public TypeLiteral<PostInsertEvent<{{entityType}}>> postInsert() {
+return POST_INSERT;
+}
+
+@Override
+public TypeLiteral<PreUpdateEvent<{{entityType}}>> preUpdate() {
+return PRE_UPDATE;
+}
+
+@Override
+public TypeLiteral<PostUpdateEvent<{{entityType}}>> postUpdate() {
+return POST_UPDATE;
+}
+
+@Override
+public TypeLiteral<PreUpsertEvent<{{entityType}}>> preUpsert() {
+return PRE_UPSERT;
+}
+
+@Override
+public TypeLiteral<PostUpsertEvent<{{entityType}}>> postUpsert() {
+return POST_UPSERT;
+}
+
+@Override
+public TypeLiteral<PreDeleteEvent<{{entityType}}>> preDelete() {
+return PRE_DELETE;
+}
+
+@Override
+public TypeLiteral<PostDeleteEvent<{{entityType}}>> postDelete() {
+return POST_DELETE;
+}
+}
