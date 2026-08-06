@@ -15,6 +15,9 @@
 package org.eclipse.jnosql.lite.mapping.events;
 
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import org.eclipse.jnosql.lite.mapping.ProcessorUtil;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -27,9 +30,18 @@ final class LifecycleEventTypesIntrospect implements Supplier<String> {
 
     private static final Logger LOGGER = Logger.getLogger(LifecycleEventTypesIntrospect.class.getName());
 
+    private static final String LIFECYCLE_EVENT_MUSTACHE = "lite_lifecycle_event.mustache";
+
+    private static final Mustache ENTITY_TEMPLATE;
+
     private final Element entity;
 
     private final ProcessingEnvironment processingEnv;
+
+    static {
+        MustacheFactory factory = new DefaultMustacheFactory();
+        ENTITY_TEMPLATE = factory.compile(LIFECYCLE_EVENT_MUSTACHE);
+    }
 
     LifecycleEventTypesIntrospect(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
@@ -40,13 +52,20 @@ final class LifecycleEventTypesIntrospect implements Supplier<String> {
     public String get() {
         if (ProcessorUtil.isTypeElement(entity)) {
             TypeElement typeElement = (TypeElement) entity;
-            LOGGER.info("Processing the class: " + typeElement);
-            LOGGER.finest("Processing as an entity: " + typeElement);
+            LOGGER.finest("Processing lite lifecycle for an entity: " + typeElement);
             var mappingResult = entityMapping(typeElement);
             if (mappingResult != null) {
                 return mappingResult;
             }
         }
+        return null;
+    }
+
+    private String entityMapping(TypeElement typeElement) {
+        var packageName = ProcessorUtil.getPackageName(typeElement);
+        var entityType = typeElement.getSimpleName().toString();
+        var model = new LifecycleEventTypesModel(packageName, entityType);
+        return model.getQualified();
     }
 
 }
