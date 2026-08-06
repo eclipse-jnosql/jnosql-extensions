@@ -38,11 +38,11 @@ public final class ProcessorUtil {
     private ProcessorUtil() {
     }
 
-    static String getPackageName(TypeElement classElement) {
+    public static String getPackageName(TypeElement classElement) {
         return ((PackageElement) classElement.getEnclosingElement()).getQualifiedName().toString();
     }
 
-    static String getSimpleNameAsString(Element element) {
+    public static String getSimpleNameAsString(Element element) {
         return element.getSimpleName().toString();
     }
 
