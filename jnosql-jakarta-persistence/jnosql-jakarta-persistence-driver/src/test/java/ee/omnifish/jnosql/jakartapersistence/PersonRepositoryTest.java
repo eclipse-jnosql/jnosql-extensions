@@ -27,6 +27,8 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManagerProvider;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,12 @@ public class PersonRepositoryTest {
         return cdiContainer.select(EntityManager.class).get();
     }
 
+    private PersistenceDocumentTemplate getTemplate() {
+        var manager = cdiContainer.select(PersistenceDatabaseManagerProvider.class).get()
+                .getManager(getEntityManager());
+        return new PersistenceDocumentTemplate(manager);
+    }
+
     @AfterEach
     void cleanup() {
         getEntityManager().getTransaction().commit();
@@ -81,6 +89,33 @@ public class PersonRepositoryTest {
         new PersonBuilder().name("Jakarta").insert(personRepo);
         final long count = personRepo.countByNameNotNull();
         assertThat(count, greaterThan(0L));
+    }
+
+    @Test
+    void preparedStatementCount() {
+        new PersonBuilder().name("Jakarta").insert(personRepo);
+        new PersonBuilder().name("Jakarta").insert(personRepo);
+        new PersonBuilder().name("JNoSQL").insert(personRepo);
+
+        var prepare = getTemplate().prepare("SELECT COUNT(p) FROM Person p WHERE p.name = :name");
+        prepare.bind("name", "Jakarta");
+
+        assertThat(prepare.isCount(), is(true));
+        assertThat(prepare.count(), is(2L));
+    }
+
+    @Test
+    void preparedStatementDeleteCount() {
+        new PersonBuilder().name("Jakarta").insert(personRepo);
+        new PersonBuilder().name("Jakarta").insert(personRepo);
+        new PersonBuilder().name("JNoSQL").insert(personRepo);
+
+        var prepare = getTemplate().prepare("DELETE FROM Person p WHERE p.name = :name");
+        prepare.bind("name", "Jakarta");
+
+        assertThat(prepare.isCount(), is(true));
+        assertThat(prepare.count(), is(2L));
+        assertThat(personRepo.countAll(), is(1L));
     }
 
     @Test

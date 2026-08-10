@@ -64,7 +64,6 @@ public class PersistencePreparedStatement implements PreparedStatement {
     @Override
     public <T> Stream<T> result() {
         if (queryParser instanceof SelectQueryParser selectParser) {
-//            return selectParser.queryJNoSQLParser(queryString, entity, this.selectMapper, parameters, null);
             return selectParser.query(queryString, entity, sorts, query -> {
                 applyParameters(query);
                 applyProjections(query);
@@ -95,12 +94,30 @@ public class PersistencePreparedStatement implements PreparedStatement {
 
     @Override
     public long count() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (isCountQuery()) {
+            Query query = QLUtil.hasFromClause(queryString)
+                    ? queryParser.entityManager().createQuery(queryString)
+                    : queryParser.buildQuery(queryString, entity);
+            applyParameters(query);
+            return ((Number) query.getSingleResult()).longValue();
+        }
+
+        if (queryParser instanceof DeleteQueryParser) {
+            Query query = queryParser.buildQuery(queryString, entity);
+            applyParameters(query);
+            return query.executeUpdate();
+        }
+
+        throw new IllegalArgumentException("The count operation is only allowed for COUNT and DELETE queries");
     }
 
     @Override
     public boolean isCount() {
-        return false;
+        return isCountQuery() || queryParser instanceof DeleteQueryParser;
+    }
+
+    private boolean isCountQuery() {
+        return QLUtil.isCountQuery(queryString);
     }
 
     public void setSelectMapper(UnaryOperator<SelectQuery> selectMapper) {
