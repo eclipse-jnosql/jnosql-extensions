@@ -26,6 +26,14 @@ final class QLUtil {
 
     private static final String UPDATE_KEYWORD = "UPDATE";
     private static final String DELETE_KEYWORD = "DELETE";
+    private static final Pattern COUNT_QUERY_PATTERN = Pattern.compile(
+            "^\\s*SELECT\\s+COUNT\\s*\\(",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL
+    );
+    private static final Pattern FROM_PATTERN = Pattern.compile(
+            "\\s+FROM\\s+",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL
+    );
 
     private QLUtil() {
     }
@@ -36,6 +44,14 @@ final class QLUtil {
 
     static boolean isDeleteQuery(String query) {
         return queryStartsWith(query, DELETE_KEYWORD, DELETE_KEYWORD.length());
+    }
+
+    static boolean isCountQuery(String query) {
+        return COUNT_QUERY_PATTERN.matcher(query).find();
+    }
+
+    static boolean hasFromClause(String query) {
+        return FROM_PATTERN.matcher(query).find();
     }
 
     static boolean queryStartsWith(String query, String word, int lengthOfWord) {
