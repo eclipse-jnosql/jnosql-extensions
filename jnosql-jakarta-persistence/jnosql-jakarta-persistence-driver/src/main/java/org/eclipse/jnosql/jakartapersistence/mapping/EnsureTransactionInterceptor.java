@@ -75,6 +75,9 @@ public class EnsureTransactionInterceptor implements MethodInterceptor {
     private Object fetchIfNeeded(Object result, boolean transactionWillBeCreated) {
         if (transactionWillBeCreated && result instanceof Page page) {
             page.hasContent();
+            if (page.hasTotals()) {
+                page.totalElements();
+            }
         }
         return result;
     }
