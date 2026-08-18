@@ -12,7 +12,7 @@
 package org.eclipse.jnosql.tck;
 
 
-import ee.jakarta.tck.data.standalone.entity.JakartaEventBuiltInRepositoryTest;
+import ee.jakarta.tck.data.standalone.entity.JakartaEventCustomRepositoryTest;
 import org.eclipse.jnosql.databases.mongodb.communication.MongoDBDocumentConfigurations;
 import org.eclipse.jnosql.mapping.core.Converters;
 import org.eclipse.jnosql.mapping.core.config.MappingConfigurations;
@@ -33,7 +33,7 @@ import static org.eclipse.jnosql.tck.DocumentDatabase.INSTANCE;
 @AddPackages(DocumentTemplateProducer.class)
 @AddPackages(Reflections.class)
 @AddExtensions({ReflectionEntityMetadataExtension.class, DocumentExtension.class})
-public class JNoSQLJakartaEventBuiltInRepositoryTest extends JakartaEventBuiltInRepositoryTest {
+public class JNoSQLJakartaEventCustomRepositoryTest extends JakartaEventCustomRepositoryTest {
 
     public static final String DATABASE_NAME = "tck";
 
@@ -42,7 +42,6 @@ public class JNoSQLJakartaEventBuiltInRepositoryTest extends JakartaEventBuiltIn
         System.setProperty(MongoDBDocumentConfigurations.HOST.get() + ".1", INSTANCE.host());
         System.setProperty(MappingConfigurations.DOCUMENT_DATABASE.get(), DATABASE_NAME);
     }
-
 
 
 }
