@@ -36,7 +36,8 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -46,8 +47,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, EntityConverter.class, ColumnTemplate.class})
@@ -58,375 +58,400 @@ class ColumnEntityConverterInheritanceTest {
     @Inject
     private EntityConverter converter;
 
-    @Test
-    void shouldConvertProjectToSmallProject() {
-        CommunicationEntity entity = CommunicationEntity.of("Project");
-        entity.add("_id", "Small Project");
-        entity.add("investor", "Otavio Santana");
-        entity.add("size", "Small");
-        Project project = this.converter.toEntity(entity);
-        assertEquals("Small Project", project.getName());
-        assertEquals(SmallProject.class, project.getClass());
-        SmallProject smallProject = (SmallProject) project;
-        assertEquals("Otavio Santana", smallProject.getInvestor());
-    }
+    @Nested
+    @DisplayName("When converting inherited entities")
+    class WhenTheConversion {
 
-    @Test
-    void shouldConvertProjectToLargeProject() {
-        CommunicationEntity entity = CommunicationEntity.of("Project");
-        entity.add("_id", "Large Project");
-        entity.add("budget", BigDecimal.TEN);
-        entity.add("size", "Large");
-        Project project = this.converter.toEntity(entity);
-        assertEquals("Large Project", project.getName());
-        assertEquals(LargeProject.class, project.getClass());
-        LargeProject smallProject = (LargeProject) project;
-        assertEquals(BigDecimal.TEN, smallProject.getBudget());
-    }
+        @Test
+        @DisplayName("Should convert project to small project")
+        void shouldConvertProjectToSmallProject() {
+            CommunicationEntity entity = CommunicationEntity.of("Project");
+            entity.add("_id", "Small Project");
+            entity.add("investor", "Otavio Santana");
+            entity.add("size", "Small");
+            Project project = converter.toEntity(entity);
+            assertThat(project.getName()).isEqualTo("Small Project");
+            assertThat(project.getClass()).isEqualTo(SmallProject.class);
+            SmallProject smallProject = (SmallProject) project;
+            assertThat(smallProject.getInvestor()).isEqualTo("Otavio Santana");
+        }
 
-    @Test
-    void shouldConvertLargeProjectToCommunicationEntity() {
-        LargeProject project = new LargeProject();
-        project.setName("Large Project");
-        project.setBudget(BigDecimal.TEN);
-        CommunicationEntity entity = this.converter.toCommunication(project);
-        assertNotNull(entity);
-        assertEquals("Project", entity.name());
-        assertEquals(project.getName(), entity.find("_id", String.class).get());
-        assertEquals(project.getBudget(), entity.find("budget", BigDecimal.class).get());
-        assertEquals("Large", entity.find("size", String.class).get());
-    }
+        @Test
+        @DisplayName("Should convert project to large project")
+        void shouldConvertProjectToLargeProject() {
+            CommunicationEntity entity = CommunicationEntity.of("Project");
+            entity.add("_id", "Large Project");
+            entity.add("budget", BigDecimal.TEN);
+            entity.add("size", "Large");
+            Project project = converter.toEntity(entity);
+            assertThat(project.getName()).isEqualTo("Large Project");
+            assertThat(project.getClass()).isEqualTo(LargeProject.class);
+            LargeProject smallProject = (LargeProject) project;
+            assertThat(smallProject.getBudget()).isEqualTo(BigDecimal.TEN);
+        }
 
-    @Test
-    void shouldConvertSmallProjectToCommunicationEntity() {
-        SmallProject project = new SmallProject();
-        project.setName("Small Project");
-        project.setInvestor("Otavio Santana");
-        var entity = this.converter.toCommunication(project);
-        assertNotNull(entity);
-        assertEquals("Project", entity.name());
-        assertEquals(project.getName(), entity.find("_id", String.class).get());
-        assertEquals(project.getInvestor(), entity.find("investor", String.class).get());
-        assertEquals("Small", entity.find("size", String.class).get());
-    }
+        @Test
+        @DisplayName("Should convert large project to communication entity")
+        void shouldConvertLargeProjectToCommunicationEntity() {
+            LargeProject project = new LargeProject();
+            project.setName("Large Project");
+            project.setBudget(BigDecimal.TEN);
+            CommunicationEntity entity = converter.toCommunication(project);
+            assertThat(entity).isNotNull();
+            assertThat(entity.name()).isEqualTo("Project");
+            assertThat(entity.find("_id", String.class).get()).isEqualTo(project.getName());
+            assertThat(entity.find("budget", BigDecimal.class).get()).isEqualTo(project.getBudget());
+            assertThat(entity.find("size", String.class).get()).isEqualTo("Large");
+        }
 
-    @Test
-    void shouldConvertProject() {
-        var entity = CommunicationEntity.of("Project");
-        entity.add("_id", "Project");
-        entity.add("size", "Project");
-        Project project = this.converter.toEntity(entity);
-        assertEquals("Project", project.getName());
-    }
+        @Test
+        @DisplayName("Should convert small project to communication entity")
+        void shouldConvertSmallProjectToCommunicationEntity() {
+            SmallProject project = new SmallProject();
+            project.setName("Small Project");
+            project.setInvestor("Otavio Santana");
+            var entity = converter.toCommunication(project);
+            assertThat(entity).isNotNull();
+            assertThat(entity.name()).isEqualTo("Project");
+            assertThat(entity.find("_id", String.class).get()).isEqualTo(project.getName());
+            assertThat(entity.find("investor", String.class).get()).isEqualTo(project.getInvestor());
+            assertThat(entity.find("size", String.class).get()).isEqualTo("Small");
+        }
 
-    @Test
-    void shouldConvertProjectToCommunicationEntity() {
-        Project project = new Project();
-        project.setName("Large Project");
-        var entity = this.converter.toCommunication(project);
-        assertNotNull(entity);
-        assertEquals("Project", entity.name());
-        assertEquals(project.getName(), entity.find("_id", String.class).get());
-        assertEquals("Project", entity.find("size", String.class).get());
-    }
+        @Test
+        @DisplayName("Should convert project")
+        void shouldConvertProject() {
+            var entity = CommunicationEntity.of("Project");
+            entity.add("_id", "Project");
+            entity.add("size", "Project");
+            Project project = converter.toEntity(entity);
+            assertThat(project.getName()).isEqualTo("Project");
+        }
 
-    @Test
-    void shouldConvertColumnEntityToSocialMedia(){
-        LocalDate date = LocalDate.now();
-        var entity = CommunicationEntity.of("Notification");
-        entity.add("_id", 100L);
-        entity.add("name", "Social Media");
-        entity.add("nickname", "otaviojava");
-        entity.add("createdOn",date);
-        entity.add("dtype", SocialMediaNotification.class.getSimpleName());
-        SocialMediaNotification notification = this.converter.toEntity(entity);
-        assertEquals(100L, notification.getId());
-        assertEquals("Social Media", notification.getName());
-        assertEquals("otaviojava", notification.getNickname());
-        assertEquals(date, notification.getCreatedOn());
-    }
+        @Test
+        @DisplayName("Should convert project to communication entity")
+        void shouldConvertProjectToCommunicationEntity() {
+            Project project = new Project();
+            project.setName("Large Project");
+            var entity = converter.toCommunication(project);
+            assertThat(entity).isNotNull();
+            assertThat(entity.name()).isEqualTo("Project");
+            assertThat(entity.find("_id", String.class).get()).isEqualTo(project.getName());
+            assertThat(entity.find("size", String.class).get()).isEqualTo("Project");
+        }
 
-    @Test
-    void shouldConvertColumnEntityToSms(){
-        LocalDate date = LocalDate.now();
-        var entity = CommunicationEntity.of("Notification");
-        entity.add("_id", 100L);
-        entity.add("name", "SMS Notification");
-        entity.add("phone", "+351987654123");
-        entity.add("createdOn", date);
-        entity.add("dtype", "SMS");
-        SmsNotification notification = this.converter.toEntity(entity);
-        Assertions.assertEquals(100L, notification.getId());
-        Assertions.assertEquals("SMS Notification", notification.getName());
-        Assertions.assertEquals("+351987654123", notification.getPhone());
-        assertEquals(date, notification.getCreatedOn());
-    }
+        @Test
+        @DisplayName("Should convert column entity to social media notification")
+        void shouldConvertColumnEntityToSocialMedia(){
+            LocalDate date = LocalDate.now();
+            var entity = CommunicationEntity.of("Notification");
+            entity.add("_id", 100L);
+            entity.add("name", "Social Media");
+            entity.add("nickname", "otaviojava");
+            entity.add("createdOn",date);
+            entity.add("dtype", SocialMediaNotification.class.getSimpleName());
+            SocialMediaNotification notification = converter.toEntity(entity);
+            assertThat(notification.getId()).isEqualTo(100L);
+            assertThat(notification.getName()).isEqualTo("Social Media");
+            assertThat(notification.getNickname()).isEqualTo("otaviojava");
+            assertThat(notification.getCreatedOn()).isEqualTo(date);
+        }
 
-    @Test
-    void shouldConvertColumnEntityToEmail(){
-        LocalDate date = LocalDate.now();
-        var entity = CommunicationEntity.of("Notification");
-        entity.add("_id", 100L);
-        entity.add("name", "Email Notification");
-        entity.add("email", "otavio@otavio.test");
-        entity.add("createdOn", date);
-        entity.add("dtype", "Email");
-        EmailNotification notification = this.converter.toEntity(entity);
-        Assertions.assertEquals(100L, notification.getId());
-        Assertions.assertEquals("Email Notification", notification.getName());
-        Assertions.assertEquals("otavio@otavio.test", notification.getEmail());
-        assertEquals(date, notification.getCreatedOn());
-    }
+        @Test
+        @DisplayName("Should convert column entity to SMS notification")
+        void shouldConvertColumnEntityToSms(){
+            LocalDate date = LocalDate.now();
+            var entity = CommunicationEntity.of("Notification");
+            entity.add("_id", 100L);
+            entity.add("name", "SMS Notification");
+            entity.add("phone", "+351987654123");
+            entity.add("createdOn", date);
+            entity.add("dtype", "SMS");
+            SmsNotification notification = converter.toEntity(entity);
+            assertThat(notification.getId()).isEqualTo(100L);
+            assertThat(notification.getName()).isEqualTo("SMS Notification");
+            assertThat(notification.getPhone()).isEqualTo("+351987654123");
+            assertThat(notification.getCreatedOn()).isEqualTo(date);
+        }
 
-    @Test
-    void shouldConvertSocialMediaToCommunicationEntity(){
-        SocialMediaNotification notification = new SocialMediaNotification();
-        notification.setId(100L);
-        notification.setName("Social Media");
-        notification.setCreatedOn(LocalDate.now());
-        notification.setNickname("otaviojava");
-        var entity = this.converter.toCommunication(notification);
-        assertNotNull(entity);
-        assertEquals("Notification", entity.name());
-        assertEquals(notification.getId(), entity.find("_id", Long.class).get());
-        assertEquals(notification.getName(), entity.find("name", String.class).get());
-        assertEquals(notification.getNickname(), entity.find("nickname", String.class).get());
-        assertEquals(notification.getCreatedOn(), entity.find("createdOn", LocalDate.class).get());
-    }
+        @Test
+        @DisplayName("Should convert column entity to email notification")
+        void shouldConvertColumnEntityToEmail(){
+            LocalDate date = LocalDate.now();
+            var entity = CommunicationEntity.of("Notification");
+            entity.add("_id", 100L);
+            entity.add("name", "Email Notification");
+            entity.add("email", "otavio@otavio.test");
+            entity.add("createdOn", date);
+            entity.add("dtype", "Email");
+            EmailNotification notification = converter.toEntity(entity);
+            assertThat(notification.getId()).isEqualTo(100L);
+            assertThat(notification.getName()).isEqualTo("Email Notification");
+            assertThat(notification.getEmail()).isEqualTo("otavio@otavio.test");
+            assertThat(notification.getCreatedOn()).isEqualTo(date);
+        }
 
-    @Test
-    void shouldConvertSmsToCommunicationEntity(){
-        SmsNotification notification = new SmsNotification();
-        notification.setId(100L);
-        notification.setName("SMS");
-        notification.setCreatedOn(LocalDate.now());
-        notification.setPhone("+351123456987");
-        var entity = this.converter.toCommunication(notification);
-        assertNotNull(entity);
-        assertEquals("Notification", entity.name());
-        assertEquals(notification.getId(), entity.find("_id", Long.class).get());
-        assertEquals(notification.getName(), entity.find("name", String.class).get());
-        assertEquals(notification.getPhone(), entity.find("phone", String.class).get());
-        assertEquals(notification.getCreatedOn(), entity.find("createdOn", LocalDate.class).get());
-    }
+        @Test
+        @DisplayName("Should convert social media notification to communication entity")
+        void shouldConvertSocialMediaToCommunicationEntity(){
+            SocialMediaNotification notification = new SocialMediaNotification();
+            notification.setId(100L);
+            notification.setName("Social Media");
+            notification.setCreatedOn(LocalDate.now());
+            notification.setNickname("otaviojava");
+            var entity = converter.toCommunication(notification);
+            assertThat(entity).isNotNull();
+            assertThat(entity.name()).isEqualTo("Notification");
+            assertThat(entity.find("_id", Long.class).get()).isEqualTo(notification.getId());
+            assertThat(entity.find("name", String.class).get()).isEqualTo(notification.getName());
+            assertThat(entity.find("nickname", String.class).get()).isEqualTo(notification.getNickname());
+            assertThat(entity.find("createdOn", LocalDate.class).get()).isEqualTo(notification.getCreatedOn());
+        }
 
-    @Test
-    void shouldConvertEmailToCommunicationEntity(){
-        EmailNotification notification = new EmailNotification();
-        notification.setId(100L);
-        notification.setName("Email Media");
-        notification.setCreatedOn(LocalDate.now());
-        notification.setEmail("otavio@otavio.test.com");
-        CommunicationEntity entity = this.converter.toCommunication(notification);
-        assertNotNull(entity);
-        assertEquals("Notification", entity.name());
-        assertEquals(notification.getId(), entity.find("_id", Long.class).get());
-        assertEquals(notification.getName(), entity.find("name", String.class).get());
-        assertEquals(notification.getEmail(), entity.find("email", String.class).get());
-        assertEquals(notification.getCreatedOn(), entity.find("createdOn", LocalDate.class).get());
-    }
+        @Test
+        @DisplayName("Should convert SMS notification to communication entity")
+        void shouldConvertSmsToCommunicationEntity(){
+            SmsNotification notification = new SmsNotification();
+            notification.setId(100L);
+            notification.setName("SMS");
+            notification.setCreatedOn(LocalDate.now());
+            notification.setPhone("+351123456987");
+            var entity = converter.toCommunication(notification);
+            assertThat(entity).isNotNull();
+            assertThat(entity.name()).isEqualTo("Notification");
+            assertThat(entity.find("_id", Long.class).get()).isEqualTo(notification.getId());
+            assertThat(entity.find("name", String.class).get()).isEqualTo(notification.getName());
+            assertThat(entity.find("phone", String.class).get()).isEqualTo(notification.getPhone());
+            assertThat(entity.find("createdOn", LocalDate.class).get()).isEqualTo(notification.getCreatedOn());
+        }
 
-    @Test
-    void shouldReturnErrorWhenConvertMissingColumn(){
-        LocalDate date = LocalDate.now();
-        var entity = CommunicationEntity.of("Notification");
-        entity.add("_id", 100L);
-        entity.add("name", "SMS Notification");
-        entity.add("phone", "+351987654123");
-        entity.add("createdOn", date);
-        Assertions.assertThrows(MappingException.class, ()-> this.converter.toEntity(entity));
-    }
+        @Test
+        @DisplayName("Should convert email notification to communication entity")
+        void shouldConvertEmailToCommunicationEntity(){
+            EmailNotification notification = new EmailNotification();
+            notification.setId(100L);
+            notification.setName("Email Media");
+            notification.setCreatedOn(LocalDate.now());
+            notification.setEmail("otavio@otavio.test.com");
+            CommunicationEntity entity = converter.toCommunication(notification);
+            assertThat(entity).isNotNull();
+            assertThat(entity.name()).isEqualTo("Notification");
+            assertThat(entity.find("_id", Long.class).get()).isEqualTo(notification.getId());
+            assertThat(entity.find("name", String.class).get()).isEqualTo(notification.getName());
+            assertThat(entity.find("email", String.class).get()).isEqualTo(notification.getEmail());
+            assertThat(entity.find("createdOn", LocalDate.class).get()).isEqualTo(notification.getCreatedOn());
+        }
 
-    @Test
-    void shouldReturnErrorWhenMismatchField() {
-        LocalDate date = LocalDate.now();
-        var entity = CommunicationEntity.of("Notification");
-        entity.add("_id", 100L);
-        entity.add("name", "Email Notification");
-        entity.add("email", "otavio@otavio.test");
-        entity.add("createdOn", date);
-        entity.add("dtype", "Wrong");
-        Assertions.assertThrows(MappingException.class, ()-> this.converter.toEntity(entity));
-    }
+        @Test
+        @DisplayName("Should return an error when column discriminator is missing")
+        void shouldReturnErrorWhenConvertMissingColumn(){
+            LocalDate date = LocalDate.now();
+            var entity = CommunicationEntity.of("Notification");
+            entity.add("_id", 100L);
+            entity.add("name", "SMS Notification");
+            entity.add("phone", "+351987654123");
+            entity.add("createdOn", date);
+            assertThatExceptionOfType(MappingException.class).isThrownBy(() -> converter.toEntity(entity));
+        }
+
+        @Test
+        @DisplayName("Should return an error when discriminator does not match")
+        void shouldReturnErrorWhenMismatchField() {
+            LocalDate date = LocalDate.now();
+            var entity = CommunicationEntity.of("Notification");
+            entity.add("_id", 100L);
+            entity.add("name", "Email Notification");
+            entity.add("email", "otavio@otavio.test");
+            entity.add("createdOn", date);
+            entity.add("dtype", "Wrong");
+            assertThatExceptionOfType(MappingException.class).isThrownBy(() -> converter.toEntity(entity));
+        }
 
 
 
-    @Test
-    void shouldConvertCommunicationNotificationReaderEmail() {
-        var entity = CommunicationEntity.of("NotificationReader");
-        entity.add("_id", "poli");
-        entity.add("name", "Poliana Santana");
-        entity.add("notification", Arrays.asList(
-                Element.of("_id", 10L),
-                Element.of("name", "News"),
-                Element.of("email", "otavio@email.com"),
-                Element.of("_id", LocalDate.now()),
-                Element.of("dtype", "Email")
-        ));
+        @Test
+        @DisplayName("Should convert notification reader with email notification")
+        void shouldConvertCommunicationNotificationReaderEmail() {
+            var entity = CommunicationEntity.of("NotificationReader");
+            entity.add("_id", "poli");
+            entity.add("name", "Poliana Santana");
+            entity.add("notification", Arrays.asList(
+                    Element.of("_id", 10L),
+                    Element.of("name", "News"),
+                    Element.of("email", "otavio@email.com"),
+                    Element.of("_id", LocalDate.now()),
+                    Element.of("dtype", "Email")
+            ));
 
-        NotificationReader notificationReader = converter.toEntity(entity);
-        assertNotNull(notificationReader);
-        Assertions.assertEquals("poli", notificationReader.getNickname());
-        Assertions.assertEquals("Poliana Santana", notificationReader.getName());
-        Notification notification = notificationReader.getNotification();
-        assertNotNull(notification);
-        Assertions.assertEquals(EmailNotification.class, notification.getClass());
-        EmailNotification email = (EmailNotification) notification;
-        Assertions.assertEquals(10L, email.getId());
-        Assertions.assertEquals("News", email.getName());
-        Assertions.assertEquals("otavio@email.com", email.getEmail());
-    }
+            NotificationReader notificationReader = converter.toEntity(entity);
+            assertThat(notificationReader).isNotNull();
+            assertThat(notificationReader.getNickname()).isEqualTo("poli");
+            assertThat(notificationReader.getName()).isEqualTo("Poliana Santana");
+            Notification notification = notificationReader.getNotification();
+            assertThat(notification).isNotNull();
+            assertThat(notification.getClass()).isEqualTo(EmailNotification.class);
+            EmailNotification email = (EmailNotification) notification;
+            assertThat(email.getId()).isEqualTo(10L);
+            assertThat(email.getName()).isEqualTo("News");
+            assertThat(email.getEmail()).isEqualTo("otavio@email.com");
+        }
 
-    @Test
-    void shouldConvertCommunicationNotificationReaderSms() {
-        var entity = CommunicationEntity.of("NotificationReader");
-        entity.add("_id", "poli");
-        entity.add("name", "Poliana Santana");
-        entity.add("notification", Arrays.asList(
-                Element.of("_id", 10L),
-                Element.of("name", "News"),
-                Element.of("phone", "123456789"),
-                Element.of("_id", LocalDate.now()),
-                Element.of("dtype", "SMS")
-        ));
+        @Test
+        @DisplayName("Should convert notification reader with SMS notification")
+        void shouldConvertCommunicationNotificationReaderSms() {
+            var entity = CommunicationEntity.of("NotificationReader");
+            entity.add("_id", "poli");
+            entity.add("name", "Poliana Santana");
+            entity.add("notification", Arrays.asList(
+                    Element.of("_id", 10L),
+                    Element.of("name", "News"),
+                    Element.of("phone", "123456789"),
+                    Element.of("_id", LocalDate.now()),
+                    Element.of("dtype", "SMS")
+            ));
 
-        NotificationReader notificationReader = converter.toEntity(entity);
-        assertNotNull(notificationReader);
-        Assertions.assertEquals("poli", notificationReader.getNickname());
-        Assertions.assertEquals("Poliana Santana", notificationReader.getName());
-        Notification notification = notificationReader.getNotification();
-        assertNotNull(notification);
-        Assertions.assertEquals(SmsNotification.class, notification.getClass());
-        SmsNotification sms = (SmsNotification) notification;
-        Assertions.assertEquals(10L, sms.getId());
-        Assertions.assertEquals("News", sms.getName());
-        Assertions.assertEquals("123456789", sms.getPhone());
-    }
+            NotificationReader notificationReader = converter.toEntity(entity);
+            assertThat(notificationReader).isNotNull();
+            assertThat(notificationReader.getNickname()).isEqualTo("poli");
+            assertThat(notificationReader.getName()).isEqualTo("Poliana Santana");
+            Notification notification = notificationReader.getNotification();
+            assertThat(notification).isNotNull();
+            assertThat(notification.getClass()).isEqualTo(SmsNotification.class);
+            SmsNotification sms = (SmsNotification) notification;
+            assertThat(sms.getId()).isEqualTo(10L);
+            assertThat(sms.getName()).isEqualTo("News");
+            assertThat(sms.getPhone()).isEqualTo("123456789");
+        }
 
-    @Test
-    void shouldConvertCommunicationNotificationReaderSocial() {
-        var entity = CommunicationEntity.of("NotificationReader");
-        entity.add("_id", "poli");
-        entity.add("name", "Poliana Santana");
-        entity.add("notification", Arrays.asList(
-                Element.of("_id", 10L),
-                Element.of("name", "News"),
-                Element.of("nickname", "123456789"),
-                Element.of("_id", LocalDate.now()),
-                Element.of("dtype", "SocialMediaNotification")
-        ));
+        @Test
+        @DisplayName("Should convert notification reader with social notification")
+        void shouldConvertCommunicationNotificationReaderSocial() {
+            var entity = CommunicationEntity.of("NotificationReader");
+            entity.add("_id", "poli");
+            entity.add("name", "Poliana Santana");
+            entity.add("notification", Arrays.asList(
+                    Element.of("_id", 10L),
+                    Element.of("name", "News"),
+                    Element.of("nickname", "123456789"),
+                    Element.of("_id", LocalDate.now()),
+                    Element.of("dtype", "SocialMediaNotification")
+            ));
 
-        NotificationReader notificationReader = converter.toEntity(entity);
-        assertNotNull(notificationReader);
-        Assertions.assertEquals("poli", notificationReader.getNickname());
-        Assertions.assertEquals("Poliana Santana", notificationReader.getName());
-        Notification notification = notificationReader.getNotification();
-        assertNotNull(notification);
-        Assertions.assertEquals(SocialMediaNotification.class, notification.getClass());
-        SocialMediaNotification social = (SocialMediaNotification) notification;
-        Assertions.assertEquals(10L, social.getId());
-        Assertions.assertEquals("News", social.getName());
-        Assertions.assertEquals("123456789", social.getNickname());
-    }
+            NotificationReader notificationReader = converter.toEntity(entity);
+            assertThat(notificationReader).isNotNull();
+            assertThat(notificationReader.getNickname()).isEqualTo("poli");
+            assertThat(notificationReader.getName()).isEqualTo("Poliana Santana");
+            Notification notification = notificationReader.getNotification();
+            assertThat(notification).isNotNull();
+            assertThat(notification.getClass()).isEqualTo(SocialMediaNotification.class);
+            SocialMediaNotification social = (SocialMediaNotification) notification;
+            assertThat(social.getId()).isEqualTo(10L);
+            assertThat(social.getName()).isEqualTo("News");
+            assertThat(social.getNickname()).isEqualTo("123456789");
+        }
 
-    @Test
-    void shouldConvertSocialCommunication() {
-        SocialMediaNotification notification = new SocialMediaNotification();
-        notification.setId(10L);
-        notification.setName("Ada");
-        notification.setNickname("ada.lovelace");
-        NotificationReader reader = new NotificationReader("otavio", "Otavio", notification);
+        @Test
+        @DisplayName("Should convert social notification reader to communication entity")
+        void shouldConvertSocialNotificationReaderToCommunication() {
+            SocialMediaNotification notification = new SocialMediaNotification();
+            notification.setId(10L);
+            notification.setName("Ada");
+            notification.setNickname("ada.lovelace");
+            NotificationReader reader = new NotificationReader("otavio", "Otavio", notification);
 
-        var entity = this.converter.toCommunication(reader);
-        assertNotNull(entity);
+            var entity = converter.toCommunication(reader);
+            assertThat(entity).isNotNull();
 
-        assertEquals("NotificationReader", entity.name());
-        assertEquals("otavio", entity.find("_id", String.class).get());
-        assertEquals("Otavio", entity.find("name", String.class).get());
-        List<Element> columns = entity.find("notification", new TypeReference<List<Element>>() {
-        }).get();
+            assertThat(entity.name()).isEqualTo("NotificationReader");
+            assertThat(entity.find("_id", String.class).get()).isEqualTo("otavio");
+            assertThat(entity.find("name", String.class).get()).isEqualTo("Otavio");
+            List<Element> columns = entity.find("notification", new TypeReference<List<Element>>() {
+            }).get();
 
-        assertThat(columns).contains(Element.of("_id", 10L),
-                Element.of("name", "Ada"),
-                Element.of("dtype", "SocialMediaNotification"),
-                Element.of("nickname", "ada.lovelace"));
-    }
+            assertThat(columns).contains(Element.of("_id", 10L),
+                    Element.of("name", "Ada"),
+                    Element.of("dtype", "SocialMediaNotification"),
+                    Element.of("nickname", "ada.lovelace"));
+        }
 
-    @Test
-    void shouldConvertConvertProjectManagerCommunication() {
-        LargeProject large = new LargeProject();
-        large.setBudget(BigDecimal.TEN);
-        large.setName("large");
+        @Test
+        @DisplayName("Should convert project manager to communication entity")
+        void shouldConvertProjectManagerToCommunication() {
+            LargeProject large = new LargeProject();
+            large.setBudget(BigDecimal.TEN);
+            large.setName("large");
 
-        SmallProject small = new SmallProject();
-        small.setInvestor("new investor");
-        small.setName("Start up");
+            SmallProject small = new SmallProject();
+            small.setInvestor("new investor");
+            small.setName("Start up");
 
-        List<Project> projects = new ArrayList<>();
-        projects.add(large);
-        projects.add(small);
+            List<Project> projects = new ArrayList<>();
+            projects.add(large);
+            projects.add(small);
 
-        ProjectManager manager = ProjectManager.of(10L, "manager", projects);
-        var entity = this.converter.toCommunication(manager);
-        assertNotNull(entity);
+            ProjectManager manager = ProjectManager.of(10L, "manager", projects);
+            var entity = converter.toCommunication(manager);
+            assertThat(entity).isNotNull();
 
-        assertEquals("ProjectManager", entity.name());
-        assertEquals(10L, entity.find("_id", Long.class).get());
-        assertEquals("manager", entity.find("name", String.class).get());
+            assertThat(entity.name()).isEqualTo("ProjectManager");
+            assertThat(entity.find("_id", Long.class).get()).isEqualTo(10L);
+            assertThat(entity.find("name", String.class).get()).isEqualTo("manager");
 
-        List<List<Element>> columns = (List<List<Element>>) entity.find("projects").get().get();
+            List<List<Element>> columns = (List<List<Element>>) entity.find("projects").get().get();
 
-        List<Element> largeCommunication = columns.get(0);
-        List<Element> smallCommunication = columns.get(1);
-        assertThat(largeCommunication).contains(
-                Element.of("_id", "large"),
-                Element.of("size", "Large"),
-                Element.of("budget", BigDecimal.TEN)
-        );
+            List<Element> largeCommunication = columns.get(0);
+            List<Element> smallCommunication = columns.get(1);
+            assertThat(largeCommunication).contains(
+                    Element.of("_id", "large"),
+                    Element.of("size", "Large"),
+                    Element.of("budget", BigDecimal.TEN)
+            );
 
-        assertThat(smallCommunication).contains(
-                Element.of("size", "Small"),
-                Element.of("investor", "new investor"),
-                Element.of("_id", "Start up")
-        );
+            assertThat(smallCommunication).contains(
+                    Element.of("size", "Small"),
+                    Element.of("investor", "new investor"),
+                    Element.of("_id", "Start up")
+            );
 
-    }
+        }
 
-    @Test
-    void shouldConvertConvertCommunicationProjectManager() {
-        var communication = CommunicationEntity.of("ProjectManager");
-        communication.add("_id", 10L);
-        communication.add("name", "manager");
-        List<List<Element>> columns = new ArrayList<>();
-        columns.add(Arrays.asList(
-                Element.of("_id","small-project"),
-                Element.of("size","Small"),
-                Element.of("investor","investor")
-        ));
-        columns.add(Arrays.asList(
-                Element.of("_id","large-project"),
-                Element.of("size","Large"),
-                Element.of("budget",BigDecimal.TEN)
-        ));
-        communication.add("projects", columns);
+        @Test
+        @DisplayName("Should convert communication entity to project manager")
+        void shouldConvertCommunicationToProjectManager() {
+            var communication = CommunicationEntity.of("ProjectManager");
+            communication.add("_id", 10L);
+            communication.add("name", "manager");
+            List<List<Element>> columns = new ArrayList<>();
+            columns.add(Arrays.asList(
+                    Element.of("_id","small-project"),
+                    Element.of("size","Small"),
+                    Element.of("investor","investor")
+            ));
+            columns.add(Arrays.asList(
+                    Element.of("_id","large-project"),
+                    Element.of("size","Large"),
+                    Element.of("budget",BigDecimal.TEN)
+            ));
+            communication.add("projects", columns);
 
-        ProjectManager manager = converter.toEntity(communication);
-        assertNotNull(manager);
+            ProjectManager manager = converter.toEntity(communication);
+            assertThat(manager).isNotNull();
 
-        assertEquals(10L, manager.getId());
-        assertEquals("manager", manager.getName());
+            assertThat(manager.getId()).isEqualTo(10L);
+            assertThat(manager.getName()).isEqualTo("manager");
 
-        List<Project> projects = manager.getProjects();
-        assertEquals(2, projects.size());
-        SmallProject small = (SmallProject) projects.get(0);
-        LargeProject large = (LargeProject) projects.get(1);
-        assertNotNull(small);
-        assertEquals("small-project", small.getName());
-        assertEquals("investor", small.getInvestor());
+            List<Project> projects = manager.getProjects();
+            assertThat(projects.size()).isEqualTo(2);
+            SmallProject small = (SmallProject) projects.get(0);
+            LargeProject large = (LargeProject) projects.get(1);
+            assertThat(small).isNotNull();
+            assertThat(small.getName()).isEqualTo("small-project");
+            assertThat(small.getInvestor()).isEqualTo("investor");
 
-        assertNotNull(large);
-        assertEquals("large-project", large.getName());
-        assertEquals(BigDecimal.TEN, large.getBudget());
+            assertThat(large).isNotNull();
+            assertThat(large.getName()).isEqualTo("large-project");
+            assertThat(large.getBudget()).isEqualTo(BigDecimal.TEN);
 
+        }
     }
 }

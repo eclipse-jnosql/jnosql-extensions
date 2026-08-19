@@ -15,7 +15,6 @@
 package org.eclipse.jnosql.lite.mapping.entities;
 
 import jakarta.inject.Inject;
-import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.communication.TypeReference;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.communication.semistructured.CommunicationEntity;
@@ -28,8 +27,9 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -46,7 +46,8 @@ import java.util.stream.Stream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, EntityConverter.class, ColumnTemplate.class})
@@ -77,463 +78,498 @@ public class ColumnEntityConverterTest {
                 , Element.of("movieRating", Collections.singletonMap("JavaZone", 10))};
     }
 
-    @Test void shouldConvertEntityFromColumnEntity() {
-
-        Person person = Person.builder().withAge()
-                .withId(12)
-                .withName("Otavio")
-                .withPhones(asList("234", "2342")).build();
-
-        var entity = converter.toCommunication(person);
-        assertEquals("Person", entity.name());
-        assertEquals(4, entity.size());
-        assertThat(entity.elements()).contains(Element.of("_id", 12L),
-                Element.of("age", 10), Element.of("name", "Otavio"),
-                Element.of("phones", Arrays.asList("234", "2342")));
-
-    }
-
-    @Test
-    void shouldConvertColumnEntityFromEntity() {
-
-        var entity = converter.toCommunication(actor);
-        assertEquals("Actor", entity.name());
-        assertEquals(6, entity.size());
-
-        assertThat(entity.elements()).contains(columns);
-    }
-
-    @Test
-    void shouldConvertColumnEntityToEntity() {
-        var entity = CommunicationEntity.of("Actor");
-        Stream.of(columns).forEach(entity::add);
-
-        Actor actor = converter.toEntity(Actor.class, entity);
-        assertNotNull(actor);
-        assertEquals(10, actor.getAge());
-        assertEquals(12L, actor.getId());
-        assertEquals(asList("234", "2342"), actor.getPhones());
-        assertEquals(Collections.singletonMap("JavaZone", "Jedi"), actor.getMovieCharacter());
-        assertEquals(Collections.singletonMap("JavaZone", 10), actor.getMovieRating());
-    }
-
-    @Test
-    void shouldConvertColumnEntityToEntity2() {
-        var entity = CommunicationEntity.of("Actor");
-        Stream.of(columns).forEach(entity::add);
-
-        Actor actor = converter.toEntity(entity);
-        assertNotNull(actor);
-        assertEquals(10, actor.getAge());
-        assertEquals(12L, actor.getId());
-        assertEquals(asList("234", "2342"), actor.getPhones());
-        assertEquals(Collections.singletonMap("JavaZone", "Jedi"), actor.getMovieCharacter());
-        assertEquals(Collections.singletonMap("JavaZone", 10), actor.getMovieRating());
-    }
-
-    @Test
-    void shouldConvertColumnEntityToExistEntity() {
-        var entity = CommunicationEntity.of("Actor");
-        Stream.of(columns).forEach(entity::add);
-        Actor actor = Actor.actorBuilder().build();
-        Actor result = converter.toEntity(actor, entity);
-
-        assertSame(actor, result);
-        assertEquals(10, actor.getAge());
-        assertEquals(12L, actor.getId());
-        assertEquals(asList("234", "2342"), actor.getPhones());
-        assertEquals(Collections.singletonMap("JavaZone", "Jedi"), actor.getMovieCharacter());
-        assertEquals(Collections.singletonMap("JavaZone", 10), actor.getMovieRating());
-    }
-
-    @Test
-    void shouldReturnErrorWhenToEntityIsNull() {
-        var entity = CommunicationEntity.of("Actor");
-        Stream.of(columns).forEach(entity::add);
-        Actor actor = Actor.actorBuilder().build();
-
-        assertThrows(NullPointerException.class, () -> converter.toEntity(null, entity));
-
-        assertThrows(NullPointerException.class, () -> converter.toEntity(actor, null));
-    }
-
-
-    @Test
-    void shouldConvertEntityToColumnEntity2() {
-
-        Movie movie = new Movie("Matrix", 2012, Collections.singleton("Actor"));
-        Director director = Director.builderDirector().withAge(12)
-                .withId(12)
-                .withName("Otavio")
-                .withPhones(asList("234", "2342")).withMovie(movie).build();
-
-        var entity = converter.toCommunication(director);
-        assertEquals(5, entity.size());
-
-        assertEquals(getValue(entity.find("name")), director.getName());
-        assertEquals(getValue(entity.find("age")), director.getAge());
-        assertEquals(getValue(entity.find("_id")), director.getId());
-        assertEquals(getValue(entity.find("phones")), director.getPhones());
-
-
-        Element subColumn = entity.find("movie").get();
-        List<Element> columns = subColumn.get(new TypeReference<>() {
-        });
-
-        assertEquals(3, columns.size());
-        assertEquals("movie", subColumn.name());
-        assertEquals(movie.getTitle(), columns.stream().filter(c -> "title".equals(c.name())).findFirst().get().get());
-        assertEquals(movie.getYear(), columns.stream().filter(c -> "year".equals(c.name())).findFirst().get().get());
-        assertEquals(movie.getActors(), columns.stream().filter(c -> "actors".equals(c.name())).findFirst().get().get());
-
-
-    }
-
-    @Test
-    void shouldConvertToEmbeddedClassWhenHasSubColumn() {
-        Movie movie = new Movie("Matrix", 2012, Collections.singleton("Actor"));
-        Director director = Director.builderDirector().withAge(12)
-                .withId(12)
-                .withName("Otavio")
-                .withPhones(asList("234", "2342")).withMovie(movie).build();
-
-        var entity = converter.toCommunication(director);
-        Director director1 = converter.toEntity(entity);
-
-        assertEquals(movie, director1.getMovie());
-        assertEquals(director.getName(), director1.getName());
-        assertEquals(director.getAge(), director1.getAge());
-        assertEquals(director.getId(), director1.getId());
-    }
-
-    @Test
-    void shouldConvertToEmbeddedClassWhenHasSubColumn2() {
-        Movie movie = new Movie("Matrix", 2012, singleton("Actor"));
-        Director director = Director.builderDirector().withAge(12)
-                .withId(12)
-                .withName("Otavio")
-                .withPhones(asList("234", "2342")).withMovie(movie).build();
-
-        var entity = converter.toCommunication(director);
-        entity.remove("movie");
-        entity.add(Element.of("movie", Arrays.asList(Element.of("title", "Matrix"),
-                Element.of("year", 2012), Element.of("actors", singleton("Actor")))));
-        Director director1 = converter.toEntity(entity);
-
-        assertEquals(movie, director1.getMovie());
-        assertEquals(director.getName(), director1.getName());
-        assertEquals(director.getAge(), director1.getAge());
-        assertEquals(director.getId(), director1.getId());
-    }
-
-    @Test
-    void shouldConvertToEmbeddedClassWhenHasSubColumn3() {
-        Movie movie = new Movie("Matrix", 2012, singleton("Actor"));
-        Director director = Director.builderDirector().withAge(12)
-                .withId(12)
-                .withName("Otavio")
-                .withPhones(asList("234", "2342")).withMovie(movie).build();
-
-        var entity = converter.toCommunication(director);
-        entity.remove("movie");
-        Map<String, Object> map = new HashMap<>();
-        map.put("title", "Matrix");
-        map.put("year", 2012);
-        map.put("actors", singleton("Actor"));
-
-        entity.add(Element.of("movie", map));
-        Director director1 = converter.toEntity(entity);
-
-        assertEquals(movie, director1.getMovie());
-        assertEquals(director.getName(), director1.getName());
-        assertEquals(director.getAge(), director1.getAge());
-        assertEquals(director.getId(), director1.getId());
-    }
-
-    @Test
-    void shouldConvertToColumnWhenHaConverter() {
-        Worker worker = new Worker();
-        Job job = new Job();
-        job.setCity("Sao Paulo");
-        job.setDescription("Java Developer");
-        worker.setName("Bob");
-        worker.setSalary(new Money("BRL", BigDecimal.TEN));
-        worker.setJob(job);
-        var entity = converter.toCommunication(worker);
-        assertEquals("Worker", entity.name());
-        assertEquals("Bob", entity.find("name").get().get());
-        assertEquals("Sao Paulo", entity.find("city").get().get());
-        assertEquals("Java Developer", entity.find("description").get().get());
-        assertEquals("BRL 10", entity.find("money").get().get());
-    }
-
-    @Test
-    void shouldConvertToEntityWhenHasConverter() {
-        Worker worker = new Worker();
-        Job job = new Job();
-        job.setCity("Sao Paulo");
-        job.setDescription("Java Developer");
-        worker.setName("Bob");
-        worker.setSalary(new Money("BRL", BigDecimal.TEN));
-        worker.setJob(job);
-        var entity = converter.toCommunication(worker);
-        Worker worker1 = converter.toEntity(entity);
-        assertEquals(worker.getSalary(), worker1.getSalary());
-        assertEquals(job.getCity(), worker1.getJob().getCity());
-        assertEquals(job.getDescription(), worker1.getJob().getDescription());
-    }
-
-    @Test
-    void shouldConvertEmbeddableLazily() {
-        var entity = CommunicationEntity.of("Worker");
-        entity.add("name", "Otavio");
-        entity.add("money", "BRL 10");
-
-        Worker worker = converter.toEntity(entity);
-        assertEquals("Otavio", worker.getName());
-        assertEquals(new Money("BRL", BigDecimal.TEN), worker.getSalary());
-        Assertions.assertNull(worker.getJob());
-
-    }
-
-
-    @Test
-    void shouldConvertToListEmbeddable() {
-        AppointmentBook appointmentBook = new AppointmentBook("ids");
-        appointmentBook.add(Contact.builder().withType(ContactType.EMAIL)
-                .withName("Ada").withInformation("ada@lovelace.com").build());
-        appointmentBook.add(Contact.builder().withType(ContactType.MOBILE)
-                .withName("Ada").withInformation("11 1231231 123").build());
-        appointmentBook.add(Contact.builder().withType(ContactType.PHONE)
-                .withName("Ada").withInformation("12 123 1231 123123").build());
-
-        var entity = converter.toCommunication(appointmentBook);
-        Element contacts = entity.find("contacts").get();
-        assertEquals("ids", appointmentBook.getId());
-        List<List<Element>> columns = (List<List<Element>>) contacts.get();
-
-        assertEquals(3L, columns.stream().flatMap(Collection::stream)
-                .filter(c -> c.name().equals("contact_name"))
-                .count());
-    }
-
-    @Test
-    void shouldConvertFromListEmbeddable() {
-        var entity = CommunicationEntity.of("AppointmentBook");
-        entity.add(Element.of("_id", "ids"));
-        List<List<Element>> columns = new ArrayList<>();
-
-        columns.add(asList(Element.of("contact_name", "Ada"), Element.of("type", ContactType.EMAIL),
-                Element.of("information", "ada@lovelace.com")));
-
-        columns.add(asList(Element.of("contact_name", "Ada"), Element.of("type", ContactType.MOBILE),
-                Element.of("information", "11 1231231 123")));
-
-        columns.add(asList(Element.of("contact_name", "Ada"), Element.of("type", ContactType.PHONE),
-                Element.of("information", "phone")));
-
-        entity.add(Element.of("contacts", columns));
-
-        AppointmentBook appointmentBook = converter.toEntity(entity);
-
-        List<Contact> contacts = appointmentBook.getContacts();
-        assertEquals("ids", appointmentBook.getId());
-        assertEquals("Ada", contacts.stream().map(Contact::getName).distinct().findFirst().get());
-
-    }
-
-
-    @Test
-    void shouldConvertSubEntity() {
-        ZipCode zipcode = new ZipCode();
-        zipcode.setZip("12321");
-        zipcode.setPlusFour("1234");
-
-        Address address = new Address();
-        address.setCity("Salvador");
-        address.setState("Bahia");
-        address.setStreet("Rua Engenheiro Jose Anasoh");
-        address.setZipCode(zipcode);
-
-        var columnEntity = converter.toCommunication(address);
-        List<Element> columns = columnEntity.elements();
-        assertEquals("Address", columnEntity.name());
-        assertEquals(4, columns.size());
-        List<Element> zip = columnEntity.find("zipCode").map(d -> d.get(new TypeReference<List<Element>>() {
-        })).orElse(Collections.emptyList());
-
-        assertEquals("Rua Engenheiro Jose Anasoh", getValue(columnEntity.find("street")));
-        assertEquals("Salvador", getValue(columnEntity.find("city")));
-        assertEquals("Bahia", getValue(columnEntity.find("state")));
-        assertEquals("12321", getValue(zip.stream().filter(d -> d.name().equals("zip")).findFirst()));
-        assertEquals("1234", getValue(zip.stream().filter(d -> d.name().equals("plusFour")).findFirst()));
-    }
-
-    @Test
-    void shouldConvertColumnInSubEntity() {
-
-        var entity = CommunicationEntity.of("Address");
-
-        entity.add(Element.of("street", "Rua Engenheiro Jose Anasoh"));
-        entity.add(Element.of("city", "Salvador"));
-        entity.add(Element.of("state", "Bahia"));
-        entity.add(Element.of("zipCode", Arrays.asList(
-                Element.of("zip", "12321"),
-                Element.of("plusFour", "1234"))));
-        Address address = converter.toEntity(entity);
-
-        assertEquals("Rua Engenheiro Jose Anasoh", address.getStreet());
-        assertEquals("Salvador", address.getCity());
-        assertEquals("Bahia", address.getState());
-        assertEquals("12321", address.getZipCode().getZip());
-        assertEquals("1234", address.getZipCode().getPlusFour());
-
-    }
-
-    @Test
-    void shouldReturnNullWhenThereIsNotSubEntity() {
-        var entity = CommunicationEntity.of("Address");
-
-        entity.add(Element.of("street", "Rua Engenheiro Jose Anasoh"));
-        entity.add(Element.of("city", "Salvador"));
-        entity.add(Element.of("state", "Bahia"));
-        entity.add(Element.of("zip", "12321"));
-        entity.add(Element.of("plusFour", "1234"));
-
-        Address address = converter.toEntity(entity);
-
-        assertEquals("Rua Engenheiro Jose Anasoh", address.getStreet());
-        assertEquals("Salvador", address.getCity());
-        assertEquals("Bahia", address.getState());
-        assertNull(address.getZipCode());
-    }
-
-    @Test
-    void shouldConvertAndDoNotUseUnmodifiableCollection() {
-        var entity = CommunicationEntity.of("vendors");
-        entity.add("name", "name");
-        entity.add("prefixes", Arrays.asList("value", "value2"));
-
-        Vendor vendor = converter.toEntity(entity);
-        vendor.add("value3");
-
-        Assertions.assertEquals(3, vendor.getPrefixes().size());
-
-    }
-
-    @Test
-    void shouldConvertEntityToDocumentWithArray() {
-        byte[] contents = {1, 2, 3, 4, 5, 6};
-
-        var entity = CommunicationEntity.of("download");
-        entity.add("_id", 1L);
-        entity.add("contents", contents);
-
-        Download download = converter.toEntity(entity);
-        Assertions.assertEquals(1L, download.getId());
-        Assertions.assertArrayEquals(contents, download.getContents());
-    }
-
-    @Test
-    void shouldConvertDocumentToEntityWithArray() {
-        byte[] contents = {1, 2, 3, 4, 5, 6};
-
-        Download download = new Download();
-        download.setId(1L);
-        download.setContents(contents);
-
-        var entity = converter.toCommunication(download);
-
-        Assertions.assertEquals(1L, entity.find("_id").get().get());
-        final byte[] bytes = entity.find("contents").map(v -> v.get(byte[].class)).orElse(new byte[0]);
-        Assertions.assertArrayEquals(contents, bytes);
-    }
-
-    @Test
-    void shouldCreateUserScope() {
-        var entity = CommunicationEntity.of("UserScope");
-        entity.add("_id", "userName");
-        entity.add("scope", "scope");
-        entity.add("properties", Collections.singletonList(Element.of("halo", "weld")));
-
-        UserScope user = converter.toEntity(entity);
-        Assertions.assertNotNull(user);
-        Assertions.assertEquals("userName",user.getUserName());
-        Assertions.assertEquals("scope",user.getScope());
-        Assertions.assertEquals(Collections.singletonMap("halo", "weld"),user.getProperties());
-
-    }
-
-    @Test
-    void shouldCreateUserScope2() {
-        var entity = CommunicationEntity.of("UserScope");
-        entity.add("_id", "userName");
-        entity.add("scope", "scope");
-        entity.add("properties", Element.of("halo", "weld"));
-
-        UserScope user = converter.toEntity(entity);
-        Assertions.assertNotNull(user);
-        Assertions.assertEquals("userName",user.getUserName());
-        Assertions.assertEquals("scope",user.getScope());
-        Assertions.assertEquals(Collections.singletonMap("halo", "weld"),user.getProperties());
-
-    }
-
-    @Test
-    void shouldCreateLazilyEntity() {
-        var entity = CommunicationEntity.of("Citizen");
-        entity.add("id", "10");
-        entity.add("name", "Salvador");
-
-        Citizen citizen = converter.toEntity(entity);
-        Assertions.assertNotNull(citizen);
-        Assertions.assertNull(citizen.getCity());
-    }
-
-    @Test
-    void shouldConvertGroupEmbeddable(){
-        CommunicationEntity entity = CommunicationEntity.of("Wine");
-        entity.add("_id", "id");
-        entity.add("name", "Vin Blanc");
-        entity.add("factory", List.of(Element.of("name", "Napa Valley Factory"),
-                Element.of("location", "Napa Valley")));
-
-        Wine wine = converter.toEntity(entity);
-
-        SoftAssertions.assertSoftly(soft ->{
-            WineFactory factory = wine.getFactory();
-            soft.assertThat(wine).isNotNull();
-            soft.assertThat(wine.getId()).isEqualTo("id");
-            soft.assertThat(wine.getName()).isEqualTo("Vin Blanc");
-            soft.assertThat(factory).isNotNull();
-            soft.assertThat(factory.getName()).isEqualTo("Napa Valley Factory");
-            soft.assertThat(factory.getLocation()).isEqualTo("Napa Valley");
-        });
-    }
-
-    @Test
-    void shouldConvertGroupEmbeddableToCommunication(){
-
-        Wine wine = Wine.of("id", "Vin Blanc", WineFactory.of("Napa Valley Factory", "Napa Valley"));
-
-
-        var communication = converter.toCommunication(wine);
-
-        SoftAssertions.assertSoftly(soft ->{
-            soft.assertThat(communication).isNotNull();
-            soft.assertThat(communication.name()).isEqualTo("Wine");
-            soft.assertThat(communication.find("_id").orElseThrow().get()).isEqualTo("id");
-            soft.assertThat(communication.find("name").orElseThrow().get()).isEqualTo("Vin Blanc");
-            communication.find("factory").ifPresent(e -> {
-                List<Element> elements = e.get(new TypeReference<>(){});
-                soft.assertThat(elements).hasSize(2);
-                soft.assertThat(elements.stream().filter(c -> "name".equals(c.name())).findFirst().orElseThrow().get())
-                        .isEqualTo("Napa Valley Factory");
-                soft.assertThat(elements.stream().filter(c -> "location".equals(c.name())).findFirst().orElseThrow().get())
-                        .isEqualTo("Napa Valley");
+    @Nested
+    @DisplayName("When converting entities")
+    class WhenTheConversion {
+
+        @Test
+        @DisplayName("Should convert Entity From Column Entity")
+        void shouldConvertEntityFromColumnEntity() {
+
+            Person person = Person.builder().withAge()
+                    .withId(12)
+                    .withName("Otavio")
+                    .withPhones(asList("234", "2342")).build();
+
+            var entity = converter.toCommunication(person);
+            assertThat(entity.name()).isEqualTo("Person");
+            assertThat(entity.size()).isEqualTo(4);
+            assertThat(entity.elements()).contains(Element.of("_id", 12L),
+                    Element.of("age", 10), Element.of("name", "Otavio"),
+                    Element.of("phones", Arrays.asList("234", "2342")));
+
+        }
+
+        @Test
+        @DisplayName("Should convert Column Entity From Entity")
+        void shouldConvertColumnEntityFromEntity() {
+
+            var entity = converter.toCommunication(actor);
+            assertThat(entity.name()).isEqualTo("Actor");
+            assertThat(entity.size()).isEqualTo(6);
+
+            assertThat(entity.elements()).contains(columns);
+        }
+
+        @Test
+        @DisplayName("Should convert Column Entity To Entity")
+        void shouldConvertColumnEntityToEntity() {
+            var entity = CommunicationEntity.of("Actor");
+            Stream.of(columns).forEach(entity::add);
+
+            Actor actor = converter.toEntity(Actor.class, entity);
+            assertThat(actor).isNotNull();
+            assertThat(actor.getAge()).isEqualTo(10);
+            assertThat(actor.getId()).isEqualTo(12L);
+            assertThat(actor.getPhones()).isEqualTo(asList("234", "2342"));
+            assertThat(actor.getMovieCharacter()).isEqualTo(Collections.singletonMap("JavaZone", "Jedi"));
+            assertThat(actor.getMovieRating()).isEqualTo(Collections.singletonMap("JavaZone", 10));
+        }
+
+        @Test
+        @DisplayName("Should convert to entity without explicit type")
+        void shouldConvertToEntityWithoutExplicitType() {
+            var entity = CommunicationEntity.of("Actor");
+            Stream.of(columns).forEach(entity::add);
+
+            Actor actor = converter.toEntity(entity);
+            assertThat(actor).isNotNull();
+            assertThat(actor.getAge()).isEqualTo(10);
+            assertThat(actor.getId()).isEqualTo(12L);
+            assertThat(actor.getPhones()).isEqualTo(asList("234", "2342"));
+            assertThat(actor.getMovieCharacter()).isEqualTo(Collections.singletonMap("JavaZone", "Jedi"));
+            assertThat(actor.getMovieRating()).isEqualTo(Collections.singletonMap("JavaZone", 10));
+        }
+
+        @Test
+        @DisplayName("Should convert Column Entity To Exist Entity")
+        void shouldConvertColumnEntityToExistEntity() {
+            var entity = CommunicationEntity.of("Actor");
+            Stream.of(columns).forEach(entity::add);
+            Actor actor = Actor.actorBuilder().build();
+            Actor result = converter.toEntity(actor, entity);
+
+            assertThat(result).isSameAs(actor);
+            assertThat(actor.getAge()).isEqualTo(10);
+            assertThat(actor.getId()).isEqualTo(12L);
+            assertThat(actor.getPhones()).isEqualTo(asList("234", "2342"));
+            assertThat(actor.getMovieCharacter()).isEqualTo(Collections.singletonMap("JavaZone", "Jedi"));
+            assertThat(actor.getMovieRating()).isEqualTo(Collections.singletonMap("JavaZone", 10));
+        }
+
+        @Test
+        @DisplayName("Should return an error when entity conversion receives null")
+        void shouldReturnErrorWhenToEntityIsNull() {
+            var entity = CommunicationEntity.of("Actor");
+            Stream.of(columns).forEach(entity::add);
+            Actor actor = Actor.actorBuilder().build();
+
+            assertThatNullPointerException().isThrownBy(() -> converter.toEntity(null, entity));
+
+            assertThatNullPointerException().isThrownBy(() -> converter.toEntity(actor, null));
+        }
+
+
+        @Test
+        @DisplayName("Should convert an entity with an embedded movie")
+        void shouldConvertEntityWithEmbeddedMovie() {
+
+            Movie movie = new Movie("Matrix", 2012, Collections.singleton("Actor"));
+            Director director = Director.builderDirector().withAge(12)
+                    .withId(12)
+                    .withName("Otavio")
+                    .withPhones(asList("234", "2342")).withMovie(movie).build();
+
+            var entity = converter.toCommunication(director);
+            assertThat(entity.size()).isEqualTo(5);
+
+            assertThat(director.getName()).isEqualTo(getValue(entity.find("name")));
+            assertThat(director.getAge()).isEqualTo(getValue(entity.find("age")));
+            assertThat(director.getId()).isEqualTo(getValue(entity.find("_id")));
+            assertThat(director.getPhones()).isEqualTo(getValue(entity.find("phones")));
+
+
+            Element subColumn = entity.find("movie").get();
+            List<Element> columns = subColumn.get(new TypeReference<>() {
             });
 
-        });
+            assertThat(columns.size()).isEqualTo(3);
+            assertThat(subColumn.name()).isEqualTo("movie");
+            assertThat(columns.stream().filter(c -> "title".equals(c.name())).findFirst().get().get()).isEqualTo(movie.getTitle());
+            assertThat(columns.stream().filter(c -> "year".equals(c.name())).findFirst().get().get()).isEqualTo(movie.getYear());
+            assertThat(columns.stream().filter(c -> "actors".equals(c.name())).findFirst().get().get()).isEqualTo(movie.getActors());
+
+
+        }
+
+        @Test
+        @DisplayName("Should convert an embedded class from a column")
+        void shouldConvertToEmbeddedClassWhenHasSubColumn() {
+            Movie movie = new Movie("Matrix", 2012, Collections.singleton("Actor"));
+            Director director = Director.builderDirector().withAge(12)
+                    .withId(12)
+                    .withName("Otavio")
+                    .withPhones(asList("234", "2342")).withMovie(movie).build();
+
+            var entity = converter.toCommunication(director);
+            Director director1 = converter.toEntity(entity);
+
+            assertThat(director1.getMovie()).isEqualTo(movie);
+            assertThat(director1.getName()).isEqualTo(director.getName());
+            assertThat(director1.getAge()).isEqualTo(director.getAge());
+            assertThat(director1.getId()).isEqualTo(director.getId());
+        }
+
+        @Test
+        @DisplayName("Should convert an embedded class from element list")
+        void shouldConvertEmbeddedClassFromElementList() {
+            Movie movie = new Movie("Matrix", 2012, singleton("Actor"));
+            Director director = Director.builderDirector().withAge(12)
+                    .withId(12)
+                    .withName("Otavio")
+                    .withPhones(asList("234", "2342")).withMovie(movie).build();
+
+            var entity = converter.toCommunication(director);
+            entity.remove("movie");
+            entity.add(Element.of("movie", Arrays.asList(Element.of("title", "Matrix"),
+                    Element.of("year", 2012), Element.of("actors", singleton("Actor")))));
+            Director director1 = converter.toEntity(entity);
+
+            assertThat(director1.getMovie()).isEqualTo(movie);
+            assertThat(director1.getName()).isEqualTo(director.getName());
+            assertThat(director1.getAge()).isEqualTo(director.getAge());
+            assertThat(director1.getId()).isEqualTo(director.getId());
+        }
+
+        @Test
+        @DisplayName("Should convert an embedded class from map")
+        void shouldConvertEmbeddedClassFromMap() {
+            Movie movie = new Movie("Matrix", 2012, singleton("Actor"));
+            Director director = Director.builderDirector().withAge(12)
+                    .withId(12)
+                    .withName("Otavio")
+                    .withPhones(asList("234", "2342")).withMovie(movie).build();
+
+            var entity = converter.toCommunication(director);
+            entity.remove("movie");
+            Map<String, Object> map = new HashMap<>();
+            map.put("title", "Matrix");
+            map.put("year", 2012);
+            map.put("actors", singleton("Actor"));
+
+            entity.add(Element.of("movie", map));
+            Director director1 = converter.toEntity(entity);
+
+            assertThat(director1.getMovie()).isEqualTo(movie);
+            assertThat(director1.getName()).isEqualTo(director.getName());
+            assertThat(director1.getAge()).isEqualTo(director.getAge());
+            assertThat(director1.getId()).isEqualTo(director.getId());
+        }
+
+        @Test
+        @DisplayName("Should convert To Column When has Converter")
+        void shouldConvertToColumnWhenHaConverter() {
+            Worker worker = new Worker();
+            Job job = new Job();
+            job.setCity("Sao Paulo");
+            job.setDescription("Java Developer");
+            worker.setName("Bob");
+            worker.setSalary(new Money("BRL", BigDecimal.TEN));
+            worker.setJob(job);
+            var entity = converter.toCommunication(worker);
+            assertThat(entity.name()).isEqualTo("Worker");
+            assertThat(entity.find("name").get().get()).isEqualTo("Bob");
+            assertThat(entity.find("city").get().get()).isEqualTo("Sao Paulo");
+            assertThat(entity.find("description").get().get()).isEqualTo("Java Developer");
+            assertThat(entity.find("money").get().get()).isEqualTo("BRL 10");
+        }
+
+        @Test
+        @DisplayName("Should convert To Entity When Has Converter")
+        void shouldConvertToEntityWhenHasConverter() {
+            Worker worker = new Worker();
+            Job job = new Job();
+            job.setCity("Sao Paulo");
+            job.setDescription("Java Developer");
+            worker.setName("Bob");
+            worker.setSalary(new Money("BRL", BigDecimal.TEN));
+            worker.setJob(job);
+            var entity = converter.toCommunication(worker);
+            Worker worker1 = converter.toEntity(entity);
+            assertThat(worker1.getSalary()).isEqualTo(worker.getSalary());
+            assertThat(worker1.getJob().getCity()).isEqualTo(job.getCity());
+            assertThat(worker1.getJob().getDescription()).isEqualTo(job.getDescription());
+        }
+
+        @Test
+        @DisplayName("Should convert Embeddable Lazily")
+        void shouldConvertEmbeddableLazily() {
+            var entity = CommunicationEntity.of("Worker");
+            entity.add("name", "Otavio");
+            entity.add("money", "BRL 10");
+
+            Worker worker = converter.toEntity(entity);
+            assertThat(worker.getName()).isEqualTo("Otavio");
+            assertThat(worker.getSalary()).isEqualTo(new Money("BRL", BigDecimal.TEN));
+            assertThat(worker.getJob()).isNull();
+
+        }
+
+
+        @Test
+        @DisplayName("Should convert To List Embeddable")
+        void shouldConvertToListEmbeddable() {
+            AppointmentBook appointmentBook = new AppointmentBook("ids");
+            appointmentBook.add(Contact.builder().withType(ContactType.EMAIL)
+                    .withName("Ada").withInformation("ada@lovelace.com").build());
+            appointmentBook.add(Contact.builder().withType(ContactType.MOBILE)
+                    .withName("Ada").withInformation("11 1231231 123").build());
+            appointmentBook.add(Contact.builder().withType(ContactType.PHONE)
+                    .withName("Ada").withInformation("12 123 1231 123123").build());
+
+            var entity = converter.toCommunication(appointmentBook);
+            Element contacts = entity.find("contacts").get();
+            assertThat(appointmentBook.getId()).isEqualTo("ids");
+            List<List<Element>> columns = (List<List<Element>>) contacts.get();
+
+            assertThat(columns.stream().flatMap(Collection::stream)
+                    .filter(c -> c.name().equals("contact_name"))
+                    .count()).isEqualTo(3L);
+        }
+
+        @Test
+        @DisplayName("Should convert From List Embeddable")
+        void shouldConvertFromListEmbeddable() {
+            var entity = CommunicationEntity.of("AppointmentBook");
+            entity.add(Element.of("_id", "ids"));
+            List<List<Element>> columns = new ArrayList<>();
+
+            columns.add(asList(Element.of("contact_name", "Ada"), Element.of("type", ContactType.EMAIL),
+                    Element.of("information", "ada@lovelace.com")));
+
+            columns.add(asList(Element.of("contact_name", "Ada"), Element.of("type", ContactType.MOBILE),
+                    Element.of("information", "11 1231231 123")));
+
+            columns.add(asList(Element.of("contact_name", "Ada"), Element.of("type", ContactType.PHONE),
+                    Element.of("information", "phone")));
+
+            entity.add(Element.of("contacts", columns));
+
+            AppointmentBook appointmentBook = converter.toEntity(entity);
+
+            List<Contact> contacts = appointmentBook.getContacts();
+            assertThat(appointmentBook.getId()).isEqualTo("ids");
+            assertThat(contacts.stream().map(Contact::getName).distinct().findFirst().get()).isEqualTo("Ada");
+
+        }
+
+
+        @Test
+        @DisplayName("Should convert Sub Entity")
+        void shouldConvertSubEntity() {
+            ZipCode zipcode = new ZipCode();
+            zipcode.setZip("12321");
+            zipcode.setPlusFour("1234");
+
+            Address address = new Address();
+            address.setCity("Salvador");
+            address.setState("Bahia");
+            address.setStreet("Rua Engenheiro Jose Anasoh");
+            address.setZipCode(zipcode);
+
+            var columnEntity = converter.toCommunication(address);
+            List<Element> columns = columnEntity.elements();
+            assertThat(columnEntity.name()).isEqualTo("Address");
+            assertThat(columns.size()).isEqualTo(4);
+            List<Element> zip = columnEntity.find("zipCode").map(d -> d.get(new TypeReference<List<Element>>() {
+            })).orElse(Collections.emptyList());
+
+            assertThat(getValue(columnEntity.find("street"))).isEqualTo("Rua Engenheiro Jose Anasoh");
+            assertThat(getValue(columnEntity.find("city"))).isEqualTo("Salvador");
+            assertThat(getValue(columnEntity.find("state"))).isEqualTo("Bahia");
+            assertThat(getValue(zip.stream().filter(d -> d.name().equals("zip")).findFirst())).isEqualTo("12321");
+            assertThat(getValue(zip.stream().filter(d -> d.name().equals("plusFour")).findFirst())).isEqualTo("1234");
+        }
+
+        @Test
+        @DisplayName("Should convert Column In Sub Entity")
+        void shouldConvertColumnInSubEntity() {
+
+            var entity = CommunicationEntity.of("Address");
+
+            entity.add(Element.of("street", "Rua Engenheiro Jose Anasoh"));
+            entity.add(Element.of("city", "Salvador"));
+            entity.add(Element.of("state", "Bahia"));
+            entity.add(Element.of("zipCode", Arrays.asList(
+                    Element.of("zip", "12321"),
+                    Element.of("plusFour", "1234"))));
+            Address address = converter.toEntity(entity);
+
+            assertThat(address.getStreet()).isEqualTo("Rua Engenheiro Jose Anasoh");
+            assertThat(address.getCity()).isEqualTo("Salvador");
+            assertThat(address.getState()).isEqualTo("Bahia");
+            assertThat(address.getZipCode().getZip()).isEqualTo("12321");
+            assertThat(address.getZipCode().getPlusFour()).isEqualTo("1234");
+
+        }
+
+        @Test
+        @DisplayName("Should return Null When There Is Not Sub Entity")
+        void shouldReturnNullWhenThereIsNotSubEntity() {
+            var entity = CommunicationEntity.of("Address");
+
+            entity.add(Element.of("street", "Rua Engenheiro Jose Anasoh"));
+            entity.add(Element.of("city", "Salvador"));
+            entity.add(Element.of("state", "Bahia"));
+            entity.add(Element.of("zip", "12321"));
+            entity.add(Element.of("plusFour", "1234"));
+
+            Address address = converter.toEntity(entity);
+
+            assertThat(address.getStreet()).isEqualTo("Rua Engenheiro Jose Anasoh");
+            assertThat(address.getCity()).isEqualTo("Salvador");
+            assertThat(address.getState()).isEqualTo("Bahia");
+            assertThat(address.getZipCode()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should convert And does not Use Unmodifiable Collection")
+        void shouldConvertAndDoNotUseUnmodifiableCollection() {
+            var entity = CommunicationEntity.of("vendors");
+            entity.add("name", "name");
+            entity.add("prefixes", Arrays.asList("value", "value2"));
+
+            Vendor vendor = converter.toEntity(entity);
+            vendor.add("value3");
+
+            assertThat(vendor.getPrefixes().size()).isEqualTo(3);
+
+        }
+
+        @Test
+        @DisplayName("Should convert Entity To Document With Array")
+        void shouldConvertEntityToDocumentWithArray() {
+            byte[] contents = {1, 2, 3, 4, 5, 6};
+
+            var entity = CommunicationEntity.of("download");
+            entity.add("_id", 1L);
+            entity.add("contents", contents);
+
+            Download download = converter.toEntity(entity);
+            assertThat(download.getId()).isEqualTo(1L);
+            assertThat(download.getContents()).containsExactly(contents);
+        }
+
+        @Test
+        @DisplayName("Should convert Document To Entity With Array")
+        void shouldConvertDocumentToEntityWithArray() {
+            byte[] contents = {1, 2, 3, 4, 5, 6};
+
+            Download download = new Download();
+            download.setId(1L);
+            download.setContents(contents);
+
+            var entity = converter.toCommunication(download);
+
+            assertThat(entity.find("_id").get().get()).isEqualTo(1L);
+            final byte[] bytes = entity.find("contents").map(v -> v.get(byte[].class)).orElse(new byte[0]);
+            assertThat(bytes).containsExactly(contents);
+        }
+
+        @Test
+        @DisplayName("Should create user scope from a collection")
+        void shouldCreateUserScope() {
+            var entity = CommunicationEntity.of("UserScope");
+            entity.add("_id", "userName");
+            entity.add("scope", "scope");
+            entity.add("properties", Collections.singletonList(Element.of("halo", "weld")));
+
+            UserScope user = converter.toEntity(entity);
+            assertThat(user).isNotNull();
+            assertThat(user.getUserName()).isEqualTo("userName");
+            assertThat(user.getScope()).isEqualTo("scope");
+            assertThat(user.getProperties()).isEqualTo(Collections.singletonMap("halo", "weld"));
+
+        }
+
+        @Test
+        @DisplayName("Should create user scope from an element")
+        void shouldCreateUserScopeFromElement() {
+            var entity = CommunicationEntity.of("UserScope");
+            entity.add("_id", "userName");
+            entity.add("scope", "scope");
+            entity.add("properties", Element.of("halo", "weld"));
+
+            UserScope user = converter.toEntity(entity);
+            assertThat(user).isNotNull();
+            assertThat(user.getUserName()).isEqualTo("userName");
+            assertThat(user.getScope()).isEqualTo("scope");
+            assertThat(user.getProperties()).isEqualTo(Collections.singletonMap("halo", "weld"));
+
+        }
+
+        @Test
+        @DisplayName("Should create Lazily Entity")
+        void shouldCreateLazilyEntity() {
+            var entity = CommunicationEntity.of("Citizen");
+            entity.add("id", "10");
+            entity.add("name", "Salvador");
+
+            Citizen citizen = converter.toEntity(entity);
+            assertThat(citizen).isNotNull();
+            assertThat(citizen.getCity()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should convert Group Embeddable")
+        void shouldConvertGroupEmbeddable(){
+            CommunicationEntity entity = CommunicationEntity.of("Wine");
+            entity.add("_id", "id");
+            entity.add("name", "Vin Blanc");
+            entity.add("factory", List.of(Element.of("name", "Napa Valley Factory"),
+                    Element.of("location", "Napa Valley")));
+
+            Wine wine = converter.toEntity(entity);
+
+            assertSoftly(soft ->{
+                WineFactory factory = wine.getFactory();
+                soft.assertThat(wine).as("wine").isNotNull();
+                soft.assertThat(wine.getId()).as("wine id").isEqualTo("id");
+                soft.assertThat(wine.getName()).as("wine name").isEqualTo("Vin Blanc");
+                soft.assertThat(factory).as("wine factory").isNotNull();
+                soft.assertThat(factory.getName()).as("factory name").isEqualTo("Napa Valley Factory");
+                soft.assertThat(factory.getLocation()).as("factory location").isEqualTo("Napa Valley");
+            });
+        }
+
+        @Test
+        @DisplayName("Should convert Group Embeddable To Communication")
+        void shouldConvertGroupEmbeddableToCommunication(){
+
+            Wine wine = Wine.of("id", "Vin Blanc", WineFactory.of("Napa Valley Factory", "Napa Valley"));
+
+
+            var communication = converter.toCommunication(wine);
+
+            assertSoftly(soft ->{
+                soft.assertThat(communication).as("communication entity").isNotNull();
+                soft.assertThat(communication.name()).as("entity name").isEqualTo("Wine");
+                soft.assertThat(communication.find("_id").orElseThrow().get()).as("identifier element").isEqualTo("id");
+                soft.assertThat(communication.find("name").orElseThrow().get()).as("name element").isEqualTo("Vin Blanc");
+                communication.find("factory").ifPresent(e -> {
+                    List<Element> elements = e.get(new TypeReference<>(){});
+                    soft.assertThat(elements).as("factory elements").hasSize(2);
+                    soft.assertThat(elements.stream().filter(c -> "name".equals(c.name())).findFirst().orElseThrow().get())
+                            .as("factory name element")
+                            .isEqualTo("Napa Valley Factory");
+                    soft.assertThat(elements.stream().filter(c -> "location".equals(c.name())).findFirst().orElseThrow().get())
+                            .as("factory location element")
+                            .isEqualTo("Napa Valley");
+                });
+
+            });
+        }
+
     }
 
     private Object getValue(Optional<Element> column) {
