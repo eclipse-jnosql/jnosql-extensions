@@ -12,11 +12,12 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity.field;
 
 import jakarta.nosql.Embeddable;
 import jakarta.nosql.Entity;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
+import org.eclipse.jnosql.lite.mapping.processing.CollectionUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.type.ArrayType;
