@@ -30,7 +30,6 @@ class RepositoryMethodModel extends BaseMappingModel {
     private final List<String> selects;
     private final List<String> sorts;
     private final List<String> annotations;
-    private final List<String> annotationsSource;
     private final List<String> params;
     private final String paramSignature;
 
@@ -47,7 +46,6 @@ class RepositoryMethodModel extends BaseMappingModel {
                                  List<String> selects,
                                  List<String> sorts,
                                  List<String> annotations,
-                                 List<String> annotationsSource,
                                  List<String> params,
                                  String paramSignature) {
         this.methodName = methodName;
@@ -62,7 +60,6 @@ class RepositoryMethodModel extends BaseMappingModel {
         this.selects = selects;
         this.sorts = sorts;
         this.annotations = annotations;
-        this.annotationsSource = annotationsSource;
         this.params = params;
         this.paramSignature = paramSignature;
     }
@@ -117,10 +114,6 @@ class RepositoryMethodModel extends BaseMappingModel {
 
     public List<String> getAnnotations() {
         return annotations;
-    }
-
-    public List<String> getAnnotationsSource() {
-        return annotationsSource;
     }
 
     public List<String> getParams() {
