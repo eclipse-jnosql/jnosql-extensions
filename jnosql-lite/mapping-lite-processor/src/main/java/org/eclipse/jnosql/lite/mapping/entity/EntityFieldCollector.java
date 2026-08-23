@@ -12,9 +12,11 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
 import jakarta.nosql.MappedSuperclass;
+import org.eclipse.jnosql.lite.mapping.entity.field.FieldAnalyzer;
+import org.eclipse.jnosql.lite.mapping.processing.ElementPredicates;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -45,7 +47,7 @@ final class EntityFieldCollector {
                 .stream();
 
         return Stream.concat(entityFields, inheritedFields)
-                .filter(MappingProcessor.IS_FIELD.and(MappingProcessor.HAS_ANNOTATION))
+                .filter(ElementPredicates.IS_FIELD.and(ElementPredicates.HAS_MAPPING_ANNOTATION))
                 .map(field -> new FieldAnalyzer(field, processingEnv, entity))
                 .map(FieldAnalyzer::get)
                 .toList();
