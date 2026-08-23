@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.processing;
 
 import java.util.Collection;
 import java.util.Deque;
@@ -23,15 +23,15 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Function;
 
-enum CollectionUtil implements Function<String, String> {
+public enum CollectionUtil implements Function<String, String> {
     INSTANCE;
 
-    static final String NEW_LIST = "new java.util.ArrayList<>()";
-    static final String NEW_SET = "new java.util.HashSet<>()";
-    static final String NEW_DEQUE = "new java.util.LinkedList<>()";
-    static final String NEW_TREE_SET = "new java.util.TreeSet<>()";
+    public static final String NEW_LIST = "new java.util.ArrayList<>()";
+    public static final String NEW_SET = "new java.util.HashSet<>()";
+    public static final String NEW_DEQUE = "new java.util.LinkedList<>()";
+    public static final String NEW_TREE_SET = "new java.util.TreeSet<>()";
 
-    static final String DEFAULT = "null";
+    public static final String DEFAULT = "null";
 
     @Override
     public String apply(String type) {
