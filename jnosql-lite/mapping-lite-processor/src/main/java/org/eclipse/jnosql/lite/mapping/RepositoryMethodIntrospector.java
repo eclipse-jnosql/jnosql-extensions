@@ -99,6 +99,7 @@ final class RepositoryMethodIntrospector {
         List<String> sorts = getSorts();
         var repositoryMethodResult = annotationsClasses(executableElement, className, packageName);
         List<String> annotations = repositoryMethodResult.annotations();
+        List<String> annotationsSource = repositoryMethodResult.annotationsSource();
         if(repositoryMethodResult.isProvider()) {
             methodType = "PROVIDER_OPERATION";
         }
@@ -111,7 +112,7 @@ final class RepositoryMethodIntrospector {
         }
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, query, find, first, returnType, elementType,
-                selects, sorts, annotations, params, paramSignature);
+                selects, sorts, annotations, annotationsSource, params, paramSignature);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {
@@ -131,26 +132,45 @@ final class RepositoryMethodIntrospector {
 
     RepositoryMethodResult annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
         List<String> annotations = new ArrayList<>();
+        List<String> annotationsSource = new ArrayList<>();
         boolean isProvider = false;
-        List<? extends AnnotationMirror> annotationMirrors = executableElement.getAnnotationMirrors();
+
+        List<? extends AnnotationMirror> annotationMirrors =
+                executableElement.getAnnotationMirrors();
+
         List<String> declaredTypes = new ArrayList<>();
+
         for (AnnotationMirror annotationMirror : annotationMirrors) {
             String annotationName = annotationMirror.getAnnotationType().toString();
-            if(!declaredTypes.contains(annotationName)) {
-                RepositoryMethodAnnotationIntrospector repositoryMethodAnnotationIntrospector = new RepositoryMethodAnnotationIntrospector(className,
-                        packageName,
-                        processingEnv,
-                        annotationMirror,
-                        method);
-                var annotationClass = repositoryMethodAnnotationIntrospector.createAnnotationClass();
-                if(annotationClass.provider()) {
+
+            annotationsSource.add(annotationMirror.toString());
+
+            if (!declaredTypes.contains(annotationName)) {
+                RepositoryMethodAnnotationIntrospector repositoryMethodAnnotationIntrospector =
+                        new RepositoryMethodAnnotationIntrospector(
+                                className,
+                                packageName,
+                                processingEnv,
+                                annotationMirror,
+                                method);
+
+                var annotationClass =
+                        repositoryMethodAnnotationIntrospector.createAnnotationClass();
+
+                if (annotationClass.provider()) {
                     isProvider = true;
                 }
+
                 annotations.add(annotationClass.qualified());
                 declaredTypes.add(annotationName);
             }
         }
-        return new RepositoryMethodResult(annotations, isProvider);
+
+        return new RepositoryMethodResult(
+                annotations,
+                annotationsSource,
+                isProvider
+        );
     }
 
     private String getFind() {
@@ -221,5 +241,5 @@ final class RepositoryMethodIntrospector {
                 + exception.getMessage());
     }
 
-    record RepositoryMethodResult(List<String> annotations, boolean isProvider) {}
+    record RepositoryMethodResult(List<String> annotations, List<String> annotationsSource, boolean isProvider) {}
 }
