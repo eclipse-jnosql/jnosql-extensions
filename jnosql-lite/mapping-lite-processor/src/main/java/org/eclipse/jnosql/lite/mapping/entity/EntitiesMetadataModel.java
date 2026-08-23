@@ -12,11 +12,14 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
+import org.eclipse.jnosql.lite.mapping.processing.MappingCategory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
 import java.util.List;
 
-class EntitiesMetadataModel extends BaseMappingModel {
+public class EntitiesMetadataModel extends BaseMappingModel {
 
     private final List<String> entities;
 
