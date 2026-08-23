@@ -19,13 +19,18 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.InheritanceMetadata;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.assertj.core.api.SoftAssertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SmallProjectTest {
 
@@ -36,67 +41,97 @@ public class SmallProjectTest {
 
     @BeforeEach
     public void setUp() {
-        this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(SmallProject.class);
+        mappings = new LiteEntitiesMetadata();
+        entityMetadata = mappings.get(SmallProject.class);
     }
 
-    @Test
-    void shouldGetName() {
-        Assertions.assertEquals("Project", entityMetadata.name());
-    }
+    @Nested
+    @DisplayName("When the small project metadata is inspected")
+    class WhenTheSmallProjectMetadataIsInspected {
 
-    @Test
-    void shouldGetSimpleName() {
-        Assertions.assertEquals(SmallProject.class.getSimpleName(), entityMetadata.simpleName());
-    }
 
-    @Test
-    void shouldGetClassName() {
-        Assertions.assertEquals(SmallProject.class.getName(), entityMetadata.className());
-    }
+        @Test
+        @DisplayName("Should expose the mapping name")
+        void shouldExposeMappingName() {
+            assertThat(entityMetadata.name()).as("value of entityMetadata.name()").isEqualTo("Project");
+        }
 
-    @Test
-    void shouldGetClassInstance() {
-        Assertions.assertEquals(SmallProject.class, entityMetadata.type());
-    }
 
-    @Test
-    void shouldGetId() {
-        Optional<FieldMetadata> id = this.entityMetadata.id();
-        Assertions.assertTrue(id.isPresent());
-    }
+        @Test
+        @DisplayName("Should expose the entity simple name")
+        void shouldExposeEntitySimpleName() {
+            assertThat(entityMetadata.simpleName()).as("value of entityMetadata.simpleName()").isEqualTo(SmallProject.class.getSimpleName());
+        }
 
-    @Test
-    void shouldCreateNewInstance() {
-        SmallProject project = entityMetadata.newInstance();
-        Assertions.assertNotNull(project);
-        Assertions.assertInstanceOf(SmallProject.class, project);
-    }
 
-    @Test
-    void shouldGetFieldsName() {
-        List<String> fields = entityMetadata.fieldsName();
-        Assertions.assertEquals(2, fields.size());
-        Assertions.assertTrue(fields.contains("name"));
-        Assertions.assertTrue(fields.contains("investor"));
-    }
+        @Test
+        @DisplayName("Should expose the entity class name")
+        void shouldExposeEntityClassName() {
+            assertThat(entityMetadata.className()).as("value of entityMetadata.className()").isEqualTo(SmallProject.class.getName());
+        }
 
-    @Test
-    void shouldGetFieldsGroupByName() {
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        Assertions.assertNotNull(groupByName);
-        Assertions.assertNotNull(groupByName.get("_id"));
-        Assertions.assertNotNull(groupByName.get("investor"));
-    }
 
-    @Test
-    void shouldGetInheritanceMetadata() {
-        InheritanceMetadata inheritance = this.entityMetadata.inheritance()
-                .orElseThrow();
-        Assertions.assertEquals("Small", inheritance.discriminatorValue());
-        Assertions.assertEquals("size", inheritance.discriminatorColumn());
-        Assertions.assertEquals(SmallProject.class, inheritance.entity());
-        Assertions.assertEquals(Project.class, inheritance.parent());
-    }
+        @Test
+        @DisplayName("Should expose the entity type")
+        void shouldExposeEntityType() {
+            assertThat(entityMetadata.type()).as("value of entityMetadata.type()").isEqualTo(SmallProject.class);
+        }
 
+
+        @Test
+        @DisplayName("Should expose identifier metadata")
+        void shouldExposeIdentifierMetadata() {
+            Optional<FieldMetadata> id = entityMetadata.id();
+            assertThat(id.isPresent()).as("value of id.isPresent()").isTrue();
+        }
+
+
+        @Test
+        @DisplayName("Should create a new domain instance")
+        void shouldCreateNewInstance() {
+            SmallProject project = entityMetadata.newInstance();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(project).as("value of project").isNotNull();
+                soft.assertThat(project).as("value of project").isInstanceOf(SmallProject.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should expose every mapped field name")
+        void shouldExposeMappedFieldNames() {
+            List<String> fields = entityMetadata.fieldsName();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(fields.size()).as("value of fields.size()").isEqualTo(2);
+                soft.assertThat(fields.contains("name")).as("value of fields.contains(\"name\")").isTrue();
+                soft.assertThat(fields.contains("investor")).as("value of fields.contains(\"investor\")").isTrue();
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should index mapped fields by name")
+        void shouldIndexMappedFieldsByName() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(groupByName).as("value of groupByName").isNotNull();
+                soft.assertThat(groupByName.get("_id")).as("value of groupByName.get(\"_id\")").isNotNull();
+                soft.assertThat(groupByName.get("investor")).as("value of groupByName.get(\"investor\")").isNotNull();
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should get inheritance metadata")
+        void shouldGetInheritanceMetadata() {
+            InheritanceMetadata inheritance = entityMetadata.inheritance()
+                    .orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(inheritance.discriminatorValue()).as("value of inheritance.discriminatorValue()").isEqualTo("Small");
+                soft.assertThat(inheritance.discriminatorColumn()).as("value of inheritance.discriminatorColumn()").isEqualTo("size");
+                soft.assertThat(inheritance.entity()).as("value of inheritance.entity()").isEqualTo(SmallProject.class);
+                soft.assertThat(inheritance.parent()).as("value of inheritance.parent()").isEqualTo(Project.class);
+            });
+        }
+    }
 }
