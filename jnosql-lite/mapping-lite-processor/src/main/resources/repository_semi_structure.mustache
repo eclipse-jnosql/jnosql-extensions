@@ -31,9 +31,12 @@ import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.MethodSignatureKey;
 {{/methodSignatureKeys.isEmpty}}
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.MappingQuery;
+import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 import javax.annotation.processing.Generated;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,7 +44,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.eclipse.jnosql.mapping.Database;
 import org.eclipse.jnosql.mapping.DatabaseType;
-import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
@@ -64,50 +66,65 @@ public class {{className}} implements {{repository}} {
 
     private final EntityMetadata metadata;
 
+    private final LifecycleEventHandler lifecycleEventHandler;
+
     private final JNoSQLRepositoryProcessor jnosqlRepositoryProcessor;
 
     @jakarta.inject.Inject
     public {{className}}(@Database(value = DatabaseType.{{providerType}}) SemiStructuredTemplate template,
-                         RepositoryOperationProvider repositoryOperationProvider) {
+                         RepositoryOperationProvider repositoryOperationProvider,
+                         LifecycleEventHandler lifecycleEventHandler) {
         this.template = Objects.requireNonNull(template, "template is required");
+        this.lifecycleEventHandler = Objects.requireNonNull(lifecycleEventHandler, "lifecycleEventHandler is required");
         EntitiesMetadata entities = LiteEntitiesMetadata.INSTANCE;
         RepositoriesMetadata repositories = LiteRepositoriesMetadata.INSTANCE;
         this.metadata = entities.get({{entityType}}.class);
         var repositoryMetadata = repositories.get({{repository}}.class)
-        .orElseThrow();
+                .orElseThrow();
         this.jnosqlRepositoryProcessor = JNoSQLRepositoryProcessor.of(template, metadata, repositoryMetadata,
-        repositoryOperationProvider);
+                repositoryOperationProvider);
     }
 
     public {{className}}() {
         this.template = null;
         this.metadata = null;
+        this.lifecycleEventHandler = null;
         this.jnosqlRepositoryProcessor = null;
-   }
+    }
 
-   SemiStructuredTemplate template(){
+    SemiStructuredTemplate template() {
         return template;
     }
 
-    EntityMetadata entityMetadata(){
+    EntityMetadata entityMetadata() {
         return metadata;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <S extends {{entityType}}> S save(S entity) {
-        Objects.requireNonNull(entity, "Entity is required");
+        requireNonNull(entity, "Entity is required");
+
+        this.lifecycleEventHandler.preUpsert(entity);
+
         Object id = getIdField().read(entity);
+
+        S savedEntity;
+
         if (nonNull(id) && existsByIdJNoSQL(({{keyType}}) id)) {
-            return template().update(entity);
+            savedEntity = template().update(entity);
         } else {
-            return template().insert(entity);
+            savedEntity = template().insert(entity);
         }
+
+        this.lifecycleEventHandler.postUpsert(savedEntity);
+        return savedEntity;
     }
 
     @Override
     public <S extends {{entityType}}> List<S> saveAll(List<S> entities) {
-        requireNonNull(entities, "entities is required");
-        return stream(entities.spliterator(), false).map(this::save).collect(toList());
+        requireEntities(entities);
+        return entities.stream().map(this::save).collect(toList());
     }
 
     @Override
@@ -119,8 +136,10 @@ public class {{className}} implements {{repository}} {
     @Override
     public void delete({{entityType}} entity) {
         requireNonNull(entity, "entity is required");
-        Object id = getIdField().read(entity);
-        this.deleteById(({{keyType}}) id);
+
+        this.lifecycleEventHandler.preDelete(entity);
+        template().delete(entityMetadata().type(), getIdField().read(entity));
+        this.lifecycleEventHandler.postDelete(entity);
     }
 
     @Override
@@ -131,9 +150,9 @@ public class {{className}} implements {{repository}} {
 
     @Override
     public void deleteAll(List<? extends {{entityType}}> entities) {
-       requireNonNull(entities, "entities is required");
-       entities.forEach(this::delete);
-   }
+        requireEntities(entities);
+        entities.forEach(this::delete);
+    }
 
 
     @Override
@@ -142,25 +161,26 @@ public class {{className}} implements {{repository}} {
         EntityMetadata metadata = entityMetadata();
         List<Sort<?>> sorts = order.sorts().stream().collect(toList());
         SelectQuery query = new MappingQuery(sorts,
-        pageRequest.size(), NoSQLPage.skip(pageRequest), null, metadata.name(), java.util.Collections.emptyList());
+                pageRequest.size(), NoSQLPage.skip(pageRequest), null, metadata.name(),
+                java.util.Collections.emptyList());
 
         List<{{entityType}}> entities = template().<{{entityType}}>select(query).toList();
         return NoSQLPage.of(entities, pageRequest, () -> template.count(query));
     }
 
-   @Override
-   public Optional<{{entityType}}> findById({{keyType}} id) {
-       requireNonNull(id, "id is required");
-       return template().find(getEntityClass(), id);
-   }
+    @Override
+    public Optional<{{entityType}}> findById({{keyType}} id) {
+        requireNonNull(id, "id is required");
+        return template().find(getEntityClass(), id);
+    }
 
 
     {{#element.isNoSQLRepository}}
 
-   @Override
-   public boolean existsById({{keyType}} id) {
-       return findById(id).isPresent();
-   }
+    @Override
+    public boolean existsById({{keyType}} id) {
+        return findById(id).isPresent();
+    }
 
 
     @Override
@@ -174,42 +194,74 @@ public class {{className}} implements {{repository}} {
         ids.forEach(this::deleteById);
     }
 
-   @Override
-   public long countBy() {
-       return template().count(getEntityClass());
-   }
+    @Override
+    public long countBy() {
+        return template().count(getEntityClass());
+    }
 
     @Override
     public Stream<{{entityType}}> findByIdIn(Iterable<{{keyType}}> ids) {
         requireNonNull(ids, "ids is required");
         return stream(ids.spliterator(), false)
-        .flatMap(optionalToStream());
+                .flatMap(optionalToStream());
     }
     {{/element.isNoSQLRepository}}
 
     {{#element.isCrudRepository}}
     @Override
     public <S extends {{entityType}}> S insert(S entity) {
-        Objects.requireNonNull(entity, "entity is required");
-        return template().insert(entity);
+        requireNonNull(entity, "entity is required");
+
+        this.lifecycleEventHandler.preInsert(entity);
+        S insertedEntity = template().insert(entity);
+        this.lifecycleEventHandler.postInsert(insertedEntity);
+        return insertedEntity;
     }
- 
+
     @Override
     public <S extends {{entityType}}> List<S> insertAll(List<S> entities) {
-        Objects.requireNonNull(entities, "entities is required");
-        return stream(template().insert(entities).spliterator(), false).toList();
+        requireEntities(entities);
+
+        entities.forEach(this.lifecycleEventHandler::preInsert);
+
+        List<S> insertedEntities = new ArrayList<>();
+        template().insert(entities).forEach(entity -> {
+            @SuppressWarnings("unchecked")
+            S insertedEntity = (S) entity;
+
+            this.lifecycleEventHandler.postInsert(insertedEntity);
+            insertedEntities.add(insertedEntity);
+        });
+
+        return insertedEntities;
     }
 
     @Override
     public {{entityType}} update({{entityType}} entity) {
-        Objects.requireNonNull(entity, "entity is required");
-        return template().update(entity);
+        requireNonNull(entity, "entity is required");
+
+        this.lifecycleEventHandler.preUpdate(entity);
+        {{entityType}} updatedEntity = template().update(entity);
+        this.lifecycleEventHandler.postUpdate(updatedEntity);
+        return updatedEntity;
     }
 
     @Override
     public <S extends {{entityType}}> List<S> updateAll(List<S> entities) {
-       Objects.requireNonNull(entities, "entities is required");
-       return stream(template().update(entities).spliterator(), false).toList();
+        requireEntities(entities);
+
+        entities.forEach(this.lifecycleEventHandler::preUpdate);
+
+        List<S> updatedEntities = new ArrayList<>();
+        template().update(entities).forEach(entity -> {
+            @SuppressWarnings("unchecked")
+            S updatedEntity = (S) entity;
+
+            this.lifecycleEventHandler.postUpdate(updatedEntity);
+            updatedEntities.add(updatedEntity);
+        });
+
+        return updatedEntities;
     }
 
     {{/element.isCrudRepository}}
@@ -223,15 +275,15 @@ public class {{className}} implements {{repository}} {
     @Override
     public {{{returnType}}} {{methodName}}({{{parametersSignature}}}) {
     {{#parameters}}
-       requireNonNull({{name}}, "{{name}} is required");
+        requireNonNull({{name}}, "{{name}} is required");
     {{/parameters}}
     {{#hasReturn}}
-       return jnosqlRepositoryProcessor.invokeRepositoryMethod({{constantName}},
-               {{{parametersAsObjectArray}}});
+        return jnosqlRepositoryProcessor.invokeRepositoryMethod({{constantName}},
+                {{{parametersAsObjectArray}}});
     {{/hasReturn}}
     {{^hasReturn}}
-       jnosqlRepositoryProcessor.invokeRepositoryVoidMethod({{constantName}},
-        {{{parametersAsObjectArray}}});
+        jnosqlRepositoryProcessor.invokeRepositoryVoidMethod({{constantName}},
+                {{{parametersAsObjectArray}}});
     {{/hasReturn}}
     }
 
@@ -254,6 +306,11 @@ public class {{className}} implements {{repository}} {
 
     private Class<{{entityType}}> getEntityClass() {
         return (Class<{{entityType}}>) entityMetadata().type();
+    }
+
+    private static void requireEntities(Iterable<?> entities) {
+        requireNonNull(entities, "entities is required");
+        entities.forEach(entity -> requireNonNull(entity, "entities must not contain null"));
     }
 
 }
