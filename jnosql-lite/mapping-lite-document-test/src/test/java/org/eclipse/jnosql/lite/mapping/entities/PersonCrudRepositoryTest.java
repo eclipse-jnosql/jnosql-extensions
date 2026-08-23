@@ -97,6 +97,62 @@ class PersonCrudRepositoryTest {
     }
 
     @Nested
+    @DisplayName("When lifecycle events are handled")
+    class WhenLifecycleEventsAreHandled {
+
+        @Test
+        @DisplayName("Should handle lifecycle events when an entity is saved")
+        void shouldHandleLifecycleEventsWhenEntityIsSaved() {
+            Person person = new Person();
+            Person savedPerson = new Person();
+            when(template.insert(person)).thenReturn(savedPerson);
+
+            personRepository.save(person);
+
+            verify(lifecycleEventHandler).preUpsert(person);
+            verify(lifecycleEventHandler).postUpsert(savedPerson);
+        }
+
+        @Test
+        @DisplayName("Should handle lifecycle events when an entity is inserted")
+        void shouldHandleLifecycleEventsWhenEntityIsInserted() {
+            Person person = new Person();
+            Person insertedPerson = new Person();
+            when(template.insert(person)).thenReturn(insertedPerson);
+
+            personRepository.insert(person);
+
+            verify(lifecycleEventHandler).preInsert(person);
+            verify(lifecycleEventHandler).postInsert(insertedPerson);
+        }
+
+        @Test
+        @DisplayName("Should handle lifecycle events when an entity is updated")
+        void shouldHandleLifecycleEventsWhenEntityIsUpdated() {
+            Person person = new Person();
+            Person updatedPerson = new Person();
+            when(template.update(person)).thenReturn(updatedPerson);
+
+            personRepository.update(person);
+
+            verify(lifecycleEventHandler).preUpdate(person);
+            verify(lifecycleEventHandler).postUpdate(updatedPerson);
+        }
+
+        @Test
+        @DisplayName("Should handle lifecycle events when an entity is deleted")
+        void shouldHandleLifecycleEventsWhenEntityIsDeleted() {
+            Person person = new Person();
+            person.setId(1L);
+
+            personRepository.delete(person);
+
+            verify(lifecycleEventHandler).preDelete(person);
+            verify(lifecycleEventHandler).postDelete(person);
+        }
+    }
+
+    @Nested
     @DisplayName("When entities are deleted")
     class WhenTheEntitiesAreDeleted {
 
