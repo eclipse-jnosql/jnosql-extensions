@@ -12,11 +12,11 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.processing;
 
-record MappingResult(MappingCategory category, String name) {
+public record MappingResult(MappingCategory category, String name) {
 
-    static final MappingResult EMPTY = new MappingResult(MappingCategory.ENTITY, "");
+    public static final MappingResult EMPTY = new MappingResult(MappingCategory.ENTITY, "");
 
     public boolean isNotEmpty() {
         return !this.equals(EMPTY);
