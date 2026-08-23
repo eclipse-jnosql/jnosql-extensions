@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.processing;
 
 import jakarta.data.exceptions.MappingException;
 
@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-final class MetadataAppender {
+public final class MetadataAppender {
 
     private static final Logger LOGGER = Logger.getLogger(MetadataAppender.class.getName());
     private static final String PACKAGE = "org.eclipse.jnosql.lite.mapping.metadata.";
@@ -52,7 +52,7 @@ final class MetadataAppender {
     }
 
     void append() throws IOException, URISyntaxException {
-        URL url = MappingProcessor.class.getClassLoader().getResource(METADATA);
+        URL url = MetadataAppender.class.getClassLoader().getResource(METADATA);
         Objects.requireNonNull(url, "Could not load resources from metadata folder");
         LOGGER.info("URL folder: " + url);
         LOGGER.info("URI folder: " + url.toURI());
