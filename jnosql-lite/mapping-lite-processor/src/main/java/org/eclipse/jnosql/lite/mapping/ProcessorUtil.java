@@ -15,13 +15,11 @@
 package org.eclipse.jnosql.lite.mapping;
 
 import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.Locale.ENGLISH;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 
 /**
  * Utility class containing static methods for processing and manipulating elements in annotation processors.
@@ -39,15 +37,15 @@ public final class ProcessorUtil {
     }
 
     public static String getPackageName(TypeElement classElement) {
-        return ((PackageElement) classElement.getEnclosingElement()).getQualifiedName().toString();
+        return ProcessorUtils.packageName(classElement);
     }
 
     public static String getSimpleNameAsString(Element element) {
-        return element.getSimpleName().toString();
+        return ProcessorUtils.simpleName(element);
     }
 
-    static String capitalize(String name) {
-        return name.substring(0, 1).toUpperCase(ENGLISH) + name.substring(1);
+    public static String capitalize(String name) {
+        return ProcessorUtils.capitalize(name);
     }
 
     /**
@@ -57,7 +55,7 @@ public final class ProcessorUtil {
      * @return true if the Element is a TypeElement, false otherwise.
      */
     public static boolean isTypeElement(Element element) {
-        return element instanceof TypeElement;
+        return ProcessorUtils.isTypeElement(element);
     }
 
     /**
@@ -67,25 +65,10 @@ public final class ProcessorUtil {
      * @return The extracted text from within angle brackets, or the input string if no match is found.
      */
     public static String extractFromType(String returnType) {
-        Matcher matcher = COMPILE.matcher(returnType);
-        if (matcher.find()) {
-            return matcher.group(1);
-        } else {
-            return returnType;
-        }
+        return ProcessorUtils.extractFromType(returnType);
     }
 
     public static String generateClassName(String... components) {
-        StringBuilder sb = new StringBuilder();
-        for (int index = 0; index < components.length; index++) {
-            if (index == 0) {
-                sb.append(components[index]);
-            } else {
-                var capitalized = components[index].substring(0, 1).toUpperCase(ENGLISH);
-                sb.append(capitalized).append(components[index].substring(1));
-            }
-
-        }
-        return sb.toString();
+        return ProcessorUtils.className(components);
     }
 }
