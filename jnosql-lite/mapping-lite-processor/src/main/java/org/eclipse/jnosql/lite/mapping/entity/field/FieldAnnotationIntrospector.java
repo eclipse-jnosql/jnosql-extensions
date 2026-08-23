@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity.field;
 
 import jakarta.nosql.Column;
 import jakarta.nosql.Convert;
