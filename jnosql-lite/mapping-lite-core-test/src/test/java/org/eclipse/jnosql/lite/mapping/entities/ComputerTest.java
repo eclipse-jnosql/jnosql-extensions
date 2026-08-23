@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+
 class ComputerTest {
 
     private EntitiesMetadata mappings;
@@ -35,34 +38,43 @@ class ComputerTest {
 
     @BeforeEach
     public void setUp() {
-        this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(Computer.class);
+        mappings = new LiteEntitiesMetadata();
+        entityMetadata = mappings.get(Computer.class);
     }
 
-    @Test
-    void shouldReturnAsEmbeddable() {
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        FieldMetadata address = groupByName.get("address");
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(address.name()).isEqualTo("address");
-            soft.assertThat(address.isId()).isFalse();
-            soft.assertThat(address.mappingType()).isEqualTo(MappingType.EMBEDDED);
-        });
-    }
+    @Nested
+    @DisplayName("When the computer metadata is inspected")
+    class WhenTheComputerMetadataIsInspected {
 
-    @Test
-    void shouldReturnAsEntity(){
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        FieldMetadata fieldMetadata = groupByName.get("users");
-        var users = (CollectionFieldMetadata) fieldMetadata;
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(users.name()).isEqualTo("users");
-            soft.assertThat(users.isId()).isFalse();
-            soft.assertThat(users.isEmbeddable()).isTrue();
-            soft.assertThat(users.mappingType()).isEqualTo(MappingType.COLLECTION);
-            soft.assertThat(users.elementType()).isEqualTo(Person.class);
-            soft.assertThat(users.collectionInstance()).isInstanceOf(List.class);
-        });
 
+        @Test
+        @DisplayName("Should return as embeddable")
+        void shouldReturnAsEmbeddable() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            FieldMetadata address = groupByName.get("address");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(address.name()).as("value of address.name()").isEqualTo("address");
+                soft.assertThat(address.isId()).as("value of address.isId()").isFalse();
+                soft.assertThat(address.mappingType()).as("value of address.mappingType()").isEqualTo(MappingType.EMBEDDED);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should return as entity")
+        void shouldReturnAsEntity() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            FieldMetadata fieldMetadata = groupByName.get("users");
+            var users = (CollectionFieldMetadata) fieldMetadata;
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(users.name()).as("value of users.name()").isEqualTo("users");
+                soft.assertThat(users.isId()).as("value of users.isId()").isFalse();
+                soft.assertThat(users.isEmbeddable()).as("value of users.isEmbeddable()").isTrue();
+                soft.assertThat(users.mappingType()).as("value of users.mappingType()").isEqualTo(MappingType.COLLECTION);
+                soft.assertThat(users.elementType()).as("value of users.elementType()").isEqualTo(Person.class);
+                soft.assertThat(users.collectionInstance()).as("value of users.collectionInstance()").isInstanceOf(List.class);
+            });
+
+        }
     }
 }
