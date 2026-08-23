@@ -15,6 +15,10 @@
 package org.eclipse.jnosql.lite.mapping;
 
 import jakarta.nosql.Projection;
+import org.eclipse.jnosql.lite.mapping.entity.EntityMappingIntrospector;
+import org.eclipse.jnosql.lite.mapping.processing.ElementPredicates;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
+import org.eclipse.jnosql.lite.mapping.projection.ProjectionMappingIntrospector;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -68,8 +72,8 @@ class MappingIntrospector implements Supplier<MappingResult> {
     private MappingResult entityMapping(TypeElement typeElement) {
         boolean hasValidConstructor = processingEnv.getElementUtils().getAllMembers(typeElement)
                 .stream()
-                .filter(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS))
-                .anyMatch(MappingProcessor.IS_CONSTRUCTOR.and(MappingProcessor.HAS_ACCESS));
+                .filter(ElementPredicates.IS_CONSTRUCTOR.and(ElementPredicates.HAS_ACCESS))
+                .anyMatch(ElementPredicates.IS_CONSTRUCTOR.and(ElementPredicates.HAS_ACCESS));
         if (hasValidConstructor) {
             try {
                 return entityMappingIntrospector.buildMappingMetadata(typeElement);
