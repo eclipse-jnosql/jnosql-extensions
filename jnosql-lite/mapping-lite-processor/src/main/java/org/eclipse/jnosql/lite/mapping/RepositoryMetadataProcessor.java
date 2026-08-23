@@ -37,7 +37,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
+/**
+ * Processes Jakarta Data repository interfaces to generate reflection-free
+ * repository and repository-method metadata.
+ *
+ * <p>The resulting aggregate metadata is consumed by generated repository
+ * implementations when resolving and invoking repository operations.</p>
+ */
 @SupportedAnnotationTypes("jakarta.data.repository.Repository")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class RepositoryMetadataProcessor extends AbstractProcessor {
