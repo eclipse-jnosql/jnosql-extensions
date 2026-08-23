@@ -12,13 +12,14 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
 import jakarta.nosql.DiscriminatorColumn;
 import jakarta.nosql.DiscriminatorValue;
 import jakarta.nosql.Embeddable;
 import jakarta.nosql.Entity;
 import jakarta.nosql.Inheritance;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -36,8 +37,8 @@ final class EntityModelIntrospector {
         boolean entityAnnotation = annotation != null;
         boolean embedded = element.getAnnotation(Embeddable.class) != null;
         boolean hasInheritanceAnnotation = element.getAnnotation(Inheritance.class) != null;
-        String packageName = ProcessorUtil.getPackageName(element);
-        String sourceClassName = ProcessorUtil.getSimpleNameAsString(element);
+        String packageName = ProcessorUtils.packageName(element);
+        String sourceClassName = ProcessorUtils.simpleName(element);
 
         String entityName = Optional.ofNullable(annotation)
                 .map(Entity::value)
@@ -55,7 +56,7 @@ final class EntityModelIntrospector {
             inheritanceParameter = inheritanceParameter(element, superclass);
             Entity superEntity = superclass.getAnnotation(Entity.class);
             entityName = superEntity.value().isBlank()
-                    ? ProcessorUtil.getSimpleNameAsString(superclass)
+                    ? ProcessorUtils.simpleName(superclass)
                     : annotation.value();
         } else if (hasInheritanceAnnotation) {
             inheritanceParameter = inheritanceParameter(element, element);
