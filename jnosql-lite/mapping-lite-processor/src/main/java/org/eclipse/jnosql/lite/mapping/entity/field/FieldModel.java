@@ -12,9 +12,11 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity.field;
 
 import jakarta.nosql.Convert;
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
@@ -85,7 +87,7 @@ final class FieldModel extends BaseMappingModel {
     }
 
     public String getClassName() {
-        return entity + ProcessorUtil.capitalize(fieldName) + "FieldMetaData";
+        return entity + ProcessorUtils.capitalize(fieldName) + "FieldMetaData";
     }
 
     public String getFieldName() {
