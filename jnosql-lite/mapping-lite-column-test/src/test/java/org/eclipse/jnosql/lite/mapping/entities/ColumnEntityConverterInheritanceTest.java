@@ -46,8 +46,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.assertj.core.api.SoftAssertions;
+
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, EntityConverter.class, ColumnTemplate.class})
@@ -59,8 +61,9 @@ class ColumnEntityConverterInheritanceTest {
     private EntityConverter converter;
 
     @Nested
-    @DisplayName("When converting inherited entities")
-    class WhenTheConversion {
+    @DisplayName("When a project is mapped")
+    class WhenTheProjectIsMapped {
+
 
         @Test
         @DisplayName("Should convert project to small project")
@@ -70,11 +73,14 @@ class ColumnEntityConverterInheritanceTest {
             entity.add("investor", "Otavio Santana");
             entity.add("size", "Small");
             Project project = converter.toEntity(entity);
-            assertThat(project.getName()).isEqualTo("Small Project");
-            assertThat(project.getClass()).isEqualTo(SmallProject.class);
-            SmallProject smallProject = (SmallProject) project;
-            assertThat(smallProject.getInvestor()).isEqualTo("Otavio Santana");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(project.getName()).as("value of project.getName()").isEqualTo("Small Project");
+                soft.assertThat(project.getClass()).as("value of project.getClass()").isEqualTo(SmallProject.class);
+                SmallProject smallProject = (SmallProject) project;
+                soft.assertThat(smallProject.getInvestor()).as("value of smallProject.getInvestor()").isEqualTo("Otavio Santana");
+            });
         }
+
 
         @Test
         @DisplayName("Should convert project to large project")
@@ -84,11 +90,14 @@ class ColumnEntityConverterInheritanceTest {
             entity.add("budget", BigDecimal.TEN);
             entity.add("size", "Large");
             Project project = converter.toEntity(entity);
-            assertThat(project.getName()).isEqualTo("Large Project");
-            assertThat(project.getClass()).isEqualTo(LargeProject.class);
-            LargeProject smallProject = (LargeProject) project;
-            assertThat(smallProject.getBudget()).isEqualTo(BigDecimal.TEN);
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(project.getName()).as("value of project.getName()").isEqualTo("Large Project");
+                soft.assertThat(project.getClass()).as("value of project.getClass()").isEqualTo(LargeProject.class);
+                LargeProject smallProject = (LargeProject) project;
+                soft.assertThat(smallProject.getBudget()).as("value of smallProject.getBudget()").isEqualTo(BigDecimal.TEN);
+            });
         }
+
 
         @Test
         @DisplayName("Should convert large project to communication entity")
@@ -97,12 +106,15 @@ class ColumnEntityConverterInheritanceTest {
             project.setName("Large Project");
             project.setBudget(BigDecimal.TEN);
             CommunicationEntity entity = converter.toCommunication(project);
-            assertThat(entity).isNotNull();
-            assertThat(entity.name()).isEqualTo("Project");
-            assertThat(entity.find("_id", String.class).get()).isEqualTo(project.getName());
-            assertThat(entity.find("budget", BigDecimal.class).get()).isEqualTo(project.getBudget());
-            assertThat(entity.find("size", String.class).get()).isEqualTo("Large");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("Project");
+                soft.assertThat(entity.find("_id", String.class).get()).as("value of entity.find(\"_id\", String.class).get()").isEqualTo(project.getName());
+                soft.assertThat(entity.find("budget", BigDecimal.class).get()).as("value of entity.find(\"budget\", BigDecimal.class).get()").isEqualTo(project.getBudget());
+                soft.assertThat(entity.find("size", String.class).get()).as("value of entity.find(\"size\", String.class).get()").isEqualTo("Large");
+            });
         }
+
 
         @Test
         @DisplayName("Should convert small project to communication entity")
@@ -111,12 +123,15 @@ class ColumnEntityConverterInheritanceTest {
             project.setName("Small Project");
             project.setInvestor("Otavio Santana");
             var entity = converter.toCommunication(project);
-            assertThat(entity).isNotNull();
-            assertThat(entity.name()).isEqualTo("Project");
-            assertThat(entity.find("_id", String.class).get()).isEqualTo(project.getName());
-            assertThat(entity.find("investor", String.class).get()).isEqualTo(project.getInvestor());
-            assertThat(entity.find("size", String.class).get()).isEqualTo("Small");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("Project");
+                soft.assertThat(entity.find("_id", String.class).get()).as("value of entity.find(\"_id\", String.class).get()").isEqualTo(project.getName());
+                soft.assertThat(entity.find("investor", String.class).get()).as("value of entity.find(\"investor\", String.class).get()").isEqualTo(project.getInvestor());
+                soft.assertThat(entity.find("size", String.class).get()).as("value of entity.find(\"size\", String.class).get()").isEqualTo("Small");
+            });
         }
+
 
         @Test
         @DisplayName("Should convert project")
@@ -125,8 +140,9 @@ class ColumnEntityConverterInheritanceTest {
             entity.add("_id", "Project");
             entity.add("size", "Project");
             Project project = converter.toEntity(entity);
-            assertThat(project.getName()).isEqualTo("Project");
+            assertThat(project.getName()).as("value of project.getName()").isEqualTo("Project");
         }
+
 
         @Test
         @DisplayName("Should convert project to communication entity")
@@ -134,32 +150,43 @@ class ColumnEntityConverterInheritanceTest {
             Project project = new Project();
             project.setName("Large Project");
             var entity = converter.toCommunication(project);
-            assertThat(entity).isNotNull();
-            assertThat(entity.name()).isEqualTo("Project");
-            assertThat(entity.find("_id", String.class).get()).isEqualTo(project.getName());
-            assertThat(entity.find("size", String.class).get()).isEqualTo("Project");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("Project");
+                soft.assertThat(entity.find("_id", String.class).get()).as("value of entity.find(\"_id\", String.class).get()").isEqualTo(project.getName());
+                soft.assertThat(entity.find("size", String.class).get()).as("value of entity.find(\"size\", String.class).get()").isEqualTo("Project");
+            });
         }
+    }
+
+    @Nested
+    @DisplayName("When a notification is mapped")
+    class WhenTheNotificationIsMapped {
+
 
         @Test
         @DisplayName("Should convert column entity to social media notification")
-        void shouldConvertColumnEntityToSocialMedia(){
+        void shouldConvertColumnEntityToSocialMedia() {
             LocalDate date = LocalDate.now();
             var entity = CommunicationEntity.of("Notification");
             entity.add("_id", 100L);
             entity.add("name", "Social Media");
             entity.add("nickname", "otaviojava");
-            entity.add("createdOn",date);
+            entity.add("createdOn", date);
             entity.add("dtype", SocialMediaNotification.class.getSimpleName());
             SocialMediaNotification notification = converter.toEntity(entity);
-            assertThat(notification.getId()).isEqualTo(100L);
-            assertThat(notification.getName()).isEqualTo("Social Media");
-            assertThat(notification.getNickname()).isEqualTo("otaviojava");
-            assertThat(notification.getCreatedOn()).isEqualTo(date);
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notification.getId()).as("value of notification.getId()").isEqualTo(100L);
+                soft.assertThat(notification.getName()).as("value of notification.getName()").isEqualTo("Social Media");
+                soft.assertThat(notification.getNickname()).as("value of notification.getNickname()").isEqualTo("otaviojava");
+                soft.assertThat(notification.getCreatedOn()).as("value of notification.getCreatedOn()").isEqualTo(date);
+            });
         }
+
 
         @Test
         @DisplayName("Should convert column entity to SMS notification")
-        void shouldConvertColumnEntityToSms(){
+        void shouldConvertColumnEntityToSms() {
             LocalDate date = LocalDate.now();
             var entity = CommunicationEntity.of("Notification");
             entity.add("_id", 100L);
@@ -168,15 +195,18 @@ class ColumnEntityConverterInheritanceTest {
             entity.add("createdOn", date);
             entity.add("dtype", "SMS");
             SmsNotification notification = converter.toEntity(entity);
-            assertThat(notification.getId()).isEqualTo(100L);
-            assertThat(notification.getName()).isEqualTo("SMS Notification");
-            assertThat(notification.getPhone()).isEqualTo("+351987654123");
-            assertThat(notification.getCreatedOn()).isEqualTo(date);
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notification.getId()).as("value of notification.getId()").isEqualTo(100L);
+                soft.assertThat(notification.getName()).as("value of notification.getName()").isEqualTo("SMS Notification");
+                soft.assertThat(notification.getPhone()).as("value of notification.getPhone()").isEqualTo("+351987654123");
+                soft.assertThat(notification.getCreatedOn()).as("value of notification.getCreatedOn()").isEqualTo(date);
+            });
         }
+
 
         @Test
         @DisplayName("Should convert column entity to email notification")
-        void shouldConvertColumnEntityToEmail(){
+        void shouldConvertColumnEntityToEmail() {
             LocalDate date = LocalDate.now();
             var entity = CommunicationEntity.of("Notification");
             entity.add("_id", 100L);
@@ -185,77 +215,90 @@ class ColumnEntityConverterInheritanceTest {
             entity.add("createdOn", date);
             entity.add("dtype", "Email");
             EmailNotification notification = converter.toEntity(entity);
-            assertThat(notification.getId()).isEqualTo(100L);
-            assertThat(notification.getName()).isEqualTo("Email Notification");
-            assertThat(notification.getEmail()).isEqualTo("otavio@otavio.test");
-            assertThat(notification.getCreatedOn()).isEqualTo(date);
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notification.getId()).as("value of notification.getId()").isEqualTo(100L);
+                soft.assertThat(notification.getName()).as("value of notification.getName()").isEqualTo("Email Notification");
+                soft.assertThat(notification.getEmail()).as("value of notification.getEmail()").isEqualTo("otavio@otavio.test");
+                soft.assertThat(notification.getCreatedOn()).as("value of notification.getCreatedOn()").isEqualTo(date);
+            });
         }
+
 
         @Test
         @DisplayName("Should convert social media notification to communication entity")
-        void shouldConvertSocialMediaToCommunicationEntity(){
+        void shouldConvertSocialMediaToCommunicationEntity() {
             SocialMediaNotification notification = new SocialMediaNotification();
             notification.setId(100L);
             notification.setName("Social Media");
             notification.setCreatedOn(LocalDate.now());
             notification.setNickname("otaviojava");
             var entity = converter.toCommunication(notification);
-            assertThat(entity).isNotNull();
-            assertThat(entity.name()).isEqualTo("Notification");
-            assertThat(entity.find("_id", Long.class).get()).isEqualTo(notification.getId());
-            assertThat(entity.find("name", String.class).get()).isEqualTo(notification.getName());
-            assertThat(entity.find("nickname", String.class).get()).isEqualTo(notification.getNickname());
-            assertThat(entity.find("createdOn", LocalDate.class).get()).isEqualTo(notification.getCreatedOn());
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("Notification");
+                soft.assertThat(entity.find("_id", Long.class).get()).as("value of entity.find(\"_id\", Long.class).get()").isEqualTo(notification.getId());
+                soft.assertThat(entity.find("name", String.class).get()).as("value of entity.find(\"name\", String.class).get()").isEqualTo(notification.getName());
+                soft.assertThat(entity.find("nickname", String.class).get()).as("value of entity.find(\"nickname\", String.class).get()").isEqualTo(notification.getNickname());
+                soft.assertThat(entity.find("createdOn", LocalDate.class).get()).as("value of entity.find(\"createdOn\", LocalDate.class).get()").isEqualTo(notification.getCreatedOn());
+            });
         }
+
 
         @Test
         @DisplayName("Should convert SMS notification to communication entity")
-        void shouldConvertSmsToCommunicationEntity(){
+        void shouldConvertSmsToCommunicationEntity() {
             SmsNotification notification = new SmsNotification();
             notification.setId(100L);
             notification.setName("SMS");
             notification.setCreatedOn(LocalDate.now());
             notification.setPhone("+351123456987");
             var entity = converter.toCommunication(notification);
-            assertThat(entity).isNotNull();
-            assertThat(entity.name()).isEqualTo("Notification");
-            assertThat(entity.find("_id", Long.class).get()).isEqualTo(notification.getId());
-            assertThat(entity.find("name", String.class).get()).isEqualTo(notification.getName());
-            assertThat(entity.find("phone", String.class).get()).isEqualTo(notification.getPhone());
-            assertThat(entity.find("createdOn", LocalDate.class).get()).isEqualTo(notification.getCreatedOn());
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("Notification");
+                soft.assertThat(entity.find("_id", Long.class).get()).as("value of entity.find(\"_id\", Long.class).get()").isEqualTo(notification.getId());
+                soft.assertThat(entity.find("name", String.class).get()).as("value of entity.find(\"name\", String.class).get()").isEqualTo(notification.getName());
+                soft.assertThat(entity.find("phone", String.class).get()).as("value of entity.find(\"phone\", String.class).get()").isEqualTo(notification.getPhone());
+                soft.assertThat(entity.find("createdOn", LocalDate.class).get()).as("value of entity.find(\"createdOn\", LocalDate.class).get()").isEqualTo(notification.getCreatedOn());
+            });
         }
+
 
         @Test
         @DisplayName("Should convert email notification to communication entity")
-        void shouldConvertEmailToCommunicationEntity(){
+        void shouldConvertEmailToCommunicationEntity() {
             EmailNotification notification = new EmailNotification();
             notification.setId(100L);
             notification.setName("Email Media");
             notification.setCreatedOn(LocalDate.now());
             notification.setEmail("otavio@otavio.test.com");
             CommunicationEntity entity = converter.toCommunication(notification);
-            assertThat(entity).isNotNull();
-            assertThat(entity.name()).isEqualTo("Notification");
-            assertThat(entity.find("_id", Long.class).get()).isEqualTo(notification.getId());
-            assertThat(entity.find("name", String.class).get()).isEqualTo(notification.getName());
-            assertThat(entity.find("email", String.class).get()).isEqualTo(notification.getEmail());
-            assertThat(entity.find("createdOn", LocalDate.class).get()).isEqualTo(notification.getCreatedOn());
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("Notification");
+                soft.assertThat(entity.find("_id", Long.class).get()).as("value of entity.find(\"_id\", Long.class).get()").isEqualTo(notification.getId());
+                soft.assertThat(entity.find("name", String.class).get()).as("value of entity.find(\"name\", String.class).get()").isEqualTo(notification.getName());
+                soft.assertThat(entity.find("email", String.class).get()).as("value of entity.find(\"email\", String.class).get()").isEqualTo(notification.getEmail());
+                soft.assertThat(entity.find("createdOn", LocalDate.class).get()).as("value of entity.find(\"createdOn\", LocalDate.class).get()").isEqualTo(notification.getCreatedOn());
+            });
         }
 
+
         @Test
-        @DisplayName("Should return an error when column discriminator is missing")
-        void shouldReturnErrorWhenConvertMissingColumn(){
+        @DisplayName("Should reject a notification when its discriminator is missing")
+        void shouldReturnErrorWhenConvertMissingColumn() {
             LocalDate date = LocalDate.now();
             var entity = CommunicationEntity.of("Notification");
             entity.add("_id", 100L);
             entity.add("name", "SMS Notification");
             entity.add("phone", "+351987654123");
             entity.add("createdOn", date);
-            assertThatExceptionOfType(MappingException.class).isThrownBy(() -> converter.toEntity(entity));
+            assertThatExceptionOfType(MappingException.class).as("expected exception").isThrownBy(() -> converter.toEntity(entity));
         }
 
+
         @Test
-        @DisplayName("Should return an error when discriminator does not match")
+        @DisplayName("Should reject a notification when its discriminator is unknown")
         void shouldReturnErrorWhenMismatchField() {
             LocalDate date = LocalDate.now();
             var entity = CommunicationEntity.of("Notification");
@@ -264,9 +307,13 @@ class ColumnEntityConverterInheritanceTest {
             entity.add("email", "otavio@otavio.test");
             entity.add("createdOn", date);
             entity.add("dtype", "Wrong");
-            assertThatExceptionOfType(MappingException.class).isThrownBy(() -> converter.toEntity(entity));
+            assertThatExceptionOfType(MappingException.class).as("expected exception").isThrownBy(() -> converter.toEntity(entity));
         }
+    }
 
+    @Nested
+    @DisplayName("When a notification feed is mapped")
+    class WhenTheNotificationFeedIsMapped {
 
 
         @Test
@@ -284,17 +331,20 @@ class ColumnEntityConverterInheritanceTest {
             ));
 
             NotificationReader notificationReader = converter.toEntity(entity);
-            assertThat(notificationReader).isNotNull();
-            assertThat(notificationReader.getNickname()).isEqualTo("poli");
-            assertThat(notificationReader.getName()).isEqualTo("Poliana Santana");
-            Notification notification = notificationReader.getNotification();
-            assertThat(notification).isNotNull();
-            assertThat(notification.getClass()).isEqualTo(EmailNotification.class);
-            EmailNotification email = (EmailNotification) notification;
-            assertThat(email.getId()).isEqualTo(10L);
-            assertThat(email.getName()).isEqualTo("News");
-            assertThat(email.getEmail()).isEqualTo("otavio@email.com");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notificationReader).as("value of notificationReader").isNotNull();
+                soft.assertThat(notificationReader.getNickname()).as("value of notificationReader.getNickname()").isEqualTo("poli");
+                soft.assertThat(notificationReader.getName()).as("value of notificationReader.getName()").isEqualTo("Poliana Santana");
+                Notification notification = notificationReader.getNotification();
+                soft.assertThat(notification).as("value of notification").isNotNull();
+                soft.assertThat(notification.getClass()).as("value of notification.getClass()").isEqualTo(EmailNotification.class);
+                EmailNotification email = (EmailNotification) notification;
+                soft.assertThat(email.getId()).as("value of email.getId()").isEqualTo(10L);
+                soft.assertThat(email.getName()).as("value of email.getName()").isEqualTo("News");
+                soft.assertThat(email.getEmail()).as("value of email.getEmail()").isEqualTo("otavio@email.com");
+            });
         }
+
 
         @Test
         @DisplayName("Should convert notification reader with SMS notification")
@@ -311,17 +361,20 @@ class ColumnEntityConverterInheritanceTest {
             ));
 
             NotificationReader notificationReader = converter.toEntity(entity);
-            assertThat(notificationReader).isNotNull();
-            assertThat(notificationReader.getNickname()).isEqualTo("poli");
-            assertThat(notificationReader.getName()).isEqualTo("Poliana Santana");
-            Notification notification = notificationReader.getNotification();
-            assertThat(notification).isNotNull();
-            assertThat(notification.getClass()).isEqualTo(SmsNotification.class);
-            SmsNotification sms = (SmsNotification) notification;
-            assertThat(sms.getId()).isEqualTo(10L);
-            assertThat(sms.getName()).isEqualTo("News");
-            assertThat(sms.getPhone()).isEqualTo("123456789");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notificationReader).as("value of notificationReader").isNotNull();
+                soft.assertThat(notificationReader.getNickname()).as("value of notificationReader.getNickname()").isEqualTo("poli");
+                soft.assertThat(notificationReader.getName()).as("value of notificationReader.getName()").isEqualTo("Poliana Santana");
+                Notification notification = notificationReader.getNotification();
+                soft.assertThat(notification).as("value of notification").isNotNull();
+                soft.assertThat(notification.getClass()).as("value of notification.getClass()").isEqualTo(SmsNotification.class);
+                SmsNotification sms = (SmsNotification) notification;
+                soft.assertThat(sms.getId()).as("value of sms.getId()").isEqualTo(10L);
+                soft.assertThat(sms.getName()).as("value of sms.getName()").isEqualTo("News");
+                soft.assertThat(sms.getPhone()).as("value of sms.getPhone()").isEqualTo("123456789");
+            });
         }
+
 
         @Test
         @DisplayName("Should convert notification reader with social notification")
@@ -338,17 +391,20 @@ class ColumnEntityConverterInheritanceTest {
             ));
 
             NotificationReader notificationReader = converter.toEntity(entity);
-            assertThat(notificationReader).isNotNull();
-            assertThat(notificationReader.getNickname()).isEqualTo("poli");
-            assertThat(notificationReader.getName()).isEqualTo("Poliana Santana");
-            Notification notification = notificationReader.getNotification();
-            assertThat(notification).isNotNull();
-            assertThat(notification.getClass()).isEqualTo(SocialMediaNotification.class);
-            SocialMediaNotification social = (SocialMediaNotification) notification;
-            assertThat(social.getId()).isEqualTo(10L);
-            assertThat(social.getName()).isEqualTo("News");
-            assertThat(social.getNickname()).isEqualTo("123456789");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notificationReader).as("value of notificationReader").isNotNull();
+                soft.assertThat(notificationReader.getNickname()).as("value of notificationReader.getNickname()").isEqualTo("poli");
+                soft.assertThat(notificationReader.getName()).as("value of notificationReader.getName()").isEqualTo("Poliana Santana");
+                Notification notification = notificationReader.getNotification();
+                soft.assertThat(notification).as("value of notification").isNotNull();
+                soft.assertThat(notification.getClass()).as("value of notification.getClass()").isEqualTo(SocialMediaNotification.class);
+                SocialMediaNotification social = (SocialMediaNotification) notification;
+                soft.assertThat(social.getId()).as("value of social.getId()").isEqualTo(10L);
+                soft.assertThat(social.getName()).as("value of social.getName()").isEqualTo("News");
+                soft.assertThat(social.getNickname()).as("value of social.getNickname()").isEqualTo("123456789");
+            });
         }
+
 
         @Test
         @DisplayName("Should convert social notification reader to communication entity")
@@ -360,19 +416,27 @@ class ColumnEntityConverterInheritanceTest {
             NotificationReader reader = new NotificationReader("otavio", "Otavio", notification);
 
             var entity = converter.toCommunication(reader);
-            assertThat(entity).isNotNull();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
 
-            assertThat(entity.name()).isEqualTo("NotificationReader");
-            assertThat(entity.find("_id", String.class).get()).isEqualTo("otavio");
-            assertThat(entity.find("name", String.class).get()).isEqualTo("Otavio");
-            List<Element> columns = entity.find("notification", new TypeReference<List<Element>>() {
-            }).get();
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("NotificationReader");
+                soft.assertThat(entity.find("_id", String.class).get()).as("value of entity.find(\"_id\", String.class).get()").isEqualTo("otavio");
+                soft.assertThat(entity.find("name", String.class).get()).as("value of entity.find(\"name\", String.class).get()").isEqualTo("Otavio");
+                List<Element> columns = entity.find("notification", new TypeReference<List<Element>>() {
+                }).get();
 
-            assertThat(columns).contains(Element.of("_id", 10L),
-                    Element.of("name", "Ada"),
-                    Element.of("dtype", "SocialMediaNotification"),
-                    Element.of("nickname", "ada.lovelace"));
+                soft.assertThat(columns).as("value of columns").contains(Element.of("_id", 10L),
+                        Element.of("name", "Ada"),
+                        Element.of("dtype", "SocialMediaNotification"),
+                        Element.of("nickname", "ada.lovelace"));
+            });
         }
+    }
+
+    @Nested
+    @DisplayName("When a project portfolio is mapped")
+    class WhenTheProjectPortfolioIsMapped {
+
 
         @Test
         @DisplayName("Should convert project manager to communication entity")
@@ -391,29 +455,32 @@ class ColumnEntityConverterInheritanceTest {
 
             ProjectManager manager = ProjectManager.of(10L, "manager", projects);
             var entity = converter.toCommunication(manager);
-            assertThat(entity).isNotNull();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity).as("value of entity").isNotNull();
 
-            assertThat(entity.name()).isEqualTo("ProjectManager");
-            assertThat(entity.find("_id", Long.class).get()).isEqualTo(10L);
-            assertThat(entity.find("name", String.class).get()).isEqualTo("manager");
+                soft.assertThat(entity.name()).as("value of entity.name()").isEqualTo("ProjectManager");
+                soft.assertThat(entity.find("_id", Long.class).get()).as("value of entity.find(\"_id\", Long.class).get()").isEqualTo(10L);
+                soft.assertThat(entity.find("name", String.class).get()).as("value of entity.find(\"name\", String.class).get()").isEqualTo("manager");
 
-            List<List<Element>> columns = (List<List<Element>>) entity.find("projects").get().get();
+                List<List<Element>> columns = (List<List<Element>>) entity.find("projects").get().get();
 
-            List<Element> largeCommunication = columns.get(0);
-            List<Element> smallCommunication = columns.get(1);
-            assertThat(largeCommunication).contains(
-                    Element.of("_id", "large"),
-                    Element.of("size", "Large"),
-                    Element.of("budget", BigDecimal.TEN)
-            );
+                List<Element> largeCommunication = columns.get(0);
+                List<Element> smallCommunication = columns.get(1);
+                soft.assertThat(largeCommunication).as("value of largeCommunication").contains(
+                        Element.of("_id", "large"),
+                        Element.of("size", "Large"),
+                        Element.of("budget", BigDecimal.TEN)
+                );
 
-            assertThat(smallCommunication).contains(
-                    Element.of("size", "Small"),
-                    Element.of("investor", "new investor"),
-                    Element.of("_id", "Start up")
-            );
+                soft.assertThat(smallCommunication).as("value of smallCommunication").contains(
+                        Element.of("size", "Small"),
+                        Element.of("investor", "new investor"),
+                        Element.of("_id", "Start up")
+                );
+            });
 
         }
+
 
         @Test
         @DisplayName("Should convert communication entity to project manager")
@@ -423,35 +490,38 @@ class ColumnEntityConverterInheritanceTest {
             communication.add("name", "manager");
             List<List<Element>> columns = new ArrayList<>();
             columns.add(Arrays.asList(
-                    Element.of("_id","small-project"),
-                    Element.of("size","Small"),
-                    Element.of("investor","investor")
+                    Element.of("_id", "small-project"),
+                    Element.of("size", "Small"),
+                    Element.of("investor", "investor")
             ));
             columns.add(Arrays.asList(
-                    Element.of("_id","large-project"),
-                    Element.of("size","Large"),
-                    Element.of("budget",BigDecimal.TEN)
+                    Element.of("_id", "large-project"),
+                    Element.of("size", "Large"),
+                    Element.of("budget", BigDecimal.TEN)
             ));
             communication.add("projects", columns);
 
             ProjectManager manager = converter.toEntity(communication);
-            assertThat(manager).isNotNull();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(manager).as("value of manager").isNotNull();
 
-            assertThat(manager.getId()).isEqualTo(10L);
-            assertThat(manager.getName()).isEqualTo("manager");
+                soft.assertThat(manager.getId()).as("value of manager.getId()").isEqualTo(10L);
+                soft.assertThat(manager.getName()).as("value of manager.getName()").isEqualTo("manager");
 
-            List<Project> projects = manager.getProjects();
-            assertThat(projects.size()).isEqualTo(2);
-            SmallProject small = (SmallProject) projects.get(0);
-            LargeProject large = (LargeProject) projects.get(1);
-            assertThat(small).isNotNull();
-            assertThat(small.getName()).isEqualTo("small-project");
-            assertThat(small.getInvestor()).isEqualTo("investor");
+                List<Project> projects = manager.getProjects();
+                soft.assertThat(projects.size()).as("value of projects.size()").isEqualTo(2);
+                SmallProject small = (SmallProject) projects.get(0);
+                LargeProject large = (LargeProject) projects.get(1);
+                soft.assertThat(small).as("value of small").isNotNull();
+                soft.assertThat(small.getName()).as("value of small.getName()").isEqualTo("small-project");
+                soft.assertThat(small.getInvestor()).as("value of small.getInvestor()").isEqualTo("investor");
 
-            assertThat(large).isNotNull();
-            assertThat(large.getName()).isEqualTo("large-project");
-            assertThat(large.getBudget()).isEqualTo(BigDecimal.TEN);
+                soft.assertThat(large).as("value of large").isNotNull();
+                soft.assertThat(large.getName()).as("value of large.getName()").isEqualTo("large-project");
+                soft.assertThat(large.getBudget()).as("value of large.getBudget()").isEqualTo(BigDecimal.TEN);
+            });
 
         }
     }
+
 }
