@@ -25,10 +25,15 @@ import org.eclipse.jnosql.mapping.keyvalue.spi.KeyValueExtension;
 import org.jboss.weld.junit5.auto.AddExtensions;
 import org.jboss.weld.junit5.auto.AddPackages;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.assertj.core.api.SoftAssertions;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 @EnableAutoWeld
 @AddPackages(value = {Converters.class, KeyValueEntityConverter.class})
@@ -39,115 +44,164 @@ public class KeyValueEntityConverterTest {
     @Inject
     private KeyValueEntityConverter converter;
 
-    @Test
-    void shouldReturnNPEWhenEntityIsNull() {
-        Assertions.assertThrows(NullPointerException.class, () -> converter.toKeyValue(null));
+    @Nested
+    @DisplayName("When an entity is mapped to a key-value entry")
+    class WhenTheEntityIsMappedToAKeyValueEntry {
+
+
+        @Test
+        @DisplayName("Should reject a null entity")
+        void shouldRejectNullEntity() {
+            assertThatNullPointerException().as("null input rejection").isThrownBy(() -> converter.toKeyValue(null));
+        }
+
+
+        @Test
+        @DisplayName("Should reject an entity when identifier metadata is missing")
+        void shouldRejectEntityWhenIdentifierMetadataIsMissing() {
+            assertThatExceptionOfType(IdNotFoundException.class).as("expected exception").isThrownBy(() -> converter.toKeyValue(new Worker()));
+        }
+
+
+        @Test
+        @DisplayName("Should reject an entity when its identifier is null")
+        void shouldRejectEntityWhenIdentifierIsNull() {
+            assertThatNullPointerException().as("null input rejection").isThrownBy(() -> {
+                User user = new User(null, "name", 24);
+                converter.toKeyValue(user);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should convert to key value")
+        void shouldConvertToKeyValue() {
+            User user = new User("nickname", "name", 24);
+            KeyValueEntity keyValueEntity = converter.toKeyValue(user);
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(keyValueEntity.key()).as("value of keyValueEntity.key()").isEqualTo("nickname");
+                soft.assertThat(keyValueEntity.value()).as("value of keyValueEntity.value()").isEqualTo(user);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should convert the identifier to a key")
+        void shouldConvertIdentifierToKey() {
+            Car car = new Car();
+            car.setPlate(Plate.of("123-BRL"));
+            car.setName("Ferrari");
+            KeyValueEntity entity = converter.toKeyValue(car);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(entity.key()).as("value of entity.key()").isEqualTo("123-BRL");
+                soft.assertThat(entity.value()).as("value of entity.value()").isEqualTo(car);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should preserve the identifier type as the key")
+        void shouldPreserveIdentifierTypeAsKey() {
+            Person person = Person.builder().withId(123L).withName("Ada").build();
+            KeyValueEntity entity = converter.toKeyValue(person);
+            assertThat(entity.key()).as("value of entity.key()").isEqualTo(123L);
+        }
     }
 
-    @Test
-    void shouldReturnErrorWhenThereIsNotKeyAnnotation() {
-        Assertions.assertThrows(IdNotFoundException.class, () -> converter.toKeyValue(new Worker()));
+    @Nested
+    @DisplayName("When a key-value entry is mapped to an entity")
+    class WhenTheKeyValueEntryIsMappedToAnEntity {
+
+
+        @Test
+        @DisplayName("Should reject a null key-value entry")
+        void shouldRejectNullKeyValueEntry() {
+            assertThatNullPointerException().as("null input rejection").isThrownBy(() -> converter.toEntity(User.class, null));
+        }
+
+
+        @Test
+        @DisplayName("Should reject a null entity type")
+        void shouldRejectNullEntityType() {
+            assertThatNullPointerException().as("null input rejection").isThrownBy(() -> converter.toEntity(null,
+                    KeyValueEntity.of("user", new User("nickname", "name", 21))));
+        }
+
+
+        @Test
+        @DisplayName("Should reject a key-value entry when identifier metadata is missing")
+        void shouldRejectKeyValueEntryWhenIdentifierMetadataIsMissing() {
+            assertThatExceptionOfType(IdNotFoundException.class).as("expected exception").isThrownBy(() -> converter.toEntity(Worker.class,
+                    KeyValueEntity.of("worker", new Worker())));
+        }
+
+
+        @Test
+        @DisplayName("Should convert to entity")
+        void shouldConvertToEntity() {
+            User expectedUser = new User("nickname", "name", 21);
+            User user = converter.toEntity(User.class,
+                    KeyValueEntity.of("user", expectedUser));
+            assertThat(user).as("value of user").isEqualTo(expectedUser);
+        }
+
+
+        @Test
+        @DisplayName("Should restore the identifier from the key")
+        void shouldRestoreIdentifierFromKey() {
+            User expectedUser = new User("nickname", "name", 21);
+            User user = converter.toEntity(User.class,
+                    KeyValueEntity.of("nickname", new User(null, "name", 21)));
+            assertThat(user).as("value of user").isEqualTo(expectedUser);
+        }
+
+
+        @Test
+        @DisplayName("Should prefer the key when the stored identifier differs")
+        void shouldPreferKeyWhenStoredIdentifierDiffers() {
+            User expectedUser = new User("nickname", "name", 21);
+            User user = converter.toEntity(User.class,
+                    KeyValueEntity.of("nickname", new User("newName", "name", 21)));
+            assertThat(user).as("value of user").isEqualTo(expectedUser);
+        }
+
+
+        @Test
+        @DisplayName("Should convert value to entity")
+        void shouldConvertValueToEntity() {
+            User expectedUser = new User("nickname", "name", 21);
+            User user = converter.toEntity(User.class, KeyValueEntity.of("nickname", Value.of(expectedUser)));
+            assertThat(user).as("value of user").isEqualTo(expectedUser);
+        }
+
+
+        @Test
+        @DisplayName("Should restore a converted identifier")
+        void shouldRestoreConvertedIdentifier() {
+            Car car = new Car();
+            car.setName("Ferrari");
+
+            Car ferrari = converter.toEntity(Car.class, KeyValueEntity.of("123-BRL", car));
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(ferrari.getPlate()).as("value of ferrari.getPlate()").isEqualTo(Plate.of("123-BRL"));
+                soft.assertThat(ferrari.getName()).as("value of ferrari.getName()").isEqualTo(car.getName());
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should coerce the key to the identifier type")
+        void shouldCoerceKeyToIdentifierType() {
+
+            Person person = Person.builder().withName("Ada").build();
+            Person ada = converter.toEntity(Person.class, KeyValueEntity.of("123", person));
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(ada.getId()).as("value of ada.getId()").isEqualTo(123L);
+                soft.assertThat(person.getName()).as("value of person.getName()").isEqualTo(ada.getName());
+            });
+        }
     }
 
-    @Test
-    void shouldReturnErrorWhenTheKeyIsNull() {
-        Assertions.assertThrows(NullPointerException.class, () -> {
-            User user = new User(null, "name", 24);
-            converter.toKeyValue(user);
-        });
-    }
-
-    @Test
-    void shouldConvertToKeyValue() {
-        User user = new User("nickname", "name", 24);
-        KeyValueEntity keyValueEntity = converter.toKeyValue(user);
-        assertEquals("nickname", keyValueEntity.key());
-        assertEquals(user, keyValueEntity.value());
-    }
-
-    @Test
-    void shouldReturnNPEWhenKeyValueIsNull() {
-        Assertions.assertThrows(NullPointerException.class, () -> converter.toEntity(User.class, null));
-    }
-
-    @Test
-    void shouldReturnNPEWhenClassIsNull() {
-        Assertions.assertThrows(NullPointerException.class, () -> converter.toEntity(null,
-                KeyValueEntity.of("user", new User("nickname", "name", 21))));
-    }
-
-    @Test
-    void shouldReturnErrorWhenTheKeyIsMissing() {
-        Assertions.assertThrows(IdNotFoundException.class, () -> converter.toEntity(Worker.class,
-                KeyValueEntity.of("worker", new Worker())));
-    }
-
-    @Test
-    void shouldConvertToEntity() {
-        User expectedUser = new User("nickname", "name", 21);
-        User user = converter.toEntity(User.class,
-                KeyValueEntity.of("user", expectedUser));
-        assertEquals(expectedUser, user);
-    }
-
-    @Test
-    void shouldConvertAndFeedTheKeyValue() {
-        User expectedUser = new User("nickname", "name", 21);
-        User user = converter.toEntity(User.class,
-                KeyValueEntity.of("nickname", new User(null, "name", 21)));
-        assertEquals(expectedUser, user);
-    }
-
-    @Test
-    void shouldConvertAndFeedTheKeyValueIfKeyAndFieldAreDifferent() {
-        User expectedUser = new User("nickname", "name", 21);
-        User user = converter.toEntity(User.class,
-                KeyValueEntity.of("nickname", new User("newName", "name", 21)));
-        assertEquals(expectedUser, user);
-    }
-
-    @Test
-    void shouldConvertValueToEntity() {
-        User expectedUser = new User("nickname", "name", 21);
-        User user = converter.toEntity(User.class, KeyValueEntity.of("nickname", Value.of(expectedUser)));
-        assertEquals(expectedUser, user);
-    }
-
-    @Test
-    void shouldConvertToEntityKeyWhenThereIsConverterAnnotation() {
-        Car car = new Car();
-        car.setName("Ferrari");
-
-        Car ferrari = converter.toEntity(Car.class, KeyValueEntity.of("123-BRL", car));
-        assertEquals(Plate.of("123-BRL"), ferrari.getPlate());
-        assertEquals(car.getName(), ferrari.getName());
-    }
-
-    @Test
-    void shouldConvertToKeyWhenThereIsConverterAnnotation() {
-        Car car = new Car();
-        car.setPlate(Plate.of("123-BRL"));
-        car.setName("Ferrari");
-        KeyValueEntity entity = converter.toKeyValue(car);
-
-        Assertions.assertEquals("123-BRL", entity.key());
-        Assertions.assertEquals(car, entity.value());
-    }
-
-    @Test
-    void shouldConvertToEntityKeyWhenKeyTypeIsDifferent() {
-
-        Person person = Person.builder().withName("Ada").build();
-        Person ada = converter.toEntity(Person.class, KeyValueEntity.of("123", person));
-
-        Assertions.assertEquals(123L, ada.getId());
-        Assertions.assertEquals(ada.getName(), person.getName());
-    }
-
-    @Test
-    void shouldConvertToKeyWhenKeyTypeIsDifferent() {
-        Person person = Person.builder().withId(123L).withName("Ada").build();
-        KeyValueEntity entity = converter.toKeyValue(person);
-        Assertions.assertEquals(123L, entity.key());
-    }
 }
