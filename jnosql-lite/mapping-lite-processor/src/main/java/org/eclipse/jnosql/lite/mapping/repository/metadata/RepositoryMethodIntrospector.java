@@ -12,8 +12,9 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.repository.metadata;
 
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -57,7 +58,7 @@ final class RepositoryMethodIntrospector {
         executableElement.getParameters().stream()
                 .map(v -> v.getSimpleName().toString())
                 .forEach(nameElements::add);
-        String className = ProcessorUtil.generateClassName(nameElements.toArray(EMPTY_STRING_ARRAY));
+        String className = ProcessorUtils.className(nameElements.toArray(EMPTY_STRING_ARRAY));
         String methodName = method.getSimpleName().toString();
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         String methodType = MethodTypeUtils.INSTANCE.type(method, processingEnv).name();
