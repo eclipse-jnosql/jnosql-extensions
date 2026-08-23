@@ -12,8 +12,9 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.repository.metadata;
 
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
 import java.util.List;
 
 class RepositoryMethodModel extends BaseMappingModel {
