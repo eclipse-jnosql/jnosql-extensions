@@ -50,7 +50,7 @@ class LiteLifecycleEventHandlerTest {
 
     @Nested
     @DisplayName("When firing insert events")
-    class WhenInsert {
+    class WhenTheInsertLifecycleRuns {
 
         @Test
         @DisplayName("Should deliver a typed pre-insert event to the entity observer")
@@ -59,7 +59,7 @@ class LiteLifecycleEventHandlerTest {
             listener.preInsert(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.PRE_INSERT,
@@ -73,7 +73,7 @@ class LiteLifecycleEventHandlerTest {
             listener.postInsert(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.POST_INSERT,
@@ -83,7 +83,7 @@ class LiteLifecycleEventHandlerTest {
 
     @Nested
     @DisplayName("When firing update events")
-    class WhenUpdate {
+    class WhenTheUpdateLifecycleRuns {
 
         @Test
         @DisplayName("Should deliver a typed pre-update event to the entity observer")
@@ -92,7 +92,7 @@ class LiteLifecycleEventHandlerTest {
             listener.preUpdate(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.PRE_UPDATE,
@@ -106,7 +106,7 @@ class LiteLifecycleEventHandlerTest {
             listener.postUpdate(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.POST_UPDATE,
@@ -116,7 +116,7 @@ class LiteLifecycleEventHandlerTest {
 
     @Nested
     @DisplayName("When firing upsert events")
-    class WhenUpsert {
+    class WhenTheUpsertLifecycleRuns {
 
         @Test
         @DisplayName("Should deliver a typed pre-upsert event to the entity observer")
@@ -125,7 +125,7 @@ class LiteLifecycleEventHandlerTest {
             listener.preUpsert(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.PRE_UPSERT,
@@ -139,7 +139,7 @@ class LiteLifecycleEventHandlerTest {
             listener.postUpsert(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.POST_UPSERT,
@@ -149,7 +149,7 @@ class LiteLifecycleEventHandlerTest {
 
     @Nested
     @DisplayName("When firing delete events")
-    class WhenDelete {
+    class WhenTheDeleteLifecycleRuns {
 
         @Test
         @DisplayName("Should deliver a typed pre-delete event to the entity observer")
@@ -158,7 +158,7 @@ class LiteLifecycleEventHandlerTest {
             listener.preDelete(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.PRE_DELETE,
@@ -172,7 +172,7 @@ class LiteLifecycleEventHandlerTest {
             listener.postDelete(car);
 
             // then
-            assertThat(observer.events())
+            assertThat(observer.events()).as("value of observer.events()")
                     .containsExactly(
                             new ObservedLifecycleEvent(
                                     ObservedLifecycleEventType.POST_DELETE,
