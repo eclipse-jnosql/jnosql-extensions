@@ -14,7 +14,6 @@
  */
 package org.eclipse.jnosql.lite.mapping.entities.projection;
 
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
@@ -28,72 +27,86 @@ import java.math.BigDecimal;
 import java.time.Year;
 import java.util.Optional;
 
+import org.junit.jupiter.api.Nested;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 class MovieSummaryTest {
 
     private final EntitiesMetadata metadata = new LiteEntitiesMetadata();
 
+    @Nested
+    @DisplayName("When projection metadata is inspected")
+    class WhenTheProjectionMetadataIsInspected {
 
-    @Test
-    @DisplayName("Should return movie summary")
-    void shouldReturnMovieSummary() {
-        Optional<ProjectionMetadata> projection = metadata.projection(MovieSummary.class);
-        Assertions.assertThat(projection).isPresent();
+
+        @Test
+        @DisplayName("Should expose projection metadata")
+        void shouldExposeProjectionMetadata() {
+            Optional<ProjectionMetadata> projection = metadata.projection(MovieSummary.class);
+            assertThat(projection).as("value of projection").isPresent();
+        }
+
+
+        @Test
+        @DisplayName("Should expose the projection class name")
+        void shouldExposeProjectionClassName() {
+            ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
+            assertThat(projection.className()).as("value of projection.className()").isEqualTo(MovieSummary.class.getSimpleName());
+        }
+
+
+        @Test
+        @DisplayName("Should expose the projection type")
+        void shouldExposeProjectionType() {
+            ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
+            assertThat(projection.type()).as("value of projection.type()").isEqualTo(MovieSummary.class);
+        }
+
+
+        @Test
+        @DisplayName("Should expose the projection source type")
+        void shouldExposeProjectionSourceType() {
+            ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
+            assertThat(projection.from()).as("value of projection.from()").isEqualTo(void.class);
+        }
+
+
+        @Test
+        @DisplayName("Should describe the projection constructor")
+        void shouldDescribeProjectionConstructor() {
+            ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
+            ProjectionConstructorMetadata constructor = projection.constructor();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(constructor.parameters()).as("value of constructor.parameters()").hasSize(3);
+                var name = constructor.parameters().getFirst();
+                var release = constructor.parameters().get(1);
+                var price = constructor.parameters().get(2);
+
+                soft.assertThat(name.name()).as("value of name.name()").isEqualTo("name");
+                soft.assertThat(name.type()).as("value of name.type()").isEqualTo(String.class);
+
+                soft.assertThat(release.name()).as("value of release.name()").isEqualTo("release");
+                soft.assertThat(release.type()).as("value of release.type()").isEqualTo(Year.class);
+
+                soft.assertThat(price.name()).as("value of price.name()").isEqualTo("price");
+                soft.assertThat(price.type()).as("value of price.type()").isEqualTo(BigDecimal.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should build the projection from mapped values")
+        void shouldBuildProjectionFromMappedValues() {
+            var projection = metadata.projection(MovieSummary.class).orElseThrow();
+            var constructor = projection.constructor();
+            ProjectionBuilder projectionBuilder = ProjectionBuilder.of(constructor);
+            projectionBuilder.add("Otavio");
+            projectionBuilder.add(Year.now());
+            projectionBuilder.add(BigDecimal.TEN);
+            MovieSummary movieSummary = projectionBuilder.build();
+            assertThat(movieSummary).as("value of movieSummary").isNotNull();
+        }
     }
-
-    @Test
-    @DisplayName("Should return class name")
-    void shouldClassName() {
-        ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
-        Assertions.assertThat(projection.className()).isEqualTo(MovieSummary.class.getSimpleName());
-    }
-
-    @Test
-    @DisplayName("Should return type")
-    void shouldType() {
-        ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
-        Assertions.assertThat(projection.type()).isEqualTo(MovieSummary.class);
-    }
-
-    @Test
-    @DisplayName("Should from")
-    void shouldFrom() {
-        ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
-        Assertions.assertThat(projection.from()).isEqualTo(void.class);
-    }
-
-    @Test
-    void shouldConstructor() {
-        ProjectionMetadata projection = metadata.projection(MovieSummary.class).orElseThrow();
-        ProjectionConstructorMetadata constructor = projection.constructor();
-
-        SoftAssertions.assertSoftly(soft ->{
-            soft.assertThat(constructor.parameters()).hasSize(3);
-            var name = constructor.parameters().getFirst();
-            var release = constructor.parameters().get(1);
-            var price = constructor.parameters().get(2);
-
-            soft.assertThat(name.name()).isEqualTo("name");
-            soft.assertThat(name.type()).isEqualTo(String.class);
-
-            soft.assertThat(release.name()).isEqualTo("release");
-            soft.assertThat(release.type()).isEqualTo(Year.class);
-
-            soft.assertThat(price.name()).isEqualTo("price");
-            soft.assertThat(price.type()).isEqualTo(BigDecimal.class);
-        });
-    }
-
-    @Test
-    @DisplayName("Should create by constructor")
-    void shouldCreate() {
-        var projection = metadata.projection(MovieSummary.class).orElseThrow();
-        var constructor = projection.constructor();
-        ProjectionBuilder projectionBuilder = ProjectionBuilder.of(constructor);
-        projectionBuilder.add("Otavio");
-        projectionBuilder.add(Year.now());
-        projectionBuilder.add(BigDecimal.TEN);
-        MovieSummary movieSummary = projectionBuilder.build();
-        Assertions.assertThat(movieSummary).isNotNull();
-    }
-
 }

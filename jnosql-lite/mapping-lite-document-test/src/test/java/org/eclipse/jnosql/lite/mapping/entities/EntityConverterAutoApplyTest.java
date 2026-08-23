@@ -49,10 +49,10 @@ public class EntityConverterAutoApplyTest {
 
     @Nested
     @DisplayName("When converting entity attributes to database values using auto-apply converters")
-    class WhenAutoApplyToCommunication {
+    class WhenTheAutoApplyConverterMapsToCommunication {
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply attribute converter")
         void shouldOverWriteByAttributeConverter() {
 
             WishCollection wishCollection = new WishCollection();
@@ -61,16 +61,16 @@ public class EntityConverterAutoApplyTest {
             var birthdayWishList = new BirthdayWishList(UUID.randomUUID(), wishCollection);
             var communicationEntity = converter.toCommunication(birthdayWishList);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(communicationEntity.name()).isEqualTo("BirthdayWishList");
-                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).isEqualTo(birthdayWishList.uuid());
-                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).isEqualTo(
+                soft.assertThat(communicationEntity.name()).as("value of communicationEntity.name()").isEqualTo("BirthdayWishList");
+                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).as("value of communicationEntity.find(\"_id\").orElseThrow().get()").isEqualTo(birthdayWishList.uuid());
+                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).as("value of communicationEntity.find(\"wishCollection\").orElseThrow().get()").isEqualTo(
                         String.join(",", wishCollection.getWishes())
                 );
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply converter to constructor attributes")
         void shouldOverWriteByAttributeConverterCustomConstructor() {
 
             WishCollection wishCollection = new WishCollection();
@@ -79,16 +79,16 @@ public class EntityConverterAutoApplyTest {
             var christmasWishList = ChristmasWishList.of(wishCollection);
             var communicationEntity = converter.toCommunication(christmasWishList);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(communicationEntity.name()).isEqualTo("ChristmasWishList");
-                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).isEqualTo(christmasWishList.getUuid());
-                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).isEqualTo(
+                soft.assertThat(communicationEntity.name()).as("value of communicationEntity.name()").isEqualTo("ChristmasWishList");
+                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).as("value of communicationEntity.find(\"_id\").orElseThrow().get()").isEqualTo(christmasWishList.getUuid());
+                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).as("value of communicationEntity.find(\"wishCollection\").orElseThrow().get()").isEqualTo(
                         String.join(",", wishCollection.getWishes())
                 );
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by record converter")
+        @DisplayName("Should apply the auto-apply converter to record components")
         void shouldOverwriteByRecord() {
 
             WishCollection wishCollection = new WishCollection();
@@ -97,9 +97,9 @@ public class EntityConverterAutoApplyTest {
             var carWishList = new NewYearWishList(UUID.randomUUID(), wishCollection);
             var communicationEntity = converter.toCommunication(carWishList);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(communicationEntity.name()).isEqualTo("NewYearWishList");
-                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).isEqualTo(carWishList.getUuid());
-                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).isEqualTo(
+                soft.assertThat(communicationEntity.name()).as("value of communicationEntity.name()").isEqualTo("NewYearWishList");
+                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).as("value of communicationEntity.find(\"_id\").orElseThrow().get()").isEqualTo(carWishList.getUuid());
+                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).as("value of communicationEntity.find(\"wishCollection\").orElseThrow().get()").isEqualTo(
                         String.join(",", wishCollection.getWishes())
                 );
             });
@@ -108,10 +108,10 @@ public class EntityConverterAutoApplyTest {
 
     @Nested
     @DisplayName("When converting database values to entity attributes using auto-apply converters")
-    class WhenAutoApplyToEntity {
+    class WhenTheAutoApplyConverterMapsToEntity {
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply attribute converter")
         void shouldOverWriteByAttributeConverter() {
 
             var communicationEntity = CommunicationEntity.of("NewYearWishList");
@@ -119,13 +119,13 @@ public class EntityConverterAutoApplyTest {
             communicationEntity.add("wishCollection", "Learn JNoSQL,Clean Code,Refactor Code");
             NewYearWishList newYearWishList = converter.toEntity(communicationEntity);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(newYearWishList.getUuid()).isEqualTo(communicationEntity.find("_id").orElseThrow().get());
-                soft.assertThat(newYearWishList.getWishCollection().getWishes()).contains("Learn JNoSQL", "Clean Code", "Refactor Code");
+                soft.assertThat(newYearWishList.getUuid()).as("value of newYearWishList.getUuid()").isEqualTo(communicationEntity.find("_id").orElseThrow().get());
+                soft.assertThat(newYearWishList.getWishCollection().getWishes()).as("value of newYearWishList.getWishCollection().getWishes()").contains("Learn JNoSQL", "Clean Code", "Refactor Code");
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply converter to constructor attributes")
         void shouldOverWriteByAttributeConverterCustomConstructor() {
 
             var communicationEntity = CommunicationEntity.of("BirthdayWishList");
@@ -133,31 +133,31 @@ public class EntityConverterAutoApplyTest {
             communicationEntity.add("wishCollection", "Salvador,Rio de Janeiro,Amor");
             BirthdayWishList birthdayWishList = converter.toEntity(communicationEntity);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(birthdayWishList.uuid()).isEqualTo(communicationEntity.find("_id").orElseThrow().get());
-                soft.assertThat(birthdayWishList.wishCollection().getWishes()).contains("Salvador", "Rio de Janeiro", "Amor");
+                soft.assertThat(birthdayWishList.uuid()).as("value of birthdayWishList.uuid()").isEqualTo(communicationEntity.find("_id").orElseThrow().get());
+                soft.assertThat(birthdayWishList.wishCollection().getWishes()).as("value of birthdayWishList.wishCollection().getWishes()").contains("Salvador", "Rio de Janeiro", "Amor");
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by record converter")
+        @DisplayName("Should apply the auto-apply converter to record components")
         void shouldOverwriteByRecord() {
             var communicationEntity = CommunicationEntity.of("ChristmasWishList");
             communicationEntity.add("_id", UUID.randomUUID());
             communicationEntity.add("wishCollection", "SUV,Sports Car,Truck");
             ChristmasWishList christmasWishList = converter.toEntity(communicationEntity);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(christmasWishList.getUuid()).isEqualTo(communicationEntity.find("_id").orElseThrow().get());
-                soft.assertThat(christmasWishList.getWishCollection().getWishes()).contains("SUV", "Sports Car", "Truck");
+                soft.assertThat(christmasWishList.getUuid()).as("value of christmasWishList.getUuid()").isEqualTo(communicationEntity.find("_id").orElseThrow().get());
+                soft.assertThat(christmasWishList.getWishCollection().getWishes()).as("value of christmasWishList.getWishCollection().getWishes()").contains("SUV", "Sports Car", "Truck");
             });
         }
     }
 
     @Nested
     @DisplayName("When an explicit converter overrides an auto-apply converter during entity-to-database conversion")
-    class WhenOverwriteAutoApplyToCommunication {
+    class WhenTheExplicitConverterMapsToCommunication {
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply attribute converter")
         void shouldOverWriteByAttributeConverter() {
 
             WishCollection wishCollection = new WishCollection();
@@ -167,16 +167,16 @@ public class EntityConverterAutoApplyTest {
             var bookWishList = BookWishList.of(wishCollection);
             var communicationEntity = converter.toCommunication(bookWishList);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(communicationEntity.name()).isEqualTo("BookWishList");
-                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).isEqualTo(bookWishList.getUuid());
-                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).isEqualTo(
+                soft.assertThat(communicationEntity.name()).as("value of communicationEntity.name()").isEqualTo("BookWishList");
+                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).as("value of communicationEntity.find(\"_id\").orElseThrow().get()").isEqualTo(bookWishList.getUuid());
+                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).as("value of communicationEntity.find(\"wishCollection\").orElseThrow().get()").isEqualTo(
                         String.join("|", wishCollection.getWishes())
                 );
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply converter to constructor attributes")
         void shouldOverWriteByAttributeConverterCustomConstructor() {
 
             WishCollection wishCollection = new WishCollection();
@@ -186,16 +186,16 @@ public class EntityConverterAutoApplyTest {
             var travelWishList = TravelWishList.of(wishCollection);
             var communicationEntity = converter.toCommunication(travelWishList);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(communicationEntity.name()).isEqualTo("TravelWishList");
-                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).isEqualTo(travelWishList.getUuid());
-                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).isEqualTo(
+                soft.assertThat(communicationEntity.name()).as("value of communicationEntity.name()").isEqualTo("TravelWishList");
+                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).as("value of communicationEntity.find(\"_id\").orElseThrow().get()").isEqualTo(travelWishList.getUuid());
+                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).as("value of communicationEntity.find(\"wishCollection\").orElseThrow().get()").isEqualTo(
                         String.join("|", wishCollection.getWishes())
                 );
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by record converter")
+        @DisplayName("Should apply the auto-apply converter to record components")
         void shouldOverwriteByRecord() {
 
             WishCollection wishCollection = new WishCollection();
@@ -205,9 +205,9 @@ public class EntityConverterAutoApplyTest {
             var carWishList = new CarWishList(UUID.randomUUID(), wishCollection);
             var communicationEntity = converter.toCommunication(carWishList);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(communicationEntity.name()).isEqualTo("CarWishList");
-                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).isEqualTo(carWishList.uuid());
-                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).isEqualTo(
+                soft.assertThat(communicationEntity.name()).as("value of communicationEntity.name()").isEqualTo("CarWishList");
+                soft.assertThat(communicationEntity.find("_id").orElseThrow().get()).as("value of communicationEntity.find(\"_id\").orElseThrow().get()").isEqualTo(carWishList.uuid());
+                soft.assertThat(communicationEntity.find("wishCollection").orElseThrow().get()).as("value of communicationEntity.find(\"wishCollection\").orElseThrow().get()").isEqualTo(
                         String.join("|", wishCollection.getWishes())
                 );
             });
@@ -216,10 +216,10 @@ public class EntityConverterAutoApplyTest {
 
     @Nested
     @DisplayName("When an explicit converter overrides an auto-apply converter during database-to-entity conversion")
-    class WhenOverwriteAutoApplyToEntity {
+    class WhenTheExplicitConverterMapsToEntity {
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply attribute converter")
         void shouldOverWriteByAttributeConverter() {
 
             var communicationEntity = CommunicationEntity.of("BookWishList");
@@ -227,13 +227,13 @@ public class EntityConverterAutoApplyTest {
             communicationEntity.add("wishCollection", "Learn JNoSQL|Clean Code|Refactor Code");
             BookWishList bookWishList = converter.toEntity(communicationEntity);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(bookWishList.getUuid()).isEqualTo(communicationEntity.find("_id").orElseThrow().get());
-                soft.assertThat(bookWishList.getWishCollection().getWishes()).contains("Learn JNoSQL", "Clean Code", "Refactor Code");
+                soft.assertThat(bookWishList.getUuid()).as("value of bookWishList.getUuid()").isEqualTo(communicationEntity.find("_id").orElseThrow().get());
+                soft.assertThat(bookWishList.getWishCollection().getWishes()).as("value of bookWishList.getWishCollection().getWishes()").contains("Learn JNoSQL", "Clean Code", "Refactor Code");
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by attribute converter")
+        @DisplayName("Should apply the auto-apply converter to constructor attributes")
         void shouldOverWriteByAttributeConverterCustomConstructor() {
 
             var communicationEntity = CommunicationEntity.of("TravelWishList");
@@ -241,21 +241,21 @@ public class EntityConverterAutoApplyTest {
             communicationEntity.add("wishCollection", "Salvador|Rio de Janeiro|Amor");
             TravelWishList travelWishList = converter.toEntity(communicationEntity);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(travelWishList.getUuid()).isEqualTo(communicationEntity.find("_id").orElseThrow().get());
-                soft.assertThat(travelWishList.getWishCollection().getWishes()).contains("Salvador", "Rio de Janeiro", "Amor");
+                soft.assertThat(travelWishList.getUuid()).as("value of travelWishList.getUuid()").isEqualTo(communicationEntity.find("_id").orElseThrow().get());
+                soft.assertThat(travelWishList.getWishCollection().getWishes()).as("value of travelWishList.getWishCollection().getWishes()").contains("Salvador", "Rio de Janeiro", "Amor");
             });
         }
 
         @Test
-        @DisplayName("Should overwrite by record converter")
+        @DisplayName("Should apply the auto-apply converter to record components")
         void shouldOverwriteByRecord() {
             var communicationEntity = CommunicationEntity.of("CarWishList");
             communicationEntity.add("_id", UUID.randomUUID());
             communicationEntity.add("wishCollection", "SUV|Sports Car|Truck");
             CarWishList carWishList = converter.toEntity(communicationEntity);
             SoftAssertions.assertSoftly(soft -> {
-                soft.assertThat(carWishList.uuid()).isEqualTo(communicationEntity.find("_id").orElseThrow().get());
-                soft.assertThat(carWishList.wishCollection().getWishes()).contains("SUV", "Sports Car", "Truck");
+                soft.assertThat(carWishList.uuid()).as("value of carWishList.uuid()").isEqualTo(communicationEntity.find("_id").orElseThrow().get());
+                soft.assertThat(carWishList.wishCollection().getWishes()).as("value of carWishList.wishCollection().getWishes()").contains("SUV", "Sports Car", "Truck");
             });
         }
     }

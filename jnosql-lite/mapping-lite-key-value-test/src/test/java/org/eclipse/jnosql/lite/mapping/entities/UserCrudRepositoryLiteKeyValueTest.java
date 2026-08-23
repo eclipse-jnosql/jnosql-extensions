@@ -16,7 +16,7 @@ package org.eclipse.jnosql.lite.mapping.entities;
 
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.keyvalue.KeyValueTemplate;
-import org.assertj.core.api.Assertions;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,8 +27,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UserCrudRepositoryLiteKeyValueTest {
@@ -39,89 +47,135 @@ public class UserCrudRepositoryLiteKeyValueTest {
     @Mock
     private RepositoryOperationProvider repositoryOperationProvider;
 
+    @Mock
+    private LifecycleEventHandler lifecycleEventHandler;
+
     @InjectMocks
     private UserCrudRepositoryLiteKeyValue userRepository;
 
+    @Nested
+    @DisplayName("When entities are saved")
+    class WhenTheEntitiesAreSaved {
 
-    @Test
-    void shouldSaveEntity() {
-        User user = new User();
-        userRepository.save(user);
-        verify(template, times(1)).put(eq(user));
+
+        @Test
+        @DisplayName("Should save the entity")
+        void shouldSaveEntity() {
+            User user = new User();
+            userRepository.save(user);
+            verify(template, times(1)).put(eq(user));
+        }
+
+
+        @Test
+        @DisplayName("Should save every entity")
+        void shouldSaveAllEntities() {
+            User user1 = new User("ada", "Ada", 36);
+            User user2 = new User("grace", "Grace", 85);
+            List<User> entities = Arrays.asList(user1, user2);
+
+            userRepository.saveAll(entities);
+
+            verify(template).put(user1);
+            verify(template).put(user2);
+        }
     }
 
-    @Test
-    void shouldSaveAllEntities() {
-        User user1 = new User();
-        User user2 = new User();
-        List<User> entities = Arrays.asList(user1, user2);
+    @Nested
+    @DisplayName("When entities are deleted")
+    class WhenTheEntitiesAreDeleted {
 
-        userRepository.saveAll(entities);
 
-        verify(template, times(1)).insert(eq(entities));
+        @Test
+        @DisplayName("Should delete by identifier")
+        void shouldDeleteById() {
+            String id = "123";
+
+            userRepository.deleteById(id);
+
+            verify(template, times(1)).delete(eq(id));
+        }
     }
 
-    @Test
-    void shouldDeleteById() {
-        String id = "123";
+    @Nested
+    @DisplayName("When entities are retrieved")
+    class WhenTheEntitiesAreRetrieved {
 
-        userRepository.deleteById(id);
 
-        verify(template, times(1)).delete(eq(id));
+        @Test
+        @DisplayName("Should find by identifier")
+        void shouldFindById() {
+            String id = "123";
+            when(template.get(eq(id), eq(User.class))).thenReturn(Optional.of(new User()));
+
+            userRepository.findById(id);
+
+            verify(template, times(1)).get(eq(id), eq(User.class));
+        }
+
+
+        @Test
+        @DisplayName("Should find all by identifiers")
+        void shouldFindAllByIds() {
+            String id1 = "123";
+            String id2 = "456";
+            Iterable<String> ids = Arrays.asList(id1, id2);
+            when(template.get(eq(id1), eq(User.class))).thenReturn(Optional.of(new User()));
+            when(template.get(eq(id2), eq(User.class))).thenReturn(Optional.of(new User()));
+
+            List<User> users = userRepository.findByIdIn(ids).toList();
+
+            verify(template, times(2)).get(anyString(), eq(User.class));
+
+            assertThat(users).as("value of users").isNotNull().isNotEmpty().hasSize(2);
+        }
     }
 
-    @Test
-    void shouldFindById() {
-        String id = "123";
-        when(template.get(eq(id), eq(User.class))).thenReturn(Optional.of(new User()));
+    @Nested
+    @DisplayName("When entity existence is checked")
+    class WhenTheEntityExistenceIsChecked {
 
-        userRepository.findById(id);
 
-        verify(template, times(1)).get(eq(id), eq(User.class));
+        @Test
+        @DisplayName("Should report an existing entity by identifier")
+        void shouldCheckIfEntityExistsById() {
+            String id = "123";
+            when(template.get(eq(id), eq(User.class))).thenReturn(Optional.of(new User()));
+
+            boolean exists = userRepository.existsById(id);
+
+            assertThat(exists).as("value of exists").isTrue();
+        }
+
+
+        @Test
+        @DisplayName("Should report absence when the identifier is unknown")
+        void shouldReturnFalseIfEntityDoesNotExistById() {
+            String id = "123";
+            when(template.get(eq(id), eq(User.class))).thenReturn(Optional.empty());
+
+            boolean exists = userRepository.existsById(id);
+
+            assertThat(exists).as("value of exists").isFalse();
+        }
     }
 
-    @Test
-    void shouldFindAllByIds() {
-        String id1 = "123";
-        String id2 = "456";
-        Iterable<String> ids = Arrays.asList(id1, id2);
-        when(template.get(eq(id1), eq(User.class))).thenReturn(Optional.of(new User()));
-        when(template.get(eq(id2), eq(User.class))).thenReturn(Optional.of(new User()));
+    @Nested
+    @DisplayName("When a repository operation is executed")
+    class WhenTheRepositoryOperationIsExecuted {
 
-        List<User> users = userRepository.findByIdIn(ids).toList();
 
-        verify(template, times(2)).get(anyString(), eq(User.class));
+        @Test
+        @DisplayName("Should reject counting when the store does not support it")
+        void shouldThrowUnsupportedOperationExceptionOnCount() {
+            assertThatExceptionOfType(UnsupportedOperationException.class).as("expected exception").isThrownBy(() -> userRepository.countBy());
+        }
 
-        Assertions.assertThat(users).isNotNull().isNotEmpty().hasSize(2);
-    }
 
-    @Test
-    void shouldCheckIfEntityExistsById() {
-        String id = "123";
-        when(template.get(eq(id), eq(User.class))).thenReturn(Optional.of(new User()));
-
-        boolean exists = userRepository.existsById(id);
-
-        assertTrue(exists);
-    }
-
-    @Test
-    void shouldReturnFalseIfEntityDoesNotExistById() {
-        String id = "123";
-        when(template.get(eq(id), eq(User.class))).thenReturn(Optional.empty());
-
-        boolean exists = userRepository.existsById(id);
-
-        assertFalse(exists);
-    }
-
-    @Test
-    void shouldThrowUnsupportedOperationExceptionOnCount() {
-        assertThrows(UnsupportedOperationException.class, () -> userRepository.countBy());
-    }
-
-    @Test
-    void shouldThrowUnsupportedOperationExceptionOnFindAll() {
-        assertThrows(UnsupportedOperationException.class, () -> userRepository.findAll());
+        @Test
+        @DisplayName("Should reject unbounded retrieval when the store does not support it")
+        void shouldThrowUnsupportedOperationExceptionOnFindAll() {
+            assertThatExceptionOfType(UnsupportedOperationException.class).as("expected exception").isThrownBy(() -> userRepository.findAll());
+        }
     }
 }

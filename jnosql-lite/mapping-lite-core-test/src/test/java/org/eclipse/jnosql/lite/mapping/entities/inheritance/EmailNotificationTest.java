@@ -20,13 +20,18 @@ import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.InheritanceMetadata;
 import jakarta.nosql.DiscriminatorColumn;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.assertj.core.api.SoftAssertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class EmailNotificationTest {
 
@@ -37,68 +42,98 @@ public class EmailNotificationTest {
 
     @BeforeEach
     public void setUp() {
-        this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(EmailNotification.class);
+        mappings = new LiteEntitiesMetadata();
+        entityMetadata = mappings.get(EmailNotification.class);
     }
 
-    @Test
-    void shouldGetName() {
-        Assertions.assertEquals("Notification", entityMetadata.name());
-    }
+    @Nested
+    @DisplayName("When the email notification metadata is inspected")
+    class WhenTheEmailNotificationMetadataIsInspected {
 
-    @Test
-    void shouldGetSimpleName() {
-        Assertions.assertEquals(EmailNotification.class.getSimpleName(), entityMetadata.simpleName());
-    }
 
-    @Test
-    void shouldGetClassName() {
-        Assertions.assertEquals(EmailNotification.class.getName(), entityMetadata.className());
-    }
+        @Test
+        @DisplayName("Should expose the mapping name")
+        void shouldExposeMappingName() {
+            assertThat(entityMetadata.name()).as("value of entityMetadata.name()").isEqualTo("Notification");
+        }
 
-    @Test
-    void shouldGetClassInstance() {
-        Assertions.assertEquals(EmailNotification.class, entityMetadata.type());
-    }
 
-    @Test
-    void shouldGetId() {
-        Optional<FieldMetadata> id = this.entityMetadata.id();
-        Assertions.assertTrue(id.isPresent());
-    }
+        @Test
+        @DisplayName("Should expose the entity simple name")
+        void shouldExposeEntitySimpleName() {
+            assertThat(entityMetadata.simpleName()).as("value of entityMetadata.simpleName()").isEqualTo(EmailNotification.class.getSimpleName());
+        }
 
-    @Test
-    void shouldCreateNewInstance() {
-        var notification = entityMetadata.newInstance();
-        Assertions.assertNotNull(notification);
-        Assertions.assertInstanceOf(EmailNotification.class, notification);
-    }
 
-    @Test
-    void shouldGetFieldsName() {
-        List<String> fields = entityMetadata.fieldsName();
-        Assertions.assertEquals(4, fields.size());
-        Assertions.assertTrue(fields.contains("id"));
-        Assertions.assertTrue(fields.contains("name"));
-        Assertions.assertTrue(fields.contains("email"));
-    }
+        @Test
+        @DisplayName("Should expose the entity class name")
+        void shouldExposeEntityClassName() {
+            assertThat(entityMetadata.className()).as("value of entityMetadata.className()").isEqualTo(EmailNotification.class.getName());
+        }
 
-    @Test
-    void shouldGetFieldsGroupByName() {
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        Assertions.assertNotNull(groupByName);
-        Assertions.assertNotNull(groupByName.get("_id"));
-        Assertions.assertNotNull(groupByName.get("name"));
-    }
 
-    @Test
-    void shouldGetInheritanceMetadata() {
-        InheritanceMetadata inheritance = this.entityMetadata.inheritance()
-                .orElseThrow();
-        Assertions.assertEquals("Email", inheritance.discriminatorValue());
-        Assertions.assertEquals(DiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN, inheritance.discriminatorColumn());
-        Assertions.assertEquals(EmailNotification.class, inheritance.entity());
-        Assertions.assertEquals(Notification.class, inheritance.parent());
-    }
+        @Test
+        @DisplayName("Should expose the entity type")
+        void shouldExposeEntityType() {
+            assertThat(entityMetadata.type()).as("value of entityMetadata.type()").isEqualTo(EmailNotification.class);
+        }
 
+
+        @Test
+        @DisplayName("Should expose identifier metadata")
+        void shouldExposeIdentifierMetadata() {
+            Optional<FieldMetadata> id = entityMetadata.id();
+            assertThat(id.isPresent()).as("value of id.isPresent()").isTrue();
+        }
+
+
+        @Test
+        @DisplayName("Should create a new domain instance")
+        void shouldCreateNewInstance() {
+            var notification = entityMetadata.newInstance();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(notification).as("value of notification").isNotNull();
+                soft.assertThat(notification).as("value of notification").isInstanceOf(EmailNotification.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should expose every mapped field name")
+        void shouldExposeMappedFieldNames() {
+            List<String> fields = entityMetadata.fieldsName();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(fields.size()).as("value of fields.size()").isEqualTo(4);
+                soft.assertThat(fields.contains("id")).as("value of fields.contains(\"id\")").isTrue();
+                soft.assertThat(fields.contains("name")).as("value of fields.contains(\"name\")").isTrue();
+                soft.assertThat(fields.contains("email")).as("value of fields.contains(\"email\")").isTrue();
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should index mapped fields by name")
+        void shouldIndexMappedFieldsByName() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(groupByName).as("value of groupByName").isNotNull();
+                soft.assertThat(groupByName.get("_id")).as("value of groupByName.get(\"_id\")").isNotNull();
+                soft.assertThat(groupByName.get("name")).as("value of groupByName.get(\"name\")").isNotNull();
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should get inheritance metadata")
+        void shouldGetInheritanceMetadata() {
+            InheritanceMetadata inheritance = entityMetadata.inheritance()
+                    .orElseThrow();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(inheritance.discriminatorValue()).as("value of inheritance.discriminatorValue()").isEqualTo("Email");
+                soft.assertThat(inheritance.discriminatorColumn()).as("value of inheritance.discriminatorColumn()").isEqualTo(DiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN);
+                soft.assertThat(inheritance.entity()).as("value of inheritance.entity()").isEqualTo(EmailNotification.class);
+                soft.assertThat(inheritance.parent()).as("value of inheritance.parent()").isEqualTo(Notification.class);
+            });
+        }
+    }
 }

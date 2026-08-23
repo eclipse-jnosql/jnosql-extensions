@@ -17,6 +17,9 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
+import org.eclipse.jnosql.lite.mapping.repository.metadata.RepositoriesMetadataModel;
+import org.eclipse.jnosql.lite.mapping.repository.metadata.RepositoryIntrospector;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -34,7 +37,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-
+/**
+ * Processes Jakarta Data repository interfaces to generate reflection-free
+ * repository and repository-method metadata.
+ *
+ * <p>The resulting aggregate metadata is consumed by generated repository
+ * implementations when resolving and invoking repository operations.</p>
+ */
 @SupportedAnnotationTypes("jakarta.data.repository.Repository")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class RepositoryMetadataProcessor extends AbstractProcessor {

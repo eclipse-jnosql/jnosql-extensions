@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
+import org.eclipse.jnosql.lite.mapping.processing.CollectionUtil;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;

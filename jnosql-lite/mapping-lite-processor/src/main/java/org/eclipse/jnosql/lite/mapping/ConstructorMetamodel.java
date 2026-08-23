@@ -14,6 +14,8 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
+
 import java.util.List;
 
 public class ConstructorMetamodel extends BaseMappingModel {

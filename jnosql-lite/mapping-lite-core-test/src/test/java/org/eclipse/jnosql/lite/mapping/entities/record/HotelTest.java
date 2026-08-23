@@ -24,13 +24,17 @@ import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
 import org.eclipse.jnosql.mapping.metadata.MapParameterMetaData;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 import org.eclipse.jnosql.mapping.metadata.ParameterMetaData;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class HotelTest {
 
@@ -40,65 +44,80 @@ class HotelTest {
 
     @BeforeEach
     public void setUp() {
-        this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(Hotel.class);
+        mappings = new LiteEntitiesMetadata();
+        entityMetadata = mappings.get(Hotel.class);
     }
 
-
-    @Test
-    void shouldGetName() {
-        Assertions.assertEquals("Hotel", entityMetadata.name());
-    }
-
-    @Test
-    void shouldGetSimpleName() {
-        Assertions.assertEquals(Hotel.class.getSimpleName(), entityMetadata.simpleName());
-    }
-
-    @Test
-    void shouldGetClassName() {
-        Assertions.assertEquals(Hotel.class.getSimpleName(), entityMetadata.simpleName());
-    }
-
-    @Test
-    void shouldGetClassInstance() {
-        Assertions.assertEquals(Hotel.class, entityMetadata.type());
-    }
-
-    @Test
-    void shouldGetId() {
-        Optional<FieldMetadata> id = this.entityMetadata.id();
-        Assertions.assertTrue(id.isPresent());
-    }
+    @Nested
+    @DisplayName("When the hotel metadata is inspected")
+    class WhenTheHotelMetadataIsInspected {
 
 
-    @Test
-    void shouldCheckConstructor() {
-        ConstructorMetadata constructor = entityMetadata.constructor();
-        org.assertj.core.api.Assertions.assertThat(constructor.isDefault()).isFalse();
-        List<ParameterMetaData> parameters = constructor.parameters();
-        org.assertj.core.api.Assertions.assertThat(parameters).hasSize(3);
+        @Test
+        @DisplayName("Should expose the mapping name")
+        void shouldExposeMappingName() {
+            assertThat(entityMetadata.name()).as("value of entityMetadata.name()").isEqualTo("Hotel");
+        }
 
-        var document = parameters.get(0);
-        var socialMedias = (MapParameterMetaData) parameters.get(1);
-        var cities = (ArrayParameterMetaData)parameters.get(2);
 
-        SoftAssertions.assertSoftly(soft ->{
-            soft.assertThat(document.name()).isEqualTo("_id");
-            soft.assertThat(document.type()).isEqualTo(String.class);
-            soft.assertThat(document.converter()).isEmpty();
-            soft.assertThat(document.mappingType()).isEqualTo(MappingType.DEFAULT);
+        @Test
+        @DisplayName("Should expose the entity simple name")
+        void shouldExposeEntitySimpleName() {
+            assertThat(entityMetadata.simpleName()).as("value of entityMetadata.simpleName()").isEqualTo(Hotel.class.getSimpleName());
+        }
 
-            soft.assertThat(socialMedias.name()).isEqualTo("socialMedias");
-            soft.assertThat(socialMedias.type()).isEqualTo(Map.class);
-            soft.assertThat(socialMedias.mappingType()).isEqualTo(MappingType.MAP);
-            soft.assertThat(socialMedias.isEmbeddable()).isFalse();
 
-            soft.assertThat(cities.name()).isEqualTo("cities");
-            soft.assertThat(cities.type()).isEqualTo(String[].class);
-            soft.assertThat(cities.mappingType()).isEqualTo(MappingType.ARRAY);
-            soft.assertThat(cities.isEmbeddable()).isFalse();
-        });
+        @Test
+        @DisplayName("Should expose the entity class name")
+        void shouldExposeEntityClassName() {
+            assertThat(entityMetadata.simpleName()).as("value of entityMetadata.simpleName()").isEqualTo(Hotel.class.getSimpleName());
+        }
 
+
+        @Test
+        @DisplayName("Should expose the entity type")
+        void shouldExposeEntityType() {
+            assertThat(entityMetadata.type()).as("value of entityMetadata.type()").isEqualTo(Hotel.class);
+        }
+
+
+        @Test
+        @DisplayName("Should expose identifier metadata")
+        void shouldExposeIdentifierMetadata() {
+            Optional<FieldMetadata> id = entityMetadata.id();
+            assertThat(id.isPresent()).as("value of id.isPresent()").isTrue();
+        }
+
+
+        @Test
+        @DisplayName("Should check constructor")
+        void shouldCheckConstructor() {
+            ConstructorMetadata constructor = entityMetadata.constructor();
+            assertThat(constructor.isDefault()).as("value of constructor.isDefault()").isFalse();
+            List<ParameterMetaData> parameters = constructor.parameters();
+            assertThat(parameters).as("value of parameters").hasSize(3);
+
+            var document = parameters.get(0);
+            var socialMedias = (MapParameterMetaData) parameters.get(1);
+            var cities = (ArrayParameterMetaData) parameters.get(2);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(document.name()).as("value of document.name()").isEqualTo("_id");
+                soft.assertThat(document.type()).as("value of document.type()").isEqualTo(String.class);
+                soft.assertThat(document.converter()).as("value of document.converter()").isEmpty();
+                soft.assertThat(document.mappingType()).as("value of document.mappingType()").isEqualTo(MappingType.DEFAULT);
+
+                soft.assertThat(socialMedias.name()).as("value of socialMedias.name()").isEqualTo("socialMedias");
+                soft.assertThat(socialMedias.type()).as("value of socialMedias.type()").isEqualTo(Map.class);
+                soft.assertThat(socialMedias.mappingType()).as("value of socialMedias.mappingType()").isEqualTo(MappingType.MAP);
+                soft.assertThat(socialMedias.isEmbeddable()).as("value of socialMedias.isEmbeddable()").isFalse();
+
+                soft.assertThat(cities.name()).as("value of cities.name()").isEqualTo("cities");
+                soft.assertThat(cities.type()).as("value of cities.type()").isEqualTo(String[].class);
+                soft.assertThat(cities.mappingType()).as("value of cities.mappingType()").isEqualTo(MappingType.ARRAY);
+                soft.assertThat(cities.isEmbeddable()).as("value of cities.isEmbeddable()").isFalse();
+            });
+
+        }
     }
 }

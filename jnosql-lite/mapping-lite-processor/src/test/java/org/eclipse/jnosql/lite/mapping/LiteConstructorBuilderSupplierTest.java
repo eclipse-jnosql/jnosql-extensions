@@ -15,15 +15,57 @@
 package org.eclipse.jnosql.lite.mapping;
 
 import org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilderSupplier;
+import org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorMetadata;
+import org.eclipse.jnosql.mapping.metadata.ConstructorMetadata;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 class LiteConstructorBuilderSupplierTest {
 
-    @Test
-    void shouldReturnExceptionWhenApply() {
-        LiteConstructorBuilderSupplier supplier = new LiteConstructorBuilderSupplier();
-        assertThrows(NullPointerException.class, () -> supplier.apply(null));
+    @Nested
+    @DisplayName("When creating a constructor builder")
+    class WhenTheBuilderIsCreated {
+
+        @Test
+        @DisplayName("Should create a reflection-free builder")
+        void shouldCreateAReflectionFreeBuilder() {
+            var metadata = mock(LiteConstructorMetadata.class);
+            var supplier = new LiteConstructorBuilderSupplier();
+
+            var result = supplier.apply(metadata);
+
+            assertThat(result)
+                    .as("constructor builder")
+                    .isInstanceOf(org.eclipse.jnosql.lite.mapping.metadata.LiteConstructorBuilder.class);
+        }
+
+        @Test
+        @DisplayName("Should reject reflection-based metadata")
+        void shouldRejectReflectionBasedMetadata() {
+            var metadata = mock(ConstructorMetadata.class);
+            var supplier = new LiteConstructorBuilderSupplier();
+
+            assertThatThrownBy(() -> supplier.apply(metadata))
+                    .as("reflection-based constructor metadata")
+                    .isInstanceOf(UnsupportedOperationException.class)
+                    .hasMessageContaining("does not support reflection");
+        }
+
+        @Test
+        @DisplayName("Should reject null metadata")
+        void shouldRejectNullMetadata() {
+            var supplier = new LiteConstructorBuilderSupplier();
+
+            assertThatNullPointerException()
+                    .as("null constructor metadata")
+                    .isThrownBy(() -> supplier.apply(null))
+                    .withMessage("constructorMetadata is required");
+        }
     }
 }

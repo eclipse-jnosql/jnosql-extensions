@@ -34,12 +34,14 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.InsertOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ParameterBasedOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ProviderOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.SaveOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -47,6 +49,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JNoSQLRepositoryProcessor tests")
@@ -467,12 +470,33 @@ class JNoSQLRepositoryProcessorTest {
                     repositoryOperationProvider
             );
 
-            var result = processor.invokeRepositoryMethod(methodSignatureKey, new Object[]{"entity"});
-
-            Assertions.assertThat(result).isEqualTo("result");
+            var parameters = new Object[]{"entity"};
+            var result = processor.invokeRepositoryMethod(methodSignatureKey, parameters);
 
             Mockito.verify(repositoryOperationProvider).insertOperation();
-            Mockito.verify(insertOperation).execute(ArgumentMatchers.any());
+            var contextCaptor = ArgumentCaptor.forClass(RepositoryInvocationContext.class);
+            Mockito.verify(insertOperation).execute(contextCaptor.capture());
+            var context = contextCaptor.getValue();
+            assertSoftly(softly -> {
+                softly.assertThat(result)
+                        .as("insert operation result")
+                        .isEqualTo("result");
+                softly.assertThat(context.method())
+                        .as("repository method in the invocation context")
+                        .isSameAs(repositoryMethod);
+                softly.assertThat(context.metadata())
+                        .as("repository metadata in the invocation context")
+                        .isSameAs(repositoryMetadata);
+                softly.assertThat(context.entityMetadata())
+                        .as("entity metadata in the invocation context")
+                        .isSameAs(entityMetadata);
+                softly.assertThat(context.template())
+                        .as("template in the invocation context")
+                        .isSameAs(template);
+                softly.assertThat(context.parameters())
+                        .as("parameters in the invocation context")
+                        .isSameAs(parameters);
+            });
         }
 
         @Test

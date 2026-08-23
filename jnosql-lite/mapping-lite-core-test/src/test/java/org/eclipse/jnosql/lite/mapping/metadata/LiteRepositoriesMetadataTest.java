@@ -14,7 +14,6 @@
  */
 package org.eclipse.jnosql.lite.mapping.metadata;
 
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jnosql.lite.mapping.entities.Actor;
 import org.eclipse.jnosql.lite.mapping.entities.Computer;
@@ -30,6 +29,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
+import org.junit.jupiter.api.Nested;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class LiteRepositoriesMetadataTest {
 
     private RepositoriesMetadata repositoriesMetadata;
@@ -39,73 +42,83 @@ public class LiteRepositoriesMetadataTest {
         this.repositoriesMetadata = new LiteRepositoriesMetadata();
     }
 
-    @Test
-    @DisplayName("Should return not null instance")
-    void shouldBeNotNullInstance() {
-        Assertions.assertThat(repositoriesMetadata).isNotNull();
+    @Nested
+    @DisplayName("When the repository registry is queried")
+    class WhenTheRepositoryRegistryIsQueried {
+
+
+        @Test
+        @DisplayName("Should create the repository registry")
+        void shouldCreateRepositoryRegistry() {
+            assertThat(repositoriesMetadata).as("value of repositoriesMetadata").isNotNull();
+        }
+
+
+        @Test
+        @DisplayName("Should return empty when the repository is unknown")
+        void shouldReturnEmptyWhenRepositoryIsUnknown() {
+            var repositoryMetadata = repositoriesMetadata.get(String.class);
+            assertThat(repositoryMetadata).as("value of repositoryMetadata").isEmpty();
+        }
+
+
+        @Test
+        @DisplayName("Should return metadata when the repository is known")
+        void shouldReturnMetadataWhenRepositoryIsKnown() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class);
+            assertThat(repositoryMetadata).as("value of repositoryMetadata").isNotEmpty();
+        }
+
+
+        @Test
+        @DisplayName("Should load person repository")
+        void shouldLoadPersonRepository() {
+            var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryMetadata).as("value of repositoryMetadata").isNotNull();
+                soft.assertThat(repositoryMetadata.type()).as("value of repositoryMetadata.type()").isEqualTo(PersonRepository.class);
+                soft.assertThat(repositoryMetadata.entity().orElseThrow()).as("value of repositoryMetadata.entity().orElseThrow()").isEqualTo(Person.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should load computer repository")
+        void shouldLoadComputerRepository() {
+            var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryMetadata).as("value of repositoryMetadata").isNotNull();
+                soft.assertThat(repositoryMetadata.type()).as("value of repositoryMetadata.type()").isEqualTo(ComputerRepository.class);
+                soft.assertThat(repositoryMetadata.entity().orElseThrow()).as("value of repositoryMetadata.entity().orElseThrow()").isEqualTo(Computer.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should load actor repository")
+        void shouldLoadActorRepository() {
+            var repositoryMetadata = repositoriesMetadata.get(ActorRepository.class).orElseThrow();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryMetadata).as("value of repositoryMetadata").isNotNull();
+                soft.assertThat(repositoryMetadata.type()).as("value of repositoryMetadata.type()").isEqualTo(ActorRepository.class);
+                soft.assertThat(repositoryMetadata.entity().orElseThrow()).as("value of repositoryMetadata.entity().orElseThrow()").isEqualTo(Actor.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should load repository metadata without an entity type")
+        void shouldLoadRepositoryWithoutEntityType() {
+            var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(repositoryMetadata).as("value of repositoryMetadata").isNotNull();
+                soft.assertThat(repositoryMetadata.type()).as("value of repositoryMetadata.type()").isEqualTo(Garage.class);
+                soft.assertThat(repositoryMetadata.entity()).as("value of repositoryMetadata.entity()").isEmpty();
+            });
+        }
     }
-
-    @Test
-    @DisplayName("Should return empty when repository not found")
-    void shouldReturnOptionalEmptyWhenRepositoryNotFound() {
-        var repositoryMetadata = repositoriesMetadata.get(String.class);
-        Assertions.assertThat(repositoryMetadata).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should find when repository found")
-    void shouldFindWhenRepositoryFound() {
-        var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class);
-        Assertions.assertThat(repositoryMetadata).isNotEmpty();
-    }
-
-    @Test
-    @DisplayName("Should load person repository")
-    void shouldLoadPersonRepository() {
-        var repositoryMetadata = repositoriesMetadata.get(PersonRepository.class).orElseThrow();
-
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(repositoryMetadata).isNotNull();
-            soft.assertThat(repositoryMetadata.type()).isEqualTo(PersonRepository.class);
-            soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Person.class);
-        });
-    }
-
-    @Test
-    @DisplayName("Should load Computer repository")
-    void shouldLoadComputerRepository() {
-        var repositoryMetadata = repositoriesMetadata.get(ComputerRepository.class).orElseThrow();
-
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(repositoryMetadata).isNotNull();
-            soft.assertThat(repositoryMetadata.type()).isEqualTo(ComputerRepository.class);
-            soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Computer.class);
-        });
-    }
-
-    @Test
-    @DisplayName("Should load actor repository")
-    void shouldLoadActorRepository() {
-        var repositoryMetadata = repositoriesMetadata.get(ActorRepository.class).orElseThrow();
-
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(repositoryMetadata).isNotNull();
-            soft.assertThat(repositoryMetadata.type()).isEqualTo(ActorRepository.class);
-            soft.assertThat(repositoryMetadata.entity().orElseThrow()).isEqualTo(Actor.class);
-        });
-    }
-
-
-    @Test
-    @DisplayName("Should load garage repository")
-    void shouldLoadGarage() {
-        var repositoryMetadata = repositoriesMetadata.get(Garage.class).orElseThrow();
-
-        SoftAssertions.assertSoftly(soft -> {
-            soft.assertThat(repositoryMetadata).isNotNull();
-            soft.assertThat(repositoryMetadata.type()).isEqualTo(Garage.class);
-            soft.assertThat(repositoryMetadata.entity()).isEmpty();
-        });
-    }
-
 }

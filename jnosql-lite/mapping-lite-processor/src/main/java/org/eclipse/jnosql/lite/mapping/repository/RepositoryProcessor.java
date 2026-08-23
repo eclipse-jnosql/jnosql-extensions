@@ -30,6 +30,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Processes Jakarta Data repository interfaces to generate concrete
+ * database-specific repository implementations.
+ *
+ * <p>A repository implementation is generated for each database type detected
+ * in the annotation-processing environment.</p>
+ */
 @SupportedAnnotationTypes("jakarta.data.repository.Repository")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class RepositoryProcessor extends AbstractProcessor {
