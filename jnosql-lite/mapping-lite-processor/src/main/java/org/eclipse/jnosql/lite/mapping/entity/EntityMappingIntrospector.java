@@ -12,15 +12,18 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
+import org.eclipse.jnosql.lite.mapping.constructor.ConstructorMetadataModel;
+import org.eclipse.jnosql.lite.mapping.processing.MappingCategory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-final class EntityMappingIntrospector {
+public final class EntityMappingIntrospector {
 
     private static final Logger LOGGER = Logger.getLogger(EntityMappingIntrospector.class.getName());
 
@@ -30,7 +33,7 @@ final class EntityMappingIntrospector {
     private final EntityModelIntrospector modelIntrospector;
     private final EntitySourceGenerator sourceGenerator;
 
-    EntityMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
+    public EntityMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.fieldCollector = new EntityFieldCollector(processingEnv);
         this.constructorIntrospector = new EntityConstructorIntrospector(processingEnv);
@@ -38,14 +41,14 @@ final class EntityMappingIntrospector {
         this.sourceGenerator = new EntitySourceGenerator(processingEnv);
     }
 
-    MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
+    public MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
         var fields = fieldCollector.collect(typeElement);
         var constructor = constructorIntrospector.introspect(typeElement);
         if (constructor.isPresent()) {
             sourceGenerator.generateConstructor(entity, constructor.get());
         }
         String constructorClassName = constructor
-                .map(ConstructorMetamodel::getQualified)
+                .map(ConstructorMetadataModel::getQualified)
                 .orElse(null);
         EntityModel metadata = modelIntrospector.introspect(typeElement, fields, constructorClassName);
         sourceGenerator.generateEntity(entity, metadata);
