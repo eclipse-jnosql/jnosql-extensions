@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.constructor;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
@@ -22,6 +22,9 @@ import jakarta.nosql.Convert;
 import jakarta.nosql.Embeddable;
 import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
+import org.eclipse.jnosql.lite.mapping.processing.CollectionUtil;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorValidationException;
 import org.eclipse.jnosql.mapping.metadata.MappingType;
 
 import javax.annotation.processing.Filer;
@@ -45,15 +48,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-class ParameterAnalyzer implements Supplier<ParameterResult> {
-
-    private static final Predicate<VariableElement> ID_PARAMETER = v -> v.getAnnotation(Id.class) != null;
-    private static final Predicate<VariableElement> COLUMN_PARAMETER = v -> v.getAnnotation(Column.class) != null;
-
-    static final Predicate<Element> INJECT_CONSTRUCTOR = e -> {
-        ExecutableElement executableElement = (ExecutableElement) e;
-        return executableElement.getParameters().stream().anyMatch(ID_PARAMETER.or(COLUMN_PARAMETER));
-    };
+public class ParameterAnalyzer implements Supplier<ConstructorParameter> {
 
     private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
     private static final Mustache MUSTACHE_COLLECTION_TEMPLATE;
@@ -77,15 +72,15 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         MUSTACHE_ARRAY_TEMPLATE = createTemplate(ARRAY_TEMPLATE);
     }
 
-    ParameterAnalyzer(VariableElement parameter, ProcessingEnvironment processingEnv,
-                      TypeElement entity) {
+    public ParameterAnalyzer(VariableElement parameter, ProcessingEnvironment processingEnv,
+                             TypeElement entity) {
         this.parameter = parameter;
         this.processingEnv = processingEnv;
         this.entity = entity;
     }
 
     @Override
-    public ParameterResult get() {
+    public ConstructorParameter get() {
         var metadata = getMetaData();
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = getFileObject(metadata, filer);
@@ -100,18 +95,18 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
                 MUSTACHE_COLLECTION_TEMPLATE.execute(writer, metadata);
             }
         } catch (IOException exception) {
-            throw new ValidationException("An error to compile the class: " +
+            throw new ProcessorValidationException("An error to compile the class: " +
                     metadata.getQualified(), exception);
         }
 
-        return new ParameterResult(metadata.getQualified(), metadata.getType());
+        return new ConstructorParameter(metadata.getQualified(), metadata.getType());
     }
 
     private JavaFileObject getFileObject(ParameterModel metadata, Filer filer) {
         try {
             return filer.createSourceFile(metadata.getQualified(), entity);
         } catch (IOException exception) {
-            throw new ValidationException("An error to create the class: " +
+            throw new ProcessorValidationException("An error to create the class: " +
                     metadata.getQualified(), exception);
         }
 
@@ -187,8 +182,8 @@ class ParameterAnalyzer implements Supplier<ParameterResult> {
         }
 
         final boolean isId = id != null;
-        final String packageName = ProcessorUtil.getPackageName(entity);
-        final String entityName = ProcessorUtil.getSimpleNameAsString(this.entity);
+        final String packageName = ProcessorUtils.packageName(entity);
+        final String entityName = ProcessorUtils.simpleName(this.entity);
         final String name = getName(fieldName, column, id);
         final String udt = column != null ? column.udt() : null;
 
