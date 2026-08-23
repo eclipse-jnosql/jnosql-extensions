@@ -12,12 +12,17 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.projection;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import jakarta.nosql.Projection;
+import org.eclipse.jnosql.lite.mapping.constructor.ConstructorMetadataModel;
+import org.eclipse.jnosql.lite.mapping.processing.ElementPredicates;
+import org.eclipse.jnosql.lite.mapping.processing.MappingCategory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -29,7 +34,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.logging.Logger;
 
-final class ProjectionMappingIntrospector  {
+public final class ProjectionMappingIntrospector  {
 
     private static final Logger LOGGER = Logger.getLogger(ProjectionMappingIntrospector.class.getName());
     private static final String NEW_INSTANCE = "projector_metadata.mustache";
@@ -46,23 +51,23 @@ final class ProjectionMappingIntrospector  {
     private final Element entity;
     private final ProcessingEnvironment processingEnv;
 
-    ProjectionMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
+    public ProjectionMappingIntrospector(Element entity, ProcessingEnvironment processingEnv) {
         this.entity = entity;
         this.processingEnv = processingEnv;
 
     }
 
-    MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
+    public MappingResult buildMappingMetadata(TypeElement typeElement) throws IOException {
 
-        String packageName = ProcessorUtil.getPackageName(typeElement);
-        String className = ProcessorUtil.getSimpleNameAsString(typeElement);
-        String type = ProcessorUtil.getSimpleNameAsString(typeElement);
+        String packageName = ProcessorUtils.packageName(typeElement);
+        String className = ProcessorUtils.simpleName(typeElement);
+        String type = ProcessorUtils.simpleName(typeElement);
         var projection = typeElement.getAnnotation(Projection.class).toString();
         var from = projection.substring(projection.indexOf("from=") +5, projection.lastIndexOf(")"));
 
         var constructor = processingEnv.getElementUtils().getAllMembers(typeElement)
                 .stream()
-                .filter(MappingProcessor.IS_CONSTRUCTOR)
+                .filter(ElementPredicates.IS_CONSTRUCTOR)
                 .findFirst().orElseThrow();
 
         var executableElement = (ExecutableElement) constructor;
@@ -72,9 +77,9 @@ final class ProjectionMappingIntrospector  {
                 .toList();
 
         LOGGER.finest("Found the parameters: " + parameters);
-        var constructorMetamodel = ConstructorMetamodel.of(ProcessorUtil.getPackageName(typeElement),
-                ProcessorUtil.getSimpleNameAsString(typeElement), parameters,
-                ProcessorUtil.getSimpleNameAsString(typeElement));
+        var constructorMetamodel = ConstructorMetadataModel.of(ProcessorUtils.packageName(typeElement),
+                ProcessorUtils.simpleName(typeElement), parameters,
+                ProcessorUtils.simpleName(typeElement));
 
         createConstructors(entity, constructorMetamodel);
         var constructorClassName = constructorMetamodel.getQualified();
@@ -92,7 +97,7 @@ final class ProjectionMappingIntrospector  {
         }
     }
 
-    private void createConstructors(Element entity, ConstructorMetamodel metadata) throws IOException {
+    private void createConstructors(Element entity, ConstructorMetadataModel metadata) throws IOException {
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
         try (Writer writer = fileObject.openWriter()) {
