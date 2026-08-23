@@ -12,10 +12,11 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity.field;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorValidationException;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -42,7 +43,7 @@ final class FieldSourceGenerator {
         try (Writer writer = fileObject.openWriter()) {
             template(metadata).execute(writer, metadata);
         } catch (IOException exception) {
-            throw new ValidationException("An error to compile the class: "
+            throw new ProcessorValidationException("An error to compile the class: "
                     + metadata.getQualified(), exception);
         }
     }
@@ -51,7 +52,7 @@ final class FieldSourceGenerator {
         try {
             return processingEnv.getFiler().createSourceFile(metadata.getQualified(), entity);
         } catch (IOException exception) {
-            throw new ValidationException("An error to create the class: "
+            throw new ProcessorValidationException("An error to create the class: "
                     + metadata.getQualified(), exception);
         }
     }
