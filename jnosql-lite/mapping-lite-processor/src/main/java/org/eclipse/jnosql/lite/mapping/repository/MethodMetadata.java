@@ -73,11 +73,13 @@ class MethodMetadata {
     private MethodGenerator generator;
 
     private final String entityType;
+    private final List<String> annotationsSource;
 
     private MethodMetadata(String methodName, TypeElement returnElement, String returnType,
                            List<Parameter> parameters, DatabaseType type, String entityType,
-                           Query query, Insert insert, Update update, Delete delete, Save save, Find find, OrderBy[] orders,
-                           String constantName) {
+                           Query query, Insert insert, Update update,
+                           Delete delete, Save save, Find find, OrderBy[] orders,
+                           String constantName, List<String> annotationsSource) {
 
         this.methodName = methodName;
         this.returnElement = returnElement;
@@ -93,6 +95,7 @@ class MethodMetadata {
         this.find = find;
         this.orders = orders;
         this.constantName = constantName;
+        this.annotationsSource = annotationsSource;
     }
 
     public String getMethodName() {
@@ -172,6 +175,10 @@ class MethodMetadata {
         return Optional.empty();
     }
 
+    public List<String> getAnnotationsSource() {
+        return annotationsSource;
+    }
+
     public boolean isInsert() {
         return Objects.nonNull(insert);
     }
@@ -211,13 +218,26 @@ class MethodMetadata {
         return orders;
     }
 
-    public static MethodMetadata of(Element element, String entityType, DatabaseType type, ProcessingEnvironment processingEnv) {
+    static MethodMetadata of(Element element,
+                                    String entityType,
+                                    DatabaseType type,
+                                    ProcessingEnvironment processingEnv) {
+
         ElementKind kind = element.getKind();
-        if (ElementKind.METHOD.equals(kind) && !isDefaultMethod((ExecutableElement) element)) {
+
+        if (ElementKind.METHOD.equals(kind)
+                && !isDefaultMethod((ExecutableElement) element)) {
+
             ExecutableElement method = (ExecutableElement) element;
+
             String methodName = method.getSimpleName().toString();
-            TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(method.getReturnType());
+
+            TypeElement returnElement =
+                    (TypeElement) processingEnv.getTypeUtils()
+                            .asElement(method.getReturnType());
+
             String returnType = method.getReturnType().toString();
+
             List<Parameter> parameters = method.getParameters()
                     .stream()
                     .map(e -> Parameter.of(e, processingEnv))
@@ -230,13 +250,33 @@ class MethodMetadata {
             Save save = method.getAnnotation(Save.class);
             Find find = method.getAnnotation(Find.class);
             OrderBy[] orders = method.getAnnotationsByType(OrderBy.class);
+
+            List<String> annotationsSource = method.getAnnotationMirrors()
+                    .stream()
+                    .map(Object::toString)
+                    .toList();
             String constantName = MethodSignatureKeyExtractor.buildConstantName(method);
-            return new MethodMetadata(methodName, returnElement, returnType, parameters, type, entityType, query,
-                    insert, update, delete, save, find, orders, constantName);
+            return new MethodMetadata(
+                    methodName,
+                    returnElement,
+                    returnType,
+                    parameters,
+                    type,
+                    entityType,
+                    query,
+                    insert,
+                    update,
+                    delete,
+                    save,
+                    find,
+                    orders,
+                    constantName,
+                    annotationsSource
+            );
         }
+
         return null;
     }
-
     private static boolean isDefaultMethod(ExecutableElement methodElement) {
         return methodElement.getModifiers().contains(Modifier.DEFAULT);
     }
