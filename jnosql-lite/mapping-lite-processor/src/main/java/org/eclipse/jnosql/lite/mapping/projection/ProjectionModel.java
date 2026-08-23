@@ -12,8 +12,9 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.projection;
 
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
 class ProjectionModel extends BaseMappingModel {
 
     private final String packageName;
