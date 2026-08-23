@@ -18,13 +18,18 @@ import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.assertj.core.api.SoftAssertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CarTest {
 
@@ -35,90 +40,124 @@ public class CarTest {
 
     @BeforeEach
     public void setUp() {
-        this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(Car.class);
+        mappings = new LiteEntitiesMetadata();
+        entityMetadata = mappings.get(Car.class);
     }
 
-    @Test
-    void shouldGetName() {
-        Assertions.assertEquals("car", entityMetadata.name());
+    @Nested
+    @DisplayName("When the car metadata is inspected")
+    class WhenTheCarMetadataIsInspected {
+
+
+        @Test
+        @DisplayName("Should expose the mapping name")
+        void shouldExposeMappingName() {
+            assertThat(entityMetadata.name()).as("value of entityMetadata.name()").isEqualTo("car");
+        }
+
+
+        @Test
+        @DisplayName("Should expose the entity simple name")
+        void shouldExposeEntitySimpleName() {
+            assertThat(entityMetadata.simpleName()).as("value of entityMetadata.simpleName()").isEqualTo(Car.class.getSimpleName());
+        }
+
+
+        @Test
+        @DisplayName("Should expose the entity class name")
+        void shouldExposeEntityClassName() {
+            assertThat(entityMetadata.className()).as("value of entityMetadata.className()").isEqualTo(Car.class.getName());
+        }
+
+
+        @Test
+        @DisplayName("Should expose the entity type")
+        void shouldExposeEntityType() {
+            assertThat(entityMetadata.type()).as("value of entityMetadata.type()").isEqualTo(Car.class);
+        }
+
+
+        @Test
+        @DisplayName("Should expose identifier metadata")
+        void shouldExposeIdentifierMetadata() {
+            Optional<FieldMetadata> id = entityMetadata.id();
+            assertThat(id.isPresent()).as("value of id.isPresent()").isTrue();
+        }
+
+
+        @Test
+        @DisplayName("Should create a new domain instance")
+        void shouldCreateNewInstance() {
+            Car car = entityMetadata.newInstance();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(car).as("value of car").isNotNull();
+                soft.assertThat(car).as("value of car").isInstanceOf(Car.class);
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should expose every mapped field name")
+        void shouldExposeMappedFieldNames() {
+            List<String> fields = entityMetadata.fieldsName();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(fields.size()).as("value of fields.size()").isEqualTo(2);
+                soft.assertThat(fields.contains("name")).as("value of fields.contains(\"name\")").isTrue();
+                soft.assertThat(fields.contains("model")).as("value of fields.contains(\"model\")").isTrue();
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should index mapped fields by name")
+        void shouldIndexMappedFieldsByName() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(groupByName).as("value of groupByName").isNotNull();
+                soft.assertThat(groupByName.get("_id")).as("value of groupByName.get(\"_id\")").isNotNull();
+                soft.assertThat(groupByName.get("model")).as("value of groupByName.get(\"model\")").isNotNull();
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should read mapped field values")
+        void shouldReadMappedFieldValues() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            Car car = new Car();
+            car.setModel("sport");
+            car.setName("ferrari");
+
+            String name = entityMetadata.columnField("name");
+            String model = entityMetadata.columnField("model");
+            FieldMetadata fieldName = groupByName.get(name);
+            FieldMetadata fieldModel = groupByName.get(model);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(fieldModel.read(car)).as("value of fieldModel.read(car)").isEqualTo("sport");
+                soft.assertThat(fieldName.read(car)).as("value of fieldName.read(car)").isEqualTo("ferrari");
+            });
+        }
+
+
+        @Test
+        @DisplayName("Should write mapped field values")
+        void shouldWriteMappedFieldValues() {
+            Map<String, FieldMetadata> groupByName = entityMetadata.fieldsGroupByName();
+            Car car = new Car();
+
+            String name = entityMetadata.columnField("name");
+            String model = entityMetadata.columnField("model");
+            FieldMetadata fieldName = groupByName.get(name);
+            FieldMetadata fieldModel = groupByName.get(model);
+
+            fieldModel.write(car, "blue");
+            fieldName.write(car, "ada");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(fieldModel.read(car)).as("value of fieldModel.read(car)").isEqualTo("blue");
+                soft.assertThat(fieldName.read(car)).as("value of fieldName.read(car)").isEqualTo("ada");
+            });
+
+        }
     }
-
-    @Test
-    void shouldGetSimpleName() {
-        Assertions.assertEquals(Car.class.getSimpleName(), entityMetadata.simpleName());
-    }
-
-    @Test
-    void shouldGetClassName() {
-        Assertions.assertEquals(Car.class.getName(), entityMetadata.className());
-    }
-
-    @Test
-    void shouldGetClassInstance() {
-        Assertions.assertEquals(Car.class, entityMetadata.type());
-    }
-
-    @Test
-    void shouldGetId() {
-        Optional<FieldMetadata> id = this.entityMetadata.id();
-        Assertions.assertTrue(id.isPresent());
-    }
-
-    @Test
-    void shouldCreateNewInstance() {
-        Car car = entityMetadata.newInstance();
-        Assertions.assertNotNull(car);
-        Assertions.assertInstanceOf(Car.class, car);
-    }
-
-    @Test
-    void shouldGetFieldsName() {
-        List<String> fields = entityMetadata.fieldsName();
-        Assertions.assertEquals(2, fields.size());
-        Assertions.assertTrue(fields.contains("name"));
-        Assertions.assertTrue(fields.contains("model"));
-    }
-
-    @Test
-    void shouldGetFieldsGroupByName() {
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        Assertions.assertNotNull(groupByName);
-        Assertions.assertNotNull(groupByName.get("_id"));
-        Assertions.assertNotNull(groupByName.get("model"));
-    }
-
-    @Test
-    void shouldGetter() {
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        Car car = new Car();
-        car.setModel("sport");
-        car.setName("ferrari");
-
-        String name = this.entityMetadata.columnField("name");
-        String model = this.entityMetadata.columnField("model");
-        FieldMetadata fieldName = groupByName.get(name);
-        FieldMetadata fieldModel = groupByName.get(model);
-
-        Assertions.assertEquals("sport", fieldModel.read(car));
-        Assertions.assertEquals("ferrari", fieldName.read(car));
-    }
-
-    @Test
-    void shouldSetter() {
-        Map<String, FieldMetadata> groupByName = this.entityMetadata.fieldsGroupByName();
-        Car car = new Car();
-
-        String name = this.entityMetadata.columnField("name");
-        String model = this.entityMetadata.columnField("model");
-        FieldMetadata fieldName = groupByName.get(name);
-        FieldMetadata fieldModel = groupByName.get(model);
-
-        fieldModel.write(car, "blue");
-        fieldName.write(car, "ada");
-        Assertions.assertEquals("blue", fieldModel.read(car));
-        Assertions.assertEquals("ada", fieldName.read(car));
-
-    }
-
 }
