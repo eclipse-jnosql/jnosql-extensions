@@ -12,15 +12,17 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
+import org.eclipse.jnosql.lite.mapping.constructor.ConstructorMetadataModel;
+import org.eclipse.jnosql.lite.mapping.constructor.ParameterAnalyzer;
+import org.eclipse.jnosql.lite.mapping.processing.ElementPredicates;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import java.util.Optional;
 import java.util.logging.Logger;
-
-import static org.eclipse.jnosql.lite.mapping.ParameterAnalyzer.INJECT_CONSTRUCTOR;
 
 final class EntityConstructorIntrospector {
 
@@ -32,26 +34,26 @@ final class EntityConstructorIntrospector {
         this.processingEnv = processingEnv;
     }
 
-    Optional<ConstructorMetamodel> introspect(TypeElement entity) {
+    Optional<ConstructorMetadataModel> introspect(TypeElement entity) {
         return processingEnv.getElementUtils()
                 .getAllMembers(entity)
                 .stream()
-                .filter(MappingProcessor.IS_CONSTRUCTOR
-                        .and(MappingProcessor.HAS_ACCESS)
-                        .and(INJECT_CONSTRUCTOR))
+                .filter(ElementPredicates.IS_CONSTRUCTOR
+                        .and(ElementPredicates.HAS_ACCESS)
+                        .and(ElementPredicates.IS_INJECTABLE_CONSTRUCTOR))
                 .findFirst()
                 .map(ExecutableElement.class::cast)
                 .map(constructor -> metadata(entity, constructor));
     }
 
-    private ConstructorMetamodel metadata(TypeElement entity, ExecutableElement constructor) {
+    private ConstructorMetadataModel metadata(TypeElement entity, ExecutableElement constructor) {
         var parameters = constructor.getParameters().stream()
                 .map(parameter -> new ParameterAnalyzer(parameter, processingEnv, entity))
                 .map(ParameterAnalyzer::get)
                 .toList();
         LOGGER.finest("Found the parameters: " + parameters);
-        String packageName = ProcessorUtil.getPackageName(entity);
-        String entityName = ProcessorUtil.getSimpleNameAsString(entity);
-        return ConstructorMetamodel.of(packageName, entityName, parameters, entityName);
+        String packageName = ProcessorUtils.packageName(entity);
+        String entityName = ProcessorUtils.simpleName(entity);
+        return ConstructorMetadataModel.of(packageName, entityName, parameters, entityName);
     }
 }
