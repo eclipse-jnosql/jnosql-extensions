@@ -17,6 +17,9 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
+import org.eclipse.jnosql.lite.mapping.repository.metadata.RepositoriesMetadataModel;
+import org.eclipse.jnosql.lite.mapping.repository.metadata.RepositoryIntrospector;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
