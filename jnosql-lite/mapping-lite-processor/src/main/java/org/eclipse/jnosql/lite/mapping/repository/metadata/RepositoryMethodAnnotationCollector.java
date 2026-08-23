@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.repository.metadata;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
