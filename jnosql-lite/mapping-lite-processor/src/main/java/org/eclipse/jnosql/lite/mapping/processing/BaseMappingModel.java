@@ -12,12 +12,12 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.processing;
 
 import java.time.LocalDateTime;
 import java.time.Year;
 
-abstract class BaseMappingModel {
+public abstract class BaseMappingModel {
 
     public LocalDateTime getNow() {
         return LocalDateTime.now();
