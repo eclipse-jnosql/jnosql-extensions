@@ -44,6 +44,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Processes Jakarta NoSQL entities, embeddables, mapped superclasses, and
+ * projections to generate their reflection-free mapping metadata.
+ *
+ * <p>The processor also generates the aggregated entity metadata and registers
+ * the runtime metadata services required by JNoSQL Lite.</p>
+ */
 @SupportedAnnotationTypes({"jakarta.nosql.Entity",
         "jakarta.nosql.Embeddable",
         "jakarta.nosql.MappedSuperclass",
