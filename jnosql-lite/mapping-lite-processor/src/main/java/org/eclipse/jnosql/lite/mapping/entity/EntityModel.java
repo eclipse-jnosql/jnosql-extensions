@@ -12,8 +12,9 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
 import java.util.List;
 
 final class EntityModel extends BaseMappingModel {
