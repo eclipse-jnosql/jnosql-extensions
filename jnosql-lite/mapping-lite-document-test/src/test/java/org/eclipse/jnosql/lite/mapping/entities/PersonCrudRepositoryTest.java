@@ -18,6 +18,7 @@ import jakarta.data.page.CursoredPage;
 import jakarta.data.page.PageRequest;
 import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.document.DocumentTemplate;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CursorPaginationOperation;
@@ -39,10 +40,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Nested;
+import org.assertj.core.api.SoftAssertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.eq;
@@ -61,232 +62,295 @@ class PersonCrudRepositoryTest {
     @Mock
     private RepositoryOperationProvider repositoryOperationProvider;
 
+    @Mock
+    private LifecycleEventHandler lifecycleEventHandler;
+
     @InjectMocks
     private PersonCrudRepositoryLiteDocument personRepository;
 
-    @Test
-    void shouldSaveEntity() {
-        Person person = new Person();
-        when(template.insert(eq(person))).thenReturn(person);
+    @Nested
+    @DisplayName("When entities are saved")
+    class WhenTheEntitiesAreSaved {
 
-        Person savedPerson = personRepository.save(person);
 
-        assertNotNull(savedPerson);
-        verify(template, times(1)).insert(eq(person));
+        @Test
+        @DisplayName("Should save the entity")
+        void shouldSaveEntity() {
+            Person person = new Person();
+            when(template.insert(eq(person))).thenReturn(person);
+
+            Person savedPerson = personRepository.save(person);
+
+            assertThat(savedPerson).as("value of savedPerson").isNotNull();
+            verify(template, times(1)).insert(eq(person));
+        }
+
+
+        @Test
+        @DisplayName("Should save every entity")
+        void shouldSaveAllEntities() {
+            List<Person> persons = Arrays.asList(new Person(), new Person());
+            Iterable<Person> savedPersons = personRepository.saveAll(persons);
+            assertThat(savedPersons).as("value of savedPersons").isNotNull();
+            verify(template, Mockito.times(2)).insert(new Person());
+        }
     }
 
-    @Test
-    void shouldDeleteEntityById() {
-        Long id = 123L;
+    @Nested
+    @DisplayName("When entities are deleted")
+    class WhenTheEntitiesAreDeleted {
 
-        personRepository.deleteById(id);
 
-        verify(template, times(1)).delete(eq(Person.class), eq(id));
+        @Test
+        @DisplayName("Should delete the entity by identifier")
+        void shouldDeleteEntityById() {
+            Long id = 123L;
+
+            personRepository.deleteById(id);
+
+            verify(template, times(1)).delete(eq(Person.class), eq(id));
+        }
+
+
+        @Test
+        @DisplayName("Should delete the entity")
+        void shouldDeleteEntity() {
+            Person person = new Person();
+
+            personRepository.delete(person);
+
+            verify(template, times(1)).delete(eq(Person.class), eq(person.getId()));
+        }
+
+
+        @Test
+        @DisplayName("Should delegate the name deletion query")
+        void shouldDeleteByName() {
+
+            DeleteByOperation operation = mock(DeleteByOperation.class);
+
+            when(repositoryOperationProvider.deleteByOperation()).thenReturn(operation);
+
+            personRepository.deleteByName("Ada");
+
+            verify(repositoryOperationProvider).deleteByOperation();
+            verify(operation).execute(any());
+        }
     }
 
-    @Test
-    void shouldFindEntityById() {
-        Long id = 123L;
-        Person person = new Person();
-        when(template.find(eq(Person.class), eq(id))).thenReturn(Optional.of(person));
+    @Nested
+    @DisplayName("When entities are retrieved")
+    class WhenTheEntitiesAreRetrieved {
 
-        Optional<Person> foundPerson = personRepository.findById(id);
 
-        assertTrue(foundPerson.isPresent());
-        verify(template, times(1)).find(eq(Person.class), eq(id));
+        @Test
+        @DisplayName("Should find the entity by identifier")
+        void shouldFindEntityById() {
+            Long id = 123L;
+            Person person = new Person();
+            when(template.find(eq(Person.class), eq(id))).thenReturn(Optional.of(person));
+
+            Optional<Person> foundPerson = personRepository.findById(id);
+
+            assertThat(foundPerson.isPresent()).as("value of foundPerson.isPresent()").isTrue();
+            verify(template, times(1)).find(eq(Person.class), eq(id));
+        }
+
+
+        @Test
+        @DisplayName("Should find every entity")
+        void shouldFindAllEntities() {
+            Stream<Object> personStream = Stream.of(new Person());
+            when(template.select(any(SelectQuery.class))).thenReturn(personStream);
+
+            Stream<Person> allPersons = personRepository.findAll();
+
+            assertThat(allPersons).as("value of allPersons").isNotNull();
+            verify(template, times(1)).select(any(SelectQuery.class));
+        }
+
+
+        @Test
+        @DisplayName("Should find every entity with a requested identifier")
+        void shouldFindAllEntitiesByIds() {
+            List<Long> ids = Arrays.asList(123L, 456L);
+            Person person1 = new Person();
+            Person person2 = new Person();
+            when(template.find(eq(Person.class), anyLong())).thenReturn(Optional.of(person1), Optional.of(person2));
+
+            Stream<Person> foundPersons = personRepository.findByIdIn(ids);
+
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(foundPersons).as("value of foundPersons").isNotNull();
+                soft.assertThat(foundPersons.count()).as("value of foundPersons.count()").isEqualTo(2);
+            });
+            verify(template, times(ids.size())).find(eq(Person.class), anyLong());
+        }
+
+
+        @Test
+        @DisplayName("Should delegate the name query")
+        void shouldFindByName() {
+
+            FindByOperation operation = mock(FindByOperation.class);
+
+            when(repositoryOperationProvider.findByOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(List.of(new Person()));
+
+            personRepository.findByName("Ada");
+
+            verify(repositoryOperationProvider).findByOperation();
+            verify(operation).execute(any());
+        }
+
+
+        @Test
+        @DisplayName("Should delegate the cursored name query")
+        void shouldCursorPagination() {
+
+            CursorPaginationOperation operation = mock(CursorPaginationOperation.class);
+
+            when(repositoryOperationProvider.cursorPaginationOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(mock(CursoredPage.class));
+
+            personRepository.findByName("Ada", PageRequest.ofPage(1).size(2));
+
+            verify(repositoryOperationProvider).cursorPaginationOperation();
+            verify(operation).execute(any());
+        }
     }
 
-    @Test
-    void shouldFindAllEntities() {
-        Stream<Object> personStream = Stream.of(new Person());
-        when(template.select(any(SelectQuery.class))).thenReturn(personStream);
+    @Nested
+    @DisplayName("When entities are counted")
+    class WhenTheEntitiesAreCounted {
 
-        Stream<Person> allPersons = personRepository.findAll();
 
-        assertNotNull(allPersons);
-        verify(template, times(1)).select(any(SelectQuery.class));
+        @Test
+        @DisplayName("Should count the entities")
+        void shouldCountEntities() {
+            long expectedCount = 5L;
+            when(template.count(eq(Person.class))).thenReturn(expectedCount);
+
+            long count = personRepository.countBy();
+
+            assertThat(count).as("value of count").isEqualTo(expectedCount);
+            verify(template, times(1)).count(eq(Person.class));
+        }
+
+
+        @Test
+        @DisplayName("Should delegate the name count query")
+        void shouldCountByName() {
+
+            CountByOperation operation = mock(CountByOperation.class);
+
+            when(repositoryOperationProvider.countByOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(2L);
+
+            personRepository.countByName("Ada");
+
+            verify(repositoryOperationProvider).countByOperation();
+            verify(operation).execute(any());
+        }
     }
 
-    @Test
-    void shouldSaveAllEntities() {
-        List<Person> persons = Arrays.asList(new Person(), new Person());
-        Iterable<Person> savedPersons = personRepository.saveAll(persons);
-        assertNotNull(savedPersons);
-        verify(template, Mockito.times(2)).insert(new Person());
+    @Nested
+    @DisplayName("When entity existence is checked")
+    class WhenTheEntityExistenceIsChecked {
+
+
+        @Test
+        @DisplayName("Should report an existing entity by identifier")
+        void shouldCheckIfEntityExistsById() {
+            Long id = 123L;
+            when(template.find(eq(Person.class), eq(id))).thenReturn(Optional.of(new Person()));
+
+            boolean exists = personRepository.existsById(id);
+
+            assertThat(exists).as("value of exists").isTrue();
+            verify(template, times(1)).find(eq(Person.class), eq(id));
+        }
+
+
+        @Test
+        @DisplayName("Should report absence when the identifier is unknown")
+        void shouldReturnFalseIfEntityDoesNotExistById() {
+            Long id = 123L;
+            when(template.find(eq(Person.class), eq(id))).thenReturn(Optional.empty());
+
+            boolean exists = personRepository.existsById(id);
+
+            assertThat(exists).as("value of exists").isFalse();
+            verify(template, times(1)).find(eq(Person.class), eq(id));
+        }
+
+
+        @Test
+        @DisplayName("Should delegate the name existence query")
+        void shouldExistsByName() {
+
+            ExistsByOperation operation = mock(ExistsByOperation.class);
+
+            when(repositoryOperationProvider.existsByOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(true);
+
+            personRepository.existsByName("Ada");
+
+            verify(repositoryOperationProvider).existsByOperation();
+            verify(operation).execute(any());
+        }
     }
 
-    @Test
-    void shouldDeleteEntity() {
-        Person person = new Person();
+    @Nested
+    @DisplayName("When a domain query is executed")
+    class WhenTheDomainQueryIsExecuted {
 
-        personRepository.delete(person);
 
-        verify(template, times(1)).delete(eq(Person.class), eq(person.getId()));
-    }
+        @Test
+        @DisplayName("Should delegate the annotated query")
+        void shouldQuery() {
 
-    @Test
-    void shouldFindAllEntitiesByIds() {
-        List<Long> ids = Arrays.asList(123L, 456L);
-        Person person1 = new Person();
-        Person person2 = new Person();
-        when(template.find(eq(Person.class), anyLong())).thenReturn(Optional.of(person1), Optional.of(person2));
+            QueryOperation operation = mock(QueryOperation.class);
 
-        Stream<Person> foundPersons = personRepository.findByIdIn(ids);
+            when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(List.of(new Person()));
 
-        assertNotNull(foundPersons);
-        assertEquals(2, foundPersons.count());
-        verify(template, times(ids.size())).find(eq(Person.class), anyLong());
-    }
+            personRepository.query("Ada");
 
-    @Test
-    void shouldCountEntities() {
-        long expectedCount = 5L;
-        when(template.count(eq(Person.class))).thenReturn(expectedCount);
+            verify(repositoryOperationProvider).queryOperation();
+            verify(operation).execute(any());
+        }
 
-        long count = personRepository.countBy();
 
-        assertEquals(expectedCount, count);
-        verify(template, times(1)).count(eq(Person.class));
-    }
+        @Test
+        @DisplayName("Should delegate the alternate annotated query")
+        void shouldQuery2() {
 
-    @Test
-    void shouldCheckIfEntityExistsById() {
-        Long id = 123L;
-        when(template.find(eq(Person.class), eq(id))).thenReturn(Optional.of(new Person()));
+            QueryOperation operation = mock(QueryOperation.class);
 
-        boolean exists = personRepository.existsById(id);
+            when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(List.of(new Person()));
 
-        assertTrue(exists);
-        verify(template, times(1)).find(eq(Person.class), eq(id));
-    }
+            personRepository.query2("Ada");
 
-    @Test
-    void shouldReturnFalseIfEntityDoesNotExistById() {
-        Long id = 123L;
-        when(template.find(eq(Person.class), eq(id))).thenReturn(Optional.empty());
+            verify(repositoryOperationProvider).queryOperation();
+            verify(operation).execute(any());
+        }
 
-        boolean exists = personRepository.existsById(id);
 
-        assertFalse(exists);
-        verify(template, times(1)).find(eq(Person.class), eq(id));
-    }
+        @Test
+        @DisplayName("Should delegate the age query")
+        void shouldParameterBasedOperation() {
 
-    @Test
-    @DisplayName("When invoking a derived findBy query the repository must delegate execution to FindByOperation")
-    void shouldFindByName() {
+            ParameterBasedOperation operation = mock(ParameterBasedOperation.class);
 
-        FindByOperation operation = mock(FindByOperation.class);
+            when(repositoryOperationProvider.parameterBasedOperation()).thenReturn(operation);
+            when(operation.execute(any())).thenReturn(List.of());
 
-        when(repositoryOperationProvider.findByOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(List.of(new Person()));
+            personRepository.age(10);
 
-        personRepository.findByName("Ada");
-
-        verify(repositoryOperationProvider).findByOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking a repository method annotated with @Query the repository must delegate to QueryOperation")
-    void shouldQuery() {
-
-        QueryOperation operation = mock(QueryOperation.class);
-
-        when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(List.of(new Person()));
-
-        personRepository.query("Ada");
-
-        verify(repositoryOperationProvider).queryOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking another explicit @Query method the repository must also delegate to QueryOperation")
-    void shouldQuery2() {
-
-        QueryOperation operation = mock(QueryOperation.class);
-
-        when(repositoryOperationProvider.queryOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(List.of(new Person()));
-
-        personRepository.query2("Ada");
-
-        verify(repositoryOperationProvider).queryOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking existsBy derived query the repository must delegate to ExistsByOperation")
-    void shouldExistsByName() {
-
-        ExistsByOperation operation = mock(ExistsByOperation.class);
-
-        when(repositoryOperationProvider.existsByOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(true);
-
-        personRepository.existsByName("Ada");
-
-        verify(repositoryOperationProvider).existsByOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking countBy derived projection the repository must delegate to CountByOperation")
-    void shouldCountByName() {
-
-        CountByOperation operation = mock(CountByOperation.class);
-
-        when(repositoryOperationProvider.countByOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(2L);
-
-        personRepository.countByName("Ada");
-
-        verify(repositoryOperationProvider).countByOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking deleteBy derived query the repository must delegate to DeleteByOperation")
-    void shouldDeleteByName() {
-
-        DeleteByOperation operation = mock(DeleteByOperation.class);
-
-        when(repositoryOperationProvider.deleteByOperation()).thenReturn(operation);
-
-        personRepository.deleteByName("Ada");
-
-        verify(repositoryOperationProvider).deleteByOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking parameter-based repository methods the repository must delegate to ParameterBasedOperation")
-    void shouldParameterBasedOperation() {
-
-        ParameterBasedOperation operation = mock(ParameterBasedOperation.class);
-
-        when(repositoryOperationProvider.parameterBasedOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(List.of());
-
-        personRepository.age(10);
-
-        verify(repositoryOperationProvider).parameterBasedOperation();
-        verify(operation).execute(any());
-    }
-
-    @Test
-    @DisplayName("When invoking cursor pagination methods the repository must delegate to CursorPaginationOperation")
-    void shouldCursorPagination() {
-
-        CursorPaginationOperation operation = mock(CursorPaginationOperation.class);
-
-        when(repositoryOperationProvider.cursorPaginationOperation()).thenReturn(operation);
-        when(operation.execute(any())).thenReturn(mock(CursoredPage.class));
-
-        personRepository.findByName("Ada", PageRequest.ofPage(1).size(2));
-
-        verify(repositoryOperationProvider).cursorPaginationOperation();
-        verify(operation).execute(any());
+            verify(repositoryOperationProvider).parameterBasedOperation();
+            verify(operation).execute(any());
+        }
     }
 }
