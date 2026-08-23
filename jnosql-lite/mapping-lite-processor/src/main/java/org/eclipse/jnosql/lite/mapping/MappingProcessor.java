@@ -17,8 +17,9 @@ package org.eclipse.jnosql.lite.mapping;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
-import jakarta.nosql.Column;
-import jakarta.nosql.Id;
+import org.eclipse.jnosql.lite.mapping.entity.EntitiesMetadataModel;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
+import org.eclipse.jnosql.lite.mapping.processing.MetadataAppender;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -26,9 +27,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
@@ -41,15 +39,10 @@ import java.io.Writer;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
-
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
 
 @SupportedAnnotationTypes({"jakarta.nosql.Entity",
         "jakarta.nosql.Embeddable",
@@ -59,16 +52,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 public class MappingProcessor extends AbstractProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(MappingProcessor.class.getName());
-    private static final EnumSet<Modifier> MODIFIERS = EnumSet.of(PUBLIC, PROTECTED);
     private static final String TEMPLATE = "entities_metadata.mustache";
-    static final Predicate<Element> IS_CONSTRUCTOR = el -> el.getKind() == ElementKind.CONSTRUCTOR;
-    static final Predicate<Element> PUBLIC_PRIVATE = el -> el.getModifiers().stream().anyMatch(MODIFIERS::contains);
-    static final Predicate<Element> DEFAULT_MODIFIER = el -> el.getModifiers().isEmpty();
-    static final Predicate<Element> HAS_ACCESS = PUBLIC_PRIVATE.or(DEFAULT_MODIFIER);
-    static final Predicate<Element> HAS_COLUMN_ANNOTATION = el -> el.getAnnotation(Column.class) != null;
-    static final Predicate<Element> HAS_ID_ANNOTATION = el -> el.getAnnotation(Id.class) != null;
-    static final Predicate<Element> HAS_ANNOTATION = HAS_COLUMN_ANNOTATION.or(HAS_ID_ANNOTATION);
-    static final Predicate<Element> IS_FIELD = el -> el.getKind() == ElementKind.FIELD;
 
     private static final Map<String, String> SPI_FILES = Map.of(
             "org.eclipse.jnosql.mapping.metadata.EntitiesMetadata",
