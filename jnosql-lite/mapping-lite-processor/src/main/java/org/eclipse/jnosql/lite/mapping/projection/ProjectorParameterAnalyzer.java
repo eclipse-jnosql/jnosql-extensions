@@ -12,13 +12,17 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.projection;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import jakarta.data.repository.Select;
 import jakarta.nosql.Column;
+import org.eclipse.jnosql.lite.mapping.constructor.ConstructorParameter;
+import org.eclipse.jnosql.lite.mapping.constructor.ParameterModel;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorValidationException;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -36,7 +40,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
+final class ProjectorParameterAnalyzer implements Supplier<ConstructorParameter> {
 
     private static final Mustache MUSTACHE_DEFAULT_TEMPLATE;
     private static final Logger LOGGER = Logger.getLogger(ProjectorParameterAnalyzer.class.getName());
@@ -59,24 +63,24 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
     }
 
     @Override
-    public ParameterResult get() {
+    public ConstructorParameter get() {
         var metadata = getMetaData();
         Filer filer = processingEnv.getFiler();
         JavaFileObject fileObject = getFileObject(metadata, filer);
         try (Writer writer = fileObject.openWriter()) {
                 MUSTACHE_DEFAULT_TEMPLATE.execute(writer, metadata);
         } catch (IOException exception) {
-            throw new ValidationException("An error to compile the class: " +
+            throw new ProcessorValidationException("An error to compile the class: " +
                     metadata.getQualified(), exception);
         }
-        return new ParameterResult(metadata.getQualified(), metadata.getType());
+        return new ConstructorParameter(metadata.getQualified(), metadata.getType());
     }
 
     private JavaFileObject getFileObject(ParameterModel metadata, Filer filer) {
         try {
             return filer.createSourceFile(metadata.getQualified(), entity);
         } catch (IOException exception) {
-            throw new ValidationException("An error to create the class: " +
+            throw new ProcessorValidationException("An error to create the class: " +
                     metadata.getQualified(), exception);
         }
 
@@ -85,7 +89,7 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
     private ParameterModel getMetaData() {
         final String fieldName = parameter.getSimpleName().toString();
         LOGGER.finest("Processing the parameter: " + fieldName);
-        final String entityName = ProcessorUtil.getSimpleNameAsString(this.entity);
+        final String entityName = ProcessorUtils.simpleName(this.entity);
         final TypeMirror typeMirror = parameter.asType();
         String className;
 
@@ -99,7 +103,7 @@ class ProjectorParameterAnalyzer implements Supplier<ParameterResult> {
         var column = parameter.getAnnotation(Column.class);
         var select = findSelectFromRecordComponent(entity, fieldName).orElse(null);
 
-        final String packageName = ProcessorUtil.getPackageName(entity);
+        final String packageName = ProcessorUtils.packageName(entity);
         final String name = getName(fieldName, column, select);
 
         return ParameterModel.builder()
