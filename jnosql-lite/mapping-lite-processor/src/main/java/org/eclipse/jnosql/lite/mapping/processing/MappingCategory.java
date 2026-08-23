@@ -12,9 +12,9 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.processing;
 
-enum MappingCategory {
+public enum MappingCategory {
     ENTITY,
     PROJECTION,
     REPOSITORY;
