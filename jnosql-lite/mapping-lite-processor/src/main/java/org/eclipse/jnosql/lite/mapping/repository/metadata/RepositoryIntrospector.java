@@ -12,11 +12,14 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.repository.metadata;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingCategory;
+import org.eclipse.jnosql.lite.mapping.processing.MappingResult;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -34,7 +37,7 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-class RepositoryIntrospector implements Supplier<MappingResult> {
+public class RepositoryIntrospector implements Supplier<MappingResult> {
 
     private static final String MUSTACHE_TEMPLATE = "repository_metadata.mustache";
 
@@ -51,7 +54,7 @@ class RepositoryIntrospector implements Supplier<MappingResult> {
     private final ProcessingEnvironment processingEnv;
     private final Mustache template;
 
-    RepositoryIntrospector(Element element, ProcessingEnvironment processingEnv) {
+    public RepositoryIntrospector(Element element, ProcessingEnvironment processingEnv) {
         this.element = element;
         this.processingEnv = processingEnv;
         MustacheFactory factory = new DefaultMustacheFactory();
@@ -69,9 +72,9 @@ class RepositoryIntrospector implements Supplier<MappingResult> {
 
     private MappingResult generateMappingInterface(TypeElement repository) {
         LOGGER.info("Processing the repository: " + repository);
-        String packageName = ProcessorUtil.getPackageName(repository);
+        String packageName = ProcessorUtils.packageName(repository);
         String entity = entityOptionalLiteral(repository);
-        String type = ProcessorUtil.getSimpleNameAsString(repository);
+        String type = ProcessorUtils.simpleName(repository);
         List<String> methods = repository.getEnclosedElements()
                 .stream()
                 .map(e -> RepositoryMethodIntrospector.of(e, type, processingEnv))
