@@ -14,61 +14,34 @@
  */
 package org.eclipse.jnosql.lite.mapping;
 
-import com.github.mustachejava.DefaultMustacheFactory;
-import com.github.mustachejava.Mustache;
-import com.github.mustachejava.MustacheFactory;
-import jakarta.data.repository.Find;
-import jakarta.data.repository.First;
-import jakarta.data.repository.OrderBy;
-import jakarta.data.repository.Query;
-import jakarta.data.repository.Select;
-
-import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.Optional.ofNullable;
 
 final class RepositoryMethodIntrospector {
 
-    private static final String MUSTACHE_TEMPLATE = "repository_method_metadata.mustache";
-    private static final String OPTIONAL_EMPTY = "Optional.empty()";
-    private static final int FIND_INITIAL_SUBSTRING = 30;
-    private static final String FIND_LAST_SUBSTRING = ")";
-    private static final String SORT_DESC_MASK = "Sort.desc(\"%s\")";
-    private static final String SORT_ASC_MASK = "Sort.asc(\"%s\")";
-    private static final String OPTIONAL_CLASS_MASK = "Optional.of(%s.class)";
-    private static final Mustache TEMPLATE;
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
-    static {
-        MustacheFactory factory = new DefaultMustacheFactory();
-        TEMPLATE = factory.compile(MUSTACHE_TEMPLATE);
-    }
 
     private final Element method;
     private final String repository;
     private final ProcessingEnvironment processingEnv;
+    private final RepositoryMethodQueryIntrospector queryIntrospector;
+    private final RepositoryMethodReturnTypeIntrospector returnTypeIntrospector;
+    private final RepositoryMethodAnnotationCollector annotationCollector;
+    private final RepositoryMethodParameterCollector parameterCollector;
+    private final RepositoryMethodSourceGenerator sourceGenerator;
 
     RepositoryMethodIntrospector(Element method, String repository, ProcessingEnvironment processingEnv) {
         this.method = method;
         this.repository = repository;
         this.processingEnv = processingEnv;
+        this.queryIntrospector = new RepositoryMethodQueryIntrospector(method);
+        this.returnTypeIntrospector = new RepositoryMethodReturnTypeIntrospector(processingEnv);
+        this.annotationCollector = new RepositoryMethodAnnotationCollector(processingEnv, method);
+        this.parameterCollector = new RepositoryMethodParameterCollector(processingEnv, method);
+        this.sourceGenerator = new RepositoryMethodSourceGenerator(processingEnv);
     }
 
     public static RepositoryMethodIntrospector of(Element method, String type, ProcessingEnvironment processingEnv) {
@@ -89,157 +62,20 @@ final class RepositoryMethodIntrospector {
         String packageName = method.getEnclosingElement().getEnclosingElement().toString();
         String methodType = MethodTypeUtils.INSTANCE.type(method, processingEnv).name();
 
-        String query = getQuery();
-        String first = getFirst();
-        String find = getFind();
-        String returnType = getReturnType(executableElement);
-        String elementType = getElementType(executableElement);
-
-        List<String> selects = getSelects();
-        List<String> sorts = getSorts();
-        var repositoryMethodResult = annotationsClasses(executableElement, className, packageName);
-        List<String> annotations = repositoryMethodResult.annotations();
-        List<String> annotationsSource = repositoryMethodResult.annotationsSource();
-        if(repositoryMethodResult.isProvider()) {
+        var queryMetadata = queryIntrospector.introspect();
+        var returnTypeMetadata = returnTypeIntrospector.introspect(executableElement);
+        var annotationMetadata = annotationCollector.collect(executableElement, className, packageName);
+        if (annotationMetadata.provider()) {
             methodType = "PROVIDER_OPERATION";
         }
-        var paramResults = params(executableElement, className, packageName);
-        List<String> params = new ArrayList<>();
-        var paramSignature = paramResults.stream().map(RepositoryMethodParameterIntrospector.ParamResult::type)
-                .map(s-> s.concat(".class")).collect(Collectors.joining(","));
-        for (RepositoryMethodParameterIntrospector.ParamResult paramResult : paramResults) {
-            params.add(paramResult.qualified());
-        }
+        var parameterMetadata = parameterCollector.collect(executableElement, className, packageName);
+
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
-                methodType, query, find, first, returnType, elementType,
-                selects, sorts, annotations, params, paramSignature);
-        try {
-            createClass(method, metadata);
-        } catch (IOException exception) {
-            error(exception);
-        }
+                methodType, queryMetadata.query(), queryMetadata.find(), queryMetadata.first(),
+                returnTypeMetadata.returnType(), returnTypeMetadata.elementType(),
+                queryMetadata.selects(), queryMetadata.sorts(), annotationMetadata.annotations(),
+                parameterMetadata.params(), parameterMetadata.signature());
+        sourceGenerator.generate(method, metadata);
         return metadata.getQualified();
     }
-
-    private List<RepositoryMethodParameterIntrospector.ParamResult> params(ExecutableElement executableElement, String className, String packageName) {
-        List<RepositoryMethodParameterIntrospector.ParamResult> params = new ArrayList<>();
-        for (VariableElement parameter : executableElement.getParameters()) {
-            var param = new RepositoryMethodParameterIntrospector(processingEnv, className, packageName, parameter, method);
-            params.add(param.createClass());
-        }
-        return params;
-    }
-
-    RepositoryMethodResult annotationsClasses(ExecutableElement executableElement, String className, String packageName) {
-        List<String> annotations = new ArrayList<>();
-        List<String> annotationsSource = new ArrayList<>();
-        boolean isProvider = false;
-
-        List<? extends AnnotationMirror> annotationMirrors =
-                executableElement.getAnnotationMirrors();
-
-        List<String> declaredTypes = new ArrayList<>();
-
-        for (AnnotationMirror annotationMirror : annotationMirrors) {
-            String annotationName = annotationMirror.getAnnotationType().toString();
-
-            annotationsSource.add(annotationMirror.toString());
-
-            if (!declaredTypes.contains(annotationName)) {
-                RepositoryMethodAnnotationIntrospector repositoryMethodAnnotationIntrospector =
-                        new RepositoryMethodAnnotationIntrospector(
-                                className,
-                                packageName,
-                                processingEnv,
-                                annotationMirror,
-                                method);
-
-                var annotationClass =
-                        repositoryMethodAnnotationIntrospector.createAnnotationClass();
-
-                if (annotationClass.provider()) {
-                    isProvider = true;
-                }
-
-                annotations.add(annotationClass.qualified());
-                declaredTypes.add(annotationName);
-            }
-        }
-
-        return new RepositoryMethodResult(
-                annotations,
-                annotationsSource,
-                isProvider
-        );
-    }
-
-    private String getFind() {
-        return ofNullable(method.getAnnotation(Find.class))
-                .map(Find::toString)
-                .map(s -> s.substring(FIND_INITIAL_SUBSTRING, s.lastIndexOf(FIND_LAST_SUBSTRING)))
-                .map("Optional.of(%s)"::formatted)
-                .orElse(OPTIONAL_EMPTY);
-    }
-
-    private String getFirst() {
-        return ofNullable(method.getAnnotation(First.class))
-                .map(First::value)
-                .map("OptionalInt.of(%d)"::formatted)
-                .orElse("OptionalInt.empty()");
-    }
-
-    private String getQuery() {
-        return ofNullable(method.getAnnotation(Query.class))
-                .map(Query::value)
-                .map("Optional.of(\"%s\")"::formatted)
-                .orElse(OPTIONAL_EMPTY);
-    }
-
-    private String getReturnType(ExecutableElement executableElement) {
-        TypeElement returnElement = (TypeElement) processingEnv.getTypeUtils().asElement(executableElement.getReturnType());
-        return ofNullable(returnElement)
-                .map(Object::toString)
-                .map(OPTIONAL_CLASS_MASK::formatted)
-                .orElse(OPTIONAL_CLASS_MASK.formatted(executableElement.getReturnType().toString()));
-    }
-
-    private List<String> getSorts() {
-        return Arrays.stream(method.getAnnotationsByType(OrderBy.class))
-                .map(orderBy -> orderBy.descending() ? SORT_DESC_MASK.formatted(orderBy.value()) :
-                        SORT_ASC_MASK.formatted(orderBy.value())).toList();
-    }
-
-    private List<String> getSelects() {
-        return Arrays.stream(method.getAnnotationsByType(Select.class))
-                .map(Select::value)
-                .toList();
-    }
-
-    private static String getElementType(ExecutableElement executableElement) {
-        String elementType = OPTIONAL_EMPTY;
-        if(executableElement.getReturnType() instanceof DeclaredType declaredType) {
-            List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-            elementType = typeArguments.stream().map(TypeMirror::toString).findFirst().map(OPTIONAL_CLASS_MASK::formatted)
-                    .orElse(OPTIONAL_EMPTY);
-        } else if(executableElement.getReturnType() instanceof ArrayType arrayType) {
-            elementType = OPTIONAL_CLASS_MASK.formatted(arrayType.getComponentType().toString());
-        }
-        return elementType;
-    }
-
-
-    private void createClass(Element entity, RepositoryMethodModel metadata) throws IOException {
-        Filer filer = processingEnv.getFiler();
-        JavaFileObject fileObject = filer.createSourceFile(metadata.getQualified(), entity);
-        try (Writer writer = fileObject.openWriter()) {
-            TEMPLATE.execute(writer, metadata);
-        }
-    }
-
-    private void error(IOException exception) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "failed to write extension file: "
-                + exception.getMessage());
-    }
-
-    record RepositoryMethodResult(List<String> annotations, List<String> annotationsSource, boolean isProvider) {}
 }
