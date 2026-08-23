@@ -18,11 +18,16 @@ import org.eclipse.jnosql.lite.mapping.metadata.LiteEntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.EntityMetadata;
 import org.eclipse.jnosql.mapping.metadata.FieldMetadata;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.assertj.core.api.SoftAssertions;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DatabaseTest {
 
@@ -32,40 +37,59 @@ public class DatabaseTest {
 
     @BeforeEach
     public void setUp() {
-        this.mappings = new LiteEntitiesMetadata();
-        this.entityMetadata = this.mappings.get(Database.class);
+        mappings = new LiteEntitiesMetadata();
+        entityMetadata = mappings.get(Database.class);
     }
 
-    @Test
-    void shouldGetName() {
-        Assertions.assertEquals("Database", entityMetadata.name());
-    }
+    @Nested
+    @DisplayName("When the database value is resolved")
+    class WhenTheDatabaseValueIsResolved {
 
-    @Test
-    void shouldGetSimpleName() {
-        Assertions.assertEquals(Database.class.getSimpleName(), entityMetadata.simpleName());
-    }
 
-    @Test
-    void shouldGetClassName() {
-        Assertions.assertEquals(Database.class.getName(), entityMetadata.className());
-    }
+        @Test
+        @DisplayName("Should expose the mapping name")
+        void shouldExposeMappingName() {
+            assertThat(entityMetadata.name()).as("value of entityMetadata.name()").isEqualTo("Database");
+        }
 
-    @Test
-    void shouldGetClassInstance() {
-        Assertions.assertEquals(Database.class, entityMetadata.type());
-    }
 
-    @Test
-    void shouldGetId() {
-        Optional<FieldMetadata> id = this.entityMetadata.id();
-        org.assertj.core.api.Assertions.assertThat(id).isPresent();
-    }
+        @Test
+        @DisplayName("Should expose the entity simple name")
+        void shouldExposeEntitySimpleName() {
+            assertThat(entityMetadata.simpleName()).as("value of entityMetadata.simpleName()").isEqualTo(Database.class.getSimpleName());
+        }
 
-    @Test
-    void shouldHaveAutoApplyConverter() {
-        Optional<FieldMetadata> id = this.entityMetadata.fieldMapping("id");
-        org.assertj.core.api.Assertions.assertThat(id).isPresent();
-        org.assertj.core.api.Assertions.assertThat(id.get().converter()).isPresent();
+
+        @Test
+        @DisplayName("Should expose the entity class name")
+        void shouldExposeEntityClassName() {
+            assertThat(entityMetadata.className()).as("value of entityMetadata.className()").isEqualTo(Database.class.getName());
+        }
+
+
+        @Test
+        @DisplayName("Should expose the entity type")
+        void shouldExposeEntityType() {
+            assertThat(entityMetadata.type()).as("value of entityMetadata.type()").isEqualTo(Database.class);
+        }
+
+
+        @Test
+        @DisplayName("Should expose identifier metadata")
+        void shouldExposeIdentifierMetadata() {
+            Optional<FieldMetadata> id = entityMetadata.id();
+            assertThat(id).as("value of id").isPresent();
+        }
+
+
+        @Test
+        @DisplayName("Should have auto apply converter")
+        void shouldHaveAutoApplyConverter() {
+            Optional<FieldMetadata> id = entityMetadata.fieldMapping("id");
+            SoftAssertions.assertSoftly(soft -> {
+                soft.assertThat(id).as("value of id").isPresent();
+                soft.assertThat(id.get().converter()).as("value of id.get().converter()").isPresent();
+            });
+        }
     }
 }
