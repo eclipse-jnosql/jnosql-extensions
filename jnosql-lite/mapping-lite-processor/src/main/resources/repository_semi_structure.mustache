@@ -269,9 +269,9 @@ public class {{className}} implements {{repository}} {
 
 
     {{#methods}}
-    {{#annotations}}
-        {{{annotation}}}
-    {{/annotations}}
+    {{#annotationsSource}}
+    {{{.}}}
+    {{/annotationsSource}}
     @Override
     public {{{returnType}}} {{methodName}}({{{parametersSignature}}}) {
     {{#parameters}}
