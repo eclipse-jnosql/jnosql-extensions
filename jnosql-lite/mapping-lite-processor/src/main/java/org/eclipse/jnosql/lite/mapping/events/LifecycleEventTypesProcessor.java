@@ -34,6 +34,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Processes Jakarta NoSQL entities to generate concrete type information for
+ * their Jakarta Data lifecycle events.
+ *
+ * <p>The generated providers enable CDI to publish strongly typed insert,
+ * update, upsert, and delete events without runtime generic-type inspection.</p>
+ */
 @SupportedAnnotationTypes("jakarta.nosql.Entity")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class LifecycleEventTypesProcessor  extends AbstractProcessor {
