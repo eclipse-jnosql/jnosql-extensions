@@ -12,15 +12,17 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.constructor;
 
 import jakarta.nosql.Convert;
+import org.eclipse.jnosql.lite.mapping.processing.BaseMappingModel;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 
 import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 import java.util.Objects;
 
-final class ParameterModel extends BaseMappingModel {
+public final class ParameterModel extends BaseMappingModel {
 
     private String packageName;
     private String name;
@@ -72,7 +74,7 @@ final class ParameterModel extends BaseMappingModel {
     }
 
     public String getClassName() {
-        return entity + ProcessorUtil.capitalize(fieldName) + "ParameterMetaData";
+        return entity + ProcessorUtils.capitalize(fieldName) + "ParameterMetaData";
     }
 
     public String getFieldName() {
@@ -259,7 +261,7 @@ final class ParameterModel extends BaseMappingModel {
         }
 
 
-        ParameterModel build() {
+        public ParameterModel build() {
            return fieldModel;
         }
     }
