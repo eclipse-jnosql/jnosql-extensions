@@ -12,15 +12,16 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity.field;
 
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
-class FieldAnalyzer implements Supplier<String> {
+public class FieldAnalyzer implements Supplier<String> {
 
     private static final Logger LOGGER = Logger.getLogger(FieldAnalyzer.class.getName());
 
@@ -31,8 +32,8 @@ class FieldAnalyzer implements Supplier<String> {
     private final FieldAnnotationIntrospector annotationIntrospector;
     private final FieldSourceGenerator sourceGenerator;
 
-    FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
-                  TypeElement entity) {
+    public FieldAnalyzer(Element field, ProcessingEnvironment processingEnv,
+                         TypeElement entity) {
         this.field = field;
         this.entity = entity;
         this.typeIntrospector = new FieldTypeIntrospector(field);
@@ -54,8 +55,8 @@ class FieldAnalyzer implements Supplier<String> {
         var typeMetadata = typeIntrospector.introspect();
         var accessorMetadata = accessorIntrospector.introspect();
         var annotationMetadata = annotationIntrospector.introspect(fieldName);
-        final String packageName = ProcessorUtil.getPackageName(entity);
-        final String entityName = ProcessorUtil.getSimpleNameAsString(this.entity);
+        final String packageName = ProcessorUtils.packageName(entity);
+        final String entityName = ProcessorUtils.simpleName(this.entity);
 
         return FieldModel.builder()
                 .packageName(packageName)
