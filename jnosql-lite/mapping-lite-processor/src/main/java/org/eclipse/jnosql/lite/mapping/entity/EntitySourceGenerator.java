@@ -12,10 +12,11 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
+import org.eclipse.jnosql.lite.mapping.constructor.ConstructorMetadataModel;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -39,7 +40,7 @@ final class EntitySourceGenerator {
         generate(entity, metadata.getQualified(), metadata, ENTITY_TEMPLATE);
     }
 
-    void generateConstructor(Element entity, ConstructorMetamodel metadata) throws IOException {
+    void generateConstructor(Element entity, ConstructorMetadataModel metadata) throws IOException {
         generate(entity, metadata.getQualified(), metadata, CONSTRUCTOR_TEMPLATE);
     }
 
