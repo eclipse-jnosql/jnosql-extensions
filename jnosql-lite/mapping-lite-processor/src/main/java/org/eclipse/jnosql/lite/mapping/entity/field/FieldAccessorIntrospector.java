@@ -12,8 +12,11 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.entity.field;
 
+import org.eclipse.jnosql.lite.mapping.processing.ElementPredicates;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorUtils;
+import org.eclipse.jnosql.lite.mapping.processing.ProcessorValidationException;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -36,12 +39,12 @@ final class FieldAccessorIntrospector {
 
     AccessorMetadata introspect() {
         String fieldName = field.getSimpleName().toString();
-        String capitalizedName = ProcessorUtil.capitalize(fieldName);
+        String capitalizedName = ProcessorUtils.capitalize(fieldName);
         Predicate<Element> validName = element -> element.getSimpleName().toString().contains(capitalizedName);
 
         var accessors = processingEnv.getElementUtils()
                 .getAllMembers(entity).stream()
-                .filter(validName.and(IS_METHOD).and(MappingProcessor.HAS_ACCESS))
+                .filter(validName.and(IS_METHOD).and(ElementPredicates.HAS_ACCESS))
                 .map(element -> element.getSimpleName().toString())
                 .toList();
 
@@ -59,10 +62,10 @@ final class FieldAccessorIntrospector {
         return new AccessorMetadata(reader, writer);
     }
 
-    private ValidationException missingGetter(String fieldName) {
-        String packageName = ProcessorUtil.getPackageName(entity);
-        String entityName = ProcessorUtil.getSimpleNameAsString(entity);
-        return new ValidationException("There is not valid getter method to the field: "
+    private ProcessorValidationException missingGetter(String fieldName) {
+        String packageName = ProcessorUtils.packageName(entity);
+        String entityName = ProcessorUtils.simpleName(entity);
+        return new ProcessorValidationException("There is not valid getter method to the field: "
                 + fieldName + " in the class: " + packageName + "." + entityName);
     }
 
