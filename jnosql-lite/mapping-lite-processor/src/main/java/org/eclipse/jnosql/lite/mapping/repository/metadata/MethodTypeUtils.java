@@ -12,7 +12,7 @@
  *
  *   Otavio Santana
  */
-package org.eclipse.jnosql.lite.mapping;
+package org.eclipse.jnosql.lite.mapping.repository.metadata;
 
 import jakarta.data.repository.Delete;
 import jakarta.data.repository.Find;
