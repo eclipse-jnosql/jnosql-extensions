@@ -37,6 +37,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Processes Jakarta NoSQL converters configured for automatic application and
+ * generates metadata that associates each attribute type with its converter.
+ *
+ * <p>The generated metadata is registered as a service provider for runtime
+ * discovery without classpath scanning.</p>
+ */
 @SupportedAnnotationTypes("jakarta.nosql.Converter")
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class AutoApplyConverterProcessor extends AbstractProcessor {
