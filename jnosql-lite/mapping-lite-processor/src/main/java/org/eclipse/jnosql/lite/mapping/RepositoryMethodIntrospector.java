@@ -112,7 +112,7 @@ final class RepositoryMethodIntrospector {
         }
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, query, find, first, returnType, elementType,
-                selects, sorts, annotations, annotationsSource, params, paramSignature);
+                selects, sorts, annotations, params, paramSignature);
         try {
             createClass(method, metadata);
         } catch (IOException exception) {
