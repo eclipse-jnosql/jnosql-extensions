@@ -1,8 +1,8 @@
 /*
  *  Copyright (c) 2025 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
- *   are made available under the terms of the Eclipse Public License v1.0
- *   and Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+ *   are made available under the terms of the Eclipse Public License 2.0
+ *   and Apache License v2.0 is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
  *   You may elect to redistribute this code under either of these licenses.
  *
