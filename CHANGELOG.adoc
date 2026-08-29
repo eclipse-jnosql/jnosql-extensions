@@ -17,6 +17,16 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 - Update Meta processor to use Java to SourceVersion.RELEASE_21
 
+== 1.1.17 - 2026-10-29
+
+=== Fixed
+
+* Fixed `Page.totalElements` access outside an active transaction.
+
+=== Changed
+
+* Updated license headers to Eclipse Public License 2.0.
+
 == [1.1.16] - 2026-10-08
 
 == [1.1.15] - 2026-07-03
