@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.lite.mapping.entities;
 
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
+import org.eclipse.jnosql.mapping.metadata.repository.spi.FindByOperation;
 import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.timeseries.TimeSeriesTemplate;
 import org.junit.jupiter.api.Test;
@@ -24,9 +25,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,5 +70,19 @@ class MeasurementRepositoryTest {
 
         assertThat(result).contains(measurement);
         verify(template).find(Measurement.class, id);
+    }
+
+    @Test
+    void shouldFindMeasurementByTimestamp() {
+        Instant timestamp = Instant.parse("2026-09-10T13:00:00Z");
+        FindByOperation operation = mock(FindByOperation.class);
+        when(repositoryOperationProvider.findByOperation()).thenReturn(operation);
+        when(operation.execute(any())).thenReturn(List.of(new Measurement()));
+
+        List<Measurement> result = repository.findByTimestamp(timestamp);
+
+        assertThat(result).hasSize(1);
+        verify(repositoryOperationProvider).findByOperation();
+        verify(operation).execute(any());
     }
 }
