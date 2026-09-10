@@ -23,6 +23,9 @@ Adopting the extension approach provides several benefits:
 
 - **Enhanced Maintainability:** Java Annotation Processors simplify codebase maintenance and debugging by replacing reflection-based operations with compile-time checks and optimizations.
 
+JNoSQL Lite supports key-value, document, column, graph, and time-series databases.
+The annotation processor detects the corresponding JNoSQL Mapping module on the classpath and generates repositories for that database type.
+
 === Extension Steps
 
 To use this Extension, follow a two-step process:
@@ -392,5 +395,4 @@ We are very happy you are interested in helping us and there are plenty ways you
 - https://github.com/eclipse/jnosql/issues[**Open an Issue:**]  Recommend improvements, changes and report bugs. Please, mention that the issue refers to the JNoSQL extensions project.
 
 - **Open a Pull Request:** If you feel like you can even make changes to our source code and suggest them, just check out our link:CONTRIBUTING.adoc[contributing guide] to learn about the development process, how to suggest bugfixes and improvements.
-
 

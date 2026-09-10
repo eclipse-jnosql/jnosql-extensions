@@ -72,6 +72,7 @@ class RepositoryElement {
     public RepositoryMetadata getMetadata(DatabaseType type) {
         return switch (type) {
             case DOCUMENT -> new SemiStructureRepositoryMetadata(this, "Document");
+            case TIME_SERIES -> new SemiStructureRepositoryMetadata(this, "TimeSeries");
             case COLUMN -> new SemiStructureRepositoryMetadata(this, "Column");
             case GRAPH -> new SemiStructureRepositoryMetadata(this, "Graph");
             case KEY_VALUE -> new KeyValueRepositoryMetadata(this);
