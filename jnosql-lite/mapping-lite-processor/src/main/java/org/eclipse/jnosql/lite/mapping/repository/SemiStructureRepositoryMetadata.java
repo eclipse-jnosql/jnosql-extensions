@@ -14,14 +14,12 @@
  */
 package org.eclipse.jnosql.lite.mapping.repository;
 
-import java.util.Locale;
-
 class SemiStructureRepositoryMetadata extends RepositoryMetadata {
 
     private final String provider;
 
     SemiStructureRepositoryMetadata(RepositoryElement element, String provider) {
-        super(element, provider.toUpperCase(Locale.ENGLISH));
+        super(element, element.getType().name());
         this.provider = provider;
     }
 
