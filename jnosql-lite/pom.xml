@@ -45,6 +45,7 @@
         <module>mapping-lite-key-value-test</module>
         <module>mapping-lite-core-test</module>
         <module>mapping-lite-document-test</module>
+        <module>mapping-lite-timeseries-test</module>
         <module>mapping-lite-column-test</module>
         <module>mapping-lite-graph-test</module>
     </modules>
