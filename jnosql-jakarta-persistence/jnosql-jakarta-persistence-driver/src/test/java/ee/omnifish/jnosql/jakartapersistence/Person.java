@@ -17,6 +17,7 @@ package ee.omnifish.jnosql.jakartapersistence;
 import static jakarta.persistence.GenerationType.AUTO;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -37,6 +38,9 @@ public class Person {
 
     @Column
     private List<String> phones;
+
+    @Embedded
+    private SocialSecurityNumber ssn;
 
     public long getId() {
         return id;
@@ -70,5 +74,12 @@ public class Person {
         this.age = age;
     }
 
+    public SocialSecurityNumber getSsn() {
+        return ssn;
+    }
+
+    public void setSsn(SocialSecurityNumber ssn) {
+        this.ssn = ssn;
+    }
 
 }
