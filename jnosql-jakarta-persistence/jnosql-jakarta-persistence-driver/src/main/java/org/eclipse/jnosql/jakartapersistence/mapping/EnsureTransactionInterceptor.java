@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License 2.0
@@ -12,6 +12,7 @@
  *  Contributors:
  *
  *  Ondro Mihalyi
+ *  Renat R. Safiullin
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
@@ -41,23 +42,22 @@ public class EnsureTransactionInterceptor implements MethodInterceptor {
     @Override
     public Object intercept(InvocationContext context) throws Exception {
         EntityManager entityManager = (EntityManager)context.getContextData().get(EntityManager.class.getName());
-        final boolean transactionWillBeCreated = !entityManager.isJoinedToTransaction();
 
-        return runInGlobalTransaction.execute(() -> runInNewOrExistingTransaction(entityManager, context, transactionWillBeCreated));
+        return runInGlobalTransaction.execute(() -> runInNewOrExistingTransaction(entityManager, context));
     }
 
-    private Object runInNewOrExistingTransaction(EntityManager entityManager, InvocationContext context, boolean transactionWillBeCreated) throws Exception {
+    private Object runInNewOrExistingTransaction(EntityManager entityManager, InvocationContext context) throws Exception {
         try {
             boolean inTransaction = entityManager.isJoinedToTransaction();
             if (inTransaction) {
                 final Object result = context.proceed();
-                return fetchIfNeeded(result, transactionWillBeCreated);
+                return fetchIfNeeded(result);
             } else {
                 EntityTransaction transaction = entityManager.getTransaction();
                 transaction.begin();
                 try {
                     Object result = context.proceed();
-                    result = fetchIfNeeded(result, transactionWillBeCreated);
+                    result = fetchIfNeeded(result);
                     transaction.commit();
                     return result;
                 } catch (Exception e) {
@@ -72,8 +72,10 @@ public class EnsureTransactionInterceptor implements MethodInterceptor {
         }
     }
 
-    private Object fetchIfNeeded(Object result, boolean transactionWillBeCreated) {
-        if (transactionWillBeCreated && result instanceof Page page) {
+    private Object fetchIfNeeded(Object result) {
+        // A transaction-scoped EntityManager is closed when the transaction ends, whether this interceptor
+        // or the caller started it, and the returned Page outlives it
+        if (result instanceof Page page) {
             page.hasContent();
             if (page.hasTotals()) {
                 page.totalElements();
