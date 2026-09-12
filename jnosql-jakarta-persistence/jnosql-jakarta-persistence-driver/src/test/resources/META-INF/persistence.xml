@@ -19,6 +19,7 @@
   <persistence-unit name="testPersistenceUnit" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <class>ee.omnifish.jnosql.jakartapersistence.Person</class>
+    <class>ee.omnifish.jnosql.jakartapersistence.SocialSecurityNumber</class>
     <class>org.eclipse.jnosql.extensions.sql.model.Computer</class>
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <properties>

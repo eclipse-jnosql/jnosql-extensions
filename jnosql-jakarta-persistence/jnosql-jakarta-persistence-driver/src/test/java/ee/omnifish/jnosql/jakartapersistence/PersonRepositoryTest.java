@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License 2.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -16,6 +16,10 @@ package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.persistence.EntityManager;
+import org.eclipse.jnosql.communication.semistructured.DeleteQuery;
+import org.eclipse.jnosql.communication.semistructured.SelectQuery;
+import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManagerProvider;
+import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +57,12 @@ public class PersonRepositoryTest {
 
     private EntityManager getEntityManager() {
         return cdiContainer.select(EntityManager.class).get();
+    }
+
+    private PersistenceDocumentTemplate getTemplate() {
+        // Created the same way as in PersistenceRepositoryProducer
+        return new PersistenceDocumentTemplate(
+                cdiContainer.select(PersistenceDatabaseManagerProvider.class).get().getManager(getEntityManager()));
     }
 
     @AfterEach
@@ -116,6 +126,55 @@ public class PersonRepositoryTest {
     }
 
     @Test
+    void findByEmbeddableWithoutNaturalOrdering() {
+        final SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+        new PersonBuilder().name("Data").ssn(new SocialSecurityNumber("987-65-4321")).insert(personRepo);
+
+        final List<Person> persons = personRepo.findBySsn(ssn);
+        assertThat(persons, hasSize(1));
+        assertThat(persons.get(0).getName(), is("Jakarta"));
+    }
+
+    @Test
+    void findAnnotatedByEmbeddableWithoutNaturalOrdering() {
+        final SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+        new PersonBuilder().name("Data").ssn(new SocialSecurityNumber("987-65-4321")).insert(personRepo);
+
+        final List<Person> persons = personRepo.personsBySsn(ssn);
+        assertThat(persons, hasSize(1));
+        assertThat(persons.get(0).getName(), is("Jakarta"));
+    }
+
+    @Test
+    void selectQueryByEmbeddableWithoutNaturalOrdering() {
+        final SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+        new PersonBuilder().name("Data").ssn(new SocialSecurityNumber("987-65-4321")).insert(personRepo);
+
+        // Unlike repository methods, a SelectQuery carries the operand as a resolved Value, not a ParamValue
+        final SelectQuery query = SelectQuery.select().from("Person").where("ssn").eq(ssn).build();
+        final List<Person> persons = getTemplate().<Person>select(query).toList();
+        assertThat(persons, hasSize(1));
+        assertThat(persons.get(0).getName(), is("Jakarta"));
+    }
+
+    @Test
+    void deleteQueryByEmbeddableWithoutNaturalOrdering() {
+        final SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+        new PersonBuilder().name("Data").ssn(new SocialSecurityNumber("987-65-4321")).insert(personRepo);
+
+        final DeleteQuery query = DeleteQuery.delete().from("Person").where("ssn").eq(ssn).build();
+        getTemplate().delete(query);
+
+        final List<Person> persons = personRepo.findAll().toList();
+        assertThat(persons, hasSize(1));
+        assertThat(persons.get(0).getName(), is("Data"));
+    }
+
+    @Test
     void hermesParser() {
         getEntityManager().createQuery("UPDATE Person SET age = age + 1");
     }
@@ -131,6 +190,11 @@ public class PersonRepositoryTest {
 
         public PersonBuilder age(long age) {
             p.setAge(age);
+            return this;
+        }
+
+        public PersonBuilder ssn(SocialSecurityNumber ssn) {
+            p.setSsn(ssn);
             return this;
         }
 
