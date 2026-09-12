@@ -116,6 +116,22 @@ public class PersonRepositoryTest {
     }
 
     @Test
+    void findByEmbeddedValue() {
+        SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+
+        assertThat(personRepo.findBySsn(ssn), hasSize(1));
+    }
+
+    @Test
+    void findByEmbeddedValueUsingFindAnnotation() {
+        SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+
+        assertThat(personRepo.personsBySsn(ssn), hasSize(1));
+    }
+
+    @Test
     void hermesParser() {
         getEntityManager().createQuery("UPDATE Person SET age = age + 1");
     }
@@ -131,6 +147,11 @@ public class PersonRepositoryTest {
 
         public PersonBuilder age(long age) {
             p.setAge(age);
+            return this;
+        }
+
+        public PersonBuilder ssn(SocialSecurityNumber ssn) {
+            p.setSsn(ssn);
             return this;
         }
 
