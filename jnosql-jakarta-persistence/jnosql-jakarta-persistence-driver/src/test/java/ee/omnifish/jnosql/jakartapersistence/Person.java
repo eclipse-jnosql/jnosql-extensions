@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License 2.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -15,6 +15,7 @@
 package ee.omnifish.jnosql.jakartapersistence;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -38,6 +39,9 @@ public class Person {
 
     @Column
     private List<String> phones;
+
+    @Embedded
+    private SocialSecurityNumber ssn;
 
     public long getId() {
         return id;
@@ -69,6 +73,14 @@ public class Person {
 
     public void setAge(long age) {
         this.age = age;
+    }
+
+    public SocialSecurityNumber getSsn() {
+        return ssn;
+    }
+
+    public void setSsn(SocialSecurityNumber ssn) {
+        this.ssn = ssn;
     }
 
 

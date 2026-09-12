@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License 2.0
@@ -173,9 +173,14 @@ abstract class BaseQueryParser {
         Element element = (Element) criteria.element();
         if (element.value().isNull()) {
             return ctx.builder().isNull(ctx.root().get(getName(element)));
-        } else {
-            ComparableContext comparableContext = ComparableContext.from(ctx, criteria, ignoreCase);
+        } else if (ignoreCase) {
+            // IgnoreCase is only defined for String values, which are Comparable
+            ComparableContext comparableContext = ComparableContext.from(ctx, criteria, true);
             return ctx.builder().equal(comparableContext.field(), comparableContext.expression());
+        } else {
+            // Equality imposes no ordering, so the value doesn't have to be Comparable
+            EqualityContext equalityContext = EqualityContext.from(ctx, criteria);
+            return ctx.builder().equal(equalityContext.field(), equalityContext.expression());
         }
     }
 
@@ -243,6 +248,19 @@ abstract class BaseQueryParser {
         }
     }
 
+    static Expression<?> getEqualityExpression(CriteriaBuilder cb, Object value) {
+        if (value instanceof ParamValue param && param.isEmpty()) {
+            // We only create parameter if we have no value
+            // If we have the value, we use the value instead
+            return cb.parameter(Object.class, param.getName());
+        } else if (value instanceof Value unwrapped) {
+            // Unlike Value.get(Class), Value.get() doesn't require a ValueReader for the target type
+            return cb.literal(unwrapped.get());
+        } else {
+            return cb.literal(value);
+        }
+    }
+
     @SafeVarargs
     static void requireComparisonSupportsIgnoreCase(CriteriaCondition criteria, Expression<? extends Comparable>... operands) {
             if (!Stream.of(operands).allMatch(BaseQueryParser::isStringExpression)) {
@@ -277,6 +295,15 @@ abstract class BaseQueryParser {
                 expression = ctx.builder().upper((Expression<String>) expression);
             }
             return new ComparableContext(field, expression);
+        }
+    }
+
+    static record EqualityContext(Expression<?> field, Expression<?> expression) {
+
+        public static <FROM> EqualityContext from(QueryContext<FROM> ctx, CriteriaCondition criteria) {
+            Element element = (Element) criteria.element();
+            return new EqualityContext(ctx.root().get(getName(element)),
+                    getEqualityExpression(ctx.builder(), element.value()));
         }
     }
 

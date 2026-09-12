@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ *  Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *   All rights reserved. This program and the accompanying materials
  *   are made available under the terms of the Eclipse Public License 2.0
  *   and Apache License v2.0 which accompanies this distribution.
@@ -116,6 +116,28 @@ public class PersonRepositoryTest {
     }
 
     @Test
+    void findByEmbeddableWithoutNaturalOrdering() {
+        final SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+        new PersonBuilder().name("Data").ssn(new SocialSecurityNumber("987-65-4321")).insert(personRepo);
+
+        final List<Person> persons = personRepo.findBySsn(ssn);
+        assertThat(persons, hasSize(1));
+        assertThat(persons.get(0).getName(), is("Jakarta"));
+    }
+
+    @Test
+    void findAnnotatedByEmbeddableWithoutNaturalOrdering() {
+        final SocialSecurityNumber ssn = new SocialSecurityNumber("123-45-6789");
+        new PersonBuilder().name("Jakarta").ssn(ssn).insert(personRepo);
+        new PersonBuilder().name("Data").ssn(new SocialSecurityNumber("987-65-4321")).insert(personRepo);
+
+        final List<Person> persons = personRepo.personsBySsn(ssn);
+        assertThat(persons, hasSize(1));
+        assertThat(persons.get(0).getName(), is("Jakarta"));
+    }
+
+    @Test
     void hermesParser() {
         getEntityManager().createQuery("UPDATE Person SET age = age + 1");
     }
@@ -131,6 +153,11 @@ public class PersonRepositoryTest {
 
         public PersonBuilder age(long age) {
             p.setAge(age);
+            return this;
+        }
+
+        public PersonBuilder ssn(SocialSecurityNumber ssn) {
+            p.setSsn(ssn);
             return this;
         }
 
