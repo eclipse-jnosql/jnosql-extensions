@@ -14,6 +14,7 @@ package ee.omnifish.jnosql.jakartapersistence;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 
 public class PageOutsideTransactionTest {
 
@@ -64,5 +66,37 @@ public class PageOutsideTransactionTest {
                         PageRequest.ofPage(1).size(10));
 
         assertThat(page.totalElements(), is(2L));
+    }
+
+    @Test
+    void pageAccessibleAfterRepositoryTransactionEnds() {
+        Page<Person> page =
+                repository.findByNameLike(
+                        "Ali%",
+                        PageRequest.ofPage(1).size(10));
+        closeEntityManager();
+
+        assertThat(page.content(), hasSize(2));
+        assertThat(page.totalElements(), is(2L));
+    }
+
+    @Test
+    void pageAccessibleAfterCallerTransactionEnds() {
+        EntityManager entityManager = cdiContainer.select(EntityManager.class).get();
+        entityManager.getTransaction().begin();
+        Page<Person> page =
+                repository.findByNameLike(
+                        "Ali%",
+                        PageRequest.ofPage(1).size(10));
+        entityManager.getTransaction().commit();
+        closeEntityManager();
+
+        assertThat(page.content(), hasSize(2));
+        assertThat(page.totalElements(), is(2L));
+    }
+
+    // Stands in for a container-managed, transaction-scoped EntityManager, which is closed once the transaction ends
+    private void closeEntityManager() {
+        cdiContainer.select(EntityManager.class).get().close();
     }
 }
