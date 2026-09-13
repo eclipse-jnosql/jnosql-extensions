@@ -187,9 +187,12 @@ abstract class BaseQueryParser {
         Element element = (Element) criteria.element();
         if (element.value().isNull()) {
             return ctx.builder().isNull(ctx.root().get(getName(element)));
-        } else {
-            ComparableContext comparableContext = ComparableContext.from(ctx, criteria, ignoreCase);
+        } else if (ignoreCase) {
+            ComparableContext comparableContext = ComparableContext.from(ctx, criteria, true);
             return ctx.builder().equal(comparableContext.field(), comparableContext.expression());
+        } else {
+            EqualityContext equalityContext = EqualityContext.from(ctx, criteria);
+            return ctx.builder().equal(equalityContext.field(), equalityContext.expression());
         }
     }
 
@@ -276,6 +279,24 @@ abstract class BaseQueryParser {
     }
 
     static record QueryContext<FROM>(Root<FROM> root, CriteriaBuilder builder) {
+    }
+
+    static record EqualityContext(Expression<?> field, Expression<?> expression) {
+
+        public static <FROM> EqualityContext from(QueryContext ctx, CriteriaCondition criteria) {
+            Element element = (Element) criteria.element();
+            Expression<?> field = ctx.root().get(getName(element));
+            Object value = element.value();
+            Expression<?> expression;
+            if (value instanceof ParamValue param && param.isEmpty()) {
+                expression = ctx.builder().parameter(field.getJavaType(), param.getName());
+            } else if (value instanceof Value wrappedValue) {
+                expression = ctx.builder().literal(wrappedValue.get());
+            } else {
+                expression = ctx.builder().literal(value);
+            }
+            return new EqualityContext(field, expression);
+        }
     }
 
     static record ComparableContext(Expression<? extends Comparable> field, Expression<? extends Comparable> expression) {
