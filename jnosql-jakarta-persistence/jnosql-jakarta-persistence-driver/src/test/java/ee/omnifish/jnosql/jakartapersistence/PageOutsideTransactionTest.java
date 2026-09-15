@@ -33,9 +33,10 @@ public class PageOutsideTransactionTest {
     @BeforeEach
     void init() {
         TestJakartaPersistenceClassScanner.standardRepositories =
-                Set.of(PagePersonRepository.class);
+                Set.of(PagePersonRepository.class, InTransactionPagePersonRepository.class);
 
         cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
+                .addBeanClasses(InTransactionInterceptor.class)
                 .initialize();
 
         repository = cdiContainer.select(PagePersonRepository.class).get();
@@ -89,6 +90,22 @@ public class PageOutsideTransactionTest {
                         "Ali%",
                         PageRequest.ofPage(1).size(10));
         entityManager.getTransaction().commit();
+        closeEntityManager();
+
+        assertThat(page.content(), hasSize(2));
+        assertThat(page.totalElements(), is(2L));
+    }
+
+    // The interceptor binding on the repository interface starts the transaction around the repository,
+    // as @Transactional on a repository interface does in a container
+    @Test
+    void pageAccessibleAfterRepositoryInterceptorTransactionEnds() {
+        InTransactionPagePersonRepository inTransactionRepository =
+                cdiContainer.select(InTransactionPagePersonRepository.class).get();
+        Page<Person> page =
+                inTransactionRepository.findByNameLike(
+                        "Ali%",
+                        PageRequest.ofPage(1).size(10));
         closeEntityManager();
 
         assertThat(page.content(), hasSize(2));
