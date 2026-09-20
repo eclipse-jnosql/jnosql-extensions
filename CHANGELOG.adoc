@@ -8,10 +8,6 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 == [Unreleased]
 
-=== Added
-
-- Add support for time-series databases in JNoSQL Lite.
-
 === Fixed
 
 - Fixes the Jakarta Data Query to execute the query with the correct parameters at JNoSQL Lite.
@@ -20,6 +16,16 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 === Changed
 
 - Update Meta processor to use Java to SourceVersion.RELEASE_21
+
+== [1.1.18] - 2026-09-20
+
+=== Added
+
+- Add Time Series database support to JNoSQL Lite.
+
+=== Fixed
+
+- Fix equality handling for non-comparable values.
 
 == 1.1.17 - 2026-10-29
 
