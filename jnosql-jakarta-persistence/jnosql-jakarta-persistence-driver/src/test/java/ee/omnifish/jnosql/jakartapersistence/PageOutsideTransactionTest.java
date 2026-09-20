@@ -96,8 +96,9 @@ public class PageOutsideTransactionTest {
         assertThat(page.totalElements(), is(2L));
     }
 
-    // The interceptor binding on the repository interface starts the transaction around the repository,
-    // as @Transactional on a repository interface does in a container
+    // The interceptor binding on the repository interface starts the transaction around the repository and closes
+    // the EntityManager when it commits, as @Transactional and a transaction-scoped persistence context do in a
+    // container. No test code runs inside that transaction, and none of it ends the persistence context.
     @Test
     void pageAccessibleAfterRepositoryInterceptorTransactionEnds() {
         InTransactionPagePersonRepository inTransactionRepository =
@@ -106,7 +107,6 @@ public class PageOutsideTransactionTest {
                 inTransactionRepository.findByNameLike(
                         "Ali%",
                         PageRequest.ofPage(1).size(10));
-        closeEntityManager();
 
         assertThat(page.content(), hasSize(2));
         assertThat(page.totalElements(), is(2L));

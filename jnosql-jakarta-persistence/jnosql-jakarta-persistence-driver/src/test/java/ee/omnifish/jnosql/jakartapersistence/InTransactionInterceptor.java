@@ -23,8 +23,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 
 /**
- * Begins a transaction before the intercepted method and commits it after the method returns,
- * like {@code jakarta.transaction.Transactional} does with a JTA transaction.
+ * Begins a transaction before the intercepted method, commits it after the method returns and then closes the
+ * {@link EntityManager}, like {@code jakarta.transaction.Transactional} and a container-managed,
+ * transaction-scoped persistence context do together: in GlassFish the transaction manager closes every
+ * transaction-scoped {@code EntityManager} once the transaction completes
+ * (<a href="https://github.com/eclipse-ee4j/glassfish/blob/main/appserver/transaction/jta/src/main/java/com/sun/enterprise/transaction/JavaEETransactionImpl.java">JavaEETransactionImpl.onTxCompletion</a>).
  */
 @InTransaction
 @Interceptor
@@ -47,6 +50,8 @@ public class InTransactionInterceptor {
                 transaction.rollback();
             }
             throw e;
+        } finally {
+            entityManager.close();
         }
     }
 }
