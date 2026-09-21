@@ -15,6 +15,7 @@
  */
 package org.eclipse.jnosql.extensions.sql.repository;
 
+import jakarta.data.page.Page;
 import jakarta.nosql.Template;
 import jakarta.persistence.EntityManager;
 import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
@@ -88,7 +89,20 @@ final class SqlInvocationHandler<T, K>  extends AbstractRepositoryInvocationHand
         if(method.getReturnType().equals(EntityManager.class)) {
             return this.template.entityManager();
         }
-        return super.invoke(proxy, method, params);
+        return loadTotalEagerly(super.invoke(proxy, method, params));
+    }
+
+    /**
+     * The total number of elements of a page is computed lazily, on the first call to
+     * {@link Page#totalElements()}. That call typically happens after the repository method
+     * returned, when the transaction is over and a container-managed EntityManager is already
+     * closed. Compute the total here instead, while the EntityManager is still open.
+     */
+    private Object loadTotalEagerly(Object result) {
+        if (result instanceof Page<?> page && page.pageRequest().requestTotal()) {
+            page.totalElements();
+        }
+        return result;
     }
 
 }
