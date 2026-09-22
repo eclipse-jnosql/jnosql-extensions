@@ -16,6 +16,7 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.data.page.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -27,6 +28,7 @@ import jakarta.transaction.Transactional;
 import java.util.concurrent.Callable;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  *
@@ -36,28 +38,45 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 @MethodInterceptor.Repository
 public class EnsureTransactionInterceptor implements MethodInterceptor {
 
+    /**
+     * Configuration property that makes a {@link Page} returned from a repository method load its content, and its
+     * total if the {@link jakarta.data.page.PageRequest} requests it, before the method returns, also when the
+     * transaction was started by the caller. Defaults to {@code false}.
+     * <p>
+     * The property is read from MicroProfile Config, or from system properties if MicroProfile Config is not available.
+     */
+    public static final String EAGER_PAGE_PROPERTY = "jnosql.jakarta.persistence.page.eager";
+
     @Inject
     private RunInGlobalTransaction runInGlobalTransaction;
+
+    private boolean eagerPage;
+
+    @PostConstruct
+    void readConfiguration() {
+        eagerPage = isEagerPageConfigured();
+    }
 
     @Override
     public Object intercept(InvocationContext context) throws Exception {
         EntityManager entityManager = (EntityManager)context.getContextData().get(EntityManager.class.getName());
+        final boolean transactionWillBeCreated = !entityManager.isJoinedToTransaction();
 
-        return runInGlobalTransaction.execute(() -> runInNewOrExistingTransaction(entityManager, context));
+        return runInGlobalTransaction.execute(() -> runInNewOrExistingTransaction(entityManager, context, transactionWillBeCreated));
     }
 
-    private Object runInNewOrExistingTransaction(EntityManager entityManager, InvocationContext context) throws Exception {
+    private Object runInNewOrExistingTransaction(EntityManager entityManager, InvocationContext context, boolean transactionWillBeCreated) throws Exception {
         try {
             boolean inTransaction = entityManager.isJoinedToTransaction();
             if (inTransaction) {
                 final Object result = context.proceed();
-                return fetchIfNeeded(result);
+                return fetchIfNeeded(result, transactionWillBeCreated);
             } else {
                 EntityTransaction transaction = entityManager.getTransaction();
                 transaction.begin();
                 try {
                     Object result = context.proceed();
-                    result = fetchIfNeeded(result);
+                    result = fetchIfNeeded(result, transactionWillBeCreated);
                     transaction.commit();
                     return result;
                 } catch (Exception e) {
@@ -72,16 +91,25 @@ public class EnsureTransactionInterceptor implements MethodInterceptor {
         }
     }
 
-    private Object fetchIfNeeded(Object result) {
-        // A transaction-scoped EntityManager is closed when the transaction ends, whether this interceptor
-        // or the caller started it, and the returned Page outlives it
-        if (result instanceof Page page) {
+    private Object fetchIfNeeded(Object result, boolean transactionWillBeCreated) {
+        // Without eager loading, a Page returned within a transaction started by the caller is loaded lazily
+        // and must be read before that transaction ends
+        if ((transactionWillBeCreated || eagerPage) && result instanceof Page page) {
             page.hasContent();
             if (page.hasTotals()) {
                 page.totalElements();
             }
         }
         return result;
+    }
+
+    private static boolean isEagerPageConfigured() {
+        try {
+            return ConfigProvider.getConfig().getOptionalValue(EAGER_PAGE_PROPERTY, Boolean.class).orElse(false);
+        } catch (IllegalStateException | NoClassDefFoundError e) {
+            // No MicroProfile Config implementation or API
+            return Boolean.getBoolean(EAGER_PAGE_PROPERTY);
+        }
     }
 
     @ApplicationScoped

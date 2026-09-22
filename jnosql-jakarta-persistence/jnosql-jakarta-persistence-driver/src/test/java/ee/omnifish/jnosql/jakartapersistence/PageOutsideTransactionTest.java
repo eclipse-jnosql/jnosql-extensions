@@ -15,6 +15,7 @@ import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.persistence.EntityManager;
+import org.eclipse.jnosql.jakartapersistence.mapping.EnsureTransactionInterceptor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,10 @@ public class PageOutsideTransactionTest {
 
     @BeforeEach
     void init() {
+        startContainer();
+    }
+
+    private void startContainer() {
         TestJakartaPersistenceClassScanner.standardRepositories =
                 Set.of(PagePersonRepository.class, InTransactionPagePersonRepository.class);
 
@@ -57,6 +62,13 @@ public class PageOutsideTransactionTest {
     @AfterEach
     void cleanup() {
         cdiContainer.close();
+        System.clearProperty(EnsureTransactionInterceptor.EAGER_PAGE_PROPERTY);
+    }
+
+    private void restartWithEagerPage() {
+        cdiContainer.close();
+        System.setProperty(EnsureTransactionInterceptor.EAGER_PAGE_PROPERTY, "true");
+        startContainer();
     }
 
     @Test
@@ -81,8 +93,28 @@ public class PageOutsideTransactionTest {
         assertThat(page.totalElements(), is(2L));
     }
 
+    // Without eager loading, a Page returned within the caller's transaction is loaded lazily,
+    // so the caller reads it before the transaction ends
     @Test
-    void pageAccessibleAfterCallerTransactionEnds() {
+    void pageReadInsideCallerTransaction() {
+        EntityManager entityManager = cdiContainer.select(EntityManager.class).get();
+        entityManager.getTransaction().begin();
+        Page<Person> page =
+                repository.findByNameLike(
+                        "Ali%",
+                        PageRequest.ofPage(1).size(10));
+        assertThat(page.content(), hasSize(2));
+        assertThat(page.totalElements(), is(2L));
+        entityManager.getTransaction().commit();
+        closeEntityManager();
+
+        assertThat(page.content(), hasSize(2));
+        assertThat(page.totalElements(), is(2L));
+    }
+
+    @Test
+    void eagerPageAccessibleAfterCallerTransactionEnds() {
+        restartWithEagerPage();
         EntityManager entityManager = cdiContainer.select(EntityManager.class).get();
         entityManager.getTransaction().begin();
         Page<Person> page =
@@ -98,9 +130,10 @@ public class PageOutsideTransactionTest {
 
     // The interceptor binding on the repository interface starts the transaction around the repository and closes
     // the EntityManager when it commits, as @Transactional and a transaction-scoped persistence context do in a
-    // container. No test code runs inside that transaction, and none of it ends the persistence context.
+    // container. No application code runs inside that transaction, so the Page must be loaded eagerly.
     @Test
-    void pageAccessibleAfterRepositoryInterceptorTransactionEnds() {
+    void eagerPageAccessibleAfterRepositoryInterceptorTransactionEnds() {
+        restartWithEagerPage();
         InTransactionPagePersonRepository inTransactionRepository =
                 cdiContainer.select(InTransactionPagePersonRepository.class).get();
         Page<Person> page =
