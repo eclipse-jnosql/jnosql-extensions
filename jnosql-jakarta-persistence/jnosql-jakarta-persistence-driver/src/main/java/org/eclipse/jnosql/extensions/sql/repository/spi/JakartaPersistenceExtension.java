@@ -51,7 +51,7 @@ public class JakartaPersistenceExtension implements Extension {
         Set<Class<?>> crudTypes = scanner.repositoriesStandard();
         Set<Class<?>> customRepositories = scanner.customRepositories();
 
-        LOGGER.info(() -> "Processing Jakarta Persistence extension. Found "
+        LOGGER.fine(() -> "Processing Jakarta Persistence extension. Found "
                 + crudTypes.size() + " standard repositories, "
                 + customRepositories.size() + " custom repositories.");
         LOGGER.fine(() -> "Processing standard repositories as a Jakarta Persistence implementation: " + crudTypes);
