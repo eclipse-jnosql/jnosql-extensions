@@ -17,6 +17,12 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 - Update Meta processor to use Java to SourceVersion.RELEASE_21
 
+== [1.1.19] - 2026-09-29
+
+=== Fixed
+
+- Lowered Jakarta Persistence extension lifecycle logging
+
 == [1.1.18] - 2026-09-20
 
 === Added
