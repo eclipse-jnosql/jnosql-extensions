@@ -2,3 +2,23 @@
 :toc: auto
 
 This project provides a driver for Eclipse JNoSQL that supports Jakarta Persistence entities over a Jakarta Persistence provider.
+
+== Pages and transactions
+
+A repository method runs in a transaction. If there is no active transaction, the driver starts one for the method call and ends it when the method returns.
+
+A `jakarta.data.page.Page` returned by a repository method is loaded as follows:
+
+* If the driver started the transaction, the page content, and the total if the `PageRequest` requests it, are loaded before the method returns. The page can be used after the transaction ends.
+* If the transaction was already active, for example started by the caller or by a `@Transactional` annotation on the repository interface, the page is loaded lazily: the queries run when `content()` or `totalElements()` is first called. With a transaction-scoped `EntityManager`, the page must be read before that transaction ends. Otherwise the call fails with `IllegalStateException: Attempting to execute an operation on a closed EntityManager`.
+
+To load the page before the repository method returns also when the transaction was already active, set the following property to `true`:
+
+[source,properties]
+----
+jnosql.jakarta.persistence.page.eager=true
+----
+
+The property is read from MicroProfile Config (for example `META-INF/microprofile-config.properties` or a system property), or from system properties if MicroProfile Config is not available. It defaults to `false`.
+
+Set this property if `@Transactional` is declared on the repository interface and the repository is called outside a transaction: the transaction then starts and ends around the repository method, so no application code can read a lazy page inside it.
