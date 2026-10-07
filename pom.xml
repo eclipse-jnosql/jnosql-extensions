@@ -48,6 +48,7 @@
         <module>jnosql-jakarta-persistence</module>
         <module>jnosql-mapping-validation</module>
         <module>jnosql-static-metamodel</module>
+        <module>jnosql-spring-boot</module>
         <module>jnosql-tinkerpop-connections</module>
     </modules>
 
