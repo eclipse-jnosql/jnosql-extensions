@@ -34,6 +34,7 @@ public class EntityManagerProvider {
     public Optional<EntityManager> produceMatchingEntityManager(String persistenceUnit, Annotation[] qualifiers) {
         Optional<EntityManager> result = Optional.empty();
         boolean qualifiersPresent = false;
+        boolean persistenceUnitSpecified = false;
         if (result.isEmpty()) {
             if (qualifiers != null && qualifiers.length > 0) {
                 qualifiersPresent = true;
@@ -42,10 +43,11 @@ public class EntityManagerProvider {
         }
         if (result.isEmpty()) {
             if (persistenceUnit != null && !persistenceUnit.isBlank()) {
+                persistenceUnitSpecified = true;
                 result = produceEntityManagerForPersistenceUnit(persistenceUnit);
             }
         }
-        if (result.isEmpty() && !qualifiersPresent) {
+        if (result.isEmpty() && !qualifiersPresent && !persistenceUnitSpecified) {
             result = this.produceDefaultEntityManager();
         }
         return result;
