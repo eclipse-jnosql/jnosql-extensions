@@ -14,6 +14,7 @@ package ee.omnifish.jnosql.jakartapersistence;
 import jakarta.data.page.Page;
 import jakarta.data.page.PageRequest;
 import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ public class PageOutsideTransactionTest {
 
     private SeContainer cdiContainer;
     private PagePersonRepository repository;
+    private EntityManager entityManager;
 
     @BeforeEach
     void init() {
@@ -37,6 +39,7 @@ public class PageOutsideTransactionTest {
                 .initialize();
 
         repository = cdiContainer.select(PagePersonRepository.class).get();
+        entityManager = cdiContainer.select(EntityManager.class).get();
 
         repository.deleteAllPersons();
 
@@ -63,6 +66,43 @@ public class PageOutsideTransactionTest {
                         "Ali%",
                         PageRequest.ofPage(1).size(10));
 
+        assertThat(page.totalElements(), is(2L));
+    }
+
+    /**
+     * A container-managed EntityManager is closed when the transaction started by the repository
+     * method ends, so the page must be fully loaded by the time the method returns.
+     */
+    @Test
+    void pageAccessibleAfterEntityManagerIsClosed() {
+        Page<Person> page =
+                repository.findByNameLike(
+                        "Ali%",
+                        PageRequest.ofPage(1).size(10));
+
+        entityManager.close();
+
+        assertThat(page.content().size(), is(2));
+        assertThat(page.totalElements(), is(2L));
+    }
+
+    /**
+     * The same, but with the transaction owned by the caller, as with {@code @Transactional} on
+     * the repository. The repository method doesn't start the transaction, but it still ends
+     * before the page is read.
+     */
+    @Test
+    void pageAccessibleWhenCallerOwnsTheTransaction() {
+        entityManager.getTransaction().begin();
+        Page<Person> page =
+                repository.findByNameLike(
+                        "Ali%",
+                        PageRequest.ofPage(1).size(10));
+        entityManager.getTransaction().commit();
+
+        entityManager.close();
+
+        assertThat(page.content().size(), is(2));
         assertThat(page.totalElements(), is(2L));
     }
 }
