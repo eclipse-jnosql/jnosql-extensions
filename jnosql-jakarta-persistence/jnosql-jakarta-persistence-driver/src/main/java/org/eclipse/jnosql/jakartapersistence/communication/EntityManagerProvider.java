@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License 2.0
@@ -34,6 +34,7 @@ public class EntityManagerProvider {
     public Optional<EntityManager> produceMatchingEntityManager(String persistenceUnit, Annotation[] qualifiers) {
         Optional<EntityManager> result = Optional.empty();
         boolean qualifiersPresent = false;
+        boolean persistenceUnitSpecified = false;
         if (result.isEmpty()) {
             if (qualifiers != null && qualifiers.length > 0) {
                 qualifiersPresent = true;
@@ -42,10 +43,11 @@ public class EntityManagerProvider {
         }
         if (result.isEmpty()) {
             if (persistenceUnit != null && !persistenceUnit.isBlank()) {
+                persistenceUnitSpecified = true;
                 result = produceEntityManagerForPersistenceUnit(persistenceUnit);
             }
         }
-        if (result.isEmpty() && !qualifiersPresent) {
+        if (result.isEmpty() && !qualifiersPresent && !persistenceUnitSpecified) {
             result = this.produceDefaultEntityManager();
         }
         return result;
