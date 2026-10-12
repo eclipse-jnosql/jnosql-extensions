@@ -83,11 +83,8 @@ public class JNoSQLCoreAutoConfiguration {
         if (env instanceof ConfigurableEnvironment environment) {
             environment.getPropertySources().forEach(ps -> {
                 if (ps instanceof org.springframework.core.env.MapPropertySource mapPropertySource) {
-                    mapPropertySource.getSource().forEach((key, value) -> {
-                        if (value != null) {
-                            builder.put(key, value.toString());
-                        }
-                    });
+                    mapPropertySource.getSource().forEach((key, value) ->
+                            builder.put(key, value.toString()));
                 }
             });
         }
