@@ -51,6 +51,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.QueryOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.SaveOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
 import org.eclipse.jnosql.mapping.reflection.repository.ReflectionRepositoriesMetadataBuilder;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
 import org.eclipse.jnosql.mapping.semistructured.repository.RepositoryOperationProviderBuilder;
 import org.eclipse.jnosql.mapping.semistructured.repository.SemistructuredCountAllOperationBuilder;
@@ -361,16 +362,24 @@ public class JNoSQLSemistructuredAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    public LifecycleEventHandler lifecycleEventHandler(ApplicationEventPublisher eventPublisher) {
+        return new SpringLifecycleEventHandler(eventPublisher);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
     public SemistructuredRepositoryProducer semistructuredRepositoryProducer(
             EntitiesMetadata entities,
             RepositoriesMetadata repositories,
             InfrastructureOperatorProvider infrastructure,
-            RepositoryOperationProvider operations) {
+            RepositoryOperationProvider operations,
+            LifecycleEventHandler lifecycleEventHandler) {
         return SemistructuredRepositoryProducerBuilder.builder()
                 .withEntities(entities)
                 .withRepositories(repositories)
                 .withInfrastructure(infrastructure)
                 .withOperations(operations)
+                .withLifecycleEventHandler(lifecycleEventHandler)
                 .build();
     }
 

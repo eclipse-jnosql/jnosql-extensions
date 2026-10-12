@@ -40,13 +40,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.MapPropertySource;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
+
+import static java.util.Optional.ofNullable;
 
 /**
- * Spring Boot auto-configuration for Eclipse JNoSQL core infrastructure beans.
+ * Spring Boot Autoconfiguration for Eclipse JNoSQL core infrastructure beans.
  *
  * <p>Provides all database-agnostic infrastructure beans required by JNoSQL database-specific
  * auto-configurations. The wiring chain is:
@@ -88,8 +90,14 @@ public class JNoSQLCoreAutoConfiguration implements ApplicationContextAware {
         if (env instanceof ConfigurableEnvironment environment) {
             environment.getPropertySources().forEach(ps -> {
                 if (ps instanceof org.springframework.core.env.MapPropertySource mapPropertySource) {
-                    mapPropertySource.getSource().forEach((key, value) ->
-                            builder.put(key, value.toString()));
+                    mapPropertySource.getSource().forEach((key, value) -> {
+                        if (value instanceof Supplier<?> supplier) {
+                            ofNullable(supplier.get())
+                                    .ifPresent(v -> builder.put(key, v));
+                        } else {
+                            builder.put(key, value);
+                        }
+                    });
                 }
             });
         }
