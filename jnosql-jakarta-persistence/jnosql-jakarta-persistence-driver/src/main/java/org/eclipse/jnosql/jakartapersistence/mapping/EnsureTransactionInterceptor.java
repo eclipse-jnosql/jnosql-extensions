@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License 2.0
@@ -12,9 +12,11 @@
  *  Contributors:
  *
  *  Ondro Mihalyi
+ *  Renat R. Safiullin
  */
 package org.eclipse.jnosql.jakartapersistence.mapping;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.data.page.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -26,6 +28,7 @@ import jakarta.transaction.Transactional;
 import java.util.concurrent.Callable;
 
 import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  *
@@ -35,8 +38,24 @@ import org.eclipse.jnosql.jakartapersistence.mapping.spi.MethodInterceptor;
 @MethodInterceptor.Repository
 public class EnsureTransactionInterceptor implements MethodInterceptor {
 
+    /**
+     * Configuration property that makes a {@link Page} returned from a repository method load its content, and its
+     * total if the {@link jakarta.data.page.PageRequest} requests it, before the method returns, also when the
+     * transaction was started by the caller. Defaults to {@code false}.
+     * <p>
+     * The property is read from MicroProfile Config, or from system properties if MicroProfile Config is not available.
+     */
+    public static final String EAGER_PAGE_PROPERTY = "jnosql.jakarta.persistence.page.eager";
+
     @Inject
     private RunInGlobalTransaction runInGlobalTransaction;
+
+    private boolean eagerPage;
+
+    @PostConstruct
+    void readConfiguration() {
+        eagerPage = isEagerPageConfigured();
+    }
 
     @Override
     public Object intercept(InvocationContext context) throws Exception {
@@ -73,13 +92,24 @@ public class EnsureTransactionInterceptor implements MethodInterceptor {
     }
 
     private Object fetchIfNeeded(Object result, boolean transactionWillBeCreated) {
-        if (transactionWillBeCreated && result instanceof Page page) {
+        // Without eager loading, a Page returned within a transaction started by the caller is loaded lazily
+        // and must be read before that transaction ends
+        if ((transactionWillBeCreated || eagerPage) && result instanceof Page page) {
             page.hasContent();
             if (page.hasTotals()) {
                 page.totalElements();
             }
         }
         return result;
+    }
+
+    private static boolean isEagerPageConfigured() {
+        try {
+            return ConfigProvider.getConfig().getOptionalValue(EAGER_PAGE_PROPERTY, Boolean.class).orElse(false);
+        } catch (IllegalStateException | NoClassDefFoundError e) {
+            // No MicroProfile Config implementation or API
+            return Boolean.getBoolean(EAGER_PAGE_PROPERTY);
+        }
     }
 
     @ApplicationScoped
