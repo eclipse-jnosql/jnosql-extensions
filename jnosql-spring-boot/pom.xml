@@ -39,10 +39,11 @@
         <module>jnosql-spring-boot-starter</module>
         <module>jnosql-spring-boot-starter-mongodb</module>
         <module>jnosql-spring-boot-starter-oracle-nosql</module>
+        <module>jnosql-spring-boot-test-projects</module>
     </modules>
 
     <properties>
-        <spring.boot.version>4.0.0-RC2</spring.boot.version>
+        <spring.boot.version>4.0.5</spring.boot.version>
         <mongodb.driver.version>5.6.2</mongodb.driver.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <yasson.version>3.0.4</yasson.version>

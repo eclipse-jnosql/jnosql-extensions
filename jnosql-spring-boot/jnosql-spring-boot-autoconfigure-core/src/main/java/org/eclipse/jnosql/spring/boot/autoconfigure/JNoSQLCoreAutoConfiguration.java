@@ -22,6 +22,7 @@ import org.eclipse.jnosql.mapping.metadata.ClassConverter;
 import org.eclipse.jnosql.mapping.metadata.ClassScanner;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.GroupEntityMetadata;
+import org.eclipse.jnosql.mapping.reflection.JNoSQLSpringContext;
 import org.eclipse.jnosql.mapping.reflection.ReflectionEntitiesMetadataBuilder;
 import org.eclipse.jnosql.mapping.reflection.ReflectionGroupEntityMetadataBuilder;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverter;
@@ -29,13 +30,17 @@ import org.eclipse.jnosql.mapping.semistructured.EntityConverterFactory;
 import org.eclipse.jnosql.mapping.semistructured.EntityConverterFactoryBuilder;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManager;
 import org.eclipse.jnosql.mapping.semistructured.EventPersistManagerBuilder;
+import org.eclipse.jnosql.mapping.semistructured.ProjectorConverter;
+import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +65,7 @@ import java.util.Optional;
  * shared beans are available when they run.
  */
 @AutoConfiguration
-public class JNoSQLCoreAutoConfiguration {
+public class JNoSQLCoreAutoConfiguration implements ApplicationContextAware {
 
     private static final String DEFAULT_ID_FIELD = "_id";
 
@@ -201,5 +206,19 @@ public class JNoSQLCoreAutoConfiguration {
                 .withPrePersist(eventPublisher::publishEvent)
                 .withPostPersist(eventPublisher::publishEvent)
                 .build();
+    }
+
+    /**
+     * Creates the {@link ProjectorConverter} for mapping entities to projections, using the provided metadata.
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ProjectorConverter projectorConverter(EntitiesMetadata entitiesMetadata) {
+        return new ProjectorConverter(entitiesMetadata);
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        JNoSQLSpringContext.setContext(applicationContext);
     }
 }

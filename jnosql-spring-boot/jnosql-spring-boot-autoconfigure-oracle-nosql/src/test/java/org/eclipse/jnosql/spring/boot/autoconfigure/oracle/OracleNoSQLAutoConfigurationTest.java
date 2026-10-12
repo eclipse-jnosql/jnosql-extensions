@@ -17,6 +17,8 @@ package org.eclipse.jnosql.spring.boot.autoconfigure.oracle;
 import org.eclipse.jnosql.databases.oracle.communication.OracleDocumentManagerFactory;
 import org.eclipse.jnosql.databases.oracle.communication.OracleNoSQLDocumentManager;
 import org.eclipse.jnosql.databases.oracle.mapping.OracleNoSQLTemplate;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration;
+import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -40,7 +42,8 @@ class OracleNoSQLAutoConfigurationTest {
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(
-                    org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLCoreAutoConfiguration.class,
+                    JNoSQLSemistructuredAutoConfiguration.class,
                     OracleNoSQLAutoConfiguration.class));
 
     // ------------------------------------------------------------------
@@ -92,7 +95,10 @@ class OracleNoSQLAutoConfigurationTest {
     @Test
     void contextShouldFailWhenDatabasePropertyIsAbsent() {
         contextRunner
-                .withUserConfiguration(MockOracleFactoryConfig.class)
+                .withUserConfiguration(
+                        MockOracleFactoryConfig.class,
+                        UserConfigForContextShouldFailWhenDatabasePropertyIsAbsentTest.class
+                )
                 // no jnosql.document.database property
                 .run(context -> assertThat(context)
                         .hasFailed()
@@ -127,6 +133,23 @@ class OracleNoSQLAutoConfigurationTest {
         @Bean(BEAN_ID)
         OracleNoSQLTemplate userOracleNoSQLTemplate() {
             return mock(OracleNoSQLTemplate.class);
+        }
+    }
+
+    @Configuration
+    static class UserConfigForContextShouldFailWhenDatabasePropertyIsAbsentTest {
+
+        static final String BEAN_ID = "userOracleNoSQLTemplate";
+        static final String QUALIFIED_MANAGER_NAME = "qualifiedManagerName";
+
+        @Bean(BEAN_ID)
+        OracleNoSQLTemplate userOracleNoSQLTemplate() {
+            return mock(OracleNoSQLTemplate.class);
+        }
+
+        @Bean(QUALIFIED_MANAGER_NAME)
+        String qualifiedManagerName(OracleNoSQLDocumentManager manager) {
+            return manager.name();
         }
     }
 }
