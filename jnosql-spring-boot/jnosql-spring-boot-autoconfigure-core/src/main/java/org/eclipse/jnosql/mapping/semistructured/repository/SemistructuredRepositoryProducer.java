@@ -23,6 +23,7 @@ import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 import java.lang.reflect.Proxy;
@@ -38,6 +39,7 @@ public class SemistructuredRepositoryProducer {
     private final RepositoriesMetadata repositoriesMetadata;
     private final InfrastructureOperatorProvider infrastructureOperatorProvider;
     private final RepositoryOperationProvider repositoryOperationProvider;
+    private final LifecycleEventHandler lifecycleEventHandler;
 
     /**
      * CDI constructor injection. All four dependencies are required.
@@ -51,11 +53,13 @@ public class SemistructuredRepositoryProducer {
     public SemistructuredRepositoryProducer(EntitiesMetadata entities,
                                             RepositoriesMetadata repositoriesMetadata,
                                             InfrastructureOperatorProvider infrastructureOperatorProvider,
-                                            RepositoryOperationProvider repositoryOperationProvider) {
+                                            RepositoryOperationProvider repositoryOperationProvider,
+                                            LifecycleEventHandler lifecycleEventHandler) {
         this.entities = entities;
         this.repositoriesMetadata = repositoriesMetadata;
         this.infrastructureOperatorProvider = infrastructureOperatorProvider;
         this.repositoryOperationProvider = repositoryOperationProvider;
+        this.lifecycleEventHandler = lifecycleEventHandler;
     }
 
     /**
@@ -63,7 +67,7 @@ public class SemistructuredRepositoryProducer {
      * Do not use directly.
      */
     SemistructuredRepositoryProducer() {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
     /**
@@ -85,7 +89,7 @@ public class SemistructuredRepositoryProducer {
         RepositoryMetadata repositoryMetadata = repositoriesMetadata.get(repositoryClass).orElseThrow();
         var entityMetadata = entities.get(repositoryMetadata.entity().orElseThrow());
 
-        var executor = SemistructuredRepository.of(template, entityMetadata);
+        var executor = SemistructuredRepository.of(template, entityMetadata, lifecycleEventHandler);
 
         var repositoryHandler = CoreRepositoryInvocationHandler.of(executor,
                 entityMetadata,

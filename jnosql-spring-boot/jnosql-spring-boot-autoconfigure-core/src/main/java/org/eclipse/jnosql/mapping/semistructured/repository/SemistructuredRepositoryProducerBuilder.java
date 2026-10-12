@@ -18,6 +18,7 @@ import org.eclipse.jnosql.mapping.core.repository.InfrastructureOperatorProvider
 import org.eclipse.jnosql.mapping.core.repository.RepositoryOperationProvider;
 import org.eclipse.jnosql.mapping.metadata.EntitiesMetadata;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoriesMetadata;
+import org.eclipse.jnosql.mapping.repository.LifecycleEventHandler;
 
 import java.util.Objects;
 
@@ -34,6 +35,7 @@ import java.util.Objects;
  *         .withRepositories(repositoriesMetadata)
  *         .withInfrastructure(infrastructureOperatorProvider)
  *         .withOperations(repositoryOperationProvider)
+ *         .withLifecycleEventHandler(lifecycleEventHandler)
  *         .build();
  * }</pre>
  *
@@ -48,11 +50,12 @@ import java.util.Objects;
  *   <li>{@link RepositoriesMetadata} — repository interface metadata</li>
  *   <li>{@link InfrastructureOperatorProvider} — proxy infrastructure operators</li>
  *   <li>{@link RepositoryOperationProvider} — query and operation execution</li>
+ *   <li>{@link LifecycleEventHandler} — lifecycle event handling</li>
  * </ol>
  *
  * <p>
- * The {@code build()} method is available only from {@link OperationsStep}, once all
- * four required dependencies have been provided.
+ * The {@code build()} method is available only from {@link LifecycleStep}, once all
+ * five required dependencies have been provided.
  * </p>
  *
  * <p>
@@ -66,7 +69,8 @@ public sealed interface SemistructuredRepositoryProducerBuilder
         permits SemistructuredRepositoryProducerBuilder.EntitiesStep,
         SemistructuredRepositoryProducerBuilder.RepositoriesStep,
         SemistructuredRepositoryProducerBuilder.InfraStep,
-        SemistructuredRepositoryProducerBuilder.OperationsStep {
+        SemistructuredRepositoryProducerBuilder.OperationsStep,
+        SemistructuredRepositoryProducerBuilder.LifecycleStep {
 
     /**
      * Returns a new builder starting from {@link EntitiesStep}.
@@ -225,8 +229,7 @@ public sealed interface SemistructuredRepositoryProducerBuilder
     }
 
     /**
-     * Final step of the builder. Holds all four required dependencies.
-     * Exposes re-configure methods for each dependency and the {@link #build()} terminal method.
+     * Fourth step of the builder. Holds all four required dependencies.
      *
      * @param entities       the entities metadata; must not be {@code null}
      * @param repositories   the repositories metadata; must not be {@code null}
@@ -291,6 +294,100 @@ public sealed interface SemistructuredRepositoryProducerBuilder
         }
 
         /**
+         * Returns a new {@code LifecycleStep} with the given lifecycle event handler,
+         * preserving all other dependencies.
+         *
+         * @param lifecycleEventHandler the new lifecycle event handler
+         * @return a new {@code LifecycleStep} with the updated lifecycle event handler
+         * @throws NullPointerException if {@code lifecycleEventHandler} is {@code null}
+         */
+        public LifecycleStep withLifecycleEventHandler(LifecycleEventHandler lifecycleEventHandler) {
+            Objects.requireNonNull(lifecycleEventHandler, "lifecycleEventHandler is required");
+            return new LifecycleStep(entities, repositories, infrastructure, operations, lifecycleEventHandler);
+        }
+
+    }
+
+    /**
+     * Third step of the builder. Holds all four required dependencies.
+     *
+     * @param entities       the entities metadata; must not be {@code null}
+     * @param repositories   the repositories metadata; must not be {@code null}
+     * @param infrastructure the infrastructure operator provider; must not be {@code null}
+     * @param operations     the repository operation provider; must not be {@code null}
+     * @param lifecycleEventHandler the lifecycle event handler; must not be {@code null}
+     */
+    record LifecycleStep(EntitiesMetadata entities, RepositoriesMetadata repositories,
+                       InfrastructureOperatorProvider infrastructure,
+                       RepositoryOperationProvider operations,
+                       LifecycleEventHandler lifecycleEventHandler)
+            implements SemistructuredRepositoryProducerBuilder {
+
+        /**
+         * Returns a new {@code EntitiesStep} with the given entities metadata,
+         * discarding all subsequent dependencies.
+         *
+         * @param entities the new entities metadata
+         * @return a new {@code EntitiesStep} with the updated metadata
+         * @throws NullPointerException if {@code entities} is {@code null}
+         */
+        public EntitiesStep withEntities(EntitiesMetadata entities) {
+            Objects.requireNonNull(entities, "entities is required");
+            return new EntitiesStep(entities);
+        }
+
+        /**
+         * Returns a new {@code RepositoriesStep} with the given repositories metadata,
+         * discarding the infrastructure and operations dependencies.
+         *
+         * @param repositories the new repositories metadata
+         * @return a new {@code RepositoriesStep} preserving entities
+         * @throws NullPointerException if {@code repositories} is {@code null}
+         */
+        public RepositoriesStep withRepositories(RepositoriesMetadata repositories) {
+            Objects.requireNonNull(repositories, "repositories is required");
+            return new RepositoriesStep(entities, repositories);
+        }
+
+        /**
+         * Returns a new {@code InfraStep} with the given infrastructure operator provider,
+         * discarding the operations dependency.
+         *
+         * @param infrastructure the new infrastructure operator provider
+         * @return a new {@code InfraStep} preserving entities and repositories
+         * @throws NullPointerException if {@code infrastructure} is {@code null}
+         */
+        public InfraStep withInfrastructure(InfrastructureOperatorProvider infrastructure) {
+            Objects.requireNonNull(infrastructure, "infrastructure is required");
+            return new InfraStep(entities, repositories, infrastructure);
+        }
+
+        /**
+         * Returns a new {@code OperationsStep} with the given repository operation provider,
+         * preserving all other dependencies.
+         *
+         * @param operations the new repository operation provider
+         * @return a new {@code OperationsStep} with the updated operations
+         * @throws NullPointerException if {@code operations} is {@code null}
+         */
+        public OperationsStep withOperations(RepositoryOperationProvider operations) {
+            Objects.requireNonNull(operations, "operations is required");
+            return new OperationsStep(entities, repositories, infrastructure, operations);
+        }
+
+        /**
+         * Returns a new {@code LifecycleStep} with the given lifecycle event handler,
+         * preserving all other dependencies.
+         *
+         * @param lifecycleEventHandler the new lifecycle event handler
+         * @return a new {@code LifecycleStep} with the updated lifecycle event handler
+         * @throws NullPointerException if {@code lifecycleEventHandler} is {@code null}
+         */
+        public LifecycleStep withLifecycleEventHandler(LifecycleEventHandler lifecycleEventHandler) {
+            Objects.requireNonNull(lifecycleEventHandler, "lifecycleEventHandler is required");
+            return new LifecycleStep(entities, repositories, infrastructure, operations, lifecycleEventHandler);
+        }
+        /**
          * Builds a {@link SemistructuredRepositoryProducer} using the accumulated dependencies.
          *
          * <p>All four dependencies must be non-null. This method validates each one
@@ -304,7 +401,8 @@ public sealed interface SemistructuredRepositoryProducerBuilder
             Objects.requireNonNull(repositories, "repositories is required");
             Objects.requireNonNull(infrastructure, "infrastructure is required");
             Objects.requireNonNull(operations, "operations is required");
-            return new SemistructuredRepositoryProducer(entities, repositories, infrastructure, operations);
+            Objects.requireNonNull(lifecycleEventHandler, "lifecycleEventHandler is required");
+            return new SemistructuredRepositoryProducer(entities, repositories, infrastructure, operations, lifecycleEventHandler);
         }
     }
 }
