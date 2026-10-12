@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.spring.boot.starter.book;
 
+import org.eclipse.jnosql.databases.mongodb.communication.MongoDBDocumentConfigurations;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import tools.jackson.databind.JsonNode;
@@ -38,11 +40,13 @@ import java.util.UUID;
 class BookControllerIntegrationTest {
 
     @Container
-    static final MongoDBContainer MONGODB = new MongoDBContainer("mongo:latest");
+    static final MongoDBContainer MONGODB = new MongoDBContainer("mongo:latest")
+            .waitingFor(Wait.defaultWaitStrategy());
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("jnosql.mongodb.url", MONGODB::getReplicaSetUrl);
+        String serverAddress = MONGODB.getHost() + ":" + MONGODB.getFirstMappedPort();
+        registry.add(MongoDBDocumentConfigurations.HOST.get() + ".1", serverAddress::toString);
     }
 
     @Autowired
