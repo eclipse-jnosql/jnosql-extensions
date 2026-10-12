@@ -33,6 +33,7 @@ import org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConf
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
@@ -44,7 +45,7 @@ import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUM
 import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUMENT_PROVIDER;
 
 /**
- * Spring Boot auto-configuration for Eclipse JNoSQL Oracle NoSQL integration.
+ * Spring Boot AutoConfiguration for Eclipse JNoSQL Oracle NoSQL integration.
  *
  * <p>Provides Oracle NoSQL-specific beans on top of the shared infrastructure declared
  * by {@link JNoSQLCoreAutoConfiguration}. The wiring chain for Oracle NoSQL-specific beans is:
@@ -68,7 +69,7 @@ import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUM
  */
 @AutoConfiguration
 @AutoConfigureAfter({JNoSQLCoreAutoConfiguration.class, JNoSQLSemistructuredAutoConfiguration.class})
-//@ConditionalOnClass(OracleNoSQLTemplate.class)
+@ConditionalOnClass(OracleNoSQLTemplate.class)
 public class OracleNoSQLAutoConfiguration {
 
     /**
