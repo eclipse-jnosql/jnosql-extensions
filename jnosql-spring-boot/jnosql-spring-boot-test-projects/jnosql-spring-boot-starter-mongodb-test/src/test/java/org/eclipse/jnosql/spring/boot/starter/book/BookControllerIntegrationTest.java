@@ -28,6 +28,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import tools.jackson.databind.JsonNode;
 
 import java.util.UUID;
@@ -40,13 +41,11 @@ import java.util.UUID;
 class BookControllerIntegrationTest {
 
     @Container
-    static final MongoDBContainer MONGODB = new MongoDBContainer("mongo:latest")
-            .waitingFor(Wait.defaultWaitStrategy());
+    static final MongoDBContainer MONGODB = new MongoDBContainer("mongo:latest");
 
     @DynamicPropertySource
     static void overrideProperties(DynamicPropertyRegistry registry) {
-        String serverAddress = MONGODB.getHost() + ":" + MONGODB.getFirstMappedPort();
-        registry.add(MongoDBDocumentConfigurations.HOST.get() + ".1", serverAddress::toString);
+        registry.add(MongoDBDocumentConfigurations.URL.get(), MONGODB::getReplicaSetUrl);
     }
 
     @Autowired
