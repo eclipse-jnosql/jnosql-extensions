@@ -45,7 +45,7 @@ import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUM
 import static org.eclipse.jnosql.mapping.core.config.MappingConfigurations.DOCUMENT_PROVIDER;
 
 /**
- * Spring Boot auto-configuration for Eclipse JNoSQL MongoDB integration.
+ * Spring Boot AutoConfiguration for Eclipse JNoSQL MongoDB integration.
  *
  * <p>Provides MongoDB-specific beans on top of the shared infrastructure declared
  * by {@link JNoSQLCoreAutoConfiguration}. The wiring chain for MongoDB-specific beans is:
