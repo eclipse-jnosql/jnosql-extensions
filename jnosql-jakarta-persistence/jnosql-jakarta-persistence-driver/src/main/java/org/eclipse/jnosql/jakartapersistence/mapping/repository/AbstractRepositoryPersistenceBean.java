@@ -133,12 +133,41 @@ public abstract class AbstractRepositoryPersistenceBean<T> extends AbstractBean<
      * {@link EntityManager} is found
      */
     protected PersistenceDatabaseManager findDatabaseManager() throws IllegalStateException {
-        final Optional<EntityManager> entityManager = getInstance(EntityManagerProvider.class)
-                .produceMatchingEntityManager(persistenceUnit, entityManagerQualifiers);
+        Optional<EntityManager> entityManager = findDefaultEntityManager();
+        if (entityManager.isEmpty()) {
+            entityManager = getInstance(EntityManagerProvider.class)
+                    .produceMatchingEntityManager(persistenceUnit, entityManagerQualifiers);
+        }
         if (entityManager.isEmpty()) {
             throw new IllegalStateException("Found no entity manager matching the " + type + " repository declaration");
         }
         return getInstance(PersistenceDatabaseManagerProvider.class).getManager(entityManager.get());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Optional<EntityManager> findDefaultEntityManager() {
+        List<Method> matchingMethods = new ArrayList<>();
+        for (Method method : type.getMethods()) {
+            if (method.isDefault() && returnsEntityManager(method)) {
+                matchingMethods.add(method);
+            }
+        }
+        if (matchingMethods.size() > 1) {
+            throw new AmbiguousResolutionException("Expected at most one default method on " + type + " that returns EntityManager, found multiple: "
+                    + matchingMethods.stream().map(Method::toString).collect(Collectors.joining(", ")));
+
+        }
+        if (matchingMethods.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            Object tempProxy = Proxy.newProxyInstance(
+                    type.getClassLoader(), new Class[]{type}, (p, m, a) -> null);
+            return Optional.of((EntityManager) InvocationHandler.invokeDefault(tempProxy, matchingMethods.get(0)));
+        } catch (Throwable t) {
+            throw new IllegalStateException(
+                    "Failed to invoke default EntityManager method on " + type, t);
+        }
     }
 
     private String findPersistenceUnit() {
