@@ -19,7 +19,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,6 +31,7 @@ class CustomDefaultEntityManagerTest {
 
     @BeforeEach
     void init() {
+        TestJakartaPersistenceClassScanner.standardRepositories = Set.of();
         TestJakartaPersistenceClassScanner.customRepositories = Set.of(CustomDefaultEntityManagerRepository.class);
 
         cdiContainer = TestSupport.cdiInitializerWithDefaultEmProducer()
@@ -45,7 +45,6 @@ class CustomDefaultEntityManagerTest {
         }
     }
 
-    @Disabled
     @Test
     void repositoryUsesDefaultEntityManagerMethod() {
         CustomDefaultEntityManagerRepository repository = cdiContainer.select(CustomDefaultEntityManagerRepository.class).get();
