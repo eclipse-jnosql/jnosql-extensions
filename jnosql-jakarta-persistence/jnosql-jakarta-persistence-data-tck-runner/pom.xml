@@ -42,6 +42,7 @@
         <shrinkwrap.version>1.2.6</shrinkwrap.version>
         <sigtest.version>2.4</sigtest.version>
         <weld.junit5.version>4.0.3.Final</weld.junit5.version>
+        <weld.se.core.version>6.0.4.Final</weld.se.core.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <!-- Pointer to logging.properties file that has the java.util.logging
         configuration -->
@@ -54,6 +55,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Weld must match the CDI 4.1 API used by this module (parent manages Weld 7 / CDI 5) -->
+            <dependency>
+                <groupId>org.jboss.weld.se</groupId>
+                <artifactId>weld-se-core</artifactId>
+                <version>${weld.se.core.version}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
