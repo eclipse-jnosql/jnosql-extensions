@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024,2025 Contributors to the Eclipse Foundation
+ * Copyright (c) 2024,2026 Contributors to the Eclipse Foundation
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License 2.0
@@ -27,6 +27,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.persistence.EntityManager;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -105,6 +106,11 @@ public class JakartaPersistenceRepositoryProxy<T, K> extends AbstractSemiStructu
 
     @Override
     protected Object invokeForMethodType(final RepositoryType type, Object instance, Method method, Object[] params) throws Throwable {
+        // Invoke default methods directly to avoid nested EnsureTransactionInterceptor calls
+        if (type == RepositoryType.DEFAULT_METHOD) {
+            return unwrapInvocationTargetException(() -> InvocationHandler.invokeDefault(instance, method, params));
+        }
+
         Map<? extends String, ? extends Object> contextData = Map.of(EntityManager.class.getName(), template.entityManager());
         InterceptorInvocationContext context
                 = new InterceptorInvocationContext(instance, method, params, contextData) {
