@@ -31,11 +31,16 @@ public class TestSupport {
     private TestSupport() {}
 
     static SeContainerInitializer cdiInitializerWithDefaultEmProducer() {
+        return cdiInitializerWithoutEmProducer()
+                .addBeanClasses(EntityManagerProducer.class);
+    }
+
+    static SeContainerInitializer cdiInitializerWithoutEmProducer() {
         return SeContainerInitializer.newInstance()
                 .disableDiscovery()
                 .addExtensions(JakartaPersistenceExtension.class)
                 .addPackages(PersistenceDocumentTemplate.class, PersistenceDatabaseManager.class)
-                .addBeanClasses(EntityManagerProducer.class, PersistenceUnitCacheProvider.class);
+                .addBeanClasses(PersistenceUnitCacheProvider.class);
     }
 
 
