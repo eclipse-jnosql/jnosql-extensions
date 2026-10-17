@@ -26,6 +26,7 @@ enum DatabaseSupport {
 
     DOCUMENT("org.eclipse.jnosql.mapping.document.DocumentTemplate", DatabaseType.DOCUMENT),
     TIME_SERIES("org.eclipse.jnosql.mapping.timeseries.TimeSeriesTemplate", DatabaseType.TIME_SERIES),
+    VECTOR("org.eclipse.jnosql.mapping.vector.VectorTemplate", DatabaseType.VECTOR),
     COLUMN("org.eclipse.jnosql.mapping.column.ColumnTemplate", DatabaseType.COLUMN),
     KEY_VALUE("org.eclipse.jnosql.mapping.keyvalue.KeyValueTemplate", DatabaseType.KEY_VALUE),
     GRAPH("org.eclipse.jnosql.mapping.graph.GraphTemplate", DatabaseType.GRAPH);
