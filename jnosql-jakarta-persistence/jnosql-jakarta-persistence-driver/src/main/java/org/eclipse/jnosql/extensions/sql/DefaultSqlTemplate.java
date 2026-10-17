@@ -371,7 +371,18 @@ class DefaultSqlTemplate implements SqlTemplate {
 
     <T> T executeInTransaction(Supplier<T> operation) {
 
-        EntityTransaction tx = entityManager.getTransaction();
+        // A transaction owned by the caller (e.g. JTA) is never begun, committed or rolled back here
+        if (entityManager.isJoinedToTransaction()) {
+            return operation.get();
+        }
+
+        EntityTransaction tx;
+        try {
+            tx = entityManager.getTransaction();
+        } catch (IllegalStateException e) {
+            // JTA entity managers do not support getTransaction(); the container manages the transaction
+            return operation.get();
+        }
 
         boolean started = false;
 
