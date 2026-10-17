@@ -53,7 +53,12 @@ class DefaultMethodTransactionTest extends AbstractTestRepository {
         if (callerTransaction.isActive()) {
             callerTransaction.rollback();
         }
-        delegate.close();
+        var factory = delegate.getEntityManagerFactory();
+        try {
+            delegate.close();
+        } finally {
+            factory.close();
+        }
     }
 
     @Nested
