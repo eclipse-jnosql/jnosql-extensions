@@ -34,18 +34,16 @@ public class EntityManagerProvider {
     public Optional<EntityManager> produceMatchingEntityManager(String persistenceUnit, Annotation[] qualifiers) {
         Optional<EntityManager> result = Optional.empty();
         boolean qualifiersPresent = false;
-        if (result.isEmpty()) {
-            if (qualifiers != null && qualifiers.length > 0) {
-                qualifiersPresent = true;
-                result = produceEntityManagerForQualifiers(qualifiers);
-            }
+        boolean persistenceUnitPresent = persistenceUnit != null && !persistenceUnit.isBlank();
+        if (qualifiers != null && qualifiers.length > 0) {
+            qualifiersPresent = true;
+            result = produceEntityManagerForQualifiers(qualifiers);
         }
-        if (result.isEmpty()) {
-            if (persistenceUnit != null && !persistenceUnit.isBlank()) {
-                result = produceEntityManagerForPersistenceUnit(persistenceUnit);
-            }
+        if (result.isEmpty() && persistenceUnitPresent) {
+            result = produceEntityManagerForPersistenceUnit(persistenceUnit);
         }
-        if (result.isEmpty() && !qualifiersPresent) {
+        // An explicitly requested persistence unit or qualifier must never silently fall back to the default one
+        if (result.isEmpty() && !qualifiersPresent && !persistenceUnitPresent) {
             result = this.produceDefaultEntityManager();
         }
         return result;
