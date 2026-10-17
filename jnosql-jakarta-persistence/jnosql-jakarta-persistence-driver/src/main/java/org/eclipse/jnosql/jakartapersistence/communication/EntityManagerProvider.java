@@ -33,19 +33,16 @@ public class EntityManagerProvider {
 
     public Optional<EntityManager> produceMatchingEntityManager(String persistenceUnit, Annotation[] qualifiers) {
         Optional<EntityManager> result = Optional.empty();
-        boolean qualifiersPresent = false;
-        if (result.isEmpty()) {
-            if (qualifiers != null && qualifiers.length > 0) {
-                qualifiersPresent = true;
-                result = produceEntityManagerForQualifiers(qualifiers);
-            }
+        boolean qualifiersPresent = qualifiers != null && qualifiers.length > 0;
+        boolean persistenceUnitPresent = persistenceUnit != null && !persistenceUnit.isBlank();
+        if (qualifiersPresent) {
+            result = produceEntityManagerForQualifiers(qualifiers);
         }
-        if (result.isEmpty()) {
-            if (persistenceUnit != null && !persistenceUnit.isBlank()) {
-                result = produceEntityManagerForPersistenceUnit(persistenceUnit);
-            }
+        if (result.isEmpty() && persistenceUnitPresent) {
+            result = produceEntityManagerForPersistenceUnit(persistenceUnit);
         }
-        if (result.isEmpty() && !qualifiersPresent) {
+        // Fall back to the default entity manager only when the repository doesn't request a specific one
+        if (result.isEmpty() && !qualifiersPresent && !persistenceUnitPresent) {
             result = this.produceDefaultEntityManager();
         }
         return result;
