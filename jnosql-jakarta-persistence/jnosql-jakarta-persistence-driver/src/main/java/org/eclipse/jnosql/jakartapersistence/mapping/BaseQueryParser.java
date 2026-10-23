@@ -174,8 +174,8 @@ abstract class BaseQueryParser {
         if (element.value().isNull()) {
             return ctx.builder().isNull(ctx.root().get(getName(element)));
         } else {
-            ComparableContext comparableContext = ComparableContext.from(ctx, criteria, ignoreCase);
-            return ctx.builder().equal(comparableContext.field(), comparableContext.expression());
+            EqualityContext equalityContext = EqualityContext.from(ctx, criteria, ignoreCase);
+            return ctx.builder().equal(equalityContext.field(), equalityContext.expression());
         }
     }
 
@@ -243,6 +243,18 @@ abstract class BaseQueryParser {
         }
     }
 
+    /**
+     * Equality does not require ordering, so the operand is not forced to be {@link Comparable}.
+     */
+    static Expression<?> getEqualityExpression(CriteriaBuilder cb, Object value) {
+        if (value instanceof ParamValue param && param.isEmpty()) {
+            return cb.parameter(Object.class, param.getName());
+        } else if (value instanceof Value jnosqlValue) {
+            return cb.literal(jnosqlValue.get());
+        }
+        return cb.literal(value);
+    }
+
     @SafeVarargs
     static void requireComparisonSupportsIgnoreCase(CriteriaCondition criteria, Expression<? extends Comparable>... operands) {
             if (!Stream.of(operands).allMatch(BaseQueryParser::isStringExpression)) {
@@ -277,6 +289,19 @@ abstract class BaseQueryParser {
                 expression = ctx.builder().upper((Expression<String>) expression);
             }
             return new ComparableContext(field, expression);
+        }
+    }
+
+    static record EqualityContext(Expression<?> field, Expression<?> expression) {
+
+        public static <FROM> EqualityContext from(QueryContext ctx, CriteriaCondition criteria, boolean ignoreCase) {
+            Element element = (Element) criteria.element();
+            if (ignoreCase) {
+                ComparableContext comparableContext = ComparableContext.from(ctx, criteria, true);
+                return new EqualityContext(comparableContext.field(), comparableContext.expression());
+            }
+            Expression<?> field = ctx.root().get(getName(element));
+            return new EqualityContext(field, getEqualityExpression(ctx.builder(), element.value()));
         }
     }
 
