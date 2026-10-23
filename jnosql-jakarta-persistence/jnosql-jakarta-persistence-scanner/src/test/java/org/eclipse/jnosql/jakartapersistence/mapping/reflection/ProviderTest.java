@@ -18,6 +18,7 @@ package org.eclipse.jnosql.jakartapersistence.mapping.reflection;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 
+import org.eclipse.jnosql.jakartapersistence.JNoSQLJakartaPersistence;
 import org.eclipse.jnosql.jakartapersistence.communication.PersistenceDatabaseManager;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistenceDocumentTemplate;
 import org.eclipse.jnosql.jakartapersistence.mapping.cache.PersistenceUnitCacheProvider;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProviderTest {
@@ -57,5 +59,19 @@ public class ProviderTest {
         assertTrue(cdiContainer.select(UnsupportedRepository.class).isUnsatisfied(), UnsupportedRepository.class.getName() + " should not be supported");
     }
 
+    @Test
+    void testRepositoryWithoutExplicitProviderIsSupported() {
+        assertTrue(cdiContainer.select(DefaultProviderRepository.class).isResolvable(), DefaultProviderRepository.class.getName() + " should be supported");
+    }
+
+    @Test
+    void testCoreJNoSqlProviderRepositoryIsNotSupported() {
+        assertTrue(cdiContainer.select(CoreProviderRepository.class).isUnsatisfied(), CoreProviderRepository.class.getName() + " should not be supported");
+    }
+
+    @Test
+    void testProviderNameIsDistinctFromCoreJNoSql() {
+        assertNotEquals("Eclipse_JNoSQL", JNoSQLJakartaPersistence.PROVIDER);
+    }
 
 }
