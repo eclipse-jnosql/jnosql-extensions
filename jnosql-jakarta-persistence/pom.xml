@@ -39,6 +39,16 @@
         <derby.version>10.15.2.0</derby.version>
     </properties>
 
+    <profiles>
+        <!-- Runs integration tests on a real GlassFish distribution: mvn verify -Pglassfish-it -->
+        <profile>
+            <id>glassfish-it</id>
+            <modules>
+                <module>jnosql-jakarta-persistence-glassfish-test</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <pluginRepositories>
         <pluginRepository>
             <id>dash-licenses-snapshots</id>
