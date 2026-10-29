@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.extensions.sql.SqlEntityMetadata;
 import org.eclipse.jnosql.extensions.sql.SqlTemplate;
@@ -27,6 +28,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 import java.util.Map;
 
 @ApplicationScoped
+@Typed(SqlParameterBasedOperation.class)
 public class SqlParameterBasedOperation implements ParameterBasedOperation {
 
     private final SqlReturnType sqlReturnType;

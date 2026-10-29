@@ -15,12 +15,14 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.ExistsByOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
 import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 
 @ApplicationScoped
+@Typed(SqlExistsByOperation.class)
 public class SqlExistsByOperation implements ExistsByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;

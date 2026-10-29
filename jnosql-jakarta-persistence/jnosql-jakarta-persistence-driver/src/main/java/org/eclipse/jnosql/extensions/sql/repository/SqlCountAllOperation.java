@@ -15,6 +15,7 @@
 package org.eclipse.jnosql.extensions.sql.repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import org.eclipse.jnosql.communication.Value;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.CountAllOperation;
 import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationContext;
@@ -23,6 +24,7 @@ import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import java.util.function.Function;
 
 @ApplicationScoped
+@Typed(SqlCountAllOperation.class)
 public class SqlCountAllOperation implements CountAllOperation {
 
     @SuppressWarnings("unchecked")
