@@ -35,7 +35,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.UpdateOperation;
 
 @ApplicationScoped
 @Typed(SqlRepositoryOperationProvider.class)
-class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
+public class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
 
     private final InsertOperation insertOperation;
     private final UpdateOperation updateOperation;
@@ -83,7 +83,7 @@ class SqlRepositoryOperationProvider implements RepositoryOperationProvider {
         this.queryOperation = queryOperation;
     }
 
-    SqlRepositoryOperationProvider() {
+    protected SqlRepositoryOperationProvider() {
         this.insertOperation = null;
         this.updateOperation = null;
         this.saveOperation = null;

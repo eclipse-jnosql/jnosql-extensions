@@ -27,7 +27,7 @@ import java.util.function.Function;
 
 @ApplicationScoped
 @Typed(SqlCountByOperation.class)
-class SqlCountByOperation implements CountByOperation {
+public class SqlCountByOperation implements CountByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;
 
@@ -36,7 +36,7 @@ class SqlCountByOperation implements CountByOperation {
         this.sqlQueryBuilder = sqlQueryBuilder;
     }
 
-    SqlCountByOperation() {
+    protected SqlCountByOperation() {
         this.sqlQueryBuilder = null;
     }
 

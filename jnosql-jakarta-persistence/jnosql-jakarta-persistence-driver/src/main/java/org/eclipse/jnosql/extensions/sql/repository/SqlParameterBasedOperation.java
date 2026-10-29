@@ -27,7 +27,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 import java.util.Map;
 
 @ApplicationScoped
-class SqlParameterBasedOperation implements ParameterBasedOperation {
+public class SqlParameterBasedOperation implements ParameterBasedOperation {
 
     private final SqlReturnType sqlReturnType;
 
@@ -36,7 +36,7 @@ class SqlParameterBasedOperation implements ParameterBasedOperation {
         this.sqlReturnType = sqlReturnType;
     }
 
-    SqlParameterBasedOperation() {
+    protected SqlParameterBasedOperation() {
         this.sqlReturnType = null;
     }
 

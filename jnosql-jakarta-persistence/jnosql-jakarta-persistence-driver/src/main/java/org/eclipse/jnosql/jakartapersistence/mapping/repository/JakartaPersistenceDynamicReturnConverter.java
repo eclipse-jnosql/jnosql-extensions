@@ -14,6 +14,7 @@
  */
 package org.eclipse.jnosql.jakartapersistence.mapping.repository;
 
+import org.eclipse.jnosql.communication.util.ServiceDiscovery;
 import org.eclipse.jnosql.jakartapersistence.mapping.PersistencePreparedStatement;
 import org.eclipse.jnosql.mapping.core.repository.DynamicReturn;
 import org.eclipse.jnosql.mapping.core.repository.RepositoryReflectionUtils;
@@ -21,7 +22,6 @@ import org.eclipse.jnosql.mapping.core.repository.RepositoryReturn;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +35,11 @@ public enum JakartaPersistenceDynamicReturnConverter {
 
     private final RepositoryReturn defaultReturn = new JakartaPersistenceDefaultRepositoryReturn();
 
+    // Also finds the built-in returns of JNoSQL when the application's class loader does not list them, as in an
+    // application server that provides JNoSQL to its applications
+    private final ServiceDiscovery<RepositoryReturn> repositoryReturns =
+            ServiceDiscovery.of(RepositoryReturn.class, RepositoryReturn.class);
+
     /**
      * Converts the entity from the Method return type.
      *
@@ -47,9 +52,8 @@ public enum JakartaPersistenceDynamicReturnConverter {
         Class<?> typeClass = dynamic.typeClass();
         Class<?> returnType = dynamic.returnType();
 
-        RepositoryReturn repositoryReturn = ServiceLoader.load(RepositoryReturn.class)
+        RepositoryReturn repositoryReturn = repositoryReturns.all()
                 .stream()
-                .map(ServiceLoader.Provider::get)
                 .filter(RepositoryReturn.class::isInstance)
                 .map(RepositoryReturn.class::cast)
                 .filter(r -> r.isCompatible(typeClass, returnType))

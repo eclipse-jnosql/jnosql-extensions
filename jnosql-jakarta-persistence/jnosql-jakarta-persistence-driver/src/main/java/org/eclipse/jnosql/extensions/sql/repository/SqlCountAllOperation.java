@@ -23,7 +23,7 @@ import org.eclipse.jnosql.mapping.semistructured.SemiStructuredTemplate;
 import java.util.function.Function;
 
 @ApplicationScoped
-class SqlCountAllOperation implements CountAllOperation {
+public class SqlCountAllOperation implements CountAllOperation {
 
     @SuppressWarnings("unchecked")
     @Override

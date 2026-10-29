@@ -35,7 +35,7 @@ import java.util.function.Function;
 
 @ApplicationScoped
 @Typed(SqlCursorPaginationOperation.class)
-class SqlCursorPaginationOperation implements CursorPaginationOperation {
+public class SqlCursorPaginationOperation implements CursorPaginationOperation {
 
     private final SqlQueryBuilder queryBuilder;
 
@@ -47,7 +47,7 @@ class SqlCursorPaginationOperation implements CursorPaginationOperation {
         this.returnType = returnType;
     }
 
-    SqlCursorPaginationOperation() {
+    protected SqlCursorPaginationOperation() {
         this.queryBuilder = null;
         this.returnType = null;
     }

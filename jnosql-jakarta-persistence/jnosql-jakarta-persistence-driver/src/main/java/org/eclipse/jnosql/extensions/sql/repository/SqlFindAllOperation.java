@@ -25,7 +25,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 
 @ApplicationScoped
 @Typed(SqlFindAllOperation.class)
-class SqlFindAllOperation implements FindAllOperation {
+public class SqlFindAllOperation implements FindAllOperation {
 
     private static final String[] EMPTY = new String[0];
 
@@ -36,7 +36,7 @@ class SqlFindAllOperation implements FindAllOperation {
         this.sqlReturnType = sqlReturnType;
     }
 
-    SqlFindAllOperation() {
+    protected SqlFindAllOperation() {
         this.sqlReturnType = null;
     }
 

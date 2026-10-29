@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 
 @Typed(SqlQueryOperation.class)
 @ApplicationScoped
-class SqlQueryOperation implements QueryOperation {
+public class SqlQueryOperation implements QueryOperation {
 
     private static final Logger LOGGER = Logger.getLogger(SqlQueryOperation.class.getName());
 
@@ -50,7 +50,7 @@ class SqlQueryOperation implements QueryOperation {
         this.entitiesMetadata = entitiesMetadata;
     }
 
-     SqlQueryOperation() {
+     protected SqlQueryOperation() {
          this.entitiesMetadata = null;
          this.sqlReturnType = null;
     }

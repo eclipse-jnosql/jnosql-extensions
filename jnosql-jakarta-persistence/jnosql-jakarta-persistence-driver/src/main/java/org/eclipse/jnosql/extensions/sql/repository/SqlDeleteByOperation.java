@@ -24,7 +24,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 
 @ApplicationScoped
 @Typed(SqlDeleteByOperation.class)
-class SqlDeleteByOperation implements DeleteByOperation {
+public class SqlDeleteByOperation implements DeleteByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;
 
@@ -33,7 +33,7 @@ class SqlDeleteByOperation implements DeleteByOperation {
         this.sqlQueryBuilder = sqlQueryBuilder;
     }
 
-    SqlDeleteByOperation() {
+    protected SqlDeleteByOperation() {
         this.sqlQueryBuilder = null;
     }
 
