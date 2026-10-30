@@ -30,12 +30,15 @@ import java.util.Optional;
 
 @ApplicationScoped
 @Typed(SqlDeleteOperation.class)
-class SqlDeleteOperation extends CoreDeleteOperation implements DeleteOperation {
+public class SqlDeleteOperation extends CoreDeleteOperation implements DeleteOperation {
 
 
     @Inject
     protected SqlDeleteOperation(LifecycleEventHandler lifecycleEventHandler) {
         super(lifecycleEventHandler);
+    }
+
+    protected SqlDeleteOperation() {
     }
 
     @Override

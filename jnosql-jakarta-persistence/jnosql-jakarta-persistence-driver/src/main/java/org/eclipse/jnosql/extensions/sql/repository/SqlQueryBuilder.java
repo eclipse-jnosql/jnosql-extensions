@@ -41,12 +41,12 @@ import java.util.Optional;
 import java.util.function.Function;
 
 @ApplicationScoped
-class SqlQueryBuilder {
+public class SqlQueryBuilder {
 
     private static final SelectQueryParser SELECT_PARSER = new SelectQueryParser();
     private static final DeleteQueryParser DELETE_PARSER = new DeleteQueryParser();
 
-    SelectQuery selectQuery(RepositoryInvocationContext context) {
+    public SelectQuery selectQuery(RepositoryInvocationContext context) {
         var method = context.method();
         var entityMetadata = context.entityMetadata();
         var parameters = context.parameters();
@@ -125,7 +125,7 @@ class SqlQueryBuilder {
     }
 
 
-    DeleteQuery deleteQuery(RepositoryInvocationContext context) {
+    public DeleteQuery deleteQuery(RepositoryInvocationContext context) {
         var entityMetadata = context.entityMetadata();
         var provider = DeleteMethodProvider.INSTANCE;
         var method = context.method();

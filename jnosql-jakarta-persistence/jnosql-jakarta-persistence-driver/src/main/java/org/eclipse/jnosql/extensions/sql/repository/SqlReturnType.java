@@ -30,7 +30,7 @@ import java.util.function.LongSupplier;
 import java.util.stream.Stream;
 
 @ApplicationScoped
-class SqlReturnType {
+public class SqlReturnType {
 
     @SuppressWarnings("unchecked")
     protected Object executeFindByQuery(RepositoryInvocationContext context, SelectQuery query) {

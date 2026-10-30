@@ -57,7 +57,7 @@ public class SqlRepositoryProducer {
         this.lifeCycle = lifeCycle;
     }
 
-    SqlRepositoryProducer() {
+    protected SqlRepositoryProducer() {
         this.infrastructureOperatorProvider = null;
         this.repositoryOperationProvider = null;
         this.projectionFoundEvent = null;

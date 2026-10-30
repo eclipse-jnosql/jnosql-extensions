@@ -22,7 +22,7 @@ import org.eclipse.jnosql.mapping.metadata.repository.spi.RepositoryInvocationCo
 
 @ApplicationScoped
 @Typed(SqlFindByOperation.class)
-class SqlFindByOperation implements FindByOperation {
+public class SqlFindByOperation implements FindByOperation {
 
     private final SqlQueryBuilder sqlQueryBuilder;
     private final SqlReturnType sqlReturnType;
@@ -33,7 +33,7 @@ class SqlFindByOperation implements FindByOperation {
         this.sqlReturnType = sqlReturnType;
     }
 
-    SqlFindByOperation() {
+    protected SqlFindByOperation() {
         this.sqlReturnType = null;
         this.sqlQueryBuilder = null;
     }
