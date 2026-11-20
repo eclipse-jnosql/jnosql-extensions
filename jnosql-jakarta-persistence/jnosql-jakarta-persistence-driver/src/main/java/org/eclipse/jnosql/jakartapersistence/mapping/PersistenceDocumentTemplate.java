@@ -45,6 +45,19 @@ import java.util.stream.StreamSupport;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isDeleteQuery;
 import static org.eclipse.jnosql.jakartapersistence.mapping.QLUtil.isUpdateQuery;
 
+/**
+ * A {@link DocumentTemplate} that executes operations through a Jakarta Persistence
+ * {@link EntityManager}.
+ *
+ * <p>It is the engine behind the Jakarta Data repositories of this extension. Entities are persisted,
+ * queried and removed with the entity manager held by the {@link PersistenceDatabaseManager}, and queries
+ * are translated to JPQL. Application code normally uses the public
+ * {@code org.eclipse.jnosql.extensions.sql.SqlTemplate} instead of this class.</p>
+ *
+ * <p>The template does not manage transactions; callers are expected to run inside one, for example through
+ * {@link EnsureTransaction}. Operations that have no Jakarta Persistence equivalent throw
+ * {@link UnsupportedOperationException}, such as {@link #update(Class)}.</p>
+ */
 public class PersistenceDocumentTemplate implements DocumentTemplate {
 
     private static final Logger LOGGER = Logger.getLogger(PersistenceDocumentTemplate.class.getName());
@@ -54,6 +67,11 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
     private final DeleteQueryParser deleteParser;
     private final UpdateQueryParser updateParser;
 
+    /**
+     * Creates a template backed by the given manager.
+     *
+     * @param manager the manager that provides the {@link EntityManager}
+     */
     public PersistenceDocumentTemplate(PersistenceDatabaseManager manager) {
         this.manager = manager;
         this.selectParser = new SelectQueryParser(manager);
@@ -61,6 +79,11 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         this.updateParser = new UpdateQueryParser(manager);
     }
 
+    /**
+     * Returns the entity manager used by this template, for operations not covered by the template API.
+     *
+     * @return the underlying {@link EntityManager}
+     */
     public EntityManager entityManager() {
         return manager.getEntityManager();
     }
@@ -258,6 +281,12 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         return selectParser.selectOffset(sq, pr, mapper);
     }
 
+    /**
+     * Returns the {@link PersistenceUnitUtil} of the entity manager factory, which can be used to check
+     * loaded state and read identifiers.
+     *
+     * @return the persistence unit utility
+     */
     public PersistenceUnitUtil getPersistenceUnitUtil() {
         return entityManager().getEntityManagerFactory().getPersistenceUnitUtil();
     }
@@ -277,6 +306,11 @@ public class PersistenceDocumentTemplate implements DocumentTemplate {
         entities.forEach(this::delete);
     }
 
+    /**
+     * Not supported by this implementation.
+     *
+     * @throws UnsupportedOperationException always
+     */
     @Override
     public <T> QueryMapper.MapperUpdateFrom update(Class<T> type) {
         throw new UnsupportedOperationException("'update(Class<T> type)' not supported yet.");
