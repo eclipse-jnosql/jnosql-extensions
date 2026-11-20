@@ -19,6 +19,11 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.WildcardType;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
@@ -26,6 +31,8 @@ final class RepositoryMethodReturnTypeIntrospector {
 
     private static final String OPTIONAL_EMPTY = "Optional.empty()";
     private static final String OPTIONAL_CLASS_MASK = "Optional.of(%s.class)";
+    private static final String COMPLETION_STAGE = "java.util.concurrent.CompletionStage";
+    private static final String COMPLETABLE_FUTURE = "java.util.concurrent.CompletableFuture";
 
     private final ProcessingEnvironment processingEnv;
 
@@ -34,7 +41,56 @@ final class RepositoryMethodReturnTypeIntrospector {
     }
 
     ReturnTypeMetadata introspect(ExecutableElement method) {
-        return new ReturnTypeMetadata(returnType(method), elementType(method));
+        return new ReturnTypeMetadata(returnType(method), elementType(method), returnDescriptor(method));
+    }
+
+    /**
+     * Describes the declared return type with its type arguments, as {@code ReturnType.of(...)} calls.
+     * It is empty when the type has no arguments, because the default
+     * {@code RepositoryMethod.returnDescriptor()} already describes such a type from {@code returnType()}.
+     */
+    private String returnDescriptor(ExecutableElement method) {
+        if (method.getReturnType() instanceof DeclaredType declaredType
+                && !declaredType.getTypeArguments().isEmpty()) {
+            return "Optional.of(" + describe(declaredType) + ")";
+        }
+        return "";
+    }
+
+    private String describe(TypeMirror type) {
+        return switch (type) {
+            case DeclaredType declared -> {
+                String raw = rawName(declared);
+                String arguments = declared.getTypeArguments().stream()
+                        .map(this::describe)
+                        .collect(Collectors.joining(", "));
+                yield arguments.isEmpty()
+                        ? "ReturnType.of(%s.class)".formatted(raw)
+                        : "ReturnType.of(%s.class, %s)".formatted(raw, arguments);
+            }
+            case WildcardType wildcard -> describe(wildcard.getExtendsBound() == null
+                    ? objectType() : wildcard.getExtendsBound());
+            case TypeVariable variable -> describe(variable.getUpperBound());
+            default -> "ReturnType.of(%s.class)".formatted(
+                    processingEnv.getTypeUtils().erasure(type).toString());
+        };
+    }
+
+    private String rawName(DeclaredType declared) {
+        TypeElement element = (TypeElement) declared.asElement();
+        return element.getQualifiedName().toString();
+    }
+
+    private TypeMirror objectType() {
+        return processingEnv.getElementUtils().getTypeElement("java.lang.Object").asType();
+    }
+
+    private boolean isAsync(TypeMirror type) {
+        if (type.getKind() != TypeKind.DECLARED) {
+            return false;
+        }
+        String name = rawName((DeclaredType) type);
+        return COMPLETION_STAGE.equals(name) || COMPLETABLE_FUTURE.equals(name);
     }
 
     private String returnType(ExecutableElement method) {
@@ -46,7 +102,41 @@ final class RepositoryMethodReturnTypeIntrospector {
                 .orElse(OPTIONAL_CLASS_MASK.formatted(method.getReturnType().toString()));
     }
 
-    private static String elementType(ExecutableElement method) {
+    /**
+     * Resolves the element type as the reflection mapping does. For an asynchronous return type
+     * ({@code CompletionStage} or {@code CompletableFuture}) it is resolved from the type argument, so
+     * {@code CompletionStage<Optional<Product>>}, {@code CompletionStage<List<Product>>} and
+     * {@code CompletionStage<Product>} all have {@code Product} as element type.
+     */
+    private String elementType(ExecutableElement method) {
+        TypeMirror declared = method.getReturnType();
+        if (isAsync(declared)) {
+            var arguments = ((DeclaredType) declared).getTypeArguments();
+            if (arguments.isEmpty()) {
+                return OPTIONAL_EMPTY;
+            }
+            TypeMirror argument = arguments.get(0);
+            String nested = elementOf(argument);
+            return nested == null ? OPTIONAL_CLASS_MASK.formatted(erasedName(argument)) : nested;
+        }
+        return syncElementType(method);
+    }
+
+    private String elementOf(TypeMirror type) {
+        if (type instanceof DeclaredType declaredType && !declaredType.getTypeArguments().isEmpty()) {
+            return OPTIONAL_CLASS_MASK.formatted(declaredType.getTypeArguments().get(0));
+        }
+        if (type instanceof ArrayType arrayType) {
+            return OPTIONAL_CLASS_MASK.formatted(arrayType.getComponentType());
+        }
+        return null;
+    }
+
+    private String erasedName(TypeMirror type) {
+        return processingEnv.getTypeUtils().erasure(type).toString();
+    }
+
+    private static String syncElementType(ExecutableElement method) {
         if (method.getReturnType() instanceof DeclaredType declaredType) {
             return declaredType.getTypeArguments().stream()
                     .map(Object::toString)
@@ -60,6 +150,6 @@ final class RepositoryMethodReturnTypeIntrospector {
         return OPTIONAL_EMPTY;
     }
 
-    record ReturnTypeMetadata(String returnType, String elementType) {
+    record ReturnTypeMetadata(String returnType, String elementType, String returnDescriptor) {
     }
 }
