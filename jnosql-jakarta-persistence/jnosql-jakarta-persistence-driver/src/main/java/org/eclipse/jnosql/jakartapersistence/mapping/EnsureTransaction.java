@@ -27,8 +27,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 
 /**
+ * Interceptor binding that makes a method run inside a Jakarta Persistence transaction.
+ *
+ * <p>The binding is handled by {@link EnsureTransactionInterceptor}. If the entity manager is already
+ * joined to a transaction, the invocation participates in it. Otherwise a resource-local transaction is
+ * started, committed when the method returns normally and rolled back when it throws.</p>
+ *
+ * <p>It can be placed on a type, in which case it applies to all its business methods, or on a single
+ * method, and it is {@link java.lang.annotation.Inherited inherited} by subclasses. It requires the
+ * interceptor to be enabled in the CDI container.</p>
  *
  * @author Ondro Mihalyi
+ * @see EnsureTransactionInterceptor
  */
 @InterceptorBinding
 @Target({TYPE, METHOD})
