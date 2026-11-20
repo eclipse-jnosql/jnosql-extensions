@@ -31,7 +31,26 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
-
+/**
+ * Annotation processor that generates the Jakarta Data static metamodel for Jakarta NoSQL entities.
+ *
+ * <p>For every type annotated with {@code jakarta.nosql.Entity} or {@code jakarta.nosql.MappedSuperclass},
+ * it generates an interface named {@code _EntityName} in the entity's package. The interface contains a
+ * {@code String} constant and a typed Jakarta Data attribute for each field annotated with
+ * {@code jakarta.nosql.Column} or {@code jakarta.nosql.Id}, including inherited fields.</p>
+ *
+ * <p>The processor is discovered through the Java service loader when it is on the compiler's annotation
+ * processor path; applications do not instantiate or call it. Generation is performed by
+ * {@link ClassAnalyzer} and the {@code metamodel.mustache} template.</p>
+ *
+ * <p>The metamodel of an entity {@code Person} is used like this:</p>
+ *
+ * <pre>{@code
+ * Sort<Person> byName = _Person.name.asc();
+ * }</pre>
+ *
+ * @see ClassAnalyzer
+ */
 @SupportedAnnotationTypes({"jakarta.nosql.Entity", "jakarta.nosql.MappedSuperclass"})
 @SupportedSourceVersion(SourceVersion.RELEASE_21)
 public class EntityProcessor extends AbstractProcessor {
