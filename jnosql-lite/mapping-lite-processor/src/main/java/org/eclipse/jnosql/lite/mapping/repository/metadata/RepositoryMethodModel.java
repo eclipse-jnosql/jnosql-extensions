@@ -28,6 +28,7 @@ class RepositoryMethodModel extends BaseMappingModel {
     private final String first;
     private final String returnType;
     private final String elementType;
+    private final String returnDescriptor;
     private final List<String> selects;
     private final List<String> sorts;
     private final List<String> annotations;
@@ -44,6 +45,7 @@ class RepositoryMethodModel extends BaseMappingModel {
                                  String first,
                                  String returnType,
                                  String elementType,
+                                 String returnDescriptor,
                                  List<String> selects,
                                  List<String> sorts,
                                  List<String> annotations,
@@ -58,6 +60,7 @@ class RepositoryMethodModel extends BaseMappingModel {
         this.first = first;
         this.returnType = returnType;
         this.elementType = elementType;
+        this.returnDescriptor = returnDescriptor;
         this.selects = selects;
         this.sorts = sorts;
         this.annotations = annotations;
@@ -103,6 +106,18 @@ class RepositoryMethodModel extends BaseMappingModel {
 
     public String getElementType() {
         return elementType;
+    }
+
+    public String getReturnDescriptor() {
+        return returnDescriptor;
+    }
+
+    /**
+     * @return {@code true} when the method declares a parameterized return type that the default
+     * {@code RepositoryMethod.returnDescriptor()} cannot describe, so the generated class overrides it
+     */
+    public boolean isReturnDescriptorDeclared() {
+        return !returnDescriptor.isEmpty();
     }
 
     public List<String> getSelects() {

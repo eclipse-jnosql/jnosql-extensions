@@ -21,6 +21,9 @@ import org.eclipse.jnosql.mapping.metadata.repository.NameKey;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryAnnotation;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
 import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
+{{#returnDescriptorDeclared}}
+import org.eclipse.jnosql.mapping.metadata.repository.ReturnType;
+{{/returnDescriptorDeclared}}
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,6 +113,13 @@ public final class {{className}} implements RepositoryMethodLookup {
     public Optional<Class<?>> elementType() {
         return {{{elementType}}};
     }
+{{#returnDescriptorDeclared}}
+
+    @Override
+    public Optional<ReturnType> returnDescriptor() {
+        return {{{returnDescriptor}}};
+    }
+{{/returnDescriptorDeclared}}
 
     @Override
     public List<String> select() {

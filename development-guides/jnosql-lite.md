@@ -86,3 +86,17 @@ accessible constructor, otherwise `MappingIntrospector` throws a `ValidationExce
 - Test negative cases (missing constructor, unsupported repository interface) in addition to metadata
   equality. Follow [TESTING-GUIDELINE.adoc](../TESTING-GUIDELINE.adoc).
 - Do not edit generated sources under `target/`.
+
+## Asynchronous and nested return types
+
+- `RepositoryMethod.returnType()` keeps the raw declared class (for example `CompletionStage`). The
+  core default `returnDescriptor()` only wraps that raw class, so it loses nested type arguments.
+- For parameterized return types, `repository_method_metadata` generates a `returnDescriptor()`
+  override such as
+  `ReturnType.of(CompletionStage.class, ReturnType.of(Optional.class, ReturnType.of(Person.class)))`.
+  Other return types rely on the default method.
+- `elementType()` is async-aware: `CompletionStage<Optional<P>>`, `CompletionStage<List<P>>` and
+  `CompletableFuture<P>` all resolve to `P`.
+- Execution reuses the core return handlers and executor; Lite adds no executor or reflection.
+- Limitation: unlike the reflection-based mapping, Lite does not reject async return types on
+  method kinds the core does not support asynchronously.

@@ -29,6 +29,9 @@ import org.eclipse.jnosql.mapping.NoSQLRepository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 @Repository
 public interface PersonCrudRepository extends NoSQLRepository<Person, Long> {
@@ -86,5 +89,35 @@ public interface PersonCrudRepository extends NoSQLRepository<Person, Long> {
     @Find
     @OrderBy("name")
     Page<Person> findOffSet(@By("name") String name, PageRequest pageRequest, Order<Person> order);
+
+    @Find
+    CompletionStage<Person> asyncPerson(@By("name") String name);
+
+    @Find
+    CompletionStage<Optional<Person>> asyncOptionalPerson(@By("name") String name);
+
+    @Find
+    CompletionStage<List<Person>> asyncPeople(@By("name") String name);
+
+    @Find
+    CompletionStage<Long> asyncLong(@By("name") String name);
+
+    @Find
+    CompletionStage<Boolean> asyncBoolean(@By("name") String name);
+
+    @Find
+    CompletableFuture<Person> futurePerson(@By("name") String name);
+
+    @Find
+    CompletableFuture<Optional<Person>> futureOptionalPerson(@By("name") String name);
+
+    @Find
+    CompletableFuture<List<Person>> futurePeople(@By("name") String name);
+
+    @Find
+    CompletableFuture<Long> futureLong(@By("name") String name);
+
+    @Find
+    CompletableFuture<Boolean> futureBoolean(@By("name") String name);
 
 }
