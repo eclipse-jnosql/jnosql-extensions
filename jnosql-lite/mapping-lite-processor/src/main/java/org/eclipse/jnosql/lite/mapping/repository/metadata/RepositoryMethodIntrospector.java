@@ -74,6 +74,7 @@ final class RepositoryMethodIntrospector {
         var metadata = new RepositoryMethodModel(packageName, methodName, className,
                 methodType, queryMetadata.query(), queryMetadata.find(), queryMetadata.first(),
                 returnTypeMetadata.returnType(), returnTypeMetadata.elementType(),
+                returnTypeMetadata.returnDescriptor(),
                 queryMetadata.selects(), queryMetadata.sorts(), annotationMetadata.annotations(),
                 parameterMetadata.params(), parameterMetadata.signature());
         sourceGenerator.generate(method, metadata);
