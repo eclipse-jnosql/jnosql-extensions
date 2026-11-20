@@ -31,6 +31,8 @@ final class RepositoryMethodReturnTypeIntrospector {
 
     private static final String OPTIONAL_EMPTY = "Optional.empty()";
     private static final String OPTIONAL_CLASS_MASK = "Optional.of(%s.class)";
+    private static final String INDENT = "        ";
+    private static final int MAX_LINE_LENGTH = 150;
     private static final String COMPLETION_STAGE = "java.util.concurrent.CompletionStage";
     private static final String COMPLETABLE_FUTURE = "java.util.concurrent.CompletableFuture";
 
@@ -52,28 +54,42 @@ final class RepositoryMethodReturnTypeIntrospector {
     private String returnDescriptor(ExecutableElement method) {
         if (method.getReturnType() instanceof DeclaredType declaredType
                 && !declaredType.getTypeArguments().isEmpty()) {
-            return "Optional.of(" + describe(declaredType) + ")";
+            return "Optional.of(" + describe(declaredType, 1) + ")";
         }
         return "";
     }
 
-    private String describe(TypeMirror type) {
+    /**
+     * Renders a {@code ReturnType.of(...)} expression. Nested arguments that do not fit in
+     * {@link #MAX_LINE_LENGTH} columns are placed on their own lines, so the generated source stays readable.
+     */
+    private String describe(TypeMirror type, int depth) {
         return switch (type) {
-            case DeclaredType declared -> {
-                String raw = rawName(declared);
-                String arguments = declared.getTypeArguments().stream()
-                        .map(this::describe)
-                        .collect(Collectors.joining(", "));
-                yield arguments.isEmpty()
-                        ? "ReturnType.of(%s.class)".formatted(raw)
-                        : "ReturnType.of(%s.class, %s)".formatted(raw, arguments);
-            }
+            case DeclaredType declared -> describe(declared, depth);
             case WildcardType wildcard -> describe(wildcard.getExtendsBound() == null
-                    ? objectType() : wildcard.getExtendsBound());
-            case TypeVariable variable -> describe(variable.getUpperBound());
+                    ? objectType() : wildcard.getExtendsBound(), depth);
+            case TypeVariable variable -> describe(variable.getUpperBound(), depth);
             default -> "ReturnType.of(%s.class)".formatted(
                     processingEnv.getTypeUtils().erasure(type).toString());
         };
+    }
+
+    private String describe(DeclaredType declared, int depth) {
+        String raw = rawName(declared);
+        var arguments = declared.getTypeArguments();
+        if (arguments.isEmpty()) {
+            return "ReturnType.of(%s.class)".formatted(raw);
+        }
+        String inline = "ReturnType.of(%s.class, %s)".formatted(raw, arguments.stream()
+                .map(argument -> describe(argument, depth + 1))
+                .collect(Collectors.joining(", ")));
+        if (inline.length() + INDENT.length() * (depth + 1) <= MAX_LINE_LENGTH && inline.indexOf('\n') < 0) {
+            return inline;
+        }
+        String margin = "\n" + INDENT.repeat(depth + 1);
+        return "ReturnType.of(%s.class,%s%s)".formatted(raw, margin, arguments.stream()
+                .map(argument -> describe(argument, depth + 1))
+                .collect(Collectors.joining("," + margin)));
     }
 
     private String rawName(DeclaredType declared) {
