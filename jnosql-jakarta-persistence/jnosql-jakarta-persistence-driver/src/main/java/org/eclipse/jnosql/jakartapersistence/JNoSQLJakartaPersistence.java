@@ -16,10 +16,18 @@
 package org.eclipse.jnosql.jakartapersistence;
 
 /**
- * Metadata about this Jakarta Persistence implementation
+ * Metadata about the Eclipse JNoSQL Jakarta Persistence extension.
+ *
+ * <p>This interface only holds constants; it is not meant to be implemented.</p>
  *
  * @author Ondro Mihalyi
  */
 public interface JNoSQLJakartaPersistence {
+
+    /**
+     * The name that identifies this extension as the provider of Jakarta Data repositories backed by
+     * Jakarta Persistence. Compare against it when a component needs to know which Jakarta Data provider is
+     * handling a repository.
+     */
     public static final String PROVIDER = "Eclipse_JNoSQL_Jakarta_Persistence";
 }
