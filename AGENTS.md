@@ -23,6 +23,7 @@ Read the guides that apply to your change before editing:
 
 - [Common practices](development-guides/common.md) — API design, Java, Javadoc, tests, generated code.
 - [Annotation processing](development-guides/annotation-processing.md) — JSR 269 and Mustache rules.
+- [Code generation pipeline](development-guides/code-generation.md) — analysis, models, templates, diagnostics, readability findings.
 - [JNoSQL Lite](development-guides/jnosql-lite.md)
 - [Static metamodel](development-guides/static-metamodel.md)
 - [Mapping validation](development-guides/mapping-validation.md)
