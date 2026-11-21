@@ -1,0 +1,137 @@
+package {{packageName}};
+
+{{#imports}}
+import {{{.}}};
+{{/imports}}
+
+/**
+ * {{{javadoc}}}
+ */
+public record {{name}}(
+{{#attributes}}
+        {{filterType}} {{name}},
+{{/attributes}}
+        List<{{name}}> or
+) {
+
+{{#attributes}}
+    private static final {{{attributeType}}} {{constant}} = {{{factory}}};
+{{/attributes}}
+
+    /**
+     * Converts the request into a Jakarta Data restriction.
+     *
+     * @return the restriction, never unrestricted
+     * @throws BadRequestException if no filter is present or a filter is invalid
+     */
+    public Restriction<{{{entityType}}}> toRestriction() {
+        List<Restriction<{{{entityType}}}>> restrictions = new ArrayList<>();
+        collect(restrictions);
+        if (restrictions.isEmpty()) {
+            throw new BadRequestException("The search request needs at least one filter");
+        }
+        return restrictions.size() == 1 ? restrictions.get(0) : Restrict.all(restrictions);
+    }
+
+    private void collect(List<Restriction<{{{entityType}}}>> restrictions) {
+{{#attributes}}
+        if ({{name}} != null) {
+            {{name}}.collect({{constant}}, "{{name}}", restrictions);
+        }
+{{/attributes}}
+        if (or != null) {
+            if (or.isEmpty()) {
+                throw new BadRequestException("'or' needs at least one alternative");
+            }
+            List<Restriction<{{{entityType}}}>> alternatives = new ArrayList<>();
+            for ({{name}} alternative : or) {
+                if (alternative == null) {
+                    throw new BadRequestException("'or' must not contain null alternatives");
+                }
+                alternatives.add(alternative.toRestriction());
+            }
+            restrictions.add(Restrict.any(alternatives));
+        }
+    }
+
+    private static <V extends Comparable<?>> Restriction<{{{entityType}}}> between(
+            ComparableAttribute<{{{entityType}}}, V> attribute, String name, List<V> bounds) {
+        if (bounds.size() != 2 || bounds.stream().anyMatch(Objects::isNull)) {
+            throw new BadRequestException("'" + name + ".between' needs exactly two non-null bounds");
+        }
+        if (compare(bounds.get(0), bounds.get(1)) > 0) {
+            throw new BadRequestException("'" + name + ".between' needs the lower bound first");
+        }
+        return attribute.between(bounds.get(0), bounds.get(1));
+    }
+
+    private static <V> Restriction<{{{entityType}}}> in(
+            BasicAttribute<{{{entityType}}}, V> attribute, String name, List<V> values) {
+        if (values.isEmpty() || values.stream().anyMatch(Objects::isNull)) {
+            throw new BadRequestException("'" + name + ".in' needs at least one non-null value");
+        }
+        return attribute.in(values);
+    }
+
+    private static Restriction<{{{entityType}}}> nullCheck(
+            BasicAttribute<{{{entityType}}}, ?> attribute, boolean expectNull) {
+        return expectNull ? attribute.isNull() : attribute.notNull();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static int compare(Object lower, Object upper) {
+        return ((Comparable<Object>) lower).compareTo(upper);
+    }
+{{#filters}}
+
+    /**
+     * Operators available for {@code {{{valueType}}}} attributes.
+     */
+    public record {{name}}(
+            {{{valueType}}} eq,
+            {{{valueType}}} ne,
+{{#comparable}}
+            {{{valueType}}} gt,
+            {{{valueType}}} gte,
+            {{{valueType}}} lt,
+            {{{valueType}}} lte,
+            List<{{{valueType}}}> between,
+{{/comparable}}
+            List<{{{valueType}}}> in,
+            Boolean isNull) {
+
+        private void collect({{{attributeType}}} attribute, String name,
+                List<Restriction<{{{entityType}}}>> restrictions) {
+            if (eq != null) {
+                restrictions.add(attribute.equalTo(eq));
+            }
+            if (ne != null) {
+                restrictions.add(attribute.notEqualTo(ne));
+            }
+{{#comparable}}
+            if (gt != null) {
+                restrictions.add(attribute.greaterThan(gt));
+            }
+            if (gte != null) {
+                restrictions.add(attribute.greaterThanEqual(gte));
+            }
+            if (lt != null) {
+                restrictions.add(attribute.lessThan(lt));
+            }
+            if (lte != null) {
+                restrictions.add(attribute.lessThanEqual(lte));
+            }
+            if (between != null) {
+                restrictions.add({{{requestName}}}.between(attribute, name, between));
+            }
+{{/comparable}}
+            if (in != null) {
+                restrictions.add({{{requestName}}}.in(attribute, name, in));
+            }
+            if (isNull != null) {
+                restrictions.add({{{requestName}}}.nullCheck(attribute, isNull));
+            }
+        }
+    }
+{{/filters}}
+}
