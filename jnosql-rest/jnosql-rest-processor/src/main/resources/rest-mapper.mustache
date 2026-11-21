@@ -1,0 +1,16 @@
+package {{packageName}};
+
+{{#imports}}
+import {{{.}}};
+{{/imports}}
+
+/**
+ * {{{javadoc}}}
+ */
+{{{annotation}}}
+public interface {{name}} {
+{{#methods}}
+
+{{{.}}}
+{{/methods}}
+}
