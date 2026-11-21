@@ -19,6 +19,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,6 +35,48 @@ final class ScalarTypes {
             "java.util.Locale", "java.util.Currency", "java.net.URI", "java.net.URL");
 
     private ScalarTypes() {
+    }
+
+    private static final Map<String, String> PARSED = Map.ofEntries(
+            Map.entry("java.time.LocalDate", "parse"), Map.entry("java.time.LocalDateTime", "parse"),
+            Map.entry("java.time.LocalTime", "parse"), Map.entry("java.time.Instant", "parse"),
+            Map.entry("java.time.OffsetDateTime", "parse"), Map.entry("java.time.OffsetTime", "parse"),
+            Map.entry("java.time.ZonedDateTime", "parse"), Map.entry("java.time.Duration", "parse"),
+            Map.entry("java.time.Period", "parse"), Map.entry("java.time.Year", "parse"),
+            Map.entry("java.time.YearMonth", "parse"), Map.entry("java.time.MonthDay", "parse"),
+            Map.entry("java.time.ZoneId", "of"), Map.entry("java.time.ZoneOffset", "of"),
+            Map.entry("java.util.Locale", "forLanguageTag"), Map.entry("java.util.Currency", "getInstance"));
+
+    /**
+     * Finds the static factory that converts text into the type for HTTP binding, for the scalar types that Jakarta
+     * REST cannot convert by itself.
+     *
+     * @param type the parameter type
+     * @return the factory method name, or {@code null} when Jakarta REST binds the type natively or it is unsupported
+     */
+    static String parser(TypeMirror type) {
+        if (type.getKind() != TypeKind.DECLARED) {
+            return null;
+        }
+        return PARSED.get(((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName().toString());
+    }
+
+    /**
+     * Tells whether Jakarta REST can bind the type, directly or through {@link #parser(TypeMirror)}.
+     *
+     * @param type the parameter type
+     * @return {@code true} when a query or path parameter of the type is usable
+     */
+    static boolean isHttpBindable(TypeMirror type) {
+        if (type.getKind().isPrimitive()) {
+            return true;
+        }
+        if (!isScalar(type) || type.getKind() != TypeKind.DECLARED) {
+            return false;
+        }
+        TypeElement element = (TypeElement) ((DeclaredType) type).asElement();
+        return element.getKind() == ElementKind.ENUM || parser(type) != null
+                || !element.getQualifiedName().toString().startsWith("java.time.");
     }
 
     static boolean isScalar(TypeMirror type) {
