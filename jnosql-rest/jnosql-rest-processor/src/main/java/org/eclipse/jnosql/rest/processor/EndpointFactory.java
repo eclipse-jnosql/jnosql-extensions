@@ -55,7 +55,13 @@ final class EndpointFactory {
     private static final String UPDATE = DATA_PACKAGE + "Update";
     private static final String DELETE = DATA_PACKAGE + "Delete";
     private static final Set<String> RESERVED = Set.of("repository", "mapper", "entity", "request", "result",
-            "stream", "created", "response");
+            "stream", "created", "response", "page", "offset", "size", "cursor", "includeTotal", "cursorContext");
+    private static final String PAGE_PACKAGE = "jakarta.data.page.";
+    private static final String PAGE = PAGE_PACKAGE + "Page";
+    private static final String CURSORED_PAGE = PAGE_PACKAGE + "CursoredPage";
+    private static final String PAGE_REQUEST = PAGE_PACKAGE + "PageRequest";
+    private static final String PAGINATION = "org.eclipse.jnosql.rest.pagination.Pagination";
+    private static final List<String> PAGINATION_PARAMETERS = List.of("offset", "size", "includeTotal", "cursor");
     private static final Pattern TEMPLATE = Pattern.compile("\\{([^}/]+)}");
     private static final String INDENT = "    ";
 
@@ -213,11 +219,49 @@ final class EndpointFactory {
             return Classified.unsupported("a dynamic restriction can only be used by read-only operations, because "
                     + "it is served through HTTP QUERY");
         }
-        if (method.getParameters().size() != 1 || !isEntityRestriction(parameterTypes(method).get(0))) {
-            return Classified.unsupported("a dynamic restriction must be the only parameter and be a Restriction "
-                    + "of the repository entity");
+        if (nonPagingParameters(method).size() != 1 || !isEntityRestriction(nonPagingParameters(method).get(0))) {
+            return Classified.unsupported("a dynamic restriction must be the only parameter, besides an optional "
+                    + "PageRequest, and be a Restriction of the repository entity");
         }
         return Classified.explicit(Kind.SEARCH, classified.operation());
+    }
+
+    private List<TypeMirror> nonPagingParameters(ExecutableElement method) {
+        return parameterTypes(method).stream().filter(type -> !isType(type, PAGE_REQUEST))
+                .map(type -> (TypeMirror) type).toList();
+    }
+
+    private static boolean isType(TypeMirror type, String qualifiedName) {
+        return type.getKind() == TypeKind.DECLARED
+                && ((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName().contentEquals(qualifiedName);
+    }
+
+    private enum PageMode { NONE, OFFSET, CURSOR }
+
+    private record Paging(PageMode mode, String problem) {
+    }
+
+    private Paging paging(ExecutableElement method) {
+        TypeMirror result = returnType(method);
+        PageMode mode = isType(result, PAGE) ? PageMode.OFFSET
+                : isType(result, CURSORED_PAGE) ? PageMode.CURSOR : PageMode.NONE;
+        long requests = parameterTypes(method).stream().filter(type -> isType(type, PAGE_REQUEST)).count();
+        if (mode == PageMode.NONE) {
+            return new Paging(mode, requests == 0 ? null
+                    : "a PageRequest parameter needs a Page or CursoredPage return type");
+        }
+        if (requests != 1) {
+            return new Paging(mode, "a method returning a page needs exactly one PageRequest parameter");
+        }
+        if (mode == PageMode.CURSOR) {
+            return new Paging(mode, CursorOrdering.problem(method, identifier()));
+        }
+        return new Paging(mode, null);
+    }
+
+    private String identifier() {
+        return new PropertyScanner(elements, types).scan((TypeElement) types.asElement(repository.entity())).stream()
+                .filter(Property::identifier).map(Property::name).findFirst().orElse(null);
     }
 
     private long restrictionParameters(ExecutableElement method) {
@@ -606,7 +650,11 @@ final class EndpointFactory {
     }
 
     private Spec read(ExecutableElement method, Classified classified, String path) {
-        Spec spec = parameters(method, path, "GET");
+        Paging paging = paging(method);
+        if (paging.problem() != null) {
+            return unsupportedSignature(method, paging.problem());
+        }
+        Spec spec = parameters(method, path, "GET", paging);
         if (spec == null) {
             return null;
         }
@@ -618,16 +666,49 @@ final class EndpointFactory {
         return spec;
     }
 
+    private boolean searchPaginated;
+
     private Spec search(ExecutableElement method, String path) {
         if (TEMPLATE.matcher(path).find()) {
             return unsupportedSignature(method, "a search path cannot contain path variables because the criteria "
                     + "travel in the request body");
         }
+        Paging paging = paging(method);
+        if (paging.problem() != null) {
+            return unsupportedSignature(method, paging.problem());
+        }
+        boolean paged = paging.mode() != PageMode.NONE;
+        if (searchRequestResolved && searchPaginated != paged) {
+            diagnostics.error(method, "All dynamic searches of " + repository.element().getSimpleName()
+                    + " must either paginate or not, because they share one " + searchRequestName() + ".");
+            return null;
+        }
+        searchPaginated = paged;
         Spec spec = new Spec("QUERY", path, "void", method.getSimpleName().toString());
-        String call = "repository." + method.getSimpleName() + "(request.toRestriction())";
+        String call = "repository." + method.getSimpleName() + "("
+                + method.getParameters().stream().map(parameter -> isType(parameter.asType(), PAGE_REQUEST)
+                        ? variableName(parameter) : "request.toRestriction()").collect(
+                        java.util.stream.Collectors.joining(", ")) + ")";
+        if (paged) {
+            String pagination = imports.name(PAGINATION);
+            VariableElement pageParameter = method.getParameters().stream()
+                    .filter(parameter -> isType(parameter.asType(), PAGE_REQUEST)).findFirst().orElseThrow();
+            if (paging.mode() == PageMode.OFFSET) {
+                spec.line(imports.name(PAGE_REQUEST) + " " + variableName(pageParameter) + " = " + pagination
+                        + ".offset(request.pagination());");
+            } else {
+                spec.line("String cursorContext = " + pagination + ".context(\"" + method.getSimpleName()
+                        + "\", request.criteria());");
+                spec.line(imports.name(PAGE_REQUEST) + " " + variableName(pageParameter) + " = " + pagination
+                        + ".cursor(request.pagination(), cursorContext);");
+            }
+        }
+        List<String> prelude = new ArrayList<>(spec.body);
+        spec.body.clear();
         if (!readBody(spec, returnType(method), call, method) || !resolveSearchRequest(method)) {
             return null;
         }
+        spec.body.addAll(0, prelude);
         Spec guard = new Spec("QUERY", path, "void", spec.name);
         guard.parameter(openApiBody(method) + imports.name(searchRequestName()) + " request");
         checkBody(guard, "request");
@@ -647,7 +728,7 @@ final class EndpointFactory {
         }
         TypeElement existing = elements.getTypeElement(searchRequestName());
         if (existing == null) {
-            searchRequest = searchPlanner.plan(repository);
+            searchRequest = searchPlanner.plan(repository, searchPaginated);
             searchRequestResolved = searchRequest != null;
             return searchRequestResolved;
         }
@@ -658,12 +739,26 @@ final class EndpointFactory {
             diagnostics.error(method, "The developer-defined " + existing.getQualifiedName() + " must declare a "
                     + "public toRestriction() method returning the Jakarta Data restriction.");
         }
+        if (convertible && searchPaginated) {
+            Set<String> declared = ElementFilter.methodsIn(existing.getEnclosedElements()).stream()
+                    .map(candidate -> candidate.getSimpleName().toString()).collect(
+                            java.util.stream.Collectors.toSet());
+            if (!declared.containsAll(Set.of("pagination", "criteria"))) {
+                diagnostics.error(method, "The developer-defined " + existing.getQualifiedName() + " must also "
+                        + "declare pagination() returning PaginationRequest and criteria() returning a String.");
+                convertible = false;
+            }
+        }
         searchRequestResolved = convertible;
         return convertible;
     }
 
     private Spec mutation(ExecutableElement method, String http, String path) {
-        Spec spec = parameters(method, path, http);
+        Paging paging = paging(method);
+        if (paging.problem() != null) {
+            return unsupportedSignature(method, paging.problem());
+        }
+        Spec spec = parameters(method, path, http, paging);
         if (spec == null) {
             return null;
         }
@@ -695,6 +790,18 @@ final class EndpointFactory {
         DeclaredType declared = (DeclaredType) type;
         String name = ((TypeElement) declared.asElement()).getQualifiedName().toString();
         List<? extends TypeMirror> arguments = declared.getTypeArguments();
+        if (arguments.size() == 1 && (name.equals(PAGE) || name.equals(CURSORED_PAGE))) {
+            TypeMirror element = arguments.get(0);
+            boolean mapped = dto != null && types.isSameType(element, repository.entity());
+            boolean cursor = name.equals(CURSORED_PAGE);
+            String response = imports.name("org.eclipse.jnosql.rest.pagination."
+                    + (cursor ? "CursorPageResponse" : "PageResponse"));
+            spec.returnType(response + "<" + (mapped ? dtoType() : imports.render(element)) + ">");
+            spec.line(imports.name(name) + "<" + imports.render(element) + "> page = " + call + ";");
+            spec.line("return " + response + ".of(page" + (cursor ? ", cursorContext" : "")
+                    + (mapped ? ", content -> mapper.toDTO(content)" : "") + ");");
+            return true;
+        }
         if (arguments.size() == 1 && Set.of("java.util.Optional", "java.util.List", "java.util.stream.Stream")
                 .contains(name)) {
             TypeMirror element = arguments.get(0);
@@ -730,7 +837,7 @@ final class EndpointFactory {
             return true;
         }
         unsupportedSignature(method, "the return type " + type + " is not supported; use a single value, "
-                + "Optional, List or Stream (pagination returns are not supported yet)");
+                + "Optional, List, Stream, Page or CursoredPage");
         return false;
     }
 
@@ -743,7 +850,7 @@ final class EndpointFactory {
         return RESERVED.contains(name) ? name + "Value" : name;
     }
 
-    private Spec parameters(ExecutableElement method, String path, String http) {
+    private Spec parameters(ExecutableElement method, String path, String http, Paging paging) {
         Matcher matcher = TEMPLATE.matcher(path);
         Set<String> templated = new java.util.HashSet<>();
         while (matcher.find()) {
@@ -753,10 +860,15 @@ final class EndpointFactory {
         Spec spec = new Spec(http, path, "void", method.getSimpleName().toString());
         List<String> checks = new ArrayList<>();
         Set<String> seen = new java.util.HashSet<>();
+        String pageVariable = null;
         for (int index = 0; index < parameterTypes.size(); index++) {
             VariableElement parameter = method.getParameters().get(index);
             String original = parameter.getSimpleName().toString();
             TypeMirror type = parameterTypes.get(index);
+            if (isType(type, PAGE_REQUEST)) {
+                pageVariable = variableName(parameter);
+                continue;
+            }
             String problem = parameterProblem(type);
             if (problem != null) {
                 return unsupportedSignature(method, "parameter '" + original + "' " + problem);
@@ -791,7 +903,47 @@ final class EndpointFactory {
                     + "(\"Query parameter '" + check.replaceAll("Value$", "") + "' is required\");");
             spec.line("}");
         }
+        if (pageVariable != null && !addPagination(spec, method, paging, pageVariable, seen)) {
+            return null;
+        }
         return spec;
+    }
+
+    private boolean addPagination(Spec spec, ExecutableElement method, Paging paging, String variable,
+                                  Set<String> seen) {
+        for (String name : PAGINATION_PARAMETERS) {
+            if (seen.contains(name)) {
+                diagnostics.error(method, "The query parameter '" + name + "' of " + method.getSimpleName()
+                        + " clashes with the pagination parameters of the generated endpoint.");
+                return false;
+            }
+        }
+        String pagination = imports.name(PAGINATION);
+        String pageRequest = imports.name(PAGE_REQUEST);
+        spec.parameter(pageParameter("size", "Maximum number of elements per page, between 1 and 100; default 20"));
+        if (paging.mode() == PageMode.OFFSET) {
+            spec.parameter(pageParameter("offset", "Zero-based page offset (0 is the first page); default 0"));
+            spec.parameter(pageParameter("includeTotal", "Set to true to include totalElements and totalPages; "
+                    + "default false"));
+            spec.line(pageRequest + " " + variable + " = " + pagination + ".offset(offset, size, includeTotal);");
+        } else {
+            spec.parameter(pageParameter("cursor", "Opaque continuation token from nextCursor or previousCursor; "
+                    + "omit it for the first page"));
+            List<String> values = method.getParameters().stream()
+                    .filter(parameter -> !isType(parameter.asType(), PAGE_REQUEST)).map(this::variableName).toList();
+            spec.line("String cursorContext = " + pagination + ".context(\"" + method.getSimpleName() + "\""
+                    + values.stream().map(value -> ", " + value).collect(java.util.stream.Collectors.joining())
+                    + ");");
+            spec.line(pageRequest + " " + variable + " = " + pagination + ".cursor(cursor, size, cursorContext);");
+        }
+        return true;
+    }
+
+    private String pageParameter(String name, String description) {
+        String documentation = openApi.available()
+                ? "@" + imports.name("org.eclipse.microprofile.openapi.annotations.parameters.Parameter")
+                + "(description = \"" + description + "\") " : "";
+        return documentation + "@" + imports.name("jakarta.ws.rs.QueryParam") + "(\"" + name + "\") String " + name;
     }
 
     private String parameterProblem(TypeMirror type) {
