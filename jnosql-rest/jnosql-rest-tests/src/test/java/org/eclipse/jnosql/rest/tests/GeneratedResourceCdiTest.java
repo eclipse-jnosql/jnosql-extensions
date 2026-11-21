@@ -28,11 +28,11 @@ import org.eclipse.jnosql.rest.tests.sample.CustomerDTOMapper;
 import org.eclipse.jnosql.rest.tests.sample.CustomerDTOMapperImpl;
 import org.eclipse.jnosql.rest.tests.sample.CustomerCreateRequest;
 import org.eclipse.jnosql.rest.tests.sample.CustomerRepository;
-import org.eclipse.jnosql.rest.tests.sample.CustomerRepositoryRepository;
+import org.eclipse.jnosql.rest.tests.sample.CustomerRepositoryResource;
 import org.eclipse.jnosql.rest.tests.sample.CustomerUpdateRequest;
 import org.eclipse.jnosql.rest.tests.sample.Product;
 import org.eclipse.jnosql.rest.tests.sample.ProductRepository;
-import org.eclipse.jnosql.rest.tests.sample.ProductRepositoryRepository;
+import org.eclipse.jnosql.rest.tests.sample.ProductRepositoryResource;
 import org.jboss.weld.junit.MockBean;
 import org.jboss.weld.junit5.EnableWeld;
 import org.jboss.weld.junit5.WeldInitiator;
@@ -67,7 +67,7 @@ class GeneratedResourceCdiTest {
 
     @WeldSetup
     WeldInitiator weld = WeldInitiator.from(WeldInitiator.createWeld()
-                    .addBeanClasses(ProductRepositoryRepository.class, CustomerRepositoryRepository.class,
+                    .addBeanClasses(ProductRepositoryResource.class, CustomerRepositoryResource.class,
                             CustomerDTOMapperImpl.class))
             .addBeans(MockBean.<ProductRepository>builder().types(ProductRepository.class)
                     .scope(ApplicationScoped.class).creating(PRODUCTS).build())
@@ -81,12 +81,12 @@ class GeneratedResourceCdiTest {
         Mockito.reset(PRODUCTS, CUSTOMERS);
     }
 
-    private ProductRepositoryRepository products() {
-        return weld.select(ProductRepositoryRepository.class).get();
+    private ProductRepositoryResource products() {
+        return weld.select(ProductRepositoryResource.class).get();
     }
 
-    private CustomerRepositoryRepository customers() {
-        return weld.select(CustomerRepositoryRepository.class).get();
+    private CustomerRepositoryResource customers() {
+        return weld.select(CustomerRepositoryResource.class).get();
     }
 
     @Nested
@@ -98,8 +98,8 @@ class GeneratedResourceCdiTest {
         void shouldDiscoverTheResources() {
             BeanManager manager = weld.getBeanManager();
 
-            assertThat(manager.getBeans(ProductRepositoryRepository.class)).hasSize(1);
-            assertThat(manager.getBeans(CustomerRepositoryRepository.class)).hasSize(1);
+            assertThat(manager.getBeans(ProductRepositoryResource.class)).hasSize(1);
+            assertThat(manager.getBeans(CustomerRepositoryResource.class)).hasSize(1);
         }
 
         @Test
@@ -111,8 +111,8 @@ class GeneratedResourceCdiTest {
         @Test
         @DisplayName("Should create the instance with the injection constructor and no null dependency")
         void shouldInjectEveryDependency() throws Exception {
-            Object product = contextualInstance(ProductRepositoryRepository.class);
-            Object customer = contextualInstance(CustomerRepositoryRepository.class);
+            Object product = contextualInstance(ProductRepositoryResource.class);
+            Object customer = contextualInstance(CustomerRepositoryResource.class);
 
             assertThat(field(product, "repository")).isInstanceOf(ProductRepository.class);
             assertThat(field(customer, "repository")).isInstanceOf(CustomerRepository.class);
