@@ -53,7 +53,7 @@ final class SearchPlanner {
      *
      * @return the specification, or {@code null} after an error was reported
      */
-    SearchSpec plan(RepositoryInfo repository, boolean paginated) {
+    SearchSpec plan(RepositoryInfo repository, boolean paginated, boolean sorted) {
         TypeElement entity = (TypeElement) ((DeclaredType) repository.entity()).asElement();
         ImportRegistry imports = new ImportRegistry(repository.packageName());
         imports.name("java.util.List");
@@ -63,6 +63,9 @@ final class SearchPlanner {
         imports.name("java.util.Objects");
         if (paginated) {
             imports.name("org.eclipse.jnosql.rest.pagination.PaginationRequest");
+        }
+        if (sorted) {
+            imports.name("org.eclipse.jnosql.rest.pagination.SortCriterion");
         }
         imports.name("jakarta.data.restrict.Restrict");
         imports.name("jakarta.data.metamodel.BasicAttribute");
@@ -107,7 +110,7 @@ final class SearchPlanner {
                 "Search criteria of {@link " + repository.element().getSimpleName() + "}: each property filters one "
                         + "attribute with operators that are combined with AND; {@code or} lists alternatives.",
                 entityType, imports.imports(), attributes, new ArrayList<>(filters.values()), repository.element(),
-                paginated);
+                paginated, sorted);
     }
 
     private static String constant(String name) {
