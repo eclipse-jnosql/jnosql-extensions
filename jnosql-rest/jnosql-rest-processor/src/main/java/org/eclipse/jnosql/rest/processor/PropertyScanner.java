@@ -81,13 +81,27 @@ final class PropertyScanner {
     }
 
     private List<Property> scanRecord(TypeElement type) {
+        Map<String, VariableElement> fields = fields(type);
+        boolean annotatedId = type.getRecordComponents().stream().anyMatch(component ->
+                hasAnnotation(component, "Id", fields));
         List<Property> properties = new ArrayList<>();
         for (RecordComponentElement component : type.getRecordComponents()) {
             String name = component.getSimpleName().toString();
-            boolean identifier = Annotations.hasSimpleName(component, "Id") || "id".equals(name);
+            if (hasAnnotation(component, "Transient", fields)) {
+                continue;
+            }
+            boolean identifier = hasAnnotation(component, "Id", fields) || (!annotatedId && "id".equals(name));
             properties.add(new Property(name, component.asType(), true, identifier));
         }
         return properties;
+    }
+
+    private static boolean hasAnnotation(RecordComponentElement component, String simpleName,
+                                         Map<String, VariableElement> fields) {
+        VariableElement field = fields.get(component.getSimpleName().toString());
+        return Annotations.hasSimpleName(component, simpleName)
+                || (component.getAccessor() != null && Annotations.hasSimpleName(component.getAccessor(), simpleName))
+                || (field != null && Annotations.hasSimpleName(field, simpleName));
     }
 
     private List<Property> sorted(Map<String, Property> properties, Map<String, VariableElement> fields) {
