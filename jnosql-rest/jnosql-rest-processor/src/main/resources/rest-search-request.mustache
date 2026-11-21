@@ -11,7 +11,8 @@ public record {{name}}(
 {{#attributes}}
         {{filterType}} {{name}},
 {{/attributes}}
-        List<{{name}}> or{{#paginated}},
+        List<{{name}}> or{{#sorted}},
+        List<SortCriterion> sort{{/sorted}}{{#paginated}},
         PaginationRequest pagination{{/paginated}}
 ) {
 
@@ -41,7 +42,7 @@ public record {{name}}(
      * @return the criteria
      */
     public String criteria() {
-        return new {{requestName}}({{#attributes}}{{name}}, {{/attributes}}or, null).toString();
+        return new {{requestName}}({{#attributes}}{{name}}, {{/attributes}}or, {{#sorted}}sort, {{/sorted}}null).toString();
     }
 
 {{/paginated}}
