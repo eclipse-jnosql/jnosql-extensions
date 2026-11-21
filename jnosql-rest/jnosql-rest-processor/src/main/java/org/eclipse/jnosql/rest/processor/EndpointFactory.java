@@ -499,10 +499,39 @@ final class EndpointFactory {
             case QUERY_UPDATE -> mutation(method, "POST", pathOr(pathOverride, name));
             case SEARCH -> search(method, pathOr(pathOverride, name));
         };
-        if (spec == null) {
+        if (spec == null || !overridePath(method, classified, spec, pathOverride)) {
             return;
         }
         register(method, standardOwner, spec);
+    }
+
+    private boolean overridePath(ExecutableElement method, Classified classified, Spec spec, String override) {
+        boolean standard = switch (classified.kind()) {
+            case FIND_BY_ID, FIND_ALL, INSERT, UPDATE, SAVE, DELETE_BY_ID, DELETE -> true;
+            default -> false;
+        };
+        if (!standard || override.isEmpty()) {
+            return true;
+        }
+        Set<String> expected = templates(spec.path);
+        Set<String> actual = templates(override);
+        if (!expected.equals(actual)) {
+            diagnostics.error(method, "@RestExpose(path = \"" + override + "\") on " + method.getSimpleName()
+                    + (expected.isEmpty() ? " must not declare path parameters"
+                    : " must declare exactly the path parameters " + expected) + ".");
+            return false;
+        }
+        spec.path = override;
+        return true;
+    }
+
+    private static Set<String> templates(String path) {
+        Set<String> names = new java.util.TreeSet<>();
+        Matcher matcher = TEMPLATE.matcher(path);
+        while (matcher.find()) {
+            names.add(matcher.group(1));
+        }
+        return names;
     }
 
     private String pathOr(String override, String name) {
@@ -554,7 +583,7 @@ final class EndpointFactory {
 
     private static final class Spec {
         private final String http;
-        private final String path;
+        private String path;
         private String returnType;
         private final String name;
         private final List<String> parameters = new ArrayList<>();
@@ -987,7 +1016,7 @@ final class EndpointFactory {
         }
         List<? extends TypeMirror> parameterTypes = parameterTypes(method);
         Spec spec = new Spec(http, path, "void", method.getSimpleName().toString());
-        List<String> checks = new ArrayList<>();
+        Map<String, String> checks = new java.util.LinkedHashMap<>();
         Set<String> seen = new java.util.HashSet<>();
         String pageVariable = null;
         List<String> conversions = new ArrayList<>();
@@ -1033,12 +1062,19 @@ final class EndpointFactory {
                 text.append(annotationSource.write(mirror)).append(' ');
             }
             boolean pathParameter = templated.contains(original);
+            String parser = ScalarTypes.parser(type);
+            String received = parser == null ? variableName(parameter) : variableName(parameter) + "Text";
             text.append('@').append(imports.name(pathParameter ? "jakarta.ws.rs.PathParam" : "jakarta.ws.rs.QueryParam"))
                     .append("(\"").append(original).append("\") ")
-                    .append(imports.render(type)).append(' ').append(variableName(parameter));
+                    .append(parser == null ? imports.render(type) : "String").append(' ').append(received);
             spec.parameter(text.toString());
+            if (parser != null) {
+                conversions.add(imports.render(type) + " " + variableName(parameter) + " = "
+                        + imports.name("org.eclipse.jnosql.rest.pagination.QueryValues") + ".parse(\"" + original
+                        + "\", " + received + ", " + imports.render(type) + "::" + parser + ");");
+            }
             if (!pathParameter) {
-                checks.add(variableName(parameter));
+                checks.put(received, original);
             }
         }
         for (String name : templated) {
@@ -1048,10 +1084,10 @@ final class EndpointFactory {
                 return null;
             }
         }
-        for (String check : checks) {
-            spec.line("if (" + check + " == null) {");
+        for (Map.Entry<String, String> check : checks.entrySet()) {
+            spec.line("if (" + check.getKey() + " == null) {");
             spec.line(INDENT + "throw new " + imports.name("jakarta.ws.rs.BadRequestException")
-                    + "(\"Query parameter '" + check.replaceAll("Value$", "") + "' is required\");");
+                    + "(\"Query parameter '" + check.getValue() + "' is required\");");
             spec.line("}");
         }
         for (String name : reserved) {
@@ -1111,8 +1147,11 @@ final class EndpointFactory {
     }
 
     private String parameterProblem(TypeMirror type) {
-        if (type.getKind().isPrimitive() || ScalarTypes.isScalar(type)) {
+        if (ScalarTypes.isHttpBindable(type)) {
             return null;
+        }
+        if (ScalarTypes.isScalar(type)) {
+            return "has type " + type + ", which cannot be converted from an HTTP parameter";
         }
         if (type.getKind() == TypeKind.DECLARED) {
             DeclaredType declared = (DeclaredType) type;
@@ -1126,7 +1165,8 @@ final class EndpointFactory {
             }
             if (Set.of("java.util.List", "java.util.Set", "java.util.Collection").contains(name)
                     && declared.getTypeArguments().size() == 1
-                    && ScalarTypes.isScalar(declared.getTypeArguments().get(0))) {
+                    && ScalarTypes.isHttpBindable(declared.getTypeArguments().get(0))
+                    && ScalarTypes.parser(declared.getTypeArguments().get(0)) == null) {
                 return null;
             }
         }
