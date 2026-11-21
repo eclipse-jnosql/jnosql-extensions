@@ -115,6 +115,7 @@ public record {{name}}(
 
         private void collect({{{attributeType}}} attribute, String name,
                 List<Restriction<{{{entityType}}}>> restrictions) {
+            int before = restrictions.size();
             if (eq != null) {
                 restrictions.add(attribute.equalTo(eq));
             }
@@ -143,6 +144,9 @@ public record {{name}}(
             }
             if (isNull != null) {
                 restrictions.add({{{requestName}}}.nullCheck(attribute, isNull));
+            }
+            if (restrictions.size() == before) {
+                throw new BadRequestException("'" + name + "' needs at least one operator");
             }
         }
     }
