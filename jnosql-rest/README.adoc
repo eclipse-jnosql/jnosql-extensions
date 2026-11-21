@@ -1,0 +1,105 @@
+= Eclipse JNoSQL REST
+:toc:
+
+Optional extension that exposes Jakarta Data repositories as Jakarta REST resources. A JSR 269 annotation processor
+generates readable Java source from Mustache templates at compile time; there is no runtime reflection.
+
+== Modules
+
+[cols="1,3"]
+|===
+|`jnosql-rest-api` |Public annotations: `@RestRepository`, `@RestExpose`, `@RestExclude`, `@RestDTO`, `RestExposure`, `RestOperation`.
+|`jnosql-rest-processor` |Annotation processor, generation model and Mustache templates.
+|`jnosql-rest-tests` |Compilation, reflection, Weld/CDI and Mockito delegation tests.
+|===
+
+== Usage
+
+[source,java]
+----
+@Repository
+@RestRepository(path = "/products")
+public interface ProductRepository extends CrudRepository<Product, UUID> {
+
+    List<Product> findByCategory(String category);
+}
+----
+
+The processor generates `ProductRepositoryRepository` (`<RepositoryName>Repository`, same package) with `@Path`,
+`@RequestScoped`, final dependency fields, a package-private no-argument constructor that sets every dependency to
+`null`, and a public `@Inject` constructor.
+
+Add the API as a dependency and the processor (and, for DTO mode, MapStruct) to the compiler `annotationProcessorPaths`.
+Adding the MapStruct annotation artifact alone does not activate its processor:
+
+[source,xml]
+----
+<annotationProcessorPaths>
+    <path><groupId>org.eclipse.jnosql.rest</groupId><artifactId>jnosql-rest-processor</artifactId></path>
+    <path><groupId>org.mapstruct</groupId><artifactId>mapstruct-processor</artifactId></path>
+</annotationProcessorPaths>
+----
+
+== Exposure
+
+* `RestExposure.ALL` (default): standard and declared methods are exposed. Mutating declared methods (`deleteBy*`,
+`@Delete` without an entity, `@Query` DELETE/UPDATE) are exposed only with `@RestExpose`.
+* `EXPLICIT`: only `@RestExpose` methods.
+* `NONE`: nothing is generated.
+* `@RestRepository(exclude = ...)` removes operation categories; `@RestExclude` removes one method.
+* `@RestExpose(path = "/x/{name}")` customizes the path; `{name}` binds to the parameter of the same name.
+
+Contradictions (`@RestExpose` with `@RestExclude`, under `NONE`, on an excluded category, path collisions, blank paths)
+are compile errors.
+
+== HTTP mapping
+
+[cols="1,2"]
+|===
+|`findById` |`GET /{id}`
+|`findAll` |`GET`
+|`insert` |`POST` (201)
+|`update` |`PUT` (entity) or `PUT /{id}` (DTO mode)
+|`save` |`PUT /save`
+|`deleteById` |`DELETE /{id}`
+|`delete(entity)` |`DELETE /delete` (entity mode)
+|read, count, exists methods |`GET /methodName` with `@QueryParam`
+|===
+
+== DTOs
+
+`@RestDTO(exclude = {...})` generates `<Entity>DTO`, `<Entity>CreateRequest`, `<Entity>UpdateRequest` records and a
+`<Entity>DTOMapper` interface annotated `@Mapper(componentModel = "jakarta-cdi")`; MapStruct generates the
+implementation and the resource receives the mapper through constructor injection. Developer-defined types with those
+names are reused (and validated), never overwritten.
+
+* Exclusions apply to the response DTO. Create requests intentionally stay distinct from response exclusions, so they
+include every writable attribute; use a developer-defined request record to narrow them.
+* Update requests use `NullValuePropertyMappingStrategy.IGNORE`: `null` means "unchanged". There is no presence-aware
+(absent vs. explicit `null`) patch.
+* Nested beans become `<Simple>DTO`; `Optional` getters are unwrapped; recursive, generic or abstract nested types are
+compile errors.
+* Record entities cannot be updated in place; no update endpoint is generated for them.
+
+== MicroProfile OpenAPI (optional)
+
+When `org.eclipse.microprofile.openapi` is on the compile classpath, `@Tag`, `@SecurityRequirement` (type level),
+`@Operation`, `@APIResponse(s)`, `@Tag`, `@SecurityRequirement`, `@Parameter` (method/parameter level) found on the
+repository are copied to the generated resource. Without it, no OpenAPI import or annotation is generated.
+Schemas are inferred by MicroProfile OpenAPI from generated DTOs. Customize with `META-INF/openapi.yaml` or an
+`OASFilter`, following the merge rules of the MicroProfile OpenAPI specification. `@SecurityRequirement` documents but
+does not enforce security.
+
+== CDI, CDI Lite and discovery
+
+Constructor injection only. The package-private constructor exists for proxying; it is deliberately not public. A
+Jakarta REST runtime that requires a public no-argument constructor for `@RequestScoped` resources is a known
+limitation. CDI discovery does not by itself register resources: Jakarta REST runtimes need either an
+`Application` subclass (scanning) or `@ApplicationPath` plus bean-discovery of the generated package.
+
+== Known limitations
+
+* `Restriction`, `PageRequest`, `Limit`, `Sort`/`Order` parameters and `Page`/`CursoredPage` returns are not generated;
+explicitly exposed methods using them fail with an error, others are skipped with a diagnostic. HTTP `QUERY` is not used.
+* Bulk operations (`saveAll`, `insertAll`, `updateAll`, `deleteAll`) are not generated.
+* No Bean Validation integration, no CDI Lite runtime test.
