@@ -161,6 +161,61 @@ List<Product> found = products.findByNameLike(searchPattern, Order.by(
 
 This approach ensures that query attribute references are both type-safe and refactor-safe, leading to more robust and maintainable code.
 
+== JNoSQL REST
+
+Building REST APIs often requires repetitive code to expose repository operations, handle HTTP requests, and map entities into public representations. Eclipse JNoSQL REST simplifies this process by transforming Jakarta Data repositories into Jakarta REST resources at compile time. With minimal configuration, developers can focus on business logic while the extension generates readable Java code, integrates with CDI, and leverages existing Jakarta EE standards without runtime reflection.
+
+JNoSQL REST goes beyond basic CRUD operations, offering:
+
+* *Jakarta Data integration:* Supports `BasicRepository`, `CrudRepository`, and custom repositories, including derived queries and Jakarta Data types such as `Restriction`, `Limit`, `Sort`, and `Order`.
+* *Pagination:* Supports both offset-based and cursor-based pagination, with paginated collection endpoints by default.
+* *DTO generation:* Integrates with MapStruct to automatically generate and map DTOs, allowing developers to control exposed attributes and exclude sensitive information.
+* *OpenAPI documentation:* Optionally integrates with Eclipse MicroProfile OpenAPI, supporting standard annotations and external API documentation customization.
+* *Flexible REST exposure:* Uses annotations such as `@RestRepository`, `@RestExpose`, and `@RestExclude` to control which repository operations become REST endpoints.
+
+With JNoSQL REST, developers can expose persistence operations as REST APIs while retaining control over data representation, endpoint exposure, and API documentation.
+
+=== REST Annotations
+
+JNoSQL REST provides a small set of annotations to control how repositories are exposed:
+
+* `@RestRepository` enables REST resource generation for a Jakarta Data repository.
+* `@RestExpose` explicitly exposes an operation or customizes its REST path.
+* `@RestExclude` prevents a repository method from becoming a REST endpoint.
+* `@RestDTO` generates DTOs and integrates with MapStruct to control public data representations, including excluding sensitive attributes.
+
+The extension also supports optional Eclipse MicroProfile OpenAPI integration, allowing developers to document endpoints using standard annotations and customize their API documentation.
+
+=== Example
+
+A Jakarta Data repository can become a REST API with a few annotations:
+
+[source,java]
+----
+@Repository
+@RestRepository(path = "/products")
+@RestDTO(exclude = {"internalCode"})
+public interface ProductRepository
+        extends CrudRepository<Product, UUID> {
+
+    List<Product> findByCategory(String category);
+}
+----
+
+JNoSQL REST automatically generates `ProductRepositoryResource`, exposing endpoints such as:
+
+[source,http]
+----
+GET /products?offset=0&size=20&sort=name:asc
+GET /products/findByCategory?category=books
+GET /products/{id}
+----
+
+The generated resource uses CDI to inject the repository and MapStruct to map entities into public DTOs, ensuring excluded attributes do not appear in the generated response representations. Collection endpoints support pagination by default, while the repository remains responsible for data access.
+
+For configuration, supported operations, dynamic searches, pagination, and advanced customization, explore the link:jnosql-rest/README.adoc[JNoSQL REST documentation].
+
+
 == Bean Validation
 
 Eclipse JNoSQL provide support for bean validation. It will validate before inserting/updating and constructing an entity.
