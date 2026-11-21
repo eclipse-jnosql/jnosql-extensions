@@ -79,11 +79,12 @@ public class RestProcessor extends AbstractProcessor {
     private void generate(Set<TypeElement> repositories) {
         var elements = processingEnv.getElementUtils();
         var types = processingEnv.getTypeUtils();
-        RepositoryResolver resolver = new RepositoryResolver(types, diagnostics);
+        RepositoryResolver resolver = new RepositoryResolver(elements, types, diagnostics);
         DtoPlanner planner = new DtoPlanner(elements, types, diagnostics);
         OpenApiPropagator openApi = new OpenApiPropagator(elements);
         SourceWriter writer = new SourceWriter(processingEnv.getFiler());
         List<ResourceModel> resources = new ArrayList<>();
+        List<SearchSpec> searches = new ArrayList<>();
         List<Element> origins = new ArrayList<>();
         for (TypeElement element : repositories) {
             resolver.resolve(element).ifPresent(repository -> {
@@ -98,8 +99,9 @@ public class RestProcessor extends AbstractProcessor {
                     }
                 }
                 ImportRegistry imports = new ImportRegistry(repository.packageName());
-                List<MethodModel> methods = new EndpointFactory(elements, types, diagnostics, openApi, imports,
-                        repository, planner, plan).build();
+                EndpointFactory endpoints = new EndpointFactory(elements, types, diagnostics, openApi, imports,
+                        repository, planner, plan);
+                List<MethodModel> methods = endpoints.build();
                 if (repository.exposure() == RestExposure.NONE) {
                     return;
                 }
@@ -107,6 +109,9 @@ public class RestProcessor extends AbstractProcessor {
                     diagnostics.warning(element, "No REST endpoint was generated for " + element.getSimpleName()
                             + " because none of its operations is exposed.");
                     return;
+                }
+                if (endpoints.searchRequest() != null) {
+                    searches.add(endpoints.searchRequest());
                 }
                 resources.add(resource(repository, plan, imports, openApi, methods));
                 origins.add(element);
@@ -122,6 +127,9 @@ public class RestProcessor extends AbstractProcessor {
             for (MapperSpec mapper : planner.mappers()) {
                 writer.write(mapper);
                 generatedMappers.add(mapper.qualifiedName());
+            }
+            for (SearchSpec search : searches) {
+                writer.write(search);
             }
             for (int index = 0; index < resources.size(); index++) {
                 writer.write(resources.get(index), origins.get(index));
