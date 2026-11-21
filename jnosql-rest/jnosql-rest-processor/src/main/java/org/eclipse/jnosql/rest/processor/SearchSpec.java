@@ -29,6 +29,7 @@ import java.util.List;
  * @param filters     the nested filter records
  * @param origin      the element that triggered the generation
  * @param paginated   whether the request carries a {@code pagination} member
+ * @param sorted      whether the request carries a {@code sort} member
  */
 public record SearchSpec(String packageName,
                          String name,
@@ -38,7 +39,8 @@ public record SearchSpec(String packageName,
                          List<SearchAttribute> attributes,
                          List<SearchFilter> filters,
                          Element origin,
-                         boolean paginated) {
+                         boolean paginated,
+                         boolean sorted) {
 
     /**
      * Gives nested templates access to the request name, which {@code name} hides inside filter sections.
