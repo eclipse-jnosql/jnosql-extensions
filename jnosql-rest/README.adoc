@@ -1,0 +1,268 @@
+= Eclipse JNoSQL REST
+:toc:
+
+Optional extension that exposes Jakarta Data repositories as Jakarta REST resources. A JSR 269 annotation processor
+generates readable Java source from Mustache templates at compile time; there is no runtime reflection.
+
+This `1.x.x` backport targets Jakarta Data 1.0. Dynamic `Restriction<T>` search (Jakarta Data 1.1) is not available: no search endpoints, HTTP `QUERY` designator or search request DTOs are generated. Derived queries, `@Find`, `@Query`, count/exists methods, pagination, `Limit`, `Sort` and `Order` work as in the newer version.
+
+== Modules
+
+[cols="1,3"]
+|===
+|`jnosql-rest-api` |Public annotations: `@RestRepository`, `@RestExpose`, `@RestExclude`, `@RestDTO`, `RestExposure`, `RestOperation`.
+|`jnosql-rest-processor` |Annotation processor, generation model and Mustache templates.
+|`jnosql-rest-tests` |Compilation, reflection, Weld/CDI and Mockito delegation tests.
+|===
+
+== Usage
+
+[source,java]
+----
+@Repository
+@RestRepository(path = "/products")
+public interface ProductRepository extends CrudRepository<Product, UUID> {
+
+    List<Product> findByCategory(String category);
+}
+----
+
+The processor generates `ProductRepositoryResource` (`<RepositoryName>Resource`, same package) with `@Path`,
+`@RequestScoped`, final dependency fields, a package-private no-argument constructor that sets every dependency to
+`null`, and a public `@Inject` constructor.
+
+Add the API as a dependency and the processor (and, for DTO mode, MapStruct) to the compiler `annotationProcessorPaths`.
+Adding the MapStruct annotation artifact alone does not activate its processor:
+
+[source,xml]
+----
+<annotationProcessorPaths>
+    <path><groupId>org.eclipse.jnosql.rest</groupId><artifactId>jnosql-rest-processor</artifactId></path>
+    <path><groupId>org.mapstruct</groupId><artifactId>mapstruct-processor</artifactId></path>
+</annotationProcessorPaths>
+----
+
+== Exposure
+
+* `RestExposure.ALL` (default): standard and declared methods are exposed. Mutating declared methods (`deleteBy*`,
+`@Delete` without an entity, `@Query` DELETE/UPDATE) are exposed only with `@RestExpose`.
+* `EXPLICIT`: only `@RestExpose` methods.
+* `NONE`: nothing is generated.
+* `@RestRepository(exclude = ...)` removes operation categories; `@RestExclude` removes one method.
+* `@RestExpose(path = "/x/{name}")` customizes the path; `{name}` binds to the parameter of the same name.
+
+Contradictions (`@RestExpose` with `@RestExclude`, under `NONE`, on an excluded category, path collisions, blank paths)
+are compile errors.
+
+== HTTP mapping
+
+[cols="1,2"]
+|===
+|`findById` |`GET /{id}`
+|`findAll(PageRequest, Order)` |`GET` (paginated and sortable, see <<Collection root>>)
+|`insert` |`POST` (201)
+|`update` |`PUT` (entity) or `PUT /{id}` (DTO mode)
+|`save` |`PUT /save`
+|`deleteById` |`DELETE /{id}`
+|`delete(entity)` |`DELETE /delete` (entity mode)
+|read, count, exists methods |`GET /methodName` with `@QueryParam`
+|===
+
+== Repository types
+
+Capabilities come from the methods the repository actually declares or inherits, never from interface names.
+`CrudRepository`, `BasicRepository` (no `insert`/`update`) and plain `@Repository` interfaces are supported; for the
+latter the entity is inferred from the return types and parameters of the methods, which must agree on one entity, and
+no CRUD operation is invented. Methods inherited from intermediate interfaces are included.
+
+== DTOs
+
+`@RestDTO(exclude = {...})` generates `<Entity>DTO`, `<Entity>CreateRequest`, `<Entity>UpdateRequest` records and a
+`<Entity>DTOMapper` interface annotated `@Mapper(componentModel = MappingConstants.ComponentModel.JAKARTA_CDI, unmappedTargetPolicy = ReportingPolicy.IGNORE)`; MapStruct generates the
+implementation and the resource receives the mapper through constructor injection. Developer-defined types with those
+names are reused (and validated), never overwritten.
+
+* Exclusions apply to the response DTO. Create requests intentionally stay distinct from response exclusions, so they
+include every writable attribute; use a developer-defined request record to narrow them.
+* Update requests use `NullValuePropertyMappingStrategy.IGNORE`: `null` means "unchanged". There is no presence-aware
+(absent vs. explicit `null`) patch.
+* Nested beans become `<Simple>DTO`; `Optional` getters are unwrapped; recursive, generic or abstract nested types are
+compile errors.
+* Record entities cannot be updated in place; no update endpoint is generated for them.
+
+== Pagination
+
+A method with one `PageRequest` parameter and a `Page<T>` or `CursoredPage<T>` return is published as a `GET`
+endpoint. JNoSQL REST only translates HTTP input into a `PageRequest` and adapts the result;
+the Jakarta Data provider runs the query and decides the page boundaries. Nothing is paginated in memory and a
+provider `UnsupportedOperationException` (for example no cursor support) is propagated, never turned into offset
+paging. A `PageRequest` without a page return, or a page return without a `PageRequest`, is rejected like any other
+unsupported signature. Business parameters named `offset`, `size`, `includeTotal` or `cursor` clash with the
+pagination parameters and are errors.
+
+All pagination parameters are received as strings so that invalid values answer `400 Bad Request` rather than the
+`404` Jakarta REST uses for failed conversions. `size` defaults to `20` and is limited to `1..100`.
+
+=== Offset pagination (`Page<T>`)
+
+[source,java]
+----
+@Find
+Page<Product> findByCategory(String category, PageRequest pageRequest);
+----
+
+[source,http]
+----
+GET /products/findByCategory?category=books&offset=0&size=20&includeTotal=true
+----
+
+* `offset` is the zero-based *page* offset, not a row offset: `0` is the first page, `1` the second. It becomes
+`PageRequest.ofPage(offset + 1, size, includeTotal)`. Default `0`; negative or overflowing values are rejected.
+* `includeTotal` defaults to `false`, so no count query is requested unless the client asks for it. When it is `false`
+(or the provider does not supply totals) the generated code never calls `totalElements()`/`totalPages()`.
+
+[source,json]
+----
+{ "content": [ { "id": "123", "name": "Notebook" } ], "offset": 0, "size": 20, "hasNext": true,
+  "hasPrevious": false, "totalElements": 145, "totalPages": 8 }
+----
+
+`totalElements` and `totalPages` are `null` when totals are not available. The response is the reusable
+`org.eclipse.jnosql.rest.pagination.PageResponse` record; no per-repository response class is generated.
+
+=== Cursor pagination (`CursoredPage<T>`)
+
+[source,java]
+----
+@Find
+@OrderBy("name")
+@OrderBy("id")
+CursoredPage<Product> findByCategory(String category, PageRequest pageRequest);
+----
+
+[source,http]
+----
+GET /products/findByCategory?category=books&size=20
+GET /products/findByCategory?category=books&size=20&cursor=<nextCursor or previousCursor>
+----
+
+[source,json]
+----
+{ "content": [ ... ], "size": 20, "hasNext": true, "hasPrevious": false,
+  "nextCursor": "djE7TjsuLi4", "previousCursor": null }
+----
+
+* Omit `cursor` for the first page. Follow `nextCursor` for the next page and `previousCursor` for the previous one;
+each is present only when `hasNext()`/`hasPrevious()` is true, and the navigation methods of the page are not called
+otherwise (`afterCursor` for next, `beforeCursor` for previous). Cursor responses carry no totals and no page numbers.
+* *Ordering is mandatory and checked at compile time.* A cursor needs a total order, so the method must declare
+`@OrderBy` attributes (or `OrderBy` in the method name, or `ORDER BY` in a `@Query`) that include the entity identifier,
+the only attribute the processor can prove unique. Without it the method is skipped with a warning, or fails the build
+when it carries `@RestExpose`.
+* Treat `cursor` as opaque. It is `v1;N|P;<query hash>;<typed keys>` encoded as Base64URL (no padding, at most 1024
+characters and 8 keys). Key types: `String`, the integer and floating point types, `Boolean`, `BigDecimal`,
+`BigInteger`, `UUID` and the `java.time` `LocalDate`, `LocalDateTime`, `LocalTime`, `Instant`; other key types fail
+when the token is issued. No Java serialization or reflection is involved.
+* A token is bound to the repository method and to its business parameters; using it
+with another query answers `400`. The page size is not part of the binding and may change between requests.
+Malformed, oversized, unversioned or unsupported-version tokens answer `400`.
+* *Security:* tokens are neither signed nor encrypted. They reveal the sort-key values of the boundary row and can be
+forged by a client, which only lets it start from another position of the same query; they do not widen access. Do not
+rely on them for authorization, and put sensitive data out of sort keys. Tokens carry no expiry; whether a stale
+cursor still works is a provider matter.
+
+=== DTOs and OpenAPI
+
+With `@RestDTO` the page content is mapped through the existing MapStruct mapper, so excluded attributes never reach
+the response; the pagination metadata is added separately and never goes through the mapper. When MicroProfile OpenAPI
+is on the classpath the pagination query parameters get an `@Parameter` description and the response schemas
+(`PageResponse`, `CursorPageResponse`, the generated DTOs) are discovered by the implementation. Add `@APIResponse` for
+`400` on the repository if you want it documented, and customize further with `META-INF/openapi.yaml` or an
+`OASFilter`. No OpenAPI types are required otherwise.
+
+== Collection root
+
+`GET /products` is served by the inherited `findAll(PageRequest, Order<T>)` of `BasicRepository` (and so
+`CrudRepository`), which returns a `Page<T>`. It is always bounded:
+
+[source,http]
+----
+GET /products?offset=0&size=20&sort=name:asc,price:desc
+----
+
+* `offset` is the zero-based page offset (default `0`), `size` defaults to `20` and is limited to `1..100`,
+`includeTotal` defaults to `false` (no count query). The response is the `PageResponse` described above; with
+`@RestDTO` the content is mapped to the DTO.
+* The unbounded `findAll()` is never exposed, so there is no second root route and nothing is paginated or sorted in
+memory. A repository without a paginated `findAll` gets no collection root; a `findAll()` declared by the developer
+on a repository stays available only as the explicit `GET /findAll` method, unchanged.
+* Invalid `offset`, `size` or `sort` values answer `400 Bad Request` before the repository is called.
+
+== Limit
+
+A method with a `Limit` parameter (and no `PageRequest`, no page return type) gets `limit` and `startAt` query
+parameters:
+
+[source,http]
+----
+GET /products/findByCategory?category=books&limit=10&startAt=5
+----
+
+`limit` is the maximum number of results (default `20`, maximum `100`); `startAt` is the one-based position of the
+first result (default `1`) as defined by Jakarta Data `Limit`. Non-numeric, overflowing, zero or negative values and
+`startAt < 1` answer `400`. `Limit` cannot be combined with `PageRequest` or a `Page` return; such a signature is
+rejected at compile time. The limit is applied by the provider.
+
+== Sort and Order
+
+A method with a `Sort<Entity>` (one criterion) or `Order<Entity>` (several) parameter gets a `sort` query parameter:
+
+[source,http]
+----
+GET /products/findByCategory?category=books&sort=price:desc
+GET /products/findByCategory?category=books&sort=name:asc,price:desc
+----
+
+* Syntax: `attribute[:asc|:desc]` terms separated by commas; the direction is case-insensitive and defaults to `asc`;
+the order of terms is preserved. A `Sort` accepts exactly one term; an `Order` accepts several and may be empty.
+* The allowed attributes are generated at compile time from the entity (scalar attributes only; nested attributes are
+rejected) minus `@RestDTO` exclusions, and, when a developer-defined DTO is visible, only the attributes that DTO
+declares. `GET /products?sort=internalCode:asc` therefore answers `400` when `internalCode` is excluded. Sorting is
+still done by the provider on the entity attribute.
+* Unknown attributes, repeated attributes, invalid directions and malformed terms answer `400`.
+* A `Sort<X>` or `Order<X>` whose type argument is not the repository entity is a compile error.
+* Offset pagination: combine freely, `GET /products/findByCategory?category=books&offset=1&size=10&sort=name:asc`.
+* Cursor pagination: a method with an `Order<Entity>` parameter and a `CursoredPage` return needs a total order, so
+the client's `sort` must include the identifier (`sort=name:asc,id:asc`), otherwise `400`. The cursor is bound to the
+sort (it is part of the existing token binding), so changing `sort` while following a cursor answers `400`. A static
+`@OrderBy` (not combined with `Order`) is still required to include the identifier. No identifier is appended
+silently.
+
+Provider limits: whether dynamic `Order`/`Sort` and cursor pagination work depends on the Jakarta Data provider; its
+`UnsupportedOperationException` is propagated.
+
+== MicroProfile OpenAPI (optional)
+
+When `org.eclipse.microprofile.openapi` is on the compile classpath, `@Tag`, `@SecurityRequirement` (type level),
+`@Operation`, `@APIResponse(s)`, `@Tag`, `@SecurityRequirement`, `@Parameter` (method/parameter level) found on the
+repository are copied to the generated resource. Without it, no OpenAPI import or annotation is generated.
+Schemas are inferred by MicroProfile OpenAPI from generated DTOs. Customize with `META-INF/openapi.yaml` or an
+`OASFilter`, following the merge rules of the MicroProfile OpenAPI specification. `@SecurityRequirement` documents but
+does not enforce security.
+
+== CDI, CDI Lite and discovery
+
+Constructor injection only. The package-private constructor exists for proxying; it is deliberately not public. A
+Jakarta REST runtime that requires a public no-argument constructor for `@RequestScoped` resources is a known
+limitation. CDI discovery does not by itself register resources: Jakarta REST runtimes need either an
+`Application` subclass (scanning) or `@ApplicationPath` plus bean-discovery of the generated package.
+
+== Known limitations
+
+* `Limit`, `Sort<T>`, `Order<T>` and the paginated root `findAll` are supported, see <<Collection root>>,
+<<Limit>> and <<Sort and Order>>. The unbounded `findAll()` is deliberately never exposed.
+* Custom-DTO sort surface is derived only when the developer's DTO type is visible to the processor; otherwise the
+entity attributes minus `@RestDTO` exclusions apply. See <<Pagination>> for the other limits of paging.
+* No dynamic `Restriction<T>` search (requires Jakarta Data 1.1); methods taking it are not supported.
+* Bulk operations (`saveAll`, `insertAll`, `updateAll`, `deleteAll`) are not generated.
+* No Bean Validation integration, no CDI Lite runtime test.
