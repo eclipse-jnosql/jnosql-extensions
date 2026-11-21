@@ -17,6 +17,9 @@ package org.eclipse.jnosql.rest.processor;
 import org.eclipse.jnosql.rest.RestExposure;
 import org.eclipse.jnosql.rest.RestOperation;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -53,7 +56,10 @@ record RepositoryInfo(TypeElement element,
     }
 
     String packageName() {
-        String name = qualifiedName();
-        return name.substring(0, name.length() - element.getSimpleName().length() - 1);
+        Element current = element;
+        while (current != null && current.getKind() != ElementKind.PACKAGE) {
+            current = current.getEnclosingElement();
+        }
+        return current == null ? "" : ((PackageElement) current).getQualifiedName().toString();
     }
 }
