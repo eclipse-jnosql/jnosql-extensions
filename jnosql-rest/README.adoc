@@ -66,6 +66,40 @@ are compile errors.
 |read, count, exists methods |`GET /methodName` with `@QueryParam`
 |===
 
+== Repository types
+
+Capabilities come from the methods the repository actually declares or inherits, never from interface names.
+`CrudRepository`, `BasicRepository` (no `insert`/`update`) and plain `@Repository` interfaces are supported; for the
+latter the entity is inferred from the return types and parameters of the methods, which must agree on one entity, and
+no CRUD operation is invented. Methods inherited from intermediate interfaces are included.
+
+== Dynamic search with `Restriction`
+
+A read-only method (`@Find`, count, exists) whose single parameter is `Restriction<Entity>` is published only with
+`@RestExpose`, as an HTTP `QUERY` endpoint taking a generated `<Repository>SearchRequest` body. Mutating methods with a
+`Restriction` are errors. `@RestExclude` always suppresses it.
+
+[source,json]
+----
+{ "price": { "gte": 100, "lte": 500 }, "category": { "eq": "books" },
+  "or": [ { "name": { "eq": "a" } }, { "name": { "eq": "b" } } ] }
+----
+
+* Searchable attributes are the scalar attributes of the entity, minus those excluded by `@RestDTO`; nested attributes
+are not searchable. Bindings are generated at compile time with the Jakarta Data `*Attribute.of(...)` factories, with no
+reflection.
+* Operators: `eq`, `ne`, `in`, `isNull` (`true` = is null, `false` = is not null) for every attribute, plus `gt`, `gte`,
+`lt`, `lte` and `between` (`[low, high]`) for `Comparable` types. Filters are combined with AND; `or` lists
+alternative requests combined with OR.
+* Invalid input (no filter at all, empty `or`, empty `in`, `null` elements, a `between` without two ordered bounds)
+answers `400 Bad Request`. An unrestricted search is never executed.
+* Unknown attributes or operators are rejected only if the JSON provider fails on unknown properties (a JSON-B/Jackson
+setting); the generated record cannot enforce it.
+* Jakarta REST accepts custom HTTP methods through `@HttpMethod`; `org.eclipse.jnosql.rest.QUERY` is such a
+designator. Runtime, proxy and client support for `QUERY` varies (RFC 10008) and no `POST` fallback is provided.
+MicroProfile OpenAPI implementations may not discover custom HTTP methods; `@Operation` and similar annotations are
+still propagated.
+
 == DTOs
 
 `@RestDTO(exclude = {...})` generates `<Entity>DTO`, `<Entity>CreateRequest`, `<Entity>UpdateRequest` records and a
@@ -99,7 +133,8 @@ limitation. CDI discovery does not by itself register resources: Jakarta REST ru
 
 == Known limitations
 
-* `Restriction`, `PageRequest`, `Limit`, `Sort`/`Order` parameters and `Page`/`CursoredPage` returns are not generated;
-explicitly exposed methods using them fail with an error, others are skipped with a diagnostic. HTTP `QUERY` is not used.
+* `PageRequest`, `Limit`, `Sort`/`Order` parameters and `Page`/`CursoredPage` returns are not generated;
+explicitly exposed methods using them fail with an error, others are skipped with a diagnostic. Searches have no
+pagination or sorting.
 * Bulk operations (`saveAll`, `insertAll`, `updateAll`, `deleteAll`) are not generated.
 * No Bean Validation integration, no CDI Lite runtime test.
