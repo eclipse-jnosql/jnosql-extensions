@@ -68,8 +68,11 @@ final class EndpointFactory {
     private final DtoPlanner planner;
     private final DtoPlanner.EntityPlan dto;
     private final AnnotationSource annotationSource;
+    private final SearchPlanner searchPlanner;
     private final Map<String, String> routes = new HashMap<>();
     private final List<MethodModel> methods = new ArrayList<>();
+    private SearchSpec searchRequest;
+    private boolean searchRequestResolved;
 
     EndpointFactory(Elements elements, Types types, Diagnostics diagnostics, OpenApiPropagator openApi,
                     ImportRegistry imports, RepositoryInfo repository, DtoPlanner planner,
@@ -83,6 +86,16 @@ final class EndpointFactory {
         this.dto = dto;
         this.annotationSource = new AnnotationSource(imports);
         this.elements = elements;
+        this.searchPlanner = new SearchPlanner(elements, types, diagnostics);
+    }
+
+    /**
+     * The search request to generate, available after {@link #build()} when a search endpoint was created.
+     *
+     * @return the specification, or {@code null} when none must be generated
+     */
+    SearchSpec searchRequest() {
+        return searchRequest;
     }
 
     List<MethodModel> build() {
@@ -108,7 +121,7 @@ final class EndpointFactory {
     }
 
     private enum Kind { FIND_BY_ID, FIND_ALL, INSERT, UPDATE, SAVE, DELETE_BY_ID, DELETE, READ, COUNT, EXISTS,
-        QUERY_DELETE, QUERY_UPDATE, LIFECYCLE_INSERT, LIFECYCLE_SAVE, LIFECYCLE_UPDATE, LIFECYCLE_DELETE }
+        QUERY_DELETE, QUERY_UPDATE, SEARCH, LIFECYCLE_INSERT, LIFECYCLE_SAVE, LIFECYCLE_UPDATE, LIFECYCLE_DELETE }
 
     private record Classified(Kind kind, RestOperation operation, boolean explicitOnly, String unsupported) {
 
@@ -168,8 +181,10 @@ final class EndpointFactory {
             return;
         }
         if (classified.explicitOnly() && !explicit) {
-            diagnostics.note(method, "Not exposed over REST: " + method.getSimpleName() + " changes data through "
-                    + "a query; add @RestExpose to publish it.");
+            diagnostics.note(method, "Not exposed over REST: " + method.getSimpleName()
+                    + (classified.kind() == Kind.SEARCH
+                    ? " accepts a dynamic Restriction; add @RestExpose to publish it as a QUERY search endpoint."
+                    : " changes data through a query; add @RestExpose to publish it."));
             return;
         }
         String path = explicit ? expose.path() : "";
@@ -188,6 +203,38 @@ final class EndpointFactory {
     }
 
     private Classified classify(ExecutableElement method, boolean standardOwner) {
+        Classified classified = classifyOperation(method, standardOwner);
+        if (classified.unsupported() != null || restrictionParameters(method) == 0) {
+            return classified;
+        }
+        boolean readOnly = classified.kind() == Kind.READ || classified.kind() == Kind.COUNT
+                || classified.kind() == Kind.EXISTS;
+        if (!readOnly) {
+            return Classified.unsupported("a dynamic restriction can only be used by read-only operations, because "
+                    + "it is served through HTTP QUERY");
+        }
+        if (method.getParameters().size() != 1 || !isEntityRestriction(parameterTypes(method).get(0))) {
+            return Classified.unsupported("a dynamic restriction must be the only parameter and be a Restriction "
+                    + "of the repository entity");
+        }
+        return Classified.explicit(Kind.SEARCH, classified.operation());
+    }
+
+    private long restrictionParameters(ExecutableElement method) {
+        return parameterTypes(method).stream().filter(type -> type.getKind() == TypeKind.DECLARED
+                && ((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName()
+                .contentEquals("jakarta.data.restrict.Restriction")).count();
+    }
+
+    private boolean isEntityRestriction(TypeMirror type) {
+        return type.getKind() == TypeKind.DECLARED
+                && ((TypeElement) ((DeclaredType) type).asElement()).getQualifiedName()
+                .contentEquals("jakarta.data.restrict.Restriction")
+                && ((DeclaredType) type).getTypeArguments().size() == 1
+                && types.isSameType(((DeclaredType) type).getTypeArguments().get(0), repository.entity());
+    }
+
+    private Classified classifyOperation(ExecutableElement method, boolean standardOwner) {
         String name = method.getSimpleName().toString();
         int arity = method.getParameters().size();
         boolean dataAnnotated = hasDataAnnotation(method);
@@ -313,6 +360,7 @@ final class EndpointFactory {
             case READ, COUNT, EXISTS -> read(method, classified, pathOr(pathOverride, name));
             case QUERY_DELETE -> mutation(method, "DELETE", pathOr(pathOverride, name));
             case QUERY_UPDATE -> mutation(method, "POST", pathOr(pathOverride, name));
+            case SEARCH -> search(method, pathOr(pathOverride, name));
         };
         if (spec == null) {
             return;
@@ -334,7 +382,8 @@ final class EndpointFactory {
             return;
         }
         List<String> annotations = new ArrayList<>();
-        annotations.add("@" + imports.name("jakarta.ws.rs." + spec.http));
+        annotations.add("@" + imports.name((spec.http.equals("QUERY") ? "org.eclipse.jnosql.rest." : "jakarta.ws.rs.")
+                + spec.http));
         if (!spec.path.isEmpty()) {
             annotations.add("@" + imports.name("jakarta.ws.rs.Path") + "(" + AnnotationSource.quote(spec.path) + ")");
         }
@@ -569,6 +618,50 @@ final class EndpointFactory {
         return spec;
     }
 
+    private Spec search(ExecutableElement method, String path) {
+        if (TEMPLATE.matcher(path).find()) {
+            return unsupportedSignature(method, "a search path cannot contain path variables because the criteria "
+                    + "travel in the request body");
+        }
+        Spec spec = new Spec("QUERY", path, "void", method.getSimpleName().toString());
+        String call = "repository." + method.getSimpleName() + "(request.toRestriction())";
+        if (!readBody(spec, returnType(method), call, method) || !resolveSearchRequest(method)) {
+            return null;
+        }
+        Spec guard = new Spec("QUERY", path, "void", spec.name);
+        guard.parameter(openApiBody(method) + imports.name(searchRequestName()) + " request");
+        checkBody(guard, "request");
+        spec.parameters.addAll(guard.parameters);
+        spec.body.addAll(0, guard.body);
+        return spec;
+    }
+
+    private String searchRequestName() {
+        String simpleName = SearchPlanner.requestName(repository);
+        return repository.packageName().isEmpty() ? simpleName : repository.packageName() + "." + simpleName;
+    }
+
+    private boolean resolveSearchRequest(ExecutableElement method) {
+        if (searchRequestResolved) {
+            return true;
+        }
+        TypeElement existing = elements.getTypeElement(searchRequestName());
+        if (existing == null) {
+            searchRequest = searchPlanner.plan(repository);
+            searchRequestResolved = searchRequest != null;
+            return searchRequestResolved;
+        }
+        boolean convertible = ElementFilter.methodsIn(existing.getEnclosedElements()).stream()
+                .anyMatch(candidate -> candidate.getSimpleName().contentEquals("toRestriction")
+                        && candidate.getParameters().isEmpty() && candidate.getModifiers().contains(Modifier.PUBLIC));
+        if (!convertible) {
+            diagnostics.error(method, "The developer-defined " + existing.getQualifiedName() + " must declare a "
+                    + "public toRestriction() method returning the Jakarta Data restriction.");
+        }
+        searchRequestResolved = convertible;
+        return convertible;
+    }
+
     private Spec mutation(ExecutableElement method, String http, String path) {
         Spec spec = parameters(method, path, http);
         if (spec == null) {
@@ -709,8 +802,7 @@ final class EndpointFactory {
             DeclaredType declared = (DeclaredType) type;
             String name = ((TypeElement) declared.asElement()).getQualifiedName().toString();
             if (name.startsWith("jakarta.data.restrict.")) {
-                return "is a dynamic restriction; restrictions need HTTP QUERY with a request body, which is not "
-                        + "supported yet";
+                return "is a restriction, which is only supported as the single parameter of a search method";
             }
             if (name.startsWith("jakarta.data.page.") || name.equals("jakarta.data.Limit")
                     || name.equals("jakarta.data.Sort") || name.equals("jakarta.data.Order")) {
