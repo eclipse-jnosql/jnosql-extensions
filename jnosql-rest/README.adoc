@@ -69,7 +69,7 @@ are compile errors.
 == DTOs
 
 `@RestDTO(exclude = {...})` generates `<Entity>DTO`, `<Entity>CreateRequest`, `<Entity>UpdateRequest` records and a
-`<Entity>DTOMapper` interface annotated `@Mapper(componentModel = "jakarta-cdi")`; MapStruct generates the
+`<Entity>DTOMapper` interface annotated `@Mapper(componentModel = MappingConstants.ComponentModel.JAKARTA_CDI, unmappedTargetPolicy = ReportingPolicy.IGNORE)`; MapStruct generates the
 implementation and the resource receives the mapper through constructor injection. Developer-defined types with those
 names are reused (and validated), never overwritten.
 
