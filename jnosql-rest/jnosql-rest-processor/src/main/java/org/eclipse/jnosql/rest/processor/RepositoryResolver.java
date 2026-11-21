@@ -72,6 +72,11 @@ final class RepositoryResolver {
         if (rest.path().isBlank()) {
             diagnostics.error(element, "@RestRepository.path of " + element.getSimpleName() + " must not be blank.");
         }
+        if (elements.getPackageOf(element).isUnnamed()) {
+            diagnostics.error(element, element.getSimpleName() + " is in the unnamed package; move it to a named "
+                    + "package so the generated REST types can be placed next to it.");
+            return Optional.empty();
+        }
         DeclaredType dataRepository = findSupertype(element.asType(), DATA_REPOSITORY);
         if (dataRepository != null && dataRepository.getTypeArguments().size() != 2) {
             diagnostics.error(element, element.getSimpleName() + " must declare explicit type arguments when "
@@ -100,12 +105,15 @@ final class RepositoryResolver {
 
     private TypeMirror inferEntity(TypeElement element) {
         Map<String, TypeMirror> candidates = new LinkedHashMap<>();
+        DeclaredType declared = (DeclaredType) element.asType();
         for (ExecutableElement method : ElementFilter.methodsIn(elements.getAllMembers(element))) {
             if (method.getEnclosingElement().toString().equals("java.lang.Object")) {
                 continue;
             }
-            candidate(method.getReturnType(), candidates);
-            method.getParameters().forEach(parameter -> candidate(parameter.asType(), candidates));
+            javax.lang.model.type.ExecutableType resolved =
+                    (javax.lang.model.type.ExecutableType) types.asMemberOf(declared, method);
+            candidate(resolved.getReturnType(), candidates);
+            resolved.getParameterTypes().forEach(parameter -> candidate(parameter, candidates));
         }
         if (candidates.size() != 1) {
             diagnostics.error(element, "The entity of " + element.getSimpleName() + " cannot be inferred ("
