@@ -1,0 +1,15 @@
+package {{packageName}};
+
+{{#imports}}
+import {{{.}}};
+{{/imports}}
+
+/**
+ * {{{javadoc}}}
+ */
+public record {{name}}(
+{{#components}}
+        {{{type}}} {{name}}{{^last}},{{/last}}
+{{/components}}
+) {
+}
