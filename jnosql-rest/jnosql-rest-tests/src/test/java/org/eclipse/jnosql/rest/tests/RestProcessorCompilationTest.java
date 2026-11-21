@@ -77,10 +77,26 @@ class RestProcessorCompilationTest {
 
             assertThat(result.errors()).isEmpty();
             assertThat(result.success()).isTrue();
-            assertThat(result.source("ItemRepositoryRepository"))
+            assertThat(result.source("ItemRepositoryResource"))
                     .contains("@Path(\"/items\")")
                     .doesNotContain("openapi")
                     .doesNotContain("mapstruct");
+        }
+
+        @Test
+        @DisplayName("Should name the resource after the complete repository interface plus the Resource suffix")
+        void shouldUseTheResourceSuffix(@TempDir Path directory) {
+            var result = harness(directory, "@RestRepository(path = \"/items\")", "").compile();
+
+            assertThat(result.success()).isTrue();
+            assertThat(result.generated("ItemRepositoryResource")).isTrue();
+            assertThat(result.generated("ItemRepositoryRepository")).isFalse();
+            assertThat(result.source("ItemRepositoryResource"))
+                    .contains("package demo;")
+                    .contains("public class ItemRepositoryResource {")
+                    .contains("    ItemRepositoryResource() {")
+                    .contains("    public ItemRepositoryResource(ItemRepository repository) {")
+                    .contains("@Path(\"/items\")");
         }
 
         @Test
@@ -91,7 +107,7 @@ class RestProcessorCompilationTest {
                     .compile();
 
             assertThat(result.success()).isTrue();
-            assertThat(result.source("ItemRepositoryRepository"))
+            assertThat(result.source("ItemRepositoryResource"))
                     .contains("findByName")
                     .doesNotContain("findBySecret")
                     .doesNotContain("deleteById");
@@ -105,7 +121,7 @@ class RestProcessorCompilationTest {
                     .compile();
 
             assertThat(result.success()).isTrue();
-            assertThat(result.source("ItemRepositoryRepository"))
+            assertThat(result.source("ItemRepositoryResource"))
                     .contains("findById")
                     .doesNotContain("deleteById");
         }
@@ -117,7 +133,7 @@ class RestProcessorCompilationTest {
                     "@RestExclude List<Item> findBySecret(String secret);").compile();
 
             assertThat(result.success()).isTrue();
-            assertThat(result.source("ItemRepositoryRepository")).doesNotContain("findBySecret");
+            assertThat(result.source("ItemRepositoryResource")).doesNotContain("findBySecret");
         }
 
         @Test
@@ -127,7 +143,7 @@ class RestProcessorCompilationTest {
                     .compile();
 
             assertThat(result.success()).isTrue();
-            assertThat(result.generated("ItemRepositoryRepository")).isFalse();
+            assertThat(result.generated("ItemRepositoryResource")).isFalse();
         }
 
         @Test
