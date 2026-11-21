@@ -57,7 +57,7 @@ are compile errors.
 [cols="1,2"]
 |===
 |`findById` |`GET /{id}`
-|`findAll` |`GET`
+|`findAll(PageRequest, Order)` |`GET` (paginated and sortable, see <<Collection root>>)
 |`insert` |`POST` (201)
 |`update` |`PUT` (entity) or `PUT /{id}` (DTO mode)
 |`save` |`PUT /save`
@@ -231,6 +231,78 @@ is on the classpath the pagination query parameters get an `@Parameter` descript
 `400` on the repository if you want it documented, and customize further with `META-INF/openapi.yaml` or an
 `OASFilter`. No OpenAPI types are required otherwise.
 
+== Collection root
+
+`GET /products` is served by the inherited `findAll(PageRequest, Order<T>)` of `BasicRepository` (and so
+`CrudRepository`), which returns a `Page<T>`. It is always bounded:
+
+[source,http]
+----
+GET /products?offset=0&size=20&sort=name:asc,price:desc
+----
+
+* `offset` is the zero-based page offset (default `0`), `size` defaults to `20` and is limited to `1..100`,
+`includeTotal` defaults to `false` (no count query). The response is the `PageResponse` described above; with
+`@RestDTO` the content is mapped to the DTO.
+* The unbounded `findAll()` is never exposed, so there is no second root route and nothing is paginated or sorted in
+memory. A repository without a paginated `findAll` gets no collection root; a `findAll()` declared by the developer
+on a repository stays available only as the explicit `GET /findAll` method, unchanged.
+* Invalid `offset`, `size` or `sort` values answer `400 Bad Request` before the repository is called.
+
+== Limit
+
+A method with a `Limit` parameter (and no `PageRequest`, no page return type) gets `limit` and `startAt` query
+parameters:
+
+[source,http]
+----
+GET /products/findByCategory?category=books&limit=10&startAt=5
+----
+
+`limit` is the maximum number of results (default `20`, maximum `100`); `startAt` is the one-based position of the
+first result (default `1`) as defined by Jakarta Data `Limit`. Non-numeric, overflowing, zero or negative values and
+`startAt < 1` answer `400`. `Limit` cannot be combined with `PageRequest` or a `Page` return; such a signature is
+rejected at compile time. The limit is applied by the provider.
+
+== Sort and Order
+
+A method with a `Sort<Entity>` (one criterion) or `Order<Entity>` (several) parameter gets a `sort` query parameter:
+
+[source,http]
+----
+GET /products/findByCategory?category=books&sort=price:desc
+GET /products/findByCategory?category=books&sort=name:asc,price:desc
+----
+
+* Syntax: `attribute[:asc|:desc]` terms separated by commas; the direction is case-insensitive and defaults to `asc`;
+the order of terms is preserved. A `Sort` accepts exactly one term; an `Order` accepts several and may be empty.
+* The allowed attributes are generated at compile time from the entity (scalar attributes only; nested attributes are
+rejected) minus `@RestDTO` exclusions, and, when a developer-defined DTO is visible, only the attributes that DTO
+declares. `GET /products?sort=internalCode:asc` therefore answers `400` when `internalCode` is excluded. Sorting is
+still done by the provider on the entity attribute.
+* Unknown attributes, repeated attributes, invalid directions and malformed terms answer `400`.
+* A `Sort<X>` or `Order<X>` whose type argument is not the repository entity is a compile error.
+* Offset pagination: combine freely, `GET /products/search?offset=1&size=10&sort=name:asc`.
+* Cursor pagination: a method with an `Order<Entity>` parameter and a `CursoredPage` return needs a total order, so
+the client's `sort` must include the identifier (`sort=name:asc,id:asc`), otherwise `400`. The cursor is bound to the
+sort (it is part of the existing token binding), so changing `sort` while following a cursor answers `400`. A static
+`@OrderBy` (not combined with `Order`) is still required to include the identifier. No identifier is appended
+silently.
+* Restriction searches may declare `Restriction`, `PageRequest` and one `Sort`/`Order`; the search body gains a
+`sort` array next to `pagination`:
+
+[source,json]
+----
+{ "category": { "eq": "books" }, "sort": [ { "attribute": "price", "direction": "desc" } ],
+  "pagination": { "offset": 0, "size": 20 } }
+----
+
+The sort array is validated like the query parameter and is part of the cursor binding. All searches of one repository
+must agree on whether they are sorted. Searches with `Limit` are rejected.
+
+Provider limits: whether dynamic `Order`/`Sort` and cursor pagination work depends on the Jakarta Data provider; its
+`UnsupportedOperationException` is propagated.
+
 == MicroProfile OpenAPI (optional)
 
 When `org.eclipse.microprofile.openapi` is on the compile classpath, `@Tag`, `@SecurityRequirement` (type level),
@@ -249,8 +321,9 @@ limitation. CDI discovery does not by itself register resources: Jakarta REST ru
 
 == Known limitations
 
-* `Limit` and `Sort`/`Order` parameters are not generated; explicitly exposed methods using them fail with an error,
-others are skipped with a diagnostic. `BasicRepository.findAll(PageRequest, Order)` is therefore not exposed. See
-<<Pagination>> for the other limits of paging.
+* `Limit`, `Sort<T>`, `Order<T>` and the paginated root `findAll` are supported, see <<Collection root>>,
+<<Limit>> and <<Sort and Order>>. The unbounded `findAll()` is deliberately never exposed.
+* Custom-DTO sort surface is derived only when the developer's DTO type is visible to the processor; otherwise the
+entity attributes minus `@RestDTO` exclusions apply. See <<Pagination>> for the other limits of paging.
 * Bulk operations (`saveAll`, `insertAll`, `updateAll`, `deleteAll`) are not generated.
 * No Bean Validation integration, no CDI Lite runtime test.
