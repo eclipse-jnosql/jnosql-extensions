@@ -161,6 +161,12 @@ List<Product> found = products.findByNameLike(searchPattern, Order.by(
 
 This approach ensures that query attribute references are both type-safe and refactor-safe, leading to more robust and maintainable code.
 
+== JNoSQL REST
+
+An optional annotation processor that exposes Jakarta Data repositories as Jakarta REST resources (`<Repository>Resource`) at compile time, with optional MapStruct DTOs and MicroProfile OpenAPI annotations. This `1.x.x` line targets Jakarta Data 1.0 and does not generate dynamic `Restriction<T>` searches.
+
+See link:jnosql-rest/README.adoc[JNoSQL REST documentation].
+
 == Bean Validation
 
 Eclipse JNoSQL provide support for bean validation. It will validate before inserting/updating and constructing an entity.
