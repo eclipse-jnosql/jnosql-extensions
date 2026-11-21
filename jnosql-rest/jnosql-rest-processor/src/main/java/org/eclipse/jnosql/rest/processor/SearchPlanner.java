@@ -20,6 +20,10 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,9 +78,17 @@ final class SearchPlanner {
         List<SearchAttribute> attributes = new ArrayList<>();
         Map<String, SearchFilter> filters = new LinkedHashMap<>();
         Map<String, String> filterOwners = new LinkedHashMap<>();
+        Set<String> reserved = reservedNames(paginated, sorted);
+        Set<String> constants = new HashSet<>();
         for (Property property : scanner.scan(entity)) {
             if (repository.dtoExclusions().contains(property.name()) || !ScalarTypes.isScalar(property.type())) {
                 continue;
+            }
+            if (reserved.contains(property.name())) {
+                diagnostics.error(repository.element(), "The attribute '" + property.name() + "' of "
+                        + entity.getQualifiedName() + " collides with a member of the generated search request ("
+                        + reserved + "). Exclude it with @RestDTO(exclude) or rename it.");
+                return null;
             }
             TypeMirror value = property.type().getKind().isPrimitive()
                     ? types.boxedClass((javax.lang.model.type.PrimitiveType) property.type()).asType()
@@ -97,7 +109,7 @@ final class SearchPlanner {
                     + (comparable ? "ComparableAttribute" : "BasicAttribute"));
             String attributeType = attribute + "<" + entityType + ", " + valueType + ">";
             filters.putIfAbsent(filterName, new SearchFilter(filterName, valueType, attributeType, comparable));
-            attributes.add(new SearchAttribute(constant(property.name()), property.name(), filterName,
+            attributes.add(new SearchAttribute(constant(property.name(), constants), property.name(), filterName,
                     attributeType, attribute + ".of(" + entityType + ".class, \"" + property.name() + "\", "
                     + valueType + ".class)"));
         }
@@ -113,7 +125,24 @@ final class SearchPlanner {
                 paginated, sorted);
     }
 
-    private static String constant(String name) {
-        return name.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toUpperCase();
+    private static Set<String> reservedNames(boolean paginated, boolean sorted) {
+        Set<String> reserved = new LinkedHashSet<>(List.of("or", "toRestriction"));
+        if (paginated) {
+            reserved.addAll(List.of("pagination", "criteria"));
+        }
+        if (sorted) {
+            reserved.add("sort");
+        }
+        return reserved;
+    }
+
+    private static String constant(String name, Set<String> used) {
+        String base = name.replaceAll("([a-z0-9])([A-Z])", "$1_$2").replaceAll("[^A-Za-z0-9_]", "_")
+                .toUpperCase(Locale.ROOT);
+        String candidate = base;
+        for (int suffix = 2; !used.add(candidate); suffix++) {
+            candidate = base + "_" + suffix;
+        }
+        return candidate;
     }
 }
