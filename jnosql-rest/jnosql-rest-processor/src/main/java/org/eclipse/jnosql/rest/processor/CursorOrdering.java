@@ -47,9 +47,12 @@ final class CursorOrdering {
             return "a CursoredPage needs a deterministic ordering: declare @OrderBy attributes ending with the "
                     + "unique identifier";
         }
-        String id = identifier == null ? "id" : identifier.toLowerCase(Locale.ROOT);
-        if (ordering.stream().noneMatch(attribute -> attribute.equals(id) || attribute.equals("_id")
-                || attribute.equals("id"))) {
+        if (identifier == null) {
+            return "the identifier attribute of the entity cannot be established, so the ordering cannot be proven "
+                    + "total";
+        }
+        String id = identifier.toLowerCase(Locale.ROOT);
+        if (!ordering.contains(id)) {
             return "the ordering " + ordering + " is not provably unique: cursor pagination needs the unique "
                     + "identifier '" + id + "' among the ordered attributes, for instance @OrderBy(\"name\") "
                     + "@OrderBy(\"" + id + "\")";
