@@ -154,7 +154,12 @@ class RestProcessorCompilationTest {
 
             assertThat(result.errors()).isEmpty();
             assertThat(result.source("ItemDTO")).contains("name").doesNotContain("secret");
-            assertThat(result.source("ItemDTOMapper")).contains("componentModel = \"jakarta-cdi\"");
+            assertThat(result.source("ItemDTOMapper"))
+                    .contains("import org.mapstruct.MappingConstants;")
+                    .contains("import org.mapstruct.ReportingPolicy;")
+                    .contains("componentModel = MappingConstants.ComponentModel.JAKARTA_CDI")
+                    .contains("unmappedTargetPolicy = ReportingPolicy.IGNORE")
+                    .doesNotContain("\"jakarta-cdi\"");
             assertThat(result.generated("ItemDTOMapperImpl")).isTrue();
         }
 
