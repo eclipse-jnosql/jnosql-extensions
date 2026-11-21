@@ -178,11 +178,13 @@ class PaginationGenerationTest {
                     .contains("public CursorPageResponse<Item> findByName(")
                     .contains("@QueryParam(\"cursor\") String cursor")
                     .contains("@QueryParam(\"size\") String size")
-                    .doesNotContain("@QueryParam(\"offset\")")
                     .contains("String cursorContext = Pagination.context(\"findByName\", name);")
                     .contains("PageRequest pageRequest = Pagination.cursor(cursor, size, cursorContext);")
                     .contains("CursoredPage<Item> page = repository.findByName(name, pageRequest);")
                     .contains("return CursorPageResponse.of(page, cursorContext);");
+            String source = result.source("ItemRepositoryResource");
+            assertThat(source.substring(source.indexOf("CursorPageResponse<Item> findByName(")))
+                    .doesNotContain("@QueryParam(\"offset\")");
         }
 
         @Test
