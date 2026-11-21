@@ -24,8 +24,8 @@ import java.lang.annotation.Target;
  * Exposes a Jakarta Data repository as a Jakarta REST resource.
  *
  * <p>The annotation processor generates, at compile time, a class named
- * {@code <RepositoryInterfaceName>Repository} in the package of the repository, for example
- * {@code ProductRepositoryRepository}. The class is a CDI request-scoped Jakarta REST resource that
+ * {@code <RepositoryInterfaceName>Resource} in the package of the repository, for example
+ * {@code ProductRepositoryResource}. The class is a CDI request-scoped Jakarta REST resource that
  * delegates every request to the CDI-managed repository.</p>
  *
  * <pre>{@code
