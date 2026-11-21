@@ -55,7 +55,19 @@ final class EndpointFactory {
     private static final String UPDATE = DATA_PACKAGE + "Update";
     private static final String DELETE = DATA_PACKAGE + "Delete";
     private static final Set<String> RESERVED = Set.of("repository", "mapper", "entity", "request", "result",
-            "stream", "created", "response", "page", "offset", "size", "cursor", "includeTotal", "cursorContext");
+            "stream", "created", "response", "page", "offset", "size", "cursor", "includeTotal", "cursorContext", "limit", "startAt",
+            "sort");
+    private static final String LIMIT = "jakarta.data.Limit";
+    private static final String SORT = "jakarta.data.Sort";
+    private static final String ORDER = "jakarta.data.Order";
+    private static final String SORTING = "org.eclipse.jnosql.rest.pagination.Sorting";
+    private static final String LIMITS = "org.eclipse.jnosql.rest.pagination.Limits";
+    private static final String SIZE_HELP = "Maximum number of elements per page, between 1 and 100; default 20";
+    private static final String OFFSET_HELP = "Zero-based page offset (0 is the first page); default 0";
+    private static final String TOTAL_HELP = "Set to true to include totalElements and totalPages; default false";
+    private static final String SORT_HELP = "Comma-separated attribute:direction criteria, such as name:asc,price:desc";
+    private static final String LIMIT_HELP = "Maximum number of results, between 1 and 100; default 20";
+    private static final String START_HELP = "One-based position of the first result; default 1";
     private static final String PAGE_PACKAGE = "jakarta.data.page.";
     private static final String PAGE = PAGE_PACKAGE + "Page";
     private static final String CURSORED_PAGE = PAGE_PACKAGE + "CursoredPage";
@@ -210,6 +222,9 @@ final class EndpointFactory {
 
     private Classified classify(ExecutableElement method, boolean standardOwner) {
         Classified classified = classifyOperation(method, standardOwner);
+        if (classified.unsupported() == null && classified.kind() != Kind.FIND_ALL && sortingProblem(method) != null) {
+            return Classified.unsupported(sortingProblem(method));
+        }
         if (classified.unsupported() != null || restrictionParameters(method) == 0) {
             return classified;
         }
@@ -221,14 +236,77 @@ final class EndpointFactory {
         }
         if (nonPagingParameters(method).size() != 1 || !isEntityRestriction(nonPagingParameters(method).get(0))) {
             return Classified.unsupported("a dynamic restriction must be the only parameter, besides an optional "
-                    + "PageRequest, and be a Restriction of the repository entity");
+                    + "PageRequest and an optional Sort or Order of the entity, and be a Restriction of the "
+                    + "repository entity");
+        }
+        if (parameterTypes(method).stream().anyMatch(type -> isType(type, LIMIT))) {
+            return Classified.unsupported("a dynamic restriction search cannot take a Limit; use a PageRequest");
         }
         return Classified.explicit(Kind.SEARCH, classified.operation());
     }
 
     private List<TypeMirror> nonPagingParameters(ExecutableElement method) {
-        return parameterTypes(method).stream().filter(type -> !isType(type, PAGE_REQUEST))
+        return parameterTypes(method).stream()
+                .filter(type -> !isType(type, PAGE_REQUEST) && !isType(type, SORT) && !isType(type, ORDER)
+                        && !isType(type, LIMIT))
                 .map(type -> (TypeMirror) type).toList();
+    }
+
+    private boolean hasType(ExecutableElement method, String qualifiedName) {
+        return parameterTypes(method).stream().anyMatch(type -> isType(type, qualifiedName));
+    }
+
+    private boolean sorted(ExecutableElement method) {
+        return hasType(method, SORT) || hasType(method, ORDER);
+    }
+
+    private boolean isEntityOf(TypeMirror type) {
+        return type.getKind() == TypeKind.DECLARED && ((DeclaredType) type).getTypeArguments().size() == 1
+                && types.isSameType(((DeclaredType) type).getTypeArguments().get(0), repository.entity());
+    }
+
+    private String sortingProblem(ExecutableElement method) {
+        long sorts = parameterTypes(method).stream().filter(type -> isType(type, SORT) || isType(type, ORDER)).count();
+        long limits = parameterTypes(method).stream().filter(type -> isType(type, LIMIT)).count();
+        if (sorts > 1) {
+            return "a method takes at most one Sort or Order parameter, because the sort query parameter feeds it";
+        }
+        if (limits > 1) {
+            return "a method takes at most one Limit parameter";
+        }
+        if (parameterTypes(method).stream().filter(type -> isType(type, SORT) || isType(type, ORDER))
+                .anyMatch(type -> !isEntityOf(type))) {
+            return "the type argument of Sort and Order must be the repository entity "
+                    + types.asElement(repository.entity()).getSimpleName();
+        }
+        if (limits == 1 && (hasType(method, PAGE_REQUEST) || isType(returnType(method), PAGE)
+                || isType(returnType(method), CURSORED_PAGE))) {
+            return "a Limit cannot be combined with pagination; use a PageRequest alone";
+        }
+        return null;
+    }
+
+    private Set<String> sortable() {
+        TypeElement entity = (TypeElement) types.asElement(repository.entity());
+        Set<String> names = new java.util.LinkedHashSet<>();
+        for (Property property : new PropertyScanner(elements, types).scan(entity)) {
+            if (!repository.dtoExclusions().contains(property.name()) && ScalarTypes.isScalar(property.type())) {
+                names.add(property.name());
+            }
+        }
+        if (dto != null) {
+            TypeElement representation = elements.getTypeElement(dto.qualified(dto.dtoName()));
+            if (representation != null) {
+                names.retainAll(new PropertyScanner(elements, types).scan(representation).stream()
+                        .map(Property::name).collect(java.util.stream.Collectors.toSet()));
+            }
+        }
+        return names;
+    }
+
+    private String sortableSet() {
+        return imports.name("java.util.Set") + ".of(" + sortable().stream().map(AnnotationSource::quote)
+                .collect(java.util.stream.Collectors.joining(", ")) + ")";
     }
 
     private static boolean isType(TypeMirror type, String qualifiedName) {
@@ -254,6 +332,11 @@ final class EndpointFactory {
             return new Paging(mode, "a method returning a page needs exactly one PageRequest parameter");
         }
         if (mode == PageMode.CURSOR) {
+            if (hasType(method, ORDER)) {
+                String id = identifier();
+                return new Paging(mode, id != null && sortable().contains(id) ? null
+                        : "cursor pagination with an Order needs the identifier among the sortable attributes");
+            }
             return new Paging(mode, CursorOrdering.problem(method, identifier()));
         }
         return new Paging(mode, null);
@@ -282,13 +365,24 @@ final class EndpointFactory {
         String name = method.getSimpleName().toString();
         int arity = method.getParameters().size();
         boolean dataAnnotated = hasDataAnnotation(method);
+        if (name.equals("findAll") && (standardOwner || !dataAnnotated)) {
+            if (arity == 0) {
+                return Classified.unsupported("an unbounded findAll() would load the whole collection; the "
+                        + "collection root is served by the paginated findAll(PageRequest, Order) instead");
+            }
+            if (arity == 2 && hasType(method, PAGE_REQUEST) && hasType(method, ORDER)
+                    && isType(returnType(method), PAGE)) {
+                return sortingProblem(method) == null ? Classified.of(Kind.FIND_ALL, RestOperation.FIND)
+                        : Classified.unsupported(sortingProblem(method));
+            }
+        }
         if (standardOwner || !dataAnnotated) {
             Classified standard = standard(name, arity, standardOwner);
             if (standard != null) {
                 return standard;
             }
             if (standardOwner) {
-                return Classified.unsupported("bulk, paginated and other repository operations are not supported "
+                return Classified.unsupported("bulk and other repository operations are not supported "
                         + "by the generated REST resource");
             }
         }
@@ -338,7 +432,6 @@ final class EndpointFactory {
         return switch (name + "/" + arity) {
             case "findById/1" -> standardOwner || repository.hasFindById()
                     ? Classified.of(Kind.FIND_BY_ID, RestOperation.FIND) : null;
-            case "findAll/0" -> Classified.of(Kind.FIND_ALL, RestOperation.FIND);
             case "insert/1" -> Classified.of(Kind.INSERT, RestOperation.INSERT);
             case "update/1" -> Classified.of(Kind.UPDATE, RestOperation.UPDATE);
             case "save/1" -> Classified.of(Kind.SAVE, RestOperation.SAVE);
@@ -391,7 +484,7 @@ final class EndpointFactory {
         String name = method.getSimpleName().toString();
         Spec spec = switch (classified.kind()) {
             case FIND_BY_ID -> findById();
-            case FIND_ALL -> findAll();
+            case FIND_ALL -> findAll(method);
             case INSERT -> insert("insert", "POST", "", method, standardOwner);
             case UPDATE -> update();
             case SAVE -> save("save", "/save", method, standardOwner);
@@ -436,6 +529,11 @@ final class EndpointFactory {
         }
         String javadoc = "Handles {@code " + spec.http + " " + repository.path() + spec.path
                 + "} by delegating to {@link " + repositoryName() + "#" + method.getSimpleName() + "}.";
+        if (!spec.docs.isEmpty()) {
+            javadoc += "\n     *\n     * " + String.join("\n     * ", spec.docs)
+                    + "\n     * @throws jakarta.ws.rs.BadRequestException if a pagination, limit or sort value is "
+                    + "invalid";
+        }
         methods.add(new MethodModel(javadoc, annotations, spec.returnType, spec.name, renderParameters(spec.parameters),
                 spec.body));
     }
@@ -461,7 +559,7 @@ final class EndpointFactory {
         private final String name;
         private final List<String> parameters = new ArrayList<>();
         private final List<String> body = new ArrayList<>();
-
+        private final List<String> docs = new ArrayList<>();
         private Spec(String http, String path, String returnType, String name) {
             this.http = http;
             this.path = path;
@@ -495,12 +593,17 @@ final class EndpointFactory {
                 + "::new);");
     }
 
-    private Spec findAll() {
-        Spec spec = new Spec("GET", "", imports.name("java.util.List") + "<" + representation() + ">", "findAll");
-        String stream = imports.name("java.util.stream.Stream");
-        spec.line("try (" + stream + "<" + entityType() + "> stream = repository.findAll()) {");
-        spec.line(INDENT + (dto == null ? "return stream.toList();" : "return mapper.toDTO(stream.toList());"));
-        return spec.line("}");
+    private Spec findAll(ExecutableElement method) {
+        Spec spec = new Spec("GET", "", "void", "findAll");
+        addQuery(spec, "size", SIZE_HELP);
+        addQuery(spec, "offset", OFFSET_HELP);
+        addQuery(spec, "includeTotal", TOTAL_HELP);
+        addQuery(spec, "sort", SORT_HELP);
+        spec.line(imports.name(PAGE_REQUEST) + " pageRequest = " + imports.name(PAGINATION)
+                + ".offset(offset, size, includeTotal);");
+        spec.line(imports.name(ORDER) + "<" + entityType() + "> order = " + imports.name(SORTING) + ".order(sort, "
+                + sortableSet() + ");");
+        return readBody(spec, returnType(method), "repository.findAll(pageRequest, order)", method) ? spec : null;
     }
 
     private Spec deleteById() {
@@ -667,6 +770,7 @@ final class EndpointFactory {
     }
 
     private boolean searchPaginated;
+    private boolean searchSorted;
 
     private Spec search(ExecutableElement method, String path) {
         if (TEMPLATE.matcher(path).find()) {
@@ -684,9 +788,18 @@ final class EndpointFactory {
             return null;
         }
         searchPaginated = paged;
+        boolean sortedSearch = sorted(method);
+        if (searchRequestResolved && searchSorted != sortedSearch) {
+            diagnostics.error(method, "All dynamic searches of " + repository.element().getSimpleName()
+                    + " must either accept a Sort or Order or not, because they share one " + searchRequestName()
+                    + ".");
+            return null;
+        }
+        searchSorted = sortedSearch;
         Spec spec = new Spec("QUERY", path, "void", method.getSimpleName().toString());
         String call = "repository." + method.getSimpleName() + "("
                 + method.getParameters().stream().map(parameter -> isType(parameter.asType(), PAGE_REQUEST)
+                        || isType(parameter.asType(), SORT) || isType(parameter.asType(), ORDER)
                         ? variableName(parameter) : "request.toRestriction()").collect(
                         java.util.stream.Collectors.joining(", ")) + ")";
         if (paged) {
@@ -701,6 +814,16 @@ final class EndpointFactory {
                         + "\", request.criteria());");
                 spec.line(imports.name(PAGE_REQUEST) + " " + variableName(pageParameter) + " = " + pagination
                         + ".cursor(request.pagination(), cursorContext);");
+            }
+        }
+        for (VariableElement parameter : method.getParameters()) {
+            boolean order = isType(parameter.asType(), ORDER);
+            if (order || isType(parameter.asType(), SORT)) {
+                String unique = order && paging.mode() == PageMode.CURSOR
+                        ? ", " + AnnotationSource.quote(identifier()) : "";
+                spec.line(imports.name(order ? ORDER : SORT) + "<" + entityType() + "> " + variableName(parameter)
+                        + " = " + imports.name(SORTING) + "." + (order ? "order" : "sort") + "(request.sort(), "
+                        + sortableSet() + (order ? (unique.isEmpty() ? ", null" : unique) : "") + ");");
             }
         }
         List<String> prelude = new ArrayList<>(spec.body);
@@ -728,7 +851,7 @@ final class EndpointFactory {
         }
         TypeElement existing = elements.getTypeElement(searchRequestName());
         if (existing == null) {
-            searchRequest = searchPlanner.plan(repository, searchPaginated);
+            searchRequest = searchPlanner.plan(repository, searchPaginated, searchSorted);
             searchRequestResolved = searchRequest != null;
             return searchRequestResolved;
         }
@@ -748,6 +871,12 @@ final class EndpointFactory {
                         + "declare pagination() returning PaginationRequest and criteria() returning a String.");
                 convertible = false;
             }
+        }
+        if (convertible && searchSorted && ElementFilter.methodsIn(existing.getEnclosedElements()).stream()
+                .noneMatch(candidate -> candidate.getSimpleName().contentEquals("sort"))) {
+            diagnostics.error(method, "The developer-defined " + existing.getQualifiedName() + " must also "
+                    + "declare sort() returning a List of SortCriterion.");
+            convertible = false;
         }
         searchRequestResolved = convertible;
         return convertible;
@@ -861,12 +990,34 @@ final class EndpointFactory {
         List<String> checks = new ArrayList<>();
         Set<String> seen = new java.util.HashSet<>();
         String pageVariable = null;
+        List<String> conversions = new ArrayList<>();
+        Set<String> reserved = new java.util.HashSet<>();
         for (int index = 0; index < parameterTypes.size(); index++) {
             VariableElement parameter = method.getParameters().get(index);
             String original = parameter.getSimpleName().toString();
             TypeMirror type = parameterTypes.get(index);
             if (isType(type, PAGE_REQUEST)) {
                 pageVariable = variableName(parameter);
+                continue;
+            }
+            if (isType(type, SORT) || isType(type, ORDER) || isType(type, LIMIT)) {
+                String variable = variableName(parameter);
+                if (isType(type, LIMIT)) {
+                    reserved.addAll(List.of("limit", "startAt"));
+                    addQuery(spec, "limit", LIMIT_HELP);
+                    addQuery(spec, "startAt", START_HELP);
+                    conversions.add(imports.name(LIMIT) + " " + variable + " = " + imports.name(LIMITS)
+                            + ".of(limit, startAt);");
+                } else {
+                    reserved.add("sort");
+                    addQuery(spec, "sort", SORT_HELP);
+                    boolean order = isType(type, ORDER);
+                    String unique = order && paging.mode() == PageMode.CURSOR
+                            ? ", " + AnnotationSource.quote(identifier()) : "";
+                    conversions.add(imports.name(order ? ORDER : SORT) + "<" + entityType() + "> " + variable
+                            + " = " + imports.name(SORTING) + "." + (order ? "order" : "sort") + "(sort, "
+                            + sortableSet() + unique + ");");
+                }
                 continue;
             }
             String problem = parameterProblem(type);
@@ -903,6 +1054,14 @@ final class EndpointFactory {
                     + "(\"Query parameter '" + check.replaceAll("Value$", "") + "' is required\");");
             spec.line("}");
         }
+        for (String name : reserved) {
+            if (seen.contains(name)) {
+                diagnostics.error(method, "The query parameter '" + name + "' of " + method.getSimpleName()
+                        + " clashes with the parameter the generated endpoint adds for Limit, Sort or Order.");
+                return null;
+            }
+        }
+        conversions.forEach(spec::line);
         if (pageVariable != null && !addPagination(spec, method, paging, pageVariable, seen)) {
             return null;
         }
@@ -920,15 +1079,14 @@ final class EndpointFactory {
         }
         String pagination = imports.name(PAGINATION);
         String pageRequest = imports.name(PAGE_REQUEST);
-        spec.parameter(pageParameter("size", "Maximum number of elements per page, between 1 and 100; default 20"));
+        addQuery(spec, "size", SIZE_HELP);
         if (paging.mode() == PageMode.OFFSET) {
-            spec.parameter(pageParameter("offset", "Zero-based page offset (0 is the first page); default 0"));
-            spec.parameter(pageParameter("includeTotal", "Set to true to include totalElements and totalPages; "
-                    + "default false"));
+            addQuery(spec, "offset", OFFSET_HELP);
+            addQuery(spec, "includeTotal", TOTAL_HELP);
             spec.line(pageRequest + " " + variable + " = " + pagination + ".offset(offset, size, includeTotal);");
         } else {
-            spec.parameter(pageParameter("cursor", "Opaque continuation token from nextCursor or previousCursor; "
-                    + "omit it for the first page"));
+            addQuery(spec, "cursor", "Opaque continuation token from nextCursor or previousCursor; "
+                    + "omit it for the first page");
             List<String> values = method.getParameters().stream()
                     .filter(parameter -> !isType(parameter.asType(), PAGE_REQUEST)).map(this::variableName).toList();
             spec.line("String cursorContext = " + pagination + ".context(\"" + method.getSimpleName() + "\""
@@ -937,6 +1095,12 @@ final class EndpointFactory {
             spec.line(pageRequest + " " + variable + " = " + pagination + ".cursor(cursor, size, cursorContext);");
         }
         return true;
+    }
+
+    private void addQuery(Spec spec, String name, String description) {
+        spec.parameter(pageParameter(name, description));
+        spec.docs.add("@param " + name + " " + Character.toLowerCase(description.charAt(0))
+                + description.substring(1));
     }
 
     private String pageParameter(String name, String description) {
