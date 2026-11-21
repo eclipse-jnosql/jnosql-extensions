@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
  * </table>
  *
  * <p>Objects are converted by a generated MapStruct mapper interface named {@code ProductDTOMapper}, declared
- * with {@code componentModel = "jakarta-cdi"} and injected into the resource. MapStruct and its annotation
+ * with {@code MappingConstants.ComponentModel.JAKARTA_CDI} and injected into the resource. MapStruct and its annotation
  * processor must be configured by the application; otherwise compilation fails with an explanatory message.</p>
  *
  * <p>The DTO is not an authorization mechanism. Prefer developer-defined records for sensitive or independently
