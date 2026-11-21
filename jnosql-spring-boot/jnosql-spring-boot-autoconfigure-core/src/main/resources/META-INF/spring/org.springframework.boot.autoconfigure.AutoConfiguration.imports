@@ -1,0 +1,2 @@
+org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLCoreAutoConfiguration
+org.eclipse.jnosql.spring.boot.autoconfigure.JNoSQLSemistructuredAutoConfiguration

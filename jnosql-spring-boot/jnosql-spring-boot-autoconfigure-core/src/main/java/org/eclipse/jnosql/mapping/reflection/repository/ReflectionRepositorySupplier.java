@@ -1,0 +1,304 @@
+/*
+ *  Copyright (c) 2025, 2026 Contributors to the Eclipse Foundation
+ *   All rights reserved. This program and the accompanying materials
+ *   are made available under the terms of the Eclipse Public License v1.0
+ *   and Apache License v2.0 which accompanies this distribution.
+ *   The Eclipse Public License is available at http://www.eclipse.org/legal/epl-v10.html
+ *   and the Apache License v2.0 is available at http://www.opensource.org/licenses/apache2.0.php.
+ *
+ *   You may elect to redistribute this code under either of these licenses.
+ *
+ *   Contributors:
+ *
+ *   Otavio Santana
+ *   Maximillian Arruda
+ */
+package org.eclipse.jnosql.mapping.reflection.repository;
+
+import jakarta.data.Sort;
+import jakarta.data.constraint.Constraint;
+import jakarta.data.repository.By;
+import jakarta.data.repository.Find;
+import jakarta.data.repository.First;
+import jakarta.data.repository.Is;
+import jakarta.data.repository.OrderBy;
+import jakarta.data.repository.Param;
+import jakarta.data.repository.Query;
+import jakarta.data.repository.Select;
+import jakarta.nosql.Entity;
+import jakarta.nosql.Projection;
+import org.eclipse.jnosql.mapping.ProviderQuery;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryAnnotation;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMetadata;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethod;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryMethodType;
+import org.eclipse.jnosql.mapping.metadata.repository.RepositoryParam;
+import org.eclipse.jnosql.mapping.reflection.ProjectionFound;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
+
+import static java.util.Optional.ofNullable;
+
+enum ReflectionRepositorySupplier {
+
+    INSTANCE;
+    private static final Logger LOGGER = Logger.getLogger(ReflectionRepositorySupplier.class.getName());
+
+    public RepositoryMetadata apply(Class<?> type) {
+        return apply(type, null);
+    }
+
+    public RepositoryMetadata apply(Class<?> type, Consumer<ProjectionFound> projectionFoundConsumer) {
+        Objects.requireNonNull(type, "type is required");
+        if (!type.isInterface()) {
+            throw new IllegalArgumentException("The repository type " + type.getName() + " is not an interface");
+        }
+        Class<?> entity = findEntity(type.getGenericInterfaces());
+        var declaredMethods = declaredRepositoryMethods(type);
+        List<RepositoryMethod> methods = new ArrayList<>(declaredMethods.size());
+        Map<Method, RepositoryMethod> methodByMethodReflection = new HashMap<>(declaredMethods.size());
+        for (Method method : declaredMethods) {
+            RepositoryMethod repositoryMethod = to(method, projectionFoundConsumer);
+            methods.add(repositoryMethod);
+            methodByMethodReflection.put(method, repositoryMethod);
+        }
+        if (entity == null) {
+            LOGGER.finest(() -> "The repository " + type.getName() + " is a custom repository checking methods");
+            entity = findEntityByMethods(methods);
+        }
+        LOGGER.finest(() -> "The repository " + type.getName() + " has " + methods.size() + " methods");
+        return new ReflectionRepositoryMetadata(type, entity, methods, methodByMethodReflection);
+    }
+
+    private Class<?> findEntityByMethods(List<RepositoryMethod> methods) {
+        for (RepositoryMethod method : methods) {
+            switch (method.type()) {
+                case SAVE, INSERT, UPDATE, DELETE -> {
+                    if (!method.params().isEmpty()) {
+                        RepositoryParam param = method.params().getFirst();
+                        Optional<Class<?>> elementType = param.elementType().filter(m -> m.getAnnotation(Entity.class) != null);
+                        if (param.type().getAnnotation(Entity.class) != null) {
+                            return param.type();
+                        } else if (elementType.isPresent()) {
+                            return elementType.orElseThrow();
+                        }
+                    }
+                }
+                case FIND_BY, FIND_ALL, CURSOR_PAGINATION, PARAMETER_BASED -> {
+                    var returnType = method.returnType().filter(m -> m.getAnnotation(Entity.class) != null);
+                    var elementType = method.elementType().filter(m -> m.getAnnotation(Entity.class) != null);
+                    var findType = method.find().filter(m -> m.getAnnotation(Entity.class) != null);
+                    if (returnType.isPresent()) {
+                        return returnType.orElseThrow();
+                    } else if (elementType.isPresent()) {
+                        return elementType.orElseThrow();
+                    } else if (findType.isPresent()) {
+                        return findType.orElseThrow();
+                    }
+                }
+                default ->
+                        LOGGER.finest(() -> "The repository method " + method.name() + " could you not be used to find the entity");
+            }
+        }
+        return null;
+    }
+
+
+    private RepositoryMethod to(Method method, Consumer<ProjectionFound> projectionFoundConsumer) {
+
+        String name = method.getName();
+        String queryValue = ofNullable(method.getAnnotation(Query.class))
+                .map(Query::value).orElse(null);
+        Integer firstValue = ofNullable(method.getAnnotation(First.class))
+                .map(First::value).orElse(null);
+        Class<?> findValue = ofNullable(method.getAnnotation(Find.class))
+                .map(Find::value).orElse(null);
+        Class<?> returnTypeValue = method.getReturnType();
+        Class<?> elementTypeValue = getElementTypeValue(method);
+        if (projectionFoundConsumer != null) {
+            checkProjectionFound(returnTypeValue, projectionFoundConsumer);
+            checkProjectionFound(elementTypeValue, projectionFoundConsumer);
+        }
+
+        List<RepositoryParam> params = to(method.getParameters());
+
+        List<Sort<?>> sorts = to(method.getAnnotationsByType(OrderBy.class));
+        List<String> select = Arrays.stream(method.getDeclaredAnnotationsByType(Select.class))
+                .map(Select::value)
+                .toList();
+
+        List<RepositoryAnnotation> annotations = Arrays.stream(method.getAnnotations())
+                .map(this::toAnnotation)
+                .distinct()
+                .toList();
+
+        boolean isProviderQuery = annotations.stream()
+                .anyMatch(RepositoryAnnotation::isProviderAnnotation);
+        RepositoryMethodType type = getRepositoryMethodType(method, isProviderQuery);
+
+        return new ReflectionRepositoryMethod(name,
+                type,
+                queryValue,
+                firstValue,
+                returnTypeValue,
+                elementTypeValue,
+                findValue,
+                params,
+                sorts,
+                select,
+                annotations);
+    }
+
+    /**
+     * Verifies if the record does not have the {@link Projection} annotation, in this case, it will accepted as
+     * projection, because of the Jakarta Data spec
+     *
+     * @param type                    the type
+     * @param projectionFoundConsumer the consumer to be called
+     */
+    private void checkProjectionFound(Class<?> type, Consumer<ProjectionFound> projectionFoundConsumer) {
+        if (type != null && type.isRecord() && type.getAnnotation(Projection.class) == null) {
+            projectionFoundConsumer.accept(new ProjectionFound(type));
+        }
+
+    }
+
+    private static Class<?> getElementTypeValue(Method method) {
+        if (method.getGenericReturnType() instanceof ParameterizedType parameterizedType) {
+            Type[] arguments = parameterizedType.getActualTypeArguments();
+            if (arguments.length > 0 && arguments[0] instanceof Class<?>) {
+                return (Class<?>) arguments[0];
+            }
+        }
+        Class<?> returnType = method.getReturnType();
+        if (returnType.isArray()) {
+            return returnType.getComponentType();
+        }
+        return null;
+    }
+
+    private List<Sort<?>> to(OrderBy[] orderBys) {
+        List<Sort<?>> sorts = new ArrayList<>(orderBys.length);
+        for (OrderBy orderBy : orderBys) {
+            sorts.add(new Sort<>(orderBy.value(), !orderBy.descending(), orderBy.ignoreCase()));
+        }
+        return sorts;
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private List<RepositoryParam> to(Parameter[] parameters) {
+        List<RepositoryParam> params = new ArrayList<>(parameters.length);
+        for (Parameter parameter : parameters) {
+            Class<? extends Constraint<?>> isValue = (Class<? extends Constraint<?>>) ofNullable(parameter
+                    .getAnnotation(Is.class))
+                    .map(Is::value)
+                    .orElse(null);
+            String param = ofNullable(parameter.getAnnotation(Param.class))
+                    .map(Param::value)
+                    .orElse(parameter.getName());
+            String name = parameter.getName();
+            String by = ofNullable(parameter.getAnnotation(By.class))
+                    .map(By::value)
+                    .orElse(parameter.getName());
+            Class<?> type = parameter.getType();
+            Class<?> elementType = null;
+            if (parameter.getParameterizedType() instanceof ParameterizedType parameterizedType
+            && parameterizedType.getActualTypeArguments()[0] instanceof Class<?>) {
+                elementType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
+            }
+            if (parameter.getType().isArray()) {
+                elementType = parameter.getType().getComponentType();
+            }
+            params.add(new ReflectionRepositoryParam(isValue, name, param, by, type, elementType));
+        }
+        return params;
+    }
+
+    private Class<?> findEntity(Type[] genericInterfaces) {
+        for (Type genericInterface : genericInterfaces) {
+            if (genericInterface instanceof ParameterizedType parameterizedType) {
+                Type[] arguments = parameterizedType.getActualTypeArguments();
+                if (arguments.length > 0) {
+                    Type entityType = arguments[0];
+                    if (entityType instanceof Class<?> entity) {
+                        return entity;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private RepositoryAnnotation toAnnotation(java.lang.annotation.Annotation annotation) {
+        Class<?> annotationType = annotation.annotationType();
+        Map<String, Object> attributes = new HashMap<>();
+        Arrays.stream(annotationType.getDeclaredMethods()).forEach(method -> {
+            try {
+                Object value = method.invoke(annotation);
+                attributes.put(method.getName(), value);
+            } catch (Exception e) {
+                throw new IllegalStateException("Could not retrieve the attribute " + method.getName() +
+                        " from the annotation " + annotationType.getName(), e);
+            }
+        });
+        boolean isProviderAnnotation = annotationType.isAnnotationPresent(ProviderQuery.class);
+        var providerValue = ofNullable(annotationType.getAnnotation(ProviderQuery.class))
+                .map(ProviderQuery::value)
+                .orElse(null);
+        return new ReflectionRepositoryAnnotation(annotationType, attributes, isProviderAnnotation, providerValue);
+    }
+
+    private static RepositoryMethodType getRepositoryMethodType(Method method, boolean isProviderQuery) {
+        RepositoryMethodType type;
+        if (isProviderQuery) {
+            type = RepositoryMethodType.PROVIDER_OPERATION;
+        } else {
+            type = RepositoryMethodTypeConverter.of(method);
+        }
+        return type;
+    }
+
+    private static List<Method> declaredRepositoryMethods(Class<?> repositoryType) {
+
+        List<Method> methods = new ArrayList<>();
+        Collections.addAll(methods, repositoryType.getDeclaredMethods());
+
+        for (var component : collectUserInterfaces(repositoryType)) {
+            Collections.addAll(methods, component.getDeclaredMethods());
+        }
+
+        methods.removeIf(method -> method.getDeclaringClass() == Object.class);
+        return methods;
+    }
+
+    private static Set<Class<?>> collectUserInterfaces(Class<?> type) {
+        Set<Class<?>> result = new HashSet<>();
+        collect(type, result);
+        return result;
+    }
+
+    private static void collect(Class<?> type, Set<Class<?>> result) {
+        for (Class<?> componentType : type.getInterfaces()) {
+
+            if (result.add(componentType)) {
+                collect(componentType, result);
+            }
+        }
+    }
+}
