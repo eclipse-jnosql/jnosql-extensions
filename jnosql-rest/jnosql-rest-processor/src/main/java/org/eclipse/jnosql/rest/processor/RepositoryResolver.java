@@ -18,14 +18,19 @@ import org.eclipse.jnosql.rest.RestDTO;
 import org.eclipse.jnosql.rest.RestRepository;
 
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -38,10 +43,16 @@ final class RepositoryResolver {
     private static final String DATA_REPOSITORY = "jakarta.data.repository.DataRepository";
     private static final String BASIC_REPOSITORY = "jakarta.data.repository.BasicRepository";
 
+    private static final Set<String> WRAPPERS = Set.of("java.util.List", "java.util.Set", "java.util.Collection",
+            "java.util.Optional", "java.util.stream.Stream", "jakarta.data.page.Page",
+            "jakarta.data.page.CursoredPage");
+
+    private final Elements elements;
     private final Types types;
     private final Diagnostics diagnostics;
 
-    RepositoryResolver(Types types, Diagnostics diagnostics) {
+    RepositoryResolver(Elements elements, Types types, Diagnostics diagnostics) {
+        this.elements = elements;
         this.types = types;
         this.diagnostics = diagnostics;
     }
@@ -62,15 +73,17 @@ final class RepositoryResolver {
             diagnostics.error(element, "@RestRepository.path of " + element.getSimpleName() + " must not be blank.");
         }
         DeclaredType dataRepository = findSupertype(element.asType(), DATA_REPOSITORY);
-        if (dataRepository == null || dataRepository.getTypeArguments().size() != 2) {
-            diagnostics.error(element, element.getSimpleName() + " must extend BasicRepository, CrudRepository or "
-                    + "DataRepository with explicit type arguments so the entity and identifier types can be resolved.");
+        if (dataRepository != null && dataRepository.getTypeArguments().size() != 2) {
+            diagnostics.error(element, element.getSimpleName() + " must declare explicit type arguments when "
+                    + "extending BasicRepository, CrudRepository or DataRepository.");
             return Optional.empty();
         }
+        TypeMirror entity = dataRepository == null ? inferEntity(element) : dataRepository.getTypeArguments().get(0);
+        TypeMirror id = dataRepository == null ? elements.getTypeElement("java.lang.Object").asType()
+                : dataRepository.getTypeArguments().get(1);
         if (diagnostics.errorCount() > errorsBefore) {
             return Optional.empty();
         }
-        TypeMirror entity = dataRepository.getTypeArguments().get(0);
         if (entity.getKind() != TypeKind.DECLARED) {
             diagnostics.error(element, "The entity type of " + element.getSimpleName() + " must be a class or record.");
             return Optional.empty();
@@ -81,8 +94,41 @@ final class RepositoryResolver {
                 : EnumSet.copyOf(Arrays.asList(rest.exclude()));
         List<String> exclusions = dto == null ? List.of() : List.of(dto.exclude());
         return Optional.of(new RepositoryInfo(element, (DeclaredType) element.asType(), entity,
-                dataRepository.getTypeArguments().get(1), findSupertype(element.asType(), BASIC_REPOSITORY) != null,
+                id, findSupertype(element.asType(), BASIC_REPOSITORY) != null,
                 normalizePath(rest.path()), rest.exposure(), excluded, dto != null, exclusions));
+    }
+
+    private TypeMirror inferEntity(TypeElement element) {
+        Map<String, TypeMirror> candidates = new LinkedHashMap<>();
+        for (ExecutableElement method : ElementFilter.methodsIn(elements.getAllMembers(element))) {
+            if (method.getEnclosingElement().toString().equals("java.lang.Object")) {
+                continue;
+            }
+            candidate(method.getReturnType(), candidates);
+            method.getParameters().forEach(parameter -> candidate(parameter.asType(), candidates));
+        }
+        if (candidates.size() != 1) {
+            diagnostics.error(element, "The entity of " + element.getSimpleName() + " cannot be inferred ("
+                    + (candidates.isEmpty() ? "no method uses an entity type" : "candidates: " + candidates.keySet())
+                    + "). Extend BasicRepository or CrudRepository, or make every method use a single entity type.");
+            return null;
+        }
+        return candidates.values().iterator().next();
+    }
+
+    private void candidate(TypeMirror type, Map<String, TypeMirror> candidates) {
+        if (type.getKind() != TypeKind.DECLARED) {
+            return;
+        }
+        DeclaredType declared = (DeclaredType) type;
+        TypeElement owner = (TypeElement) declared.asElement();
+        String name = owner.getQualifiedName().toString();
+        if (WRAPPERS.contains(name) && declared.getTypeArguments().size() == 1) {
+            candidate(declared.getTypeArguments().get(0), candidates);
+        } else if (!ScalarTypes.isScalar(type) && !name.startsWith("java.") && !name.startsWith("jakarta.data.")
+                && !name.startsWith("jakarta.nosql.") && declared.getTypeArguments().isEmpty()) {
+            candidates.putIfAbsent(name, type);
+        }
     }
 
     private static String normalizePath(String path) {
