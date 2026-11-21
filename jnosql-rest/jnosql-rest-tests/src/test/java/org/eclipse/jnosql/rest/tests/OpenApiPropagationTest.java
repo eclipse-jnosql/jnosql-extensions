@@ -14,8 +14,8 @@
  */
 package org.eclipse.jnosql.rest.tests;
 
-import org.eclipse.jnosql.rest.tests.sample.CustomerRepositoryRepository;
-import org.eclipse.jnosql.rest.tests.sample.ProductRepositoryRepository;
+import org.eclipse.jnosql.rest.tests.sample.CustomerRepositoryResource;
+import org.eclipse.jnosql.rest.tests.sample.ProductRepositoryResource;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OpenApiPropagationTest {
 
     private Method findByCategory() {
-        return Arrays.stream(ProductRepositoryRepository.class.getDeclaredMethods())
+        return Arrays.stream(ProductRepositoryResource.class.getDeclaredMethods())
                 .filter(method -> method.getName().equals("findByCategory")).findFirst().orElseThrow();
     }
 
@@ -45,7 +45,7 @@ class OpenApiPropagationTest {
         @Test
         @DisplayName("Should copy the repository @Tag to the resource class")
         void shouldCopyTheTag() {
-            Tag tag = ProductRepositoryRepository.class.getAnnotation(Tag.class);
+            Tag tag = ProductRepositoryResource.class.getAnnotation(Tag.class);
 
             assertThat(tag).isNotNull();
             assertThat(tag.name()).isEqualTo("Products");
@@ -88,15 +88,15 @@ class OpenApiPropagationTest {
         @Test
         @DisplayName("Should not invent OpenAPI annotations")
         void shouldNotInventAnnotations() {
-            assertThat(CustomerRepositoryRepository.class.getAnnotation(Tag.class)).isNull();
-            assertThat(Arrays.stream(CustomerRepositoryRepository.class.getDeclaredMethods()))
+            assertThat(CustomerRepositoryResource.class.getAnnotation(Tag.class)).isNull();
+            assertThat(Arrays.stream(CustomerRepositoryResource.class.getDeclaredMethods()))
                     .noneMatch(method -> method.isAnnotationPresent(Operation.class));
         }
 
         @Test
         @DisplayName("Should return the generated DTO type so MicroProfile OpenAPI can infer its schema")
         void shouldExposeDtoTypesInSignatures() throws Exception {
-            Method method = Arrays.stream(CustomerRepositoryRepository.class.getDeclaredMethods())
+            Method method = Arrays.stream(CustomerRepositoryResource.class.getDeclaredMethods())
                     .filter(candidate -> candidate.getName().equals("findById")).findFirst().orElseThrow();
 
             assertThat(method.getReturnType().getSimpleName()).isEqualTo("CustomerDTO");
