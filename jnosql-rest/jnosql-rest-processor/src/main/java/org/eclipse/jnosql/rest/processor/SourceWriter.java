@@ -32,6 +32,7 @@ final class SourceWriter {
     private final Mustache resource;
     private final Mustache record;
     private final Mustache mapper;
+    private final Mustache search;
     private final Filer filer;
 
     SourceWriter(Filer filer) {
@@ -39,6 +40,7 @@ final class SourceWriter {
         this.resource = factory.compile("rest-resource.mustache");
         this.record = factory.compile("rest-dto-record.mustache");
         this.mapper = factory.compile("rest-mapper.mustache");
+        this.search = factory.compile("rest-search-request.mustache");
         this.filer = filer;
     }
 
@@ -52,6 +54,10 @@ final class SourceWriter {
 
     void write(MapperSpec spec) throws IOException {
         render(mapper, spec, spec.qualifiedName(), spec.origin());
+    }
+
+    void write(SearchSpec spec) throws IOException {
+        render(search, spec, spec.qualifiedName(), spec.origin());
     }
 
     private void render(Mustache template, Object model, String qualifiedName, Element origin) throws IOException {
