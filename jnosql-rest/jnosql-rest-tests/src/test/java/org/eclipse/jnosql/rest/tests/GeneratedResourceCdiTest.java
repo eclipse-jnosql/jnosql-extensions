@@ -14,6 +14,9 @@
  */
 package org.eclipse.jnosql.rest.tests;
 
+import jakarta.data.Order;
+import jakarta.data.page.Page;
+import jakarta.data.page.PageRequest;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.spi.Bean;
@@ -87,6 +90,14 @@ class GeneratedResourceCdiTest {
 
     private CustomerRepositoryResource customers() {
         return weld.select(CustomerRepositoryResource.class).get();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Page<T> pageOf(List<T> content) {
+        Page<T> page = Mockito.mock(Page.class);
+        when(page.content()).thenReturn(content);
+        when(page.pageRequest()).thenReturn(PageRequest.ofPage(1, 20, false));
+        return page;
     }
 
     @Nested
@@ -169,14 +180,15 @@ class GeneratedResourceCdiTest {
         }
 
         @Test
-        @DisplayName("Should return every entity and close the stream")
+        @DisplayName("Should delegate the root collection to the paginated findAll")
         void shouldFindAll() {
             Product product = new Product();
-            boolean[] closed = {false};
-            when(PRODUCTS.findAll()).thenReturn(Stream.of(product).onClose(() -> closed[0] = true));
+            when(PRODUCTS.findAll(Mockito.any(PageRequest.class), Mockito.<Order<Product>>any()))
+                    .thenAnswer(call -> pageOf(List.of(product)));
 
-            assertThat(products().findAll()).containsExactly(product);
-            assertThat(closed[0]).isTrue();
+            assertThat(products().findAll(null, null, null, null).content()).containsExactly(product);
+            verify(PRODUCTS).findAll(PageRequest.ofPage(1, 20, false), Order.by());
+            verify(PRODUCTS, Mockito.never()).findAll();
         }
 
         @Test
@@ -297,10 +309,11 @@ class GeneratedResourceCdiTest {
         @DisplayName("Should map collections of entities")
         void shouldMapLists() {
             when(CUSTOMERS.findByName("Ada")).thenReturn(List.of(customer()));
-            when(CUSTOMERS.findAll()).thenReturn(Stream.of(customer()));
+            when(CUSTOMERS.findAll(Mockito.any(PageRequest.class), Mockito.<Order<Customer>>any()))
+                    .thenAnswer(call -> pageOf(List.of(customer())));
 
             assertThat(customers().findByName("Ada")).extracting("name").containsExactly("Ada");
-            assertThat(customers().findAll()).hasSize(1);
+            assertThat(customers().findAll(null, null, null, null).content()).hasSize(1);
         }
 
         @Test
