@@ -150,7 +150,7 @@ public class RestProcessor extends AbstractProcessor {
         AnnotationSource source = new AnnotationSource(imports);
         openApi.forType(repository.element()).forEach(mirror -> annotations.add(source.write(mirror)));
         imports.name("jakarta.inject.Inject");
-        String className = repository.element().getSimpleName() + "Repository";
+        String className = repository.element().getSimpleName() + "Resource";
         List<String> parameters = new ArrayList<>();
         for (Dependency dependency : dependencies) {
             parameters.add(dependency.type() + " " + dependency.name());
