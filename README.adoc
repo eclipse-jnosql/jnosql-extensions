@@ -216,6 +216,47 @@ The generated resource uses CDI to inject the repository and MapStruct to map en
 For configuration, supported operations, dynamic searches, pagination, and advanced customization, explore the link:jnosql-rest/README.adoc[JNoSQL REST documentation].
 
 
+=== Installation
+
+To enable JNoSQL REST, add the REST API dependency and configure the annotation processor in your Maven project.
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.eclipse.jnosql.rest</groupId>
+    <artifactId>jnosql-rest-api</artifactId>
+    <version>${jnosql.version}</version>
+</dependency>
+----
+
+Configure the Maven Compiler Plugin to generate Jakarta REST resources at compile time:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.eclipse.jnosql.rest</groupId>
+                <artifactId>jnosql-rest-processor</artifactId>
+                <version>${jnosql.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+----
+
+For DTO generation with `@RestDTO`, also include the MapStruct API dependency and its annotation processor. JNoSQL REST generates mapper interfaces, while MapStruct generates their CDI-managed implementations.
+
+Eclipse MicroProfile OpenAPI integration is optional. When available, JNoSQL REST propagates supported OpenAPI annotations from repository interfaces and methods to the generated REST resources.
+
+The application must also provide a Jakarta REST runtime, a CDI implementation, and a Jakarta Data repository provider.
+
+For complete Maven configuration, including MapStruct and optional MicroProfile OpenAPI, see the link:jnosql-rest/README.adoc[JNoSQL REST documentation].
+
+
 == Bean Validation
 
 Eclipse JNoSQL provide support for bean validation. It will validate before inserting/updating and constructing an entity.
