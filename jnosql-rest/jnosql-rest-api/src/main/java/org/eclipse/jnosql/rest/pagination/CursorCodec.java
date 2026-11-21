@@ -73,18 +73,26 @@ public final class CursorCodec {
      * @param request the navigation request
      * @param context the query context the token is bound to
      * @return the token
-     * @throws IllegalStateException if the request holds no cursor or a key of an unsupported type
+     * @throws IllegalStateException if the request holds no cursor, a key of an unsupported type, more than eight
+     *                               keys or a token longer than {@value #MAX_TOKEN_LENGTH} characters
      */
     public static String encode(PageRequest request, String context) {
         PageRequest.Cursor cursor = request.cursor()
                 .orElseThrow(() -> new IllegalStateException("The page request carries no cursor"));
         boolean previous = request.mode() == PageRequest.Mode.CURSOR_PREVIOUS;
+        if (cursor.elements().size() > MAX_KEYS) {
+            throw new IllegalStateException("The cursor has more than " + MAX_KEYS + " keys");
+        }
         StringBuilder text = new StringBuilder(VERSION).append(';').append(previous ? 'P' : 'N').append(';')
                 .append(hash(context));
         for (Object key : cursor.elements()) {
             text.append(';').append(tag(key)).append('~').append(encodeText(String.valueOf(key)));
         }
-        return ENCODER.encodeToString(text.toString().getBytes(StandardCharsets.UTF_8));
+        String token = ENCODER.encodeToString(text.toString().getBytes(StandardCharsets.UTF_8));
+        if (token.length() > MAX_TOKEN_LENGTH) {
+            throw new IllegalStateException("The cursor token exceeds " + MAX_TOKEN_LENGTH + " characters");
+        }
+        return token;
     }
 
     /**
