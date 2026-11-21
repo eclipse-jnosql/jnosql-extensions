@@ -139,7 +139,16 @@ public final class Pagination {
      * @return the context
      */
     public static String context(String operation, Object... values) {
-        return operation + "|" + Arrays.stream(values).map(String::valueOf).collect(Collectors.joining("|"));
+        return operation + Arrays.stream(values).map(Pagination::describe)
+                .collect(Collectors.joining("", "|", ""));
+    }
+
+    private static String describe(Object value) {
+        if (value == null) {
+            return "(null)";
+        }
+        String text = value.toString();
+        return "(" + value.getClass().getName() + ":" + text.length() + ":" + text + ")";
     }
 
     private static int size(Integer size) {
