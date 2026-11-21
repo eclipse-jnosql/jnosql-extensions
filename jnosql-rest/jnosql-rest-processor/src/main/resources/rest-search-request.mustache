@@ -11,7 +11,8 @@ public record {{name}}(
 {{#attributes}}
         {{filterType}} {{name}},
 {{/attributes}}
-        List<{{name}}> or
+        List<{{name}}> or{{#paginated}},
+        PaginationRequest pagination{{/paginated}}
 ) {
 
 {{#attributes}}
@@ -33,6 +34,17 @@ public record {{name}}(
         return restrictions.size() == 1 ? restrictions.get(0) : Restrict.all(restrictions);
     }
 
+{{#paginated}}
+    /**
+     * Describes the criteria without the pagination, so continuation tokens stay bound to one query.
+     *
+     * @return the criteria
+     */
+    public String criteria() {
+        return new {{requestName}}({{#attributes}}{{name}}, {{/attributes}}or, null).toString();
+    }
+
+{{/paginated}}
     private void collect(List<Restriction<{{{entityType}}}>> restrictions) {
 {{#attributes}}
         if ({{name}} != null) {
