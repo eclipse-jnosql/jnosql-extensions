@@ -25,7 +25,7 @@ public interface ProductRepository extends CrudRepository<Product, UUID> {
 }
 ----
 
-The processor generates `ProductRepositoryRepository` (`<RepositoryName>Repository`, same package) with `@Path`,
+The processor generates `ProductRepositoryResource` (`<RepositoryName>Resource`, same package) with `@Path`,
 `@RequestScoped`, final dependency fields, a package-private no-argument constructor that sets every dependency to
 `null`, and a public `@Inject` constructor.
 
