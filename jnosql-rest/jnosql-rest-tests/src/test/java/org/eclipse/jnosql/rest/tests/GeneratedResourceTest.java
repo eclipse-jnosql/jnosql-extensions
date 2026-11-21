@@ -28,9 +28,9 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.jnosql.rest.tests.sample.CustomerDTOMapper;
 import org.eclipse.jnosql.rest.tests.sample.CustomerRepository;
-import org.eclipse.jnosql.rest.tests.sample.CustomerRepositoryRepository;
+import org.eclipse.jnosql.rest.tests.sample.CustomerRepositoryResource;
 import org.eclipse.jnosql.rest.tests.sample.ProductRepository;
-import org.eclipse.jnosql.rest.tests.sample.ProductRepositoryRepository;
+import org.eclipse.jnosql.rest.tests.sample.ProductRepositoryResource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -64,7 +64,7 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should use the repository path, JSON media types and the request scope")
         void shouldDeclareResourceAnnotations() {
-            Class<?> resource = ProductRepositoryRepository.class;
+            Class<?> resource = ProductRepositoryResource.class;
 
             assertThat(resource.getAnnotation(Path.class).value()).isEqualTo("/products");
             assertThat(resource.getAnnotation(Produces.class).value()).containsExactly(MediaType.APPLICATION_JSON);
@@ -75,8 +75,8 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should be a public class named after the repository")
         void shouldBePublicAndNamedAfterTheRepository() {
-            assertThat(Modifier.isPublic(ProductRepositoryRepository.class.getModifiers())).isTrue();
-            assertThat(ProductRepositoryRepository.class.getSimpleName()).isEqualTo("ProductRepositoryRepository");
+            assertThat(Modifier.isPublic(ProductRepositoryResource.class.getModifiers())).isTrue();
+            assertThat(ProductRepositoryResource.class.getSimpleName()).isEqualTo("ProductRepositoryResource");
         }
     }
 
@@ -87,7 +87,7 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should map findById to GET /{id}")
         void shouldMapFindById() {
-            Method method = method(ProductRepositoryRepository.class, "findById");
+            Method method = method(ProductRepositoryResource.class, "findById");
 
             assertThat(method.isAnnotationPresent(GET.class)).isTrue();
             assertThat(method.getAnnotation(Path.class).value()).isEqualTo("/{id}");
@@ -98,7 +98,7 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should map findAll to GET on the resource root")
         void shouldMapFindAll() {
-            Method method = method(ProductRepositoryRepository.class, "findAll");
+            Method method = method(ProductRepositoryResource.class, "findAll");
 
             assertThat(method.isAnnotationPresent(GET.class)).isTrue();
             assertThat(method.isAnnotationPresent(Path.class)).isFalse();
@@ -107,7 +107,7 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should map insert to POST with a response")
         void shouldMapInsert() {
-            Method method = method(ProductRepositoryRepository.class, "insert");
+            Method method = method(ProductRepositoryResource.class, "insert");
 
             assertThat(method.isAnnotationPresent(POST.class)).isTrue();
         }
@@ -115,8 +115,8 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should map update to PUT and deleteById to DELETE")
         void shouldMapUpdateAndDelete() {
-            assertThat(method(ProductRepositoryRepository.class, "update").isAnnotationPresent(PUT.class)).isTrue();
-            assertThat(method(ProductRepositoryRepository.class, "deleteById")
+            assertThat(method(ProductRepositoryResource.class, "update").isAnnotationPresent(PUT.class)).isTrue();
+            assertThat(method(ProductRepositoryResource.class, "deleteById")
                     .isAnnotationPresent(DELETE.class)).isTrue();
         }
     }
@@ -128,7 +128,7 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should expose a @Find method as GET with a query parameter")
         void shouldMapFindMethod() {
-            Method method = method(ProductRepositoryRepository.class, "findByCategory");
+            Method method = method(ProductRepositoryResource.class, "findByCategory");
 
             assertThat(method.isAnnotationPresent(GET.class)).isTrue();
             assertThat(method.getAnnotation(Path.class).value()).isEqualTo("/findByCategory");
@@ -140,16 +140,16 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should expose count and exists queries as GET with scalar results")
         void shouldMapCountAndExists() {
-            assertThat(method(ProductRepositoryRepository.class, "countByCategory").getReturnType())
+            assertThat(method(ProductRepositoryResource.class, "countByCategory").getReturnType())
                     .isEqualTo(long.class);
-            assertThat(method(ProductRepositoryRepository.class, "existsByName").getReturnType())
+            assertThat(method(ProductRepositoryResource.class, "existsByName").getReturnType())
                     .isEqualTo(boolean.class);
         }
 
         @Test
         @DisplayName("Should expose deleteBy only through @RestExpose with the custom path and DELETE")
         void shouldMapExplicitDeleteQuery() {
-            Method method = method(ProductRepositoryRepository.class, "deleteByCategory");
+            Method method = method(ProductRepositoryResource.class, "deleteByCategory");
 
             assertThat(method.isAnnotationPresent(DELETE.class)).isTrue();
             assertThat(method.getAnnotation(Path.class).value()).isEqualTo("/purge/{category}");
@@ -159,7 +159,7 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should not expose mutating queries without @RestExpose nor excluded methods")
         void shouldSkipUnexposedMethods() {
-            List<String> names = Arrays.stream(ProductRepositoryRepository.class.getDeclaredMethods())
+            List<String> names = Arrays.stream(ProductRepositoryResource.class.getDeclaredMethods())
                     .map(Method::getName).toList();
 
             assertThat(names).doesNotContain("purgeQuery", "findByNameLike");
@@ -171,7 +171,7 @@ class GeneratedResourceTest {
     class WhenTheConstructorsAreInspected {
 
         @ParameterizedTest(name = "{0}")
-        @ValueSource(classes = {ProductRepositoryRepository.class, CustomerRepositoryRepository.class})
+        @ValueSource(classes = {ProductRepositoryResource.class, CustomerRepositoryResource.class})
         @DisplayName("Should declare a package-private no-argument constructor")
         void shouldDeclarePackagePrivateNoArgumentConstructor(Class<?> resource) throws Exception {
             Constructor<?> constructor = resource.getDeclaredConstructor();
@@ -184,7 +184,7 @@ class GeneratedResourceTest {
         }
 
         @ParameterizedTest(name = "{0}")
-        @ValueSource(classes = {ProductRepositoryRepository.class, CustomerRepositoryRepository.class})
+        @ValueSource(classes = {ProductRepositoryResource.class, CustomerRepositoryResource.class})
         @DisplayName("Should initialize every dependency field to null in the no-argument constructor")
         void shouldInitializeDependenciesToNull(Class<?> resource) throws Exception {
             Constructor<?> constructor = resource.getDeclaredConstructor();
@@ -198,7 +198,7 @@ class GeneratedResourceTest {
         }
 
         @ParameterizedTest(name = "{0}")
-        @ValueSource(classes = {ProductRepositoryRepository.class, CustomerRepositoryRepository.class})
+        @ValueSource(classes = {ProductRepositoryResource.class, CustomerRepositoryResource.class})
         @DisplayName("Should declare exactly one public @Inject constructor")
         void shouldDeclareOnePublicInjectConstructor(Class<?> resource) {
             List<Constructor<?>> injected = Arrays.stream(resource.getDeclaredConstructors())
@@ -209,7 +209,7 @@ class GeneratedResourceTest {
         }
 
         @ParameterizedTest(name = "{0}")
-        @ValueSource(classes = {ProductRepositoryRepository.class, CustomerRepositoryRepository.class})
+        @ValueSource(classes = {ProductRepositoryResource.class, CustomerRepositoryResource.class})
         @DisplayName("Should declare only final dependency fields and no setters")
         void shouldDeclareFinalFields(Class<?> resource) {
             assertThat(resource.getDeclaredFields()).isNotEmpty()
@@ -224,17 +224,17 @@ class GeneratedResourceTest {
         @Test
         @DisplayName("Should inject only the repository when DTOs are not used")
         void shouldInjectOnlyTheRepository() {
-            Constructor<?> constructor = Arrays.stream(ProductRepositoryRepository.class.getConstructors())
+            Constructor<?> constructor = Arrays.stream(ProductRepositoryResource.class.getConstructors())
                     .findFirst().orElseThrow();
 
             assertThat(constructor.getParameterTypes()).containsExactly(ProductRepository.class);
-            assertThat(ProductRepositoryRepository.class.getDeclaredFields()).hasSize(1);
+            assertThat(ProductRepositoryResource.class.getDeclaredFields()).hasSize(1);
         }
 
         @Test
         @DisplayName("Should inject the repository and the mapper interface when DTOs are used")
         void shouldInjectRepositoryAndMapper() {
-            Constructor<?> constructor = Arrays.stream(CustomerRepositoryRepository.class.getConstructors())
+            Constructor<?> constructor = Arrays.stream(CustomerRepositoryResource.class.getConstructors())
                     .findFirst().orElseThrow();
 
             assertThat(constructor.getParameterTypes())
