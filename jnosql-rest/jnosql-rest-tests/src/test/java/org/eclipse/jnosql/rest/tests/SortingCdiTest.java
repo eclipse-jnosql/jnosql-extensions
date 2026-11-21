@@ -368,5 +368,17 @@ class SortingCdiTest {
                     List.of(new SortCriterion("title", "asc")), null))).isInstanceOf(BadRequestException.class);
             verifyNoInteractions(BOOKS);
         }
+
+        @Test
+        @DisplayName("Should reject an empty filter object instead of dropping it silently")
+        void shouldRejectEmptyFilter() {
+            BookRepositoryResource resource = resource();
+
+            assertThatThrownBy(() -> resource.search(new BookRepositorySearchRequest(null, null,
+                    new StringFilter("austen", null, null, null, null, null, null, null, null),
+                    new BookRepositorySearchRequest.IntegerFilter(null, null, null, null, null, null, null, null,
+                            null), null, null, null))).isInstanceOf(BadRequestException.class);
+            verifyNoInteractions(BOOKS);
+        }
     }
 }
