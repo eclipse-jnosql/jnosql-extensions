@@ -8,7 +8,7 @@ generates readable Java source from Mustache templates at compile time; there is
 
 [cols="1,3"]
 |===
-|`jnosql-rest-api` |Public annotations: `@RestRepository`, `@RestExpose`, `@RestExclude`, `@RestDTO`, `RestExposure`, `RestOperation`.
+|`jnosql-rest-api` |Public annotations: `@RestRepository`, `@RestExclude`, `@RestDTO`, `RestExposure`, `RestOperation`.
 |`jnosql-rest-processor` |Annotation processor, generation model and Mustache templates.
 |`jnosql-rest-tests` |Compilation, reflection, Weld/CDI and Mockito delegation tests.
 |===
@@ -42,28 +42,100 @@ Adding the MapStruct annotation artifact alone does not activate its processor:
 
 == Exposure
 
-* `RestExposure.ALL` (default): standard and declared methods are exposed. Mutating declared methods (`deleteBy*`,
-`@Delete` without an entity, `@Query` DELETE/UPDATE) are exposed only with `@RestExpose`.
-* `EXPLICIT`: only `@RestExpose` methods.
-* `NONE`: nothing is generated.
-* `@RestRepository(exclude = ...)` removes operation categories; `@RestExclude` removes one method.
-* `@RestExpose(path = "/x/{name}")` customizes the path; `{name}` binds to the parameter of the same name.
+Adding `@RestRepository` is enough; use standard Jakarta REST annotations only to customize.
 
-Contradictions (`@RestExpose` with `@RestExclude`, under `NONE`, on an excluded category, path collisions, blank paths)
-are compile errors.
+[cols="1,1,1,1"]
+|===
+|Policy |Ordinary method |Method with `@Path` |Method with `@RestExclude`
 
-== HTTP mapping
+|`ALL` (default) |Exposed |Exposed with the custom path |Excluded
+|`EXPLICIT` |Excluded |Exposed with the custom path |Excluded
+|`NONE` |Excluded |Excluded |Excluded
+|===
+
+* `@Path("")` (or `@Path("/")`) explicitly exposes the collection root, also under `EXPLICIT`.
+* `@RestExclude` always wins; `@Path` never bypasses it, and `NONE` ignores `@Path`.
+* Mutating declared methods (`deleteBy*`, `@Delete` without an entity, `@Query` DELETE/UPDATE) and `Restriction`
+searches are published only with a method-level `@Path`, even under `ALL`.
+* `@RestRepository(exclude = ...)` removes operation categories. A `@Path` on a method of an excluded category is a
+compile error.
+
+== Routing
+
+Precedence: explicit `@Path`, then a recognized canonical operation, then `GET|POST /<methodName>`.
+A declared `@Path` replaces the route entirely: the method name is never appended.
+
+[source,java]
+----
+@Repository
+@RestRepository(path = "/products")
+public interface ProductRepository extends BasicRepository<Product, UUID> {
+
+    @Find
+    List<Product> findByCategory(String category);               // GET /products/findByCategory?category=books
+
+    @Find
+    List<Product> find(String category, BigDecimal price);       // GET /products/find?category=books&price=100
+
+    @Find
+    @Path("/by-category")
+    List<Product> findByName(String name);                       // GET /products/by-category?name=...
+
+    @Find
+    @Path("/{category}")
+    List<Product> find(String category, BigDecimal price);       // GET /products/books?price=100
+}
+----
+
+Canonical routes are chosen from the repository's operation metadata, not from method names:
 
 [cols="1,2"]
 |===
-|`findById` |`GET /{id}`
-|`findAll(PageRequest, Order)` |`GET` (paginated and sortable, see <<Collection root>>)
-|`insert` |`POST` (201)
-|`update` |`PUT` (entity) or `PUT /{id}` (DTO mode)
-|`save` |`PUT /save`
-|`deleteById` |`DELETE /{id}`
-|`delete(entity)` |`DELETE /delete` (entity mode)
-|read, count, exists methods |`GET /methodName` with `@QueryParam`
+|Entity insertion |`POST /`
+|Entity update |`PUT /` (or `PUT /{id}` in DTO mode)
+|Primary-key lookup |`GET /{identifier}`
+|Primary-key deletion |`DELETE /{identifier}`
+|Paginated `findAll` |`GET /`
+|Any other finder |`GET /{methodName}`
+|`save`, entity `delete` |`PUT /save`, `DELETE /delete`
+|===
+
+The identifier variable is the entity's `@Id` attribute (`/{cnpj}` for a `Company` identified by `cnpj`). A custom
+`@Find` or `@Delete` is routed by identifier only when it is proven to use the primary key: a single parameter of the
+identifier type bound with `@By("id(this)")`, `@By` on the identifier attribute, or a parameter named after it, or a
+`findBy<Id>`/`deleteBy<Id>` name. Otherwise the method-based route is used.
+
+=== Parameter binding
+
+1. Explicit `@PathParam` or `@QueryParam`; the HTTP name is the annotation value.
+2. A Java parameter named like a URI template variable becomes a `@PathParam`.
+3. Every other scalar parameter becomes a `@QueryParam` named after the Java parameter.
+
+`PageRequest`, `Limit`, `Sort`, `Order` and `Restriction` keep their dedicated handling, and entity parameters stay
+request bodies. Jakarta Data `@By` is independent: it selects the attribute, never the HTTP name or location. A
+MicroProfile OpenAPI `@Parameter(in = ...)` contradicting the real location is a compile error.
+
+=== Compile-time validation
+
+The build fails on: invalid URI templates, repeated variables, template variables without a parameter, `@PathParam`
+outside the template, `@QueryParam` naming a path variable, both annotations on one parameter, other Jakarta REST
+binding annotations (`@HeaderParam`, `@BeanParam`, ...), repeated query names, collection parameters bound to the
+path, path variables on body operations, and routes with the same HTTP method and structurally equivalent template
+(`/{id}` and `/{category}` collide; routes differing only by query parameters or overloads collide too). Different HTTP
+methods on one route are valid.
+
+== Migration
+
+`@RestExpose` was removed (source-incompatible; no deprecation).
+
+[cols="1,1"]
+|===
+|Before |After
+|`@RestExpose(path = "/x")` |`@Path("/x")`
+|bare `@RestExpose` on an ordinary method |nothing under `ALL`; `@Path("/x")` under `EXPLICIT`
+|bare `@RestExpose` on a `Restriction` search or mutating query |`@Path("/search")`
+|`POST /insert`, `PUT` update |`POST /`, `PUT /`
+|`GET /findById?id=1`-style inherited lookups |`GET /{id}`
 |===
 
 == Repository types
@@ -76,7 +148,7 @@ no CRUD operation is invented. Methods inherited from intermediate interfaces ar
 == Dynamic search with `Restriction`
 
 A read-only method (`@Find`, count, exists) whose only parameter, besides an optional `PageRequest`, is `Restriction<Entity>` is published only with
-`@RestExpose`, as an HTTP `QUERY` endpoint taking a generated `<Repository>SearchRequest` body. Mutating methods with a
+a method-level `@Path`, as an HTTP `QUERY` endpoint taking a generated `<Repository>SearchRequest` body. Mutating methods with a
 `Restriction` are errors. `@RestExclude` always suppresses it.
 
 [source,json]
@@ -183,7 +255,7 @@ otherwise (`afterCursor` for next, `beforeCursor` for previous). Cursor response
 * *Ordering is mandatory and checked at compile time.* A cursor needs a total order, so the method must declare
 `@OrderBy` attributes (or `OrderBy` in the method name, or `ORDER BY` in a `@Query`) that include the entity identifier,
 the only attribute the processor can prove unique. Without it the method is skipped with a warning, or fails the build
-when it carries `@RestExpose`.
+when it carries `@Path`.
 * Treat `cursor` as opaque. It is `v1;N|P;<query hash>;<typed keys>` encoded as Base64URL (no padding, at most 1024
 characters and 8 keys). Key types: `String`, the integer and floating point types, `Boolean`, `BigDecimal`,
 `BigInteger`, `UUID` and the `java.time` `LocalDate`, `LocalDateTime`, `LocalTime`, `Instant`; other key types fail
@@ -203,7 +275,7 @@ A `Restriction` search may also take a `PageRequest` (in either order) and retur
 [source,java]
 ----
 @Find
-@RestExpose(path = "/search")
+@Path("/search")
 @OrderBy("name")
 @OrderBy("id")
 CursoredPage<Product> search(Restriction<Product> restriction, PageRequest pageRequest);
@@ -246,7 +318,7 @@ GET /products?offset=0&size=20&sort=name:asc,price:desc
 `@RestDTO` the content is mapped to the DTO.
 * The unbounded `findAll()` is never exposed, so there is no second root route and nothing is paginated or sorted in
 memory. A repository without a paginated `findAll` gets no collection root; a `findAll()` declared by the developer
-on a repository stays available only as the explicit `GET /findAll` method, unchanged.
+on a repository stays available as `GET /findAll`, unless it declares `@Path`.
 * Invalid `offset`, `size` or `sort` values answer `400 Bad Request` before the repository is called.
 
 == Limit
