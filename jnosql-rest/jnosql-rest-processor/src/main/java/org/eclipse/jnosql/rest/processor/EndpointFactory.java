@@ -634,11 +634,15 @@ final class EndpointFactory {
         if (!spec.path.isEmpty()) {
             annotations.add("@" + imports.name("jakarta.ws.rs.Path") + "(" + AnnotationSource.quote(spec.path) + ")");
         }
+        var completed = spec.createdType == null || !openApi.available() ? null : incompleteCreated(method);
         for (var mirror : openApi.forMethod(method)) {
-            annotations.add(annotationSource.write(mirror));
+            if (mirror != completed) {
+                annotations.add(annotationSource.write(mirror));
+            }
         }
-        if (spec.createdType != null && openApi.available() && !declaresResponses(method)) {
-            annotations.add(createdResponse(spec.createdType));
+        if (spec.createdType != null && openApi.available() && (completed != null || !declaresResponses(method))) {
+            annotations.add(createdResponse(spec.createdType, completed == null ? "Created"
+                    : memberValue(completed, "description").orElse("Created")));
         }
         String javadoc = "Handles {@code " + spec.http + " " + repository.path() + spec.path
                 + "} by delegating to {@link " + repositoryName() + "#" + method.getSimpleName() + "}.";
@@ -656,10 +660,29 @@ final class EndpointFactory {
                 || Annotations.has(method, "org.eclipse.microprofile.openapi.annotations.responses.APIResponses");
     }
 
-    private String createdResponse(String type) {
+    /** Finds a developer {@code @APIResponse(responseCode = "201")} that documents no body yet. */
+    private javax.lang.model.element.AnnotationMirror incompleteCreated(ExecutableElement method) {
+        for (var mirror : openApi.forMethod(method)) {
+            if (Annotations.qualifiedName(mirror).endsWith("responses.APIResponse")
+                    && memberValue(mirror, "responseCode").filter("201"::equals).isPresent()
+                    && memberValue(mirror, "content").isEmpty() && memberValue(mirror, "ref").isEmpty()) {
+                return mirror;
+            }
+        }
+        return null;
+    }
+
+    private static java.util.Optional<String> memberValue(javax.lang.model.element.AnnotationMirror mirror,
+                                                         String member) {
+        return mirror.getElementValues().entrySet().stream()
+                .filter(entry -> entry.getKey().getSimpleName().contentEquals(member))
+                .map(entry -> entry.getValue().getValue().toString()).findFirst();
+    }
+
+    private String createdResponse(String type, String description) {
         String base = "org.eclipse.microprofile.openapi.annotations.";
         return "@" + imports.name(base + "responses.APIResponse") + "(responseCode = \"201\", "
-                + "description = \"Created\", content = @" + imports.name(base + "media.Content")
+                + "description = " + AnnotationSource.quote(description) + ", content = @" + imports.name(base + "media.Content")
                 + "(mediaType = \"application/json\", schema = @" + imports.name(base + "media.Schema")
                 + "(implementation = " + type + ".class)))";
     }
