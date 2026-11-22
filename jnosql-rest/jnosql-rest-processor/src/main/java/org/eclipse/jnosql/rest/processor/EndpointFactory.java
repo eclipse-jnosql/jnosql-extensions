@@ -637,6 +637,9 @@ final class EndpointFactory {
         for (var mirror : openApi.forMethod(method)) {
             annotations.add(annotationSource.write(mirror));
         }
+        if (spec.createdType != null && openApi.available() && !declaresResponses(method)) {
+            annotations.add(createdResponse(spec.createdType));
+        }
         String javadoc = "Handles {@code " + spec.http + " " + repository.path() + spec.path
                 + "} by delegating to {@link " + repositoryName() + "#" + method.getSimpleName() + "}.";
         if (!spec.docs.isEmpty()) {
@@ -646,6 +649,19 @@ final class EndpointFactory {
         }
         methods.add(new MethodModel(javadoc, annotations, spec.returnType, spec.name, renderParameters(spec.parameters),
                 spec.body));
+    }
+
+    private static boolean declaresResponses(ExecutableElement method) {
+        return Annotations.has(method, "org.eclipse.microprofile.openapi.annotations.responses.APIResponse")
+                || Annotations.has(method, "org.eclipse.microprofile.openapi.annotations.responses.APIResponses");
+    }
+
+    private String createdResponse(String type) {
+        String base = "org.eclipse.microprofile.openapi.annotations.";
+        return "@" + imports.name(base + "responses.APIResponse") + "(responseCode = \"201\", "
+                + "description = \"Created\", content = @" + imports.name(base + "media.Content")
+                + "(mediaType = \"application/json\", schema = @" + imports.name(base + "media.Schema")
+                + "(implementation = " + type + ".class)))";
     }
 
     private static String renderParameters(List<String> parameters) {
@@ -664,6 +680,8 @@ final class EndpointFactory {
         private final List<String> parameters = new ArrayList<>();
         private final List<String> body = new ArrayList<>();
         private final List<String> docs = new ArrayList<>();
+        private String createdType;
+
         private Spec(String http, String path, String returnType, String name) {
             this.http = http;
             this.path = path;
@@ -755,6 +773,7 @@ final class EndpointFactory {
             checkBody(spec, "request");
             spec.line(entityType + " entity = mapper.toEntity(request);");
         }
+        spec.createdType = representation();
         boolean returns = method.getReturnType().getKind() != TypeKind.VOID;
         spec.line(returns ? entityType + " created = " + call + ";" : call + ";");
         String created = returns ? "created" : "entity";
@@ -1298,8 +1317,28 @@ final class EndpointFactory {
     private String pageParameter(String name, String description) {
         String documentation = openApi.available()
                 ? "@" + imports.name("org.eclipse.microprofile.openapi.annotations.parameters.Parameter")
-                + "(description = \"" + description + "\") " : "";
+                + "(description = \"" + description + "\"" + schema(name) + ") " : "";
         return documentation + "@" + imports.name("jakarta.ws.rs.QueryParam") + "(\"" + name + "\") String " + name;
+    }
+
+    /**
+     * The parameters stay {@code String} in Java so that the runtime validation and defaults are unchanged; the
+     * OpenAPI schema describes the real contract.
+     */
+    private String schema(String name) {
+        String type = switch (name) {
+            case "offset" -> "INTEGER, minimum = \"0\", defaultValue = \"0\"";
+            case "size", "limit" -> "INTEGER, minimum = \"1\", maximum = \"100\", defaultValue = \"20\"";
+            case "startAt" -> "INTEGER, minimum = \"1\", defaultValue = \"1\"";
+            case "includeTotal" -> "BOOLEAN, defaultValue = \"false\"";
+            default -> null;
+        };
+        if (type == null) {
+            return "";
+        }
+        return ", schema = @" + imports.name("org.eclipse.microprofile.openapi.annotations.media.Schema")
+                + "(type = " + imports.name("org.eclipse.microprofile.openapi.annotations.enums.SchemaType") + "."
+                + type + ")";
     }
 
     private String parameterProblem(TypeMirror type) {
