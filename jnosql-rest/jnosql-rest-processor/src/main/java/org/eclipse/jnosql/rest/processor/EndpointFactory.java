@@ -15,7 +15,6 @@
 package org.eclipse.jnosql.rest.processor;
 
 import org.eclipse.jnosql.rest.RestExclude;
-import org.eclipse.jnosql.rest.RestExpose;
 import org.eclipse.jnosql.rest.RestExposure;
 import org.eclipse.jnosql.rest.RestOperation;
 
@@ -38,8 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Turns the operations of one repository into Jakarta REST resource methods, applying the exposure policy and
@@ -57,6 +54,14 @@ final class EndpointFactory {
     private static final Set<String> RESERVED = Set.of("repository", "mapper", "entity", "request", "result",
             "stream", "created", "response", "page", "offset", "size", "cursor", "includeTotal", "cursorContext", "limit", "startAt",
             "sort");
+    private static final String BY = DATA_PACKAGE + "By";
+    private static final String WS_PACKAGE = "jakarta.ws.rs.";
+    private static final String PATH = WS_PACKAGE + "Path";
+    private static final String PATH_PARAM = WS_PACKAGE + "PathParam";
+    private static final String QUERY_PARAM = WS_PACKAGE + "QueryParam";
+    private static final Set<String> UNSUPPORTED_BINDINGS = Set.of(WS_PACKAGE + "HeaderParam",
+            WS_PACKAGE + "CookieParam", WS_PACKAGE + "MatrixParam", WS_PACKAGE + "FormParam",
+            WS_PACKAGE + "BeanParam", WS_PACKAGE + "core.Context");
     private static final String LIMIT = "jakarta.data.Limit";
     private static final String SORT = "jakarta.data.Sort";
     private static final String ORDER = "jakarta.data.Order";
@@ -74,7 +79,6 @@ final class EndpointFactory {
     private static final String PAGE_REQUEST = PAGE_PACKAGE + "PageRequest";
     private static final String PAGINATION = "org.eclipse.jnosql.rest.pagination.Pagination";
     private static final List<String> PAGINATION_PARAMETERS = List.of("offset", "size", "includeTotal", "cursor");
-    private static final Pattern TEMPLATE = Pattern.compile("\\{([^}/]+)}");
     private static final String INDENT = "    ";
 
     private final Elements elements;
@@ -160,27 +164,14 @@ final class EndpointFactory {
         boolean standardOwner = ((TypeElement) method.getEnclosingElement()).getQualifiedName().toString()
                 .startsWith(DATA_PACKAGE);
         Classified classified = classify(method, standardOwner);
-        RestExpose expose = method.getAnnotation(RestExpose.class);
-        boolean explicit = expose != null;
+        boolean explicit = Annotations.has(method, PATH);
         Element target = standardOwner ? repository.element() : method;
-        if (explicit && method.getAnnotation(RestExclude.class) != null) {
-            diagnostics.error(method, "@RestExpose and @RestExclude cannot be combined on "
-                    + method.getSimpleName() + ".");
-            return;
-        }
-        if (method.getAnnotation(RestExclude.class) != null) {
-            return;
-        }
-        if (repository.exposure() == RestExposure.NONE) {
-            if (explicit) {
-                diagnostics.error(method, "@RestExpose on " + method.getSimpleName() + " contradicts "
-                        + "@RestRepository(exposure = NONE) of " + repository.element().getSimpleName() + ".");
-            }
+        if (method.getAnnotation(RestExclude.class) != null || repository.exposure() == RestExposure.NONE) {
             return;
         }
         if (classified.unsupported() != null) {
             if (explicit) {
-                diagnostics.error(method, "@RestExpose cannot expose " + method.getSimpleName() + ": "
+                diagnostics.error(method, "@Path cannot expose " + method.getSimpleName() + ": "
                         + classified.unsupported());
             } else if (repository.exposure() == RestExposure.ALL) {
                 report(standardOwner, target, "Not exposed over REST: " + method.getSimpleName() + " - "
@@ -190,7 +181,7 @@ final class EndpointFactory {
         }
         if (repository.excluded().contains(classified.operation())) {
             if (explicit) {
-                diagnostics.error(method, "@RestExpose on " + method.getSimpleName() + " contradicts "
+                diagnostics.error(method, "@Path on " + method.getSimpleName() + " contradicts "
                         + "@RestRepository(exclude = " + classified.operation() + ").");
             }
             return;
@@ -201,15 +192,21 @@ final class EndpointFactory {
         if (classified.explicitOnly() && !explicit) {
             diagnostics.note(method, "Not exposed over REST: " + method.getSimpleName()
                     + (classified.kind() == Kind.SEARCH
-                    ? " accepts a dynamic Restriction; add @RestExpose to publish it as a QUERY search endpoint."
-                    : " changes data through a query; add @RestExpose to publish it."));
+                    ? " accepts a dynamic Restriction; add a method-level @Path to publish it as a QUERY search "
+                    + "endpoint."
+                    : " changes data through a query; add a method-level @Path to publish it."));
             return;
         }
-        String path = explicit ? expose.path() : "";
-        if (explicit && !path.isEmpty() && !path.startsWith("/")) {
-            path = "/" + path;
+        UriTemplate declared = null;
+        if (explicit) {
+            declared = UriTemplate.of(Annotations.rawStringValue(method, PATH).orElse(""));
+            if (declared.problem() != null) {
+                diagnostics.error(method, "The @Path of " + method.getSimpleName() + " is not a valid URI template: "
+                        + declared.problem() + ".");
+                return;
+            }
         }
-        generate(method, classified, path, standardOwner);
+        generate(method, classified, declared, standardOwner);
     }
 
     private void report(boolean standardOwner, Element target, String message) {
@@ -409,7 +406,10 @@ final class EndpointFactory {
             return Classified.of(Kind.LIFECYCLE_UPDATE, RestOperation.UPDATE);
         }
         if (Annotations.has(method, DELETE)) {
-            return hasEntityParameter(method) ? Classified.of(Kind.LIFECYCLE_DELETE, RestOperation.DELETE)
+            if (hasEntityParameter(method)) {
+                return Classified.of(Kind.LIFECYCLE_DELETE, RestOperation.DELETE);
+            }
+            return deletesByIdentifier(method) ? Classified.of(Kind.QUERY_DELETE, RestOperation.DELETE)
                     : Classified.explicit(Kind.QUERY_DELETE, RestOperation.DELETE);
         }
         if (name.startsWith("findBy")) {
@@ -422,10 +422,71 @@ final class EndpointFactory {
             return Classified.of(Kind.EXISTS, RestOperation.EXISTS);
         }
         if (name.startsWith("deleteBy")) {
-            return Classified.explicit(Kind.QUERY_DELETE, RestOperation.DELETE);
+            return deletesByIdentifier(method) ? Classified.of(Kind.QUERY_DELETE, RestOperation.DELETE)
+                    : Classified.explicit(Kind.QUERY_DELETE, RestOperation.DELETE);
         }
         return Classified.unsupported("it is neither annotated with a Jakarta Data operation annotation nor "
                 + "named as a findBy, countBy, existsBy or deleteBy query");
+    }
+
+    /**
+     * Whether the only parameter of the method is proven to be the identifier of the entity, through its
+     * Jakarta Data metadata: {@code @By}, the parameter name of a {@code @Find} or {@code @Delete}, or the
+     * attribute named by a derived {@code findBy} or {@code deleteBy} method.
+     */
+    private boolean identifiesEntity(ExecutableElement method, String derivedPrefix, String annotation) {
+        String identifier = identifier();
+        if (identifier == null || method.getParameters().size() != 1) {
+            return false;
+        }
+        VariableElement parameter = method.getParameters().get(0);
+        TypeMirror type = parameterTypes(method).get(0);
+        if (!ScalarTypes.isHttpBindable(type) || !sameBoxed(type, identifierType())) {
+            return false;
+        }
+        var by = Annotations.rawStringValue(parameter, BY);
+        if (by.isPresent()) {
+            return by.get().equalsIgnoreCase("id(this)") || by.get().equals(identifier);
+        }
+        String name = method.getSimpleName().toString();
+        if (Annotations.has(method, annotation)) {
+            return parameter.getSimpleName().contentEquals(identifier);
+        }
+        if (hasDataAnnotation(method) || !name.startsWith(derivedPrefix)) {
+            return false;
+        }
+        String attribute = name.substring(derivedPrefix.length());
+        return attribute.equals("Id") || attribute.equals(Character.toUpperCase(identifier.charAt(0))
+                + identifier.substring(1));
+    }
+
+    private boolean deletesByIdentifier(ExecutableElement method) {
+        return identifiesEntity(method, "deleteBy", DELETE);
+    }
+
+    private boolean findsByIdentifier(ExecutableElement method) {
+        if (!identifiesEntity(method, "findBy", FIND)) {
+            return false;
+        }
+        TypeMirror result = returnType(method);
+        if (types.isSameType(result, repository.entity())) {
+            return true;
+        }
+        return isType(result, "java.util.Optional") && ((DeclaredType) result).getTypeArguments().size() == 1
+                && types.isSameType(((DeclaredType) result).getTypeArguments().get(0), repository.entity());
+    }
+
+    private TypeMirror identifierType() {
+        return new PropertyScanner(elements, types).scan((TypeElement) types.asElement(repository.entity())).stream()
+                .filter(Property::identifier).map(Property::type).findFirst().orElse(repository.id());
+    }
+
+    private boolean sameBoxed(TypeMirror first, TypeMirror second) {
+        return second != null && types.isSameType(box(first), box(second));
+    }
+
+    private TypeMirror box(TypeMirror type) {
+        return type.getKind().isPrimitive() ? types.boxedClass((PrimitiveType) type).asType() : type;
     }
 
     private Classified standard(String name, int arity, boolean standardOwner) {
@@ -479,30 +540,48 @@ final class EndpointFactory {
         return imports.render(repository.id());
     }
 
-    private void generate(ExecutableElement method, Classified classified, String pathOverride,
+    private void generate(ExecutableElement method, Classified classified, UriTemplate declared,
                           boolean standardOwner) {
         String name = method.getSimpleName().toString();
+        String override = declared == null ? null : declared.path();
+        if (declared != null && !declared.variables().isEmpty() && bodyOperation(classified.kind())) {
+            diagnostics.error(method, "The @Path of " + name + " must not declare path variables, because the "
+                    + "operation receives the entity in the request body.");
+            return;
+        }
+        String identifierVariable = declared != null && declared.variables().size() == 1
+                ? declared.variables().get(0) : identifierName();
         Spec spec = switch (classified.kind()) {
-            case FIND_BY_ID -> findById();
+            case FIND_BY_ID -> findById(identifierVariable);
             case FIND_ALL -> findAll(method);
             case INSERT -> insert("insert", "POST", "", method, standardOwner);
-            case UPDATE -> update();
+            case UPDATE -> update(identifierVariable);
             case SAVE -> save("save", "/save", method, standardOwner);
-            case DELETE_BY_ID -> deleteById();
+            case DELETE_BY_ID -> deleteById(identifierVariable);
             case DELETE -> deleteEntity("delete", "/delete", method);
-            case LIFECYCLE_INSERT -> insert(name, "POST", pathOr(pathOverride, name), method, false);
-            case LIFECYCLE_SAVE -> save(name, pathOr(pathOverride, name), method, false);
-            case LIFECYCLE_UPDATE -> lifecycleUpdate(method, pathOr(pathOverride, name));
-            case LIFECYCLE_DELETE -> deleteEntity(name, pathOr(pathOverride, name), method);
-            case READ, COUNT, EXISTS -> read(method, classified, pathOr(pathOverride, name));
-            case QUERY_DELETE -> mutation(method, "DELETE", pathOr(pathOverride, name));
-            case QUERY_UPDATE -> mutation(method, "POST", pathOr(pathOverride, name));
-            case SEARCH -> search(method, pathOr(pathOverride, name));
+            case LIFECYCLE_INSERT -> insert(name, "POST", pathOr(override, ""), method, false);
+            case LIFECYCLE_SAVE -> save(name, pathOr(override, "/" + name), method, false);
+            case LIFECYCLE_UPDATE -> lifecycleUpdate(method, pathOr(override, ""));
+            case LIFECYCLE_DELETE -> deleteEntity(name, pathOr(override, "/" + name), method);
+            case READ, COUNT, EXISTS -> read(method, classified,
+                    pathOr(override, findsByIdentifier(method) ? "/{" + method.getParameters().get(0).getSimpleName()
+                            + "}" : "/" + name));
+            case QUERY_DELETE -> mutation(method, "DELETE", pathOr(override, deletesByIdentifier(method)
+                    ? "/{" + method.getParameters().get(0).getSimpleName() + "}" : "/" + name));
+            case QUERY_UPDATE -> mutation(method, "POST", pathOr(override, "/" + name));
+            case SEARCH -> search(method, pathOr(override, "/" + name));
         };
-        if (spec == null || !overridePath(method, classified, spec, pathOverride)) {
+        if (spec == null || !overridePath(method, classified, spec, override)) {
             return;
         }
         register(method, standardOwner, spec);
+    }
+
+    private static boolean bodyOperation(Kind kind) {
+        return switch (kind) {
+            case LIFECYCLE_INSERT, LIFECYCLE_SAVE, LIFECYCLE_UPDATE, LIFECYCLE_DELETE -> true;
+            default -> false;
+        };
     }
 
     private boolean overridePath(ExecutableElement method, Classified classified, Spec spec, String override) {
@@ -510,41 +589,43 @@ final class EndpointFactory {
             case FIND_BY_ID, FIND_ALL, INSERT, UPDATE, SAVE, DELETE_BY_ID, DELETE -> true;
             default -> false;
         };
-        if (!standard || override.isEmpty()) {
+        if (!standard || override == null) {
             return true;
         }
-        Set<String> expected = templates(spec.path);
-        Set<String> actual = templates(override);
-        if (!expected.equals(actual)) {
-            diagnostics.error(method, "@RestExpose(path = \"" + override + "\") on " + method.getSimpleName()
-                    + (expected.isEmpty() ? " must not declare path parameters"
-                    : " must declare exactly the path parameters " + expected) + ".");
+        List<String> expected = UriTemplate.of(spec.path).variables();
+        List<String> actual = UriTemplate.of(override).variables();
+        if (expected.size() != actual.size()) {
+            diagnostics.error(method, "The @Path(\"" + override + "\") of " + method.getSimpleName()
+                    + (expected.isEmpty() ? " must not declare path variables"
+                    : " must declare exactly " + expected.size() + " path variable") + ".");
             return false;
         }
-        spec.path = override;
+        spec.path = UriTemplate.of(override).path();
         return true;
     }
 
-    private static Set<String> templates(String path) {
-        Set<String> names = new java.util.TreeSet<>();
-        Matcher matcher = TEMPLATE.matcher(path);
-        while (matcher.find()) {
-            names.add(matcher.group(1));
-        }
-        return names;
+    private static String pathOr(String override, String fallback) {
+        return override != null ? override : fallback;
     }
 
-    private String pathOr(String override, String name) {
-        return override.isEmpty() ? "/" + name : override;
+    private String identifierName() {
+        String identifier = identifier();
+        return identifier == null ? "id" : identifier;
+    }
+
+    private String javaName(String name) {
+        String safe = name.replaceAll("[^A-Za-z0-9_]", "_");
+        return RESERVED.contains(safe) ? safe + "Value" : safe;
     }
 
     private void register(ExecutableElement method, boolean standardOwner, Spec spec) {
-        String route = spec.http + " " + normalize(spec.path);
+        String route = spec.http + " " + UriTemplate.of(spec.path).shape();
         String previous = routes.putIfAbsent(route, method.getSimpleName().toString());
         if (previous != null) {
             diagnostics.error(standardOwner ? repository.element() : method, "Both " + previous + " and "
                     + method.getSimpleName() + " would handle " + spec.http + " " + repository.path() + spec.path
-                    + ". Use @RestExpose(path = ...) or @RestExclude to resolve the conflict.");
+                    + ". Routes that differ only by variable names or query parameters are the same route; "
+                    + "use a distinct @Path or @RestExclude to resolve the conflict.");
             return;
         }
         List<String> annotations = new ArrayList<>();
@@ -565,12 +646,6 @@ final class EndpointFactory {
         }
         methods.add(new MethodModel(javadoc, annotations, spec.returnType, spec.name, renderParameters(spec.parameters),
                 spec.body));
-    }
-
-    private static String normalize(String path) {
-        String normalized = TEMPLATE.matcher(path).replaceAll("{}");
-        return normalized.endsWith("/") && normalized.length() > 1
-                ? normalized.substring(0, normalized.length() - 1) : normalized;
     }
 
     private static String renderParameters(List<String> parameters) {
@@ -611,10 +686,12 @@ final class EndpointFactory {
         }
     }
 
-    private Spec findById() {
-        Spec spec = new Spec("GET", "/{id}", representation(), "findById")
-                .parameter("@" + imports.name("jakarta.ws.rs.PathParam") + "(\"id\") " + idType() + " id");
-        spec.line("return repository.findById(id)");
+    private Spec findById(String variable) {
+        String id = javaName(variable);
+        Spec spec = new Spec("GET", "/{" + variable + "}", representation(), "findById")
+                .parameter("@" + imports.name("jakarta.ws.rs.PathParam") + "(\"" + variable + "\") " + idType() + " "
+                        + id);
+        spec.line("return repository.findById(" + id + ")");
         if (dto != null) {
             spec.line(INDENT + INDENT + ".map(entity -> mapper.toDTO(entity))");
         }
@@ -635,10 +712,12 @@ final class EndpointFactory {
         return readBody(spec, returnType(method), "repository.findAll(pageRequest, order)", method) ? spec : null;
     }
 
-    private Spec deleteById() {
-        return new Spec("DELETE", "/{id}", "void", "deleteById")
-                .parameter("@" + imports.name("jakarta.ws.rs.PathParam") + "(\"id\") " + idType() + " id")
-                .line("repository.deleteById(id);");
+    private Spec deleteById(String variable) {
+        String id = javaName(variable);
+        return new Spec("DELETE", "/{" + variable + "}", "void", "deleteById")
+                .parameter("@" + imports.name("jakarta.ws.rs.PathParam") + "(\"" + variable + "\") " + idType() + " "
+                        + id)
+                .line("repository.deleteById(" + id + ");");
     }
 
     private void checkBody(Spec spec, String name) {
@@ -685,7 +764,7 @@ final class EndpointFactory {
                 .line(INDENT + INDENT + ".build();");
     }
 
-    private Spec update() {
+    private Spec update(String variable) {
         if (dto == null) {
             return new Spec("PUT", "", entityType(), "update")
                     .parameter(entityType() + " entity")
@@ -702,12 +781,14 @@ final class EndpointFactory {
             return null;
         }
         String updateType = imports.name(dto.qualified(dto.updateName()));
-        Spec spec = new Spec("PUT", "/{id}", dtoType(), "update")
-                .parameter("@" + imports.name("jakarta.ws.rs.PathParam") + "(\"id\") " + idType() + " id")
+        String id = javaName(variable);
+        Spec spec = new Spec("PUT", "/{" + variable + "}", dtoType(), "update")
+                .parameter("@" + imports.name("jakarta.ws.rs.PathParam") + "(\"" + variable + "\") " + idType() + " "
+                        + id)
                 .parameter(updateType + " request");
         checkBody(spec, "request");
         return spec
-                .line(entityType() + " entity = repository.findById(id)")
+                .line(entityType() + " entity = repository.findById(" + id + ")")
                 .line(INDENT + INDENT + ".orElseThrow(" + imports.name("jakarta.ws.rs.NotFoundException") + "::new);")
                 .line("mapper.updateEntity(request, entity);")
                 .line("return mapper.toDTO(repository.update(entity));");
@@ -771,7 +852,7 @@ final class EndpointFactory {
     }
 
     private Spec unsupportedSignature(ExecutableElement method, String reason) {
-        boolean explicit = method.getAnnotation(RestExpose.class) != null;
+        boolean explicit = Annotations.has(method, PATH);
         String message = "Not exposed over REST: " + method.getSimpleName() + " - " + reason + ".";
         if (explicit) {
             diagnostics.error(method, message);
@@ -802,7 +883,7 @@ final class EndpointFactory {
     private boolean searchSorted;
 
     private Spec search(ExecutableElement method, String path) {
-        if (TEMPLATE.matcher(path).find()) {
+        if (!UriTemplate.of(path).variables().isEmpty()) {
             return unsupportedSignature(method, "a search path cannot contain path variables because the criteria "
                     + "travel in the request body");
         }
@@ -1009,15 +1090,12 @@ final class EndpointFactory {
     }
 
     private Spec parameters(ExecutableElement method, String path, String http, Paging paging) {
-        Matcher matcher = TEMPLATE.matcher(path);
-        Set<String> templated = new java.util.HashSet<>();
-        while (matcher.find()) {
-            templated.add(matcher.group(1));
-        }
+        List<String> templated = UriTemplate.of(path).variables();
         List<? extends TypeMirror> parameterTypes = parameterTypes(method);
         Spec spec = new Spec(http, path, "void", method.getSimpleName().toString());
         Map<String, String> checks = new java.util.LinkedHashMap<>();
         Set<String> seen = new java.util.HashSet<>();
+        Set<String> boundVariables = new java.util.HashSet<>();
         String pageVariable = null;
         List<String> conversions = new ArrayList<>();
         Set<String> reserved = new java.util.HashSet<>();
@@ -1053,34 +1131,55 @@ final class EndpointFactory {
             if (problem != null) {
                 return unsupportedSignature(method, "parameter '" + original + "' " + problem);
             }
+            Binding binding = binding(method, parameter, templated);
+            if (binding == null) {
+                return null;
+            }
+            if (binding.path() && type.getKind() == TypeKind.DECLARED
+                    && !((DeclaredType) type).getTypeArguments().isEmpty()) {
+                diagnostics.error(parameter, "The path variable {" + binding.name() + "} of "
+                        + method.getSimpleName() + " cannot be bound to the collection parameter '" + original
+                        + "'.");
+                return null;
+            }
+            if (!(binding.path() ? boundVariables : seen).add(binding.name())) {
+                diagnostics.error(parameter, "The " + (binding.path() ? "path variable {" : "query parameter '")
+                        + binding.name() + (binding.path() ? "}" : "'") + " is bound by more than one parameter of "
+                        + method.getSimpleName() + ".");
+                return null;
+            }
             if (type.getKind().isPrimitive()) {
                 type = types.boxedClass((PrimitiveType) type).asType();
             }
-            seen.add(original);
             StringBuilder text = new StringBuilder();
             for (var mirror : openApi.forQueryParameter(parameter)) {
+                if (!openApiLocationMatches(mirror, binding.path())) {
+                    diagnostics.error(parameter, "The @Parameter location of '" + original + "' contradicts its "
+                            + (binding.path() ? "path" : "query") + " binding.");
+                    return null;
+                }
                 text.append(annotationSource.write(mirror)).append(' ');
             }
-            boolean pathParameter = templated.contains(original);
             String parser = ScalarTypes.parser(type);
             String received = parser == null ? variableName(parameter) : variableName(parameter) + "Text";
-            text.append('@').append(imports.name(pathParameter ? "jakarta.ws.rs.PathParam" : "jakarta.ws.rs.QueryParam"))
-                    .append("(\"").append(original).append("\") ")
+            text.append('@').append(imports.name(binding.path() ? PATH_PARAM : QUERY_PARAM))
+                    .append("(\"").append(binding.name()).append("\") ")
                     .append(parser == null ? imports.render(type) : "String").append(' ').append(received);
             spec.parameter(text.toString());
             if (parser != null) {
                 conversions.add(imports.render(type) + " " + variableName(parameter) + " = "
-                        + imports.name("org.eclipse.jnosql.rest.pagination.QueryValues") + ".parse(\"" + original
-                        + "\", " + received + ", " + imports.render(type) + "::" + parser + ");");
+                        + imports.name("org.eclipse.jnosql.rest.pagination.QueryValues") + ".parse(\""
+                        + binding.name() + "\", " + received + ", " + imports.render(type) + "::" + parser + ");");
             }
-            if (!pathParameter) {
-                checks.put(received, original);
+            if (!binding.path()) {
+                checks.put(received, binding.name());
             }
         }
         for (String name : templated) {
-            if (!seen.contains(name)) {
+            if (!boundVariables.contains(name)) {
                 diagnostics.error(method, "The path of " + method.getSimpleName() + " refers to {" + name
-                        + "}, but the method has no parameter with that name.");
+                        + "}, but no parameter is bound to it. Name a parameter '" + name + "' or annotate one with "
+                        + "@PathParam(\"" + name + "\").");
                 return null;
             }
         }
@@ -1102,6 +1201,63 @@ final class EndpointFactory {
             return null;
         }
         return spec;
+    }
+
+    private record Binding(boolean path, String name) {
+    }
+
+    /**
+     * Decides how an ordinary parameter is bound to HTTP: an explicit {@code @PathParam} or {@code @QueryParam}
+     * wins, then a path variable with the name of the Java parameter, and otherwise a query parameter named after
+     * the Java parameter. Jakarta Data's {@code @By} does not take part.
+     */
+    private Binding binding(ExecutableElement method, VariableElement parameter, List<String> templated) {
+        String original = parameter.getSimpleName().toString();
+        for (var mirror : parameter.getAnnotationMirrors()) {
+            if (UNSUPPORTED_BINDINGS.contains(Annotations.qualifiedName(mirror))) {
+                diagnostics.error(parameter, "The parameter '" + original + "' of " + method.getSimpleName()
+                        + " uses @" + mirror.getAnnotationType().asElement().getSimpleName() + ", which cannot "
+                        + "bind a repository argument; use @PathParam or @QueryParam.");
+                return null;
+            }
+        }
+        boolean explicitPath = Annotations.has(parameter, PATH_PARAM);
+        boolean explicitQuery = Annotations.has(parameter, QUERY_PARAM);
+        if (explicitPath && explicitQuery) {
+            diagnostics.error(parameter, "The parameter '" + original + "' of " + method.getSimpleName()
+                    + " declares both @PathParam and @QueryParam.");
+            return null;
+        }
+        if (!explicitPath && !explicitQuery) {
+            return new Binding(templated.contains(original), original);
+        }
+        String name = Annotations.rawStringValue(parameter, explicitPath ? PATH_PARAM : QUERY_PARAM).orElse("").trim();
+        if (name.isEmpty()) {
+            diagnostics.error(parameter, "The @" + (explicitPath ? "PathParam" : "QueryParam") + " of '" + original
+                    + "' in " + method.getSimpleName() + " needs a name.");
+            return null;
+        }
+        if (explicitPath && !templated.contains(name)) {
+            diagnostics.error(parameter, "@PathParam(\"" + name + "\") on '" + original + "' in "
+                    + method.getSimpleName() + " does not match any variable of the path.");
+            return null;
+        }
+        if (explicitQuery && templated.contains(name)) {
+            diagnostics.error(parameter, "@QueryParam(\"" + name + "\") on '" + original + "' in "
+                    + method.getSimpleName() + " conflicts with the path variable {" + name + "}; use @PathParam.");
+            return null;
+        }
+        return new Binding(explicitPath, name);
+    }
+
+    private static boolean openApiLocationMatches(javax.lang.model.element.AnnotationMirror mirror, boolean path) {
+        for (var entry : mirror.getElementValues().entrySet()) {
+            if (entry.getKey().getSimpleName().contentEquals("in")) {
+                String location = entry.getValue().getValue().toString().toUpperCase();
+                return location.endsWith("DEFAULT") || location.endsWith(path ? "PATH" : "QUERY");
+            }
+        }
+        return true;
     }
 
     private boolean addPagination(Spec spec, ExecutableElement method, Paging paging, String variable,
