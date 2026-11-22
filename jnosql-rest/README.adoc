@@ -384,6 +384,12 @@ Schemas are inferred by MicroProfile OpenAPI from generated DTOs. Customize with
 `OASFilter`, following the merge rules of the MicroProfile OpenAPI specification. `@SecurityRequirement` documents but
 does not enforce security.
 
+Generated pagination parameters (`offset`, `size`, `includeTotal`, `limit`, `startAt`) are documented with their
+OpenAPI types, bounds and defaults (for example `size`: integer, 1..100, default 20); the Java parameters stay
+`String`, so runtime validation is unchanged. Generated creation operations document the `201` response with an
+`application/json` schema: the generated response DTO when one exists, otherwise the entity. A `@APIResponse` declared
+on the repository method takes precedence. Only generator output was tested; no OpenAPI implementation ran.
+
 == CDI, CDI Lite and discovery
 
 Constructor injection only. The package-private constructor exists for proxying; it is deliberately not public. A
