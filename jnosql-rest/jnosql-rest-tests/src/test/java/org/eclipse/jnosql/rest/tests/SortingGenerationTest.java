@@ -123,7 +123,7 @@ class SortingGenerationTest {
     @DisplayName("Should reject Limit combined with PageRequest")
     void shouldRejectLimitWithPageRequest(@TempDir Path directory) {
         var result = harness(directory, "BasicRepository", """
-                @RestExpose(path = "/bad")
+                @jakarta.ws.rs.Path("/bad")
                 @Find Page<Item> bad(String name, Limit limit, PageRequest pageRequest);
                 """).compile();
 
@@ -135,7 +135,7 @@ class SortingGenerationTest {
     @DisplayName("Should reject a Sort of another entity type")
     void shouldRejectWrongEntity(@TempDir Path directory) {
         var result = harness(directory, "BasicRepository", """
-                @RestExpose(path = "/bad")
+                @jakarta.ws.rs.Path("/bad")
                 @Find List<Item> bad(String name, Sort<String> sort);
                 """).compile();
 
