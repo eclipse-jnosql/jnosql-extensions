@@ -74,7 +74,7 @@ class OpenApiSchemaTest {
                 + "@Find Page<Item> findAll(PageRequest request);").withoutOpenApi().compile();
 
         assertThat(result.errors()).isEmpty();
-        assertThat(result.source("ItemRepositoryResource")).doesNotContain("openapi");
+        assertThat(result.source("ItemRepositoryResource")).doesNotContain("openapi").contains("Response.Status.CREATED");
     }
 
     @Test
@@ -104,10 +104,24 @@ class OpenApiSchemaTest {
     }
 
     @Test
+    @DisplayName("Should add the DTO schema to a 201 response declared without content")
+    void shouldCompleteDeclaredCreated(@TempDir Path directory) {
+        var result = harness(directory, "@RestDTO(exclude = {\"secret\"})", "@Insert "
+                + "@org.eclipse.microprofile.openapi.annotations.responses.APIResponse(responseCode = \"201\", "
+                + "description = \"Item created\") Item insert(Item item);").compile();
+
+        assertThat(result.errors()).isEmpty();
+        assertThat(result.source("ItemRepositoryResource"))
+                .contains("description = \"Item created\", content = @Content(mediaType = \"application/json\"")
+                .contains("@Schema(implementation = ItemDTO.class)");
+        assertThat(result.source("ItemRepositoryResource").split("responseCode = \"201\"", -1)).hasSize(2);
+    }
+
+    @Test
     @DisplayName("Should respect a response declared by the developer")
     void shouldKeepDeclaredResponse(@TempDir Path directory) {
         var result = harness(directory, "", "@Insert @org.eclipse.microprofile.openapi.annotations.responses."
-                + "APIResponse(responseCode = \"201\", description = \"Mine\") Item insert(Item item);").compile();
+                + "APIResponse(responseCode = \"200\", description = \"Mine\") Item insert(Item item);").compile();
 
         assertThat(result.errors()).isEmpty();
         assertThat(result.source("ItemRepositoryResource")).contains("Mine").doesNotContain("\"Created\"");
