@@ -18,7 +18,7 @@ import jakarta.data.repository.BasicRepository;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.Repository;
 import jakarta.data.restrict.Restriction;
-import org.eclipse.jnosql.rest.RestExpose;
+import jakarta.ws.rs.Path;
 import org.eclipse.jnosql.rest.RestRepository;
 import org.eclipse.jnosql.rest.tests.sample.Product;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -31,7 +31,7 @@ import java.util.UUID;
 public interface ProductSearchRepository extends BasicRepository<Product, UUID> {
 
     @Find
-    @RestExpose(path = "/search")
+    @Path("/search")
     @Operation(summary = "Search products")
     List<Product> search(Restriction<Product> restriction);
 }
