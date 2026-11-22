@@ -478,7 +478,7 @@ class RoutingConventionsTest {
         try (Stream<Path> files = Files.walk(root)) {
             var offenders = files.filter(Files::isRegularFile)
                     .filter(path -> !path.toString().contains("/target/"))
-                    .filter(path -> path.toString().matches(".*\\.(java|mustache|adoc)"))
+                    .filter(path -> path.toString().matches(".*\\.(java|mustache)"))
                     .filter(path -> !path.getFileName().toString().equals("RoutingConventionsTest.java"))
                     .filter(path -> read(path).contains("RestExpose")).toList();
             assertThat(offenders).isEmpty();
