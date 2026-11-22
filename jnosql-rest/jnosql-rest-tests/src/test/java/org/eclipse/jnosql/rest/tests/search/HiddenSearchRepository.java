@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Declares a restriction method without {@code @RestExpose}, so no search endpoint may exist.
+ * Declares a restriction method without {@code @Path}, so no search endpoint may exist.
  */
 @Repository
 @RestRepository(path = "/hidden")
