@@ -22,7 +22,7 @@ import jakarta.data.repository.Find;
 import jakarta.data.repository.OrderBy;
 import jakarta.data.repository.Repository;
 import jakarta.data.restrict.Restriction;
-import org.eclipse.jnosql.rest.RestExpose;
+import jakarta.ws.rs.Path;
 import org.eclipse.jnosql.rest.RestRepository;
 import org.eclipse.jnosql.rest.tests.sample.Product;
 
@@ -41,7 +41,7 @@ public interface PagedProductRepository extends BasicRepository<Product, UUID> {
     CursoredPage<Product> findByName(String name, PageRequest pageRequest);
 
     @Find
-    @RestExpose(path = "/search")
+    @Path("/search")
     @OrderBy("name")
     @OrderBy("id")
     CursoredPage<Product> search(Restriction<Product> restriction, PageRequest pageRequest);
