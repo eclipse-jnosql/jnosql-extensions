@@ -103,7 +103,7 @@ class RestProcessorCompilationTest {
         @DisplayName("Should generate only the explicitly exposed methods under EXPLICIT")
         void shouldHonourExplicitExposure(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\", exposure = RestExposure.EXPLICIT)",
-                    "@RestExpose List<Item> findByName(String name);\nList<Item> findBySecret(String secret);")
+                    "@jakarta.ws.rs.Path(\"/by-name\") List<Item> findByName(String name);\nList<Item> findBySecret(String secret);")
                     .compile();
 
             assertThat(result.success()).isTrue();
@@ -180,23 +180,24 @@ class RestProcessorCompilationTest {
     class WhenInvalid {
 
         @Test
-        @DisplayName("Should reject @RestExpose combined with @RestExclude")
-        void shouldRejectContradictoryAnnotations(@TempDir Path directory) {
+        @DisplayName("Should let @RestExclude win over @Path")
+        void shouldLetExcludeWin(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose @RestExclude List<Item> findByName(String name);").compile();
+                    "@jakarta.ws.rs.Path(\"/by-name\") @RestExclude List<Item> findByName(String name);")
+                    .compile();
 
-            assertThat(result.success()).isFalse();
-            assertThat(result.errors()).anyMatch(message -> message.contains("@RestExpose"));
+            assertThat(result.success()).isTrue();
+            assertThat(result.source("ItemRepositoryResource")).doesNotContain("findByName");
         }
 
         @Test
-        @DisplayName("Should reject @RestExpose under NONE")
-        void shouldRejectExposeUnderNone(@TempDir Path directory) {
+        @DisplayName("Should not let @Path override RestExposure.NONE")
+        void shouldIgnorePathUnderNone(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\", exposure = RestExposure.NONE)",
-                    "@RestExpose List<Item> findByName(String name);").compile();
+                    "@jakarta.ws.rs.Path(\"/by-name\") List<Item> findByName(String name);").compile();
 
-            assertThat(result.success()).isFalse();
-            assertThat(result.errors()).anyMatch(message -> message.contains("NONE"));
+            assertThat(result.success()).isTrue();
+            assertThat(result.generated("ItemRepositoryResource")).isFalse();
         }
 
         @Test
@@ -213,8 +214,8 @@ class RestProcessorCompilationTest {
         @DisplayName("Should reject a repository path collision")
         void shouldRejectPathCollision(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose(path = \"/same\") List<Item> findByName(String name);\n"
-                            + "@RestExpose(path = \"/same\") List<Item> findBySecret(String secret);").compile();
+                    "@jakarta.ws.rs.Path(\"/same\") List<Item> findByName(String name);\n"
+                            + "@jakarta.ws.rs.Path(\"/same\") List<Item> findBySecret(String secret);").compile();
 
             assertThat(result.success()).isFalse();
             assertThat(result.errors()).isNotEmpty();
@@ -257,7 +258,7 @@ class RestProcessorCompilationTest {
         @DisplayName("Should reject a mutating method that takes a Restriction, even when exposed")
         void shouldRejectMutatingRestriction(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose @Delete void deleteMatching(jakarta.data.restrict.Restriction<Item> restriction);")
+                    "@jakarta.ws.rs.Path(\"/purge\") @Delete void deleteMatching(jakarta.data.restrict.Restriction<Item> restriction);")
                     .compile();
 
             assertThat(result.success()).isFalse();
@@ -268,7 +269,7 @@ class RestProcessorCompilationTest {
         @DisplayName("Should reject a Restriction of another entity or combined with other parameters")
         void shouldRejectMalformedSearch(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose @Find List<Item> search(jakarta.data.restrict.Restriction<Item> restriction, "
+                    "@jakarta.ws.rs.Path(\"/search\") @Find List<Item> search(jakarta.data.restrict.Restriction<Item> restriction, "
                             + "String extra);")
                     .compile();
 
@@ -277,25 +278,26 @@ class RestProcessorCompilationTest {
         }
 
         @Test
-        @DisplayName("Should reject @RestExpose and @RestExclude on the same search")
-        void shouldRejectConflictingSearchExposure(@TempDir Path directory) {
+        @DisplayName("Should let @RestExclude win over @Path on a search")
+        void shouldExcludeSearch(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose @RestExclude @Find List<Item> search(jakarta.data.restrict.Restriction<Item> r);")
+                    "@jakarta.ws.rs.Path(\"/search\") @RestExclude @Find "
+                            + "List<Item> search(jakarta.data.restrict.Restriction<Item> r);")
                     .compile();
 
-            assertThat(result.success()).isFalse();
-            assertThat(result.errors()).isNotEmpty();
+            assertThat(result.success()).isTrue();
+            assertThat(result.source("ItemRepositoryResource")).doesNotContain("search");
         }
 
         @Test
-        @DisplayName("Should reject a search exposed under RestExposure.NONE")
-        void shouldRejectSearchUnderNone(@TempDir Path directory) {
+        @DisplayName("Should not expose a search under RestExposure.NONE even with @Path")
+        void shouldIgnoreSearchUnderNone(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\", exposure = RestExposure.NONE)",
-                    "@RestExpose @Find List<Item> search(jakarta.data.restrict.Restriction<Item> r);")
-                    .compile();
+                    "@jakarta.ws.rs.Path(\"/search\") @Find "
+                            + "List<Item> search(jakarta.data.restrict.Restriction<Item> r);").compile();
 
-            assertThat(result.success()).isFalse();
-            assertThat(result.errors()).isNotEmpty();
+            assertThat(result.success()).isTrue();
+            assertThat(result.generated("ItemRepositoryResource")).isFalse();
         }
     }
 
@@ -306,9 +308,9 @@ class RestProcessorCompilationTest {
         private static final String SEARCH = "@Find List<Item> search(jakarta.data.restrict.Restriction<Item> r);";
 
         @Test
-        @DisplayName("Should generate a QUERY endpoint and request only with @RestExpose")
+        @DisplayName("Should generate a QUERY endpoint and request only with @Path")
         void shouldGenerateWithExplicitExposure(@TempDir Path directory) {
-            var result = harness(directory, "@RestRepository(path = \"/items\")", "@RestExpose(path = \"/search\") "
+            var result = harness(directory, "@RestRepository(path = \"/items\")", "@jakarta.ws.rs.Path(\"/search\") "
                     + SEARCH).compile();
 
             assertThat(result.success()).isTrue();
@@ -320,7 +322,7 @@ class RestProcessorCompilationTest {
         }
 
         @Test
-        @DisplayName("Should not generate any search endpoint without @RestExpose")
+        @DisplayName("Should not generate any search endpoint without @Path")
         void shouldNotGenerateWithoutOptIn(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")", SEARCH).compile();
 
@@ -333,7 +335,7 @@ class RestProcessorCompilationTest {
         @DisplayName("Should keep the search with EXPLICIT exposure when annotated")
         void shouldGenerateUnderExplicit(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\", exposure = RestExposure.EXPLICIT)",
-                    "@RestExpose " + SEARCH).compile();
+                    "@jakarta.ws.rs.Path(\"/search\") " + SEARCH).compile();
 
             assertThat(result.success()).isTrue();
             assertThat(result.source("ItemRepositoryResource")).contains("@QUERY");
@@ -353,7 +355,7 @@ class RestProcessorCompilationTest {
         @DisplayName("Should not filter by attributes excluded from the DTO")
         void shouldNotSearchExcludedAttributes(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")\n@RestDTO(exclude = {\"secret\"})",
-                    "@RestExpose " + SEARCH).compile();
+                    "@jakarta.ws.rs.Path(\"/search\") " + SEARCH).compile();
 
             assertThat(result.success()).isTrue();
             assertThat(result.source("ItemRepositorySearchRequest")).doesNotContain("secret");
@@ -362,7 +364,7 @@ class RestProcessorCompilationTest {
         @Test
         @DisplayName("Should compile the search without OpenAPI or MapStruct")
         void shouldCompileWithoutOptionalDependencies(@TempDir Path directory) {
-            var result = harness(directory, "@RestRepository(path = \"/items\")", "@RestExpose " + SEARCH)
+            var result = harness(directory, "@RestRepository(path = \"/items\")", "@jakarta.ws.rs.Path(\"/search\") " + SEARCH)
                     .withoutOpenApi().withoutMapStruct().compile();
 
             assertThat(result.errors()).isEmpty();
