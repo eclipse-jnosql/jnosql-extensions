@@ -174,13 +174,51 @@ still propagated.
 
 == DTOs
 
-`@RestDTO(exclude = {...})` generates `<Entity>DTO`, `<Entity>CreateRequest`, `<Entity>UpdateRequest` records and a
+`@RestDTO` generates `<Entity>DTO`, `<Entity>CreateRequest`, `<Entity>UpdateRequest` records and a
 `<Entity>DTOMapper` interface annotated `@Mapper(componentModel = MappingConstants.ComponentModel.JAKARTA_CDI, unmappedTargetPolicy = ReportingPolicy.IGNORE)`; MapStruct generates the
 implementation and the resource receives the mapper through constructor injection. Developer-defined types with those
 names are reused (and validated), never overwritten.
 
-* Exclusions apply to the response DTO. Create requests intentionally stay distinct from response exclusions, so they
-include every writable attribute; use a developer-defined request record to narrow them.
+* Three attributes control which entity attributes the generated DTOs carry. They affect only the generated REST
+DTOs, never the database model or persistence:
++
+[cols="2,2,2"]
+|===
+|Attribute |Request DTOs (create and update) |Response DTO
+
+|`exclude` |removed |removed
+|`excludeFromRequest` |removed |kept
+|`excludeFromResponse` |kept |removed
+|===
++
+Request exclusions are `exclude` plus `excludeFromRequest`; response exclusions are `exclude` plus
+`excludeFromResponse`. Other attributes are mapped normally. Repeated names are ignored and unknown names are
+compilation errors; excluding every attribute from requests is also an error. The identifier stays available to
+repository operations and path parameters even when excluded from requests. Attributes excluded from responses
+are also not sortable or searchable.
++
+[source,java]
+----
+@RestDTO(
+    exclude = {"internalNotes"},
+    excludeFromRequest = {"id"},
+    excludeFromResponse = {"supplier", "supplierCost"}
+)
+----
++
+[cols="2,1,1"]
+|===
+|Attribute |Request DTO |Response DTO
+
+|`id` |excluded |included
+|`name`, `price` |included |included
+|`supplier`, `supplierCost` |included (mapped into the entity) |excluded
+|`internalNotes` |excluded |excluded
+|===
++
+*Behavior change:* `exclude` used to affect only the response DTO, so excluded attributes remained writable through
+create and update requests. It now removes them from requests too; use `excludeFromResponse` to keep the previous
+behavior.
 * Update requests use `NullValuePropertyMappingStrategy.IGNORE`: `null` means "unchanged". There is no presence-aware
 (absent vs. explicit `null`) patch.
 * Nested beans become `<Simple>DTO`; `Optional` getters are unwrapped; recursive, generic or abstract nested types are
