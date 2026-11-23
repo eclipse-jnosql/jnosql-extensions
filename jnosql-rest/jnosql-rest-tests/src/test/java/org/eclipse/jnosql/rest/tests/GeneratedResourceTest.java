@@ -147,7 +147,7 @@ class GeneratedResourceTest {
         }
 
         @Test
-        @DisplayName("Should expose deleteBy only through @RestExpose with the custom path and DELETE")
+        @DisplayName("Should expose deleteBy only through @Path with the custom path and DELETE")
         void shouldMapExplicitDeleteQuery() {
             Method method = method(ProductRepositoryResource.class, "deleteByCategory");
 
@@ -157,7 +157,7 @@ class GeneratedResourceTest {
         }
 
         @Test
-        @DisplayName("Should not expose mutating queries without @RestExpose nor excluded methods")
+        @DisplayName("Should not expose mutating queries without @Path nor excluded methods")
         void shouldSkipUnexposedMethods() {
             List<String> names = Arrays.stream(ProductRepositoryResource.class.getDeclaredMethods())
                     .map(Method::getName).toList();

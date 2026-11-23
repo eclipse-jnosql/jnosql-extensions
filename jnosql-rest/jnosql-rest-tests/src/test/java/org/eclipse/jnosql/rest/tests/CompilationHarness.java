@@ -45,6 +45,7 @@ final class CompilationHarness {
     private boolean openApi = true;
     private boolean mapStruct = true;
     private boolean runMapStructProcessor = true;
+    private boolean runRestProcessor = true;
     private final Map<String, String> sources = new java.util.LinkedHashMap<>();
 
     CompilationHarness(Path directory) {
@@ -59,6 +60,11 @@ final class CompilationHarness {
     CompilationHarness withoutMapStruct() {
         this.mapStruct = false;
         this.runMapStructProcessor = false;
+        return this;
+    }
+
+    CompilationHarness withoutRestProcessor() {
+        this.runRestProcessor = false;
         return this;
     }
 
@@ -83,7 +89,10 @@ final class CompilationHarness {
             files.setLocation(StandardLocation.CLASS_OUTPUT, List.of(classes.toFile()));
             List<JavaFileObject> units = new ArrayList<>();
             sources.forEach((name, content) -> units.add(new StringSource(name, content)));
-            List<String> processors = new ArrayList<>(List.of(REST_PROCESSOR));
+            List<String> processors = new ArrayList<>();
+            if (runRestProcessor) {
+                processors.add(REST_PROCESSOR);
+            }
             if (runMapStructProcessor) {
                 processors.add(MAPSTRUCT_PROCESSOR);
             }
@@ -104,6 +113,10 @@ final class CompilationHarness {
     }
 
     record Result(boolean success, List<Diagnostic<? extends JavaFileObject>> diagnostics, Path generated) {
+
+        Path classes() {
+            return generated.resolveSibling("classes");
+        }
 
         List<String> errors() {
             return messages(Diagnostic.Kind.ERROR);

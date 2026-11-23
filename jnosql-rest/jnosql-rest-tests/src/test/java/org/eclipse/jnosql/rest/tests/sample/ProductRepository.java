@@ -24,7 +24,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.eclipse.jnosql.rest.RestExclude;
-import org.eclipse.jnosql.rest.RestExpose;
+import jakarta.ws.rs.Path;
 import org.eclipse.jnosql.rest.RestRepository;
 
 import java.math.BigDecimal;
@@ -52,7 +52,7 @@ public interface ProductRepository extends CrudRepository<Product, UUID> {
     @Query("WHERE price > :minimum")
     List<Product> expensive(BigDecimal minimum);
 
-    @RestExpose(path = "/purge/{category}")
+    @Path("/purge/{category}")
     void deleteByCategory(String category);
 
     @Query("DELETE FROM Product WHERE category = :category")
