@@ -157,6 +157,10 @@ final class DtoPlanner {
         }
         List<Property> writable = plan.properties.stream().filter(Property::writable).toList();
         if (writable.isEmpty()) {
+            // Setter-less entities are built through constructors or builders, which MapStruct resolves.
+            writable = plan.properties;
+        }
+        if (writable.isEmpty()) {
             return false;
         }
         int errors = diagnostics.errorCount();
