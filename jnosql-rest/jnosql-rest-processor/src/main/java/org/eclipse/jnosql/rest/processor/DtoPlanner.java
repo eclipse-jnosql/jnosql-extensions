@@ -376,7 +376,7 @@ final class DtoPlanner {
         String qualifiedEntity = element.getQualifiedName().toString();
         if (stack.contains(qualifiedEntity)) {
             return unsupported(plan, attribute, element.asType(), "recursive structure "
-                    + String.join(" -> ", stack.reversed()) + " -> " + qualifiedEntity
+                    + String.join(" -> ", (Iterable<String>) stack::descendingIterator) + " -> " + qualifiedEntity
                     + "; exclude the attribute with @RestDTO(exclude)");
         }
         String nestedName = element.getSimpleName() + "DTO";
