@@ -39,13 +39,19 @@ import java.lang.annotation.Target;
  * with {@code MappingConstants.ComponentModel.JAKARTA_CDI} and injected into the resource. MapStruct and its annotation
  * processor must be configured by the application; otherwise compilation fails with an explanatory message.</p>
  *
+ * <p>Attributes are removed from the request DTOs with {@link #exclude()} and {@link #excludeFromRequest()}, and
+ * from the response DTO with {@link #exclude()} and {@link #excludeFromResponse()}.</p>
+ *
  * <p>The DTO is not an authorization mechanism. Prefer developer-defined records for sensitive or independently
  * versioned contracts.</p>
  *
  * <pre>{@code
  * @Repository
  * @RestRepository(path = "/customers")
- * @RestDTO(exclude = {"passwordHash", "internalNotes"})
+ * @RestDTO(
+ *     exclude = {"internalNotes"},
+ *     excludeFromRequest = {"id"},
+ *     excludeFromResponse = {"passwordHash"})
  * public interface CustomerRepository extends BasicRepository<Customer, UUID> {
  * }
  * }</pre>
@@ -58,16 +64,41 @@ import java.lang.annotation.Target;
 public @interface RestDTO {
 
     /**
-     * Entity attribute names removed from the generated response DTO, and therefore from its mapping and from
-     * the OpenAPI response schema derived from it.
+     * Excludes the specified entity attributes from both generated request and response DTOs.
+     *
+     * <p>The attributes are removed from {@code ProductDTO}, {@code ProductCreateRequest} and
+     * {@code ProductUpdateRequest}, and therefore from their MapStruct mappings and from the OpenAPI schemas derived
+     * from them. All other eligible attributes are mapped by default. These settings control the generated REST DTOs,
+     * not database attributes or persistence behavior.</p>
      *
      * <p>Names are Java attribute names, not database column names, and only direct attributes are supported.
-     * Unknown or duplicated names are compilation errors. The exclusion applies only to a generated response DTO:
-     * if a developer-defined DTO that contains an excluded attribute exists, compilation fails. Create and update
-     * requests are not affected, so an excluded attribute can still be written; update requests never contain the
-     * identifier.</p>
+     * Unknown names are compilation errors and repeated names are ignored. If a developer-defined response DTO that
+     * contains an excluded attribute exists, compilation fails.</p>
      *
-     * @return the attribute names to exclude from the response DTO
+     * @return the attribute names to exclude from request and response DTOs
      */
     String[] exclude() default {};
+
+    /**
+     * Excludes the specified entity attributes from generated request DTOs while preserving them in response DTOs
+     * unless otherwise excluded.
+     *
+     * <p>Typical for server-managed attributes such as an identifier. The attribute is absent from the create and
+     * update request DTOs, but the entity identifier remains available to repository operations and to path
+     * parameters. This does not change the database model.</p>
+     *
+     * @return the attribute names to exclude from request DTOs only
+     */
+    String[] excludeFromRequest() default {};
+
+    /**
+     * Excludes the specified entity attributes from generated response DTOs while preserving them in request DTOs
+     * unless otherwise excluded.
+     *
+     * <p>Clients can still send these attributes, which MapStruct maps into the entity and the repository persists,
+     * but responses, sorting and searching never expose them. This does not change the database model.</p>
+     *
+     * @return the attribute names to exclude from response DTOs only
+     */
+    String[] excludeFromResponse() default {};
 }
