@@ -130,7 +130,8 @@ final class DtoPlanner {
         List<Property> properties = scanner.scan(entity);
         if (properties.isEmpty()) {
             diagnostics.error(repository.element(), "Entity " + key + " has no readable attributes, "
-                    + "so no DTO can be generated for it.");
+                    + "so no DTO can be generated for it. MapStruct, which maps the DTO, only reads public getters, "
+                    + "public fields and record components; make the accessors public.");
             return null;
         }
         for (String excluded : repository.dtoExclusions()) {
