@@ -118,8 +118,9 @@ final class DtoPlanner {
         String key = entity.getQualifiedName().toString();
         EntityPlan existing = entities.get(key);
         if (existing != null) {
-            if (!existing.repository.dtoExclusions().equals(repository.dtoExclusions())
-                    || !existing.repository.dtoRequestExclusions().equals(repository.dtoRequestExclusions())) {
+            if (!Set.copyOf(existing.repository.dtoExclusions()).equals(Set.copyOf(repository.dtoExclusions()))
+                    || !Set.copyOf(existing.repository.dtoRequestExclusions())
+                    .equals(Set.copyOf(repository.dtoRequestExclusions()))) {
                 diagnostics.error(repository.element(), "Entity " + key + " is already exposed by "
                         + existing.repository.qualifiedName() + " with @RestDTO exclusions (response "
                         + existing.repository.dtoExclusions() + ", request "
