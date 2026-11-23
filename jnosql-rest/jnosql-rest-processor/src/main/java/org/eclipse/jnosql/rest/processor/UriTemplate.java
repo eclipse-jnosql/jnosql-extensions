@@ -17,6 +17,7 @@ package org.eclipse.jnosql.rest.processor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * A Jakarta REST URI template relative to the resource path, validated and normalized at compile time.
@@ -61,6 +62,14 @@ record UriTemplate(String path, List<String> variables, String problem) {
                     String name = (colon < 0 ? content : content.substring(0, colon)).trim();
                     if (!NAME.matcher(name).matches()) {
                         return invalid(path, variables, "the variable '{" + content + "}' has no valid name");
+                    }
+                    if (colon >= 0) {
+                        try {
+                            Pattern.compile(content.substring(colon + 1).trim());
+                        } catch (PatternSyntaxException exception) {
+                            return invalid(path, variables, "the expression of '{" + content + "}' is not a valid "
+                                    + "regular expression (" + exception.getDescription() + ")");
+                        }
                     }
                     if (variables.contains(name)) {
                         return invalid(path, variables, "the variable {" + name + "} is declared twice");
