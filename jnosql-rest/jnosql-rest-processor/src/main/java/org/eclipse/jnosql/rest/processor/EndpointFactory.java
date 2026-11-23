@@ -18,6 +18,7 @@ import org.eclipse.jnosql.rest.RestExclude;
 import org.eclipse.jnosql.rest.RestExposure;
 import org.eclipse.jnosql.rest.RestOperation;
 
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -551,6 +552,20 @@ final class EndpointFactory {
         }
         String identifierVariable = declared != null && declared.variables().size() == 1
                 ? declared.variables().get(0) : identifierName();
+        if (!standardOwner && (classified.kind() == Kind.FIND_BY_ID || classified.kind() == Kind.DELETE_BY_ID)
+                && method.getParameters().size() == 1 && hasBindingAnnotation(method.getParameters().get(0))) {
+            Binding binding = binding(method, method.getParameters().get(0),
+                    declared != null ? declared.variables() : List.of(identifierName()));
+            if (binding == null) {
+                return;
+            }
+            if (!binding.path()) {
+                diagnostics.error(method.getParameters().get(0), "The identifier of " + name
+                        + " must be bound to a path variable with @PathParam.");
+                return;
+            }
+            identifierVariable = binding.name();
+        }
         Spec spec = switch (classified.kind()) {
             case FIND_BY_ID -> findById(identifierVariable);
             case FIND_ALL -> findAll(method);
@@ -575,6 +590,12 @@ final class EndpointFactory {
             return;
         }
         register(method, standardOwner, spec);
+    }
+
+    private static boolean hasBindingAnnotation(VariableElement parameter) {
+        return parameter.getAnnotationMirrors().stream().map(Annotations::qualifiedName)
+                .anyMatch(name -> name.equals(PATH_PARAM) || name.equals(QUERY_PARAM)
+                        || UNSUPPORTED_BINDINGS.contains(name));
     }
 
     private static boolean bodyOperation(Kind kind) {
@@ -615,7 +636,7 @@ final class EndpointFactory {
 
     private String javaName(String name) {
         String safe = name.replaceAll("[^A-Za-z0-9_]", "_");
-        return RESERVED.contains(safe) ? safe + "Value" : safe;
+        return RESERVED.contains(safe) || SourceVersion.isKeyword(safe) ? safe + "Value" : safe;
     }
 
     private void register(ExecutableElement method, boolean standardOwner, Spec spec) {
@@ -636,13 +657,11 @@ final class EndpointFactory {
         }
         var completed = spec.createdType == null || !openApi.available() ? null : incompleteCreated(method);
         for (var mirror : openApi.forMethod(method)) {
-            if (mirror != completed) {
-                annotations.add(annotationSource.write(mirror));
-            }
+            annotations.add(mirror == completed ? completedCreated(mirror, spec.createdType)
+                    : annotationSource.write(mirror));
         }
-        if (spec.createdType != null && openApi.available() && (completed != null || !declaresResponses(method))) {
-            annotations.add(createdResponse(spec.createdType, completed == null ? "Created"
-                    : memberValue(completed, "description").orElse("Created")));
+        if (spec.createdType != null && openApi.available() && completed == null && !declaresResponses(method)) {
+            annotations.add(createdResponse(spec.createdType, "Created"));
         }
         String javadoc = "Handles {@code " + spec.http + " " + repository.path() + spec.path
                 + "} by delegating to {@link " + repositoryName() + "#" + method.getSimpleName() + "}.";
@@ -680,11 +699,23 @@ final class EndpointFactory {
     }
 
     private String createdResponse(String type, String description) {
+        return "@" + imports.name("org.eclipse.microprofile.openapi.annotations.responses.APIResponse")
+                + "(responseCode = \"201\", description = " + AnnotationSource.quote(description) + ", "
+                + createdContent(type) + ")";
+    }
+
+    /** Keeps every member the developer declared and only adds the missing body schema. */
+    private String completedCreated(javax.lang.model.element.AnnotationMirror mirror, String type) {
+        String written = annotationSource.write(mirror);
+        String description = memberValue(mirror, "description").isPresent() ? ""
+                : ", description = " + AnnotationSource.quote("Created");
+        return written.substring(0, written.length() - 1) + description + ", " + createdContent(type) + ")";
+    }
+
+    private String createdContent(String type) {
         String base = "org.eclipse.microprofile.openapi.annotations.";
-        return "@" + imports.name(base + "responses.APIResponse") + "(responseCode = \"201\", "
-                + "description = " + AnnotationSource.quote(description) + ", content = @" + imports.name(base + "media.Content")
-                + "(mediaType = \"application/json\", schema = @" + imports.name(base + "media.Schema")
-                + "(implementation = " + type + ".class)))";
+        return "content = @" + imports.name(base + "media.Content") + "(mediaType = \"application/json\", schema = @"
+                + imports.name(base + "media.Schema") + "(implementation = " + type + ".class))";
     }
 
     private static String renderParameters(List<String> parameters) {
@@ -796,7 +827,7 @@ final class EndpointFactory {
             checkBody(spec, "request");
             spec.line(entityType + " entity = mapper.toEntity(request);");
         }
-        spec.createdType = representation();
+        spec.createdType = dto == null ? imports.render(types.erasure(repository.entity())) : dtoType();
         boolean returns = method.getReturnType().getKind() != TypeKind.VOID;
         spec.line(returns ? entityType + " created = " + call + ";" : call + ";");
         String created = returns ? "created" : "entity";
@@ -1128,7 +1159,7 @@ final class EndpointFactory {
 
     private String variableName(VariableElement parameter) {
         String name = parameter.getSimpleName().toString();
-        return RESERVED.contains(name) ? name + "Value" : name;
+        return RESERVED.contains(name) || SourceVersion.isKeyword(name) ? name + "Value" : name;
     }
 
     private Spec parameters(ExecutableElement method, String path, String http, Paging paging) {
@@ -1205,13 +1236,13 @@ final class EndpointFactory {
             String parser = ScalarTypes.parser(type);
             String received = parser == null ? variableName(parameter) : variableName(parameter) + "Text";
             text.append('@').append(imports.name(binding.path() ? PATH_PARAM : QUERY_PARAM))
-                    .append("(\"").append(binding.name()).append("\") ")
+                    .append('(').append(AnnotationSource.quote(binding.name())).append(") ")
                     .append(parser == null ? imports.render(type) : "String").append(' ').append(received);
             spec.parameter(text.toString());
             if (parser != null) {
                 conversions.add(imports.render(type) + " " + variableName(parameter) + " = "
-                        + imports.name("org.eclipse.jnosql.rest.pagination.QueryValues") + ".parse(\""
-                        + binding.name() + "\", " + received + ", " + imports.render(type) + "::" + parser + ");");
+                        + imports.name("org.eclipse.jnosql.rest.pagination.QueryValues") + ".parse("
+                        + AnnotationSource.quote(binding.name()) + ", " + received + ", " + imports.render(type) + "::" + parser + ");");
             }
             if (!binding.path()) {
                 checks.put(received, binding.name());
@@ -1228,7 +1259,8 @@ final class EndpointFactory {
         for (Map.Entry<String, String> check : checks.entrySet()) {
             spec.line("if (" + check.getKey() + " == null) {");
             spec.line(INDENT + "throw new " + imports.name("jakarta.ws.rs.BadRequestException")
-                    + "(\"Query parameter '" + check.getValue() + "' is required\");");
+                    + "(" + AnnotationSource.quote("Query parameter '" + check.getValue() + "' is required")
+                    + ");");
             spec.line("}");
         }
         for (String name : reserved) {
