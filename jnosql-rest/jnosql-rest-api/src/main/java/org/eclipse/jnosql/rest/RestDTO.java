@@ -45,16 +45,51 @@ import java.lang.annotation.Target;
  * <p>The DTO is not an authorization mechanism. Prefer developer-defined records for sensitive or independently
  * versioned contracts.</p>
  *
+ * <p>The examples below use this entity, whose attributes are all public and readable:</p>
+ *
+ * <pre>{@code
+ * @Entity
+ * public class Product {
+ *     @Id private String id;
+ *     @Column private String name;
+ *     @Column private BigDecimal price;
+ *     @Column private BigDecimal supplierCost;
+ *     @Column private String internalNotes;
+ *     // public getters and setters
+ * }
+ * }</pre>
+ *
+ * <p>With all three attributes combined:</p>
+ *
  * <pre>{@code
  * @Repository
- * @RestRepository(path = "/customers")
+ * @RestRepository(path = "/products")
  * @RestDTO(
  *     exclude = {"internalNotes"},
  *     excludeFromRequest = {"id"},
- *     excludeFromResponse = {"passwordHash"})
- * public interface CustomerRepository extends BasicRepository<Customer, UUID> {
+ *     excludeFromResponse = {"supplierCost"})
+ * public interface ProductRepository extends CrudRepository<Product, String> {
  * }
  * }</pre>
+ *
+ * <p>the processor generates:</p>
+ *
+ * <pre>{@code
+ * public record ProductDTO(String id, String name, BigDecimal price) { }
+ * public record ProductCreateRequest(String name, BigDecimal price, BigDecimal supplierCost) { }
+ * public record ProductUpdateRequest(String name, BigDecimal price, BigDecimal supplierCost) { }
+ * }</pre>
+ *
+ * <table>
+ *   <caption>Effective attributes of the combined example</caption>
+ *   <tr><th>Attribute</th><th>Create/update request</th><th>Response</th></tr>
+ *   <tr><td>{@code id}</td><td>excluded</td><td>included</td></tr>
+ *   <tr><td>{@code name}, {@code price}</td><td>included</td><td>included</td></tr>
+ *   <tr><td>{@code supplierCost}</td><td>included</td><td>excluded</td></tr>
+ *   <tr><td>{@code internalNotes}</td><td>excluded</td><td>excluded</td></tr>
+ * </table>
+ *
+ * <p>An update request never contains the identifier, which is bound from the path.</p>
  *
  * @see RestRepository
  */
@@ -75,6 +110,14 @@ public @interface RestDTO {
      * Unknown names are compilation errors and repeated names are ignored. If a developer-defined response DTO that
      * contains an excluded attribute exists, compilation fails.</p>
      *
+     * <pre>{@code
+     * @RestDTO(exclude = {"internalNotes"})
+     *
+     * public record ProductDTO(String id, String name, BigDecimal price, BigDecimal supplierCost) { }
+     * public record ProductCreateRequest(String id, String name, BigDecimal price, BigDecimal supplierCost) { }
+     * public record ProductUpdateRequest(String name, BigDecimal price, BigDecimal supplierCost) { }
+     * }</pre>
+     *
      * @return the attribute names to exclude from request and response DTOs
      */
     String[] exclude() default {};
@@ -87,6 +130,17 @@ public @interface RestDTO {
      * update request DTOs, but the entity identifier remains available to repository operations and to path
      * parameters. This does not change the database model.</p>
      *
+     * <pre>{@code
+     * @RestDTO(excludeFromRequest = {"id"})
+     *
+     * public record ProductDTO(String id, String name, BigDecimal price, BigDecimal supplierCost,
+     *                          String internalNotes) { }
+     * public record ProductCreateRequest(String name, BigDecimal price, BigDecimal supplierCost,
+     *                                    String internalNotes) { }
+     * public record ProductUpdateRequest(String name, BigDecimal price, BigDecimal supplierCost,
+     *                                    String internalNotes) { }
+     * }</pre>
+     *
      * @return the attribute names to exclude from request DTOs only
      */
     String[] excludeFromRequest() default {};
@@ -97,6 +151,16 @@ public @interface RestDTO {
      *
      * <p>Clients can still send these attributes, which MapStruct maps into the entity and the repository persists,
      * but responses, sorting and searching never expose them. This does not change the database model.</p>
+     *
+     * <pre>{@code
+     * @RestDTO(excludeFromResponse = {"supplierCost"})
+     *
+     * public record ProductDTO(String id, String name, BigDecimal price, String internalNotes) { }
+     * public record ProductCreateRequest(String id, String name, BigDecimal price, BigDecimal supplierCost,
+     *                                    String internalNotes) { }
+     * public record ProductUpdateRequest(String name, BigDecimal price, BigDecimal supplierCost,
+     *                                    String internalNotes) { }
+     * }</pre>
      *
      * @return the attribute names to exclude from response DTOs only
      */
