@@ -118,11 +118,14 @@ final class DtoPlanner {
         String key = entity.getQualifiedName().toString();
         EntityPlan existing = entities.get(key);
         if (existing != null) {
-            if (!existing.repository.dtoExclusions().equals(repository.dtoExclusions())) {
+            if (!Set.copyOf(existing.repository.dtoExclusions()).equals(Set.copyOf(repository.dtoExclusions()))
+                    || !Set.copyOf(existing.repository.dtoRequestExclusions())
+                    .equals(Set.copyOf(repository.dtoRequestExclusions()))) {
                 diagnostics.error(repository.element(), "Entity " + key + " is already exposed by "
-                        + existing.repository.qualifiedName() + " with @RestDTO(exclude = "
-                        + existing.repository.dtoExclusions() + "); repositories sharing an entity must declare "
-                        + "the same exclusions because the DTO and its mapper are shared.");
+                        + existing.repository.qualifiedName() + " with @RestDTO exclusions (response "
+                        + existing.repository.dtoExclusions() + ", request "
+                        + existing.repository.dtoRequestExclusions() + "); repositories sharing an entity must "
+                        + "declare the same exclusions because the DTO and its mapper are shared.");
                 return null;
             }
             return existing;
@@ -130,10 +133,13 @@ final class DtoPlanner {
         List<Property> properties = scanner.scan(entity);
         if (properties.isEmpty()) {
             diagnostics.error(repository.element(), "Entity " + key + " has no readable attributes, "
-                    + "so no DTO can be generated for it.");
+                    + "so no DTO can be generated for it. MapStruct, which maps the DTO, only reads public getters, "
+                    + "public fields and record components; make the accessors public.");
             return null;
         }
-        for (String excluded : repository.dtoExclusions()) {
+        Set<String> declared = new java.util.LinkedHashSet<>(repository.dtoExclusions());
+        declared.addAll(repository.dtoRequestExclusions());
+        for (String excluded : declared) {
             if (properties.stream().noneMatch(property -> property.name().equals(excluded))) {
                 diagnostics.error(repository.element(), "@RestDTO excludes the attribute '" + excluded
                         + "', but " + key + " has no such attribute. Available attributes: "
@@ -157,6 +163,16 @@ final class DtoPlanner {
         }
         List<Property> writable = plan.properties.stream().filter(Property::writable).toList();
         if (writable.isEmpty()) {
+            // Setter-less entities are built through constructors or builders, which MapStruct resolves.
+            writable = plan.properties;
+        }
+        if (writable.isEmpty()) {
+            return false;
+        }
+        writable = withoutRequestExclusions(plan, writable);
+        if (writable.isEmpty()) {
+            diagnostics.error(plan.repository.element(), "@RestDTO excludes every attribute of "
+                    + plan.entity.getQualifiedName() + " from requests, leaving an empty create request DTO.");
             return false;
         }
         int errors = diagnostics.errorCount();
@@ -172,6 +188,7 @@ final class DtoPlanner {
         }
         List<Property> writable = plan.properties.stream()
                 .filter(Property::writable).filter(property -> !property.identifier()).toList();
+        writable = withoutRequestExclusions(plan, writable);
         if (plan.entityIsRecord() || writable.isEmpty()) {
             return false;
         }
@@ -181,6 +198,11 @@ final class DtoPlanner {
                         + "}; absent or null attributes keep their current value.");
         plan.updateRequired = diagnostics.errorCount() == errors;
         return plan.updateRequired;
+    }
+
+    private static List<Property> withoutRequestExclusions(EntityPlan plan, List<Property> properties) {
+        return properties.stream()
+                .filter(property -> !plan.repository.dtoRequestExclusions().contains(property.name())).toList();
     }
 
     List<RecordSpec> records() {

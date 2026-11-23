@@ -25,7 +25,7 @@ import java.util.Optional;
 
 @Repository
 @RestRepository(path = "/customers")
-@RestDTO(exclude = {"passwordHash"})
+@RestDTO(excludeFromResponse = {"passwordHash"})
 public interface CustomerRepository extends CrudRepository<Customer, Long> {
 
     @Find

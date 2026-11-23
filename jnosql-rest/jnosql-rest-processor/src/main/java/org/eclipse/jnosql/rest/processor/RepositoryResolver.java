@@ -97,10 +97,17 @@ final class RepositoryResolver {
         Set<org.eclipse.jnosql.rest.RestOperation> excluded = rest.exclude().length == 0
                 ? EnumSet.noneOf(org.eclipse.jnosql.rest.RestOperation.class)
                 : EnumSet.copyOf(Arrays.asList(rest.exclude()));
-        List<String> exclusions = dto == null ? List.of() : List.of(dto.exclude());
+        List<String> responseExclusions = dto == null ? List.of() : union(dto.exclude(), dto.excludeFromResponse());
+        List<String> requestExclusions = dto == null ? List.of() : union(dto.exclude(), dto.excludeFromRequest());
         return Optional.of(new RepositoryInfo(element, (DeclaredType) element.asType(), entity,
                 id, findSupertype(element.asType(), BASIC_REPOSITORY) != null,
-                normalizePath(rest.path()), rest.exposure(), excluded, dto != null, exclusions));
+                normalizePath(rest.path()), rest.exposure(), excluded, dto != null, responseExclusions, requestExclusions));
+    }
+
+    private static List<String> union(String[] first, String[] second) {
+        Set<String> names = new java.util.LinkedHashSet<>(Arrays.asList(first));
+        names.addAll(Arrays.asList(second));
+        return List.copyOf(names);
     }
 
     private TypeMirror inferEntity(TypeElement element) {

@@ -198,7 +198,7 @@ class PaginationGenerationTest {
         @Test
         @DisplayName("Should fail the build when an explicitly exposed cursor method has no unique ordering")
         void shouldFailWhenExplicit(@TempDir Path directory) {
-            var result = harness(directory, "@Find @RestExpose @OrderBy(\"name\") "
+            var result = harness(directory, "@Find @jakarta.ws.rs.Path(\"/by-name\") @OrderBy(\"name\") "
                     + "CursoredPage<Item> findByName(String name, PageRequest r);").compile();
 
             assertThat(result.success()).isFalse();
@@ -246,7 +246,7 @@ class PaginationGenerationTest {
         @Test
         @DisplayName("Should generate a paginated restriction search with a pagination member")
         void shouldGenerateSearch(@TempDir Path directory) {
-            var result = harness(directory, "@Find @RestExpose(path = \"/search\") @OrderBy(\"name\") @OrderBy(\"id\") "
+            var result = harness(directory, "@Find @jakarta.ws.rs.Path(\"/search\") @OrderBy(\"name\") @OrderBy(\"id\") "
                     + "CursoredPage<Item> search(jakarta.data.restrict.Restriction<Item> r, PageRequest p);").compile();
 
             assertThat(result.errors()).isEmpty();
@@ -263,7 +263,7 @@ class PaginationGenerationTest {
         @Test
         @DisplayName("Should generate an offset search")
         void shouldGenerateOffsetSearch(@TempDir Path directory) {
-            var result = harness(directory, "@Find @RestExpose(path = \"/search\") "
+            var result = harness(directory, "@Find @jakarta.ws.rs.Path(\"/search\") "
                     + "Page<Item> search(jakarta.data.restrict.Restriction<Item> r, PageRequest p);").compile();
 
             assertThat(result.errors()).isEmpty();
@@ -274,9 +274,9 @@ class PaginationGenerationTest {
         @Test
         @DisplayName("Should reject searches that disagree on pagination")
         void shouldRejectMixedSearches(@TempDir Path directory) {
-            var result = harness(directory, "@Find @RestExpose(path = \"/a\") "
+            var result = harness(directory, "@Find @jakarta.ws.rs.Path(\"/a\") "
                     + "Page<Item> a(jakarta.data.restrict.Restriction<Item> r, PageRequest p);"
-                    + "@Find @RestExpose(path = \"/b\") List<Item> b(jakarta.data.restrict.Restriction<Item> r);")
+                    + "@Find @jakarta.ws.rs.Path(\"/b\") List<Item> b(jakarta.data.restrict.Restriction<Item> r);")
                     .compile();
 
             assertThat(result.success()).isFalse();

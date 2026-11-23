@@ -21,34 +21,57 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Enables DTO-based representations for a {@link RestRepository}.
+ * Enables DTO generation for a Jakarta Data repository exposed through JNoSQL REST.
  *
- * <p>No class is passed to the annotation. For an entity {@code Product} the processor looks, in the package
- * of the repository, for the following types and reuses them when they exist. It never overwrites a type written
- * by the developer, and it generates the missing ones as Java records:</p>
+ * <p>JNoSQL REST generates request and response DTOs as Java records: {@code ProductDTO} for responses,
+ * {@code ProductCreateRequest} for creation and {@code ProductUpdateRequest} for updates. DTOs written by the
+ * developer with those names, in the package of the repository, are reused and never overwritten. Entities and DTOs
+ * are converted by a generated MapStruct mapper, so MapStruct and its annotation processor must be configured by the
+ * application. All eligible attributes are mapped by default.</p>
  *
- * <table>
- *   <caption>DTO naming conventions</caption>
- *   <tr><th>Type</th><th>Role</th></tr>
- *   <tr><td>{@code ProductDTO}</td><td>response representation</td></tr>
- *   <tr><td>{@code ProductCreateRequest}</td><td>body of insert and save operations</td></tr>
- *   <tr><td>{@code ProductUpdateRequest}</td><td>body of update operations</td></tr>
- * </table>
- *
- * <p>Objects are converted by a generated MapStruct mapper interface named {@code ProductDTOMapper}, declared
- * with {@code MappingConstants.ComponentModel.JAKARTA_CDI} and injected into the resource. MapStruct and its annotation
- * processor must be configured by the application; otherwise compilation fails with an explanatory message.</p>
- *
- * <p>The DTO is not an authorization mechanism. Prefer developer-defined records for sensitive or independently
- * versioned contracts.</p>
+ * <p>Attributes can be left out of the generated DTOs with {@link #exclude()}, {@link #excludeFromRequest()} and
+ * {@link #excludeFromResponse()}. Given a {@code Product} entity with the attributes {@code id}, {@code name},
+ * {@code price}, {@code supplierCost} and {@code internalNotes}:</p>
  *
  * <pre>{@code
  * @Repository
- * @RestRepository(path = "/customers")
- * @RestDTO(exclude = {"passwordHash", "internalNotes"})
- * public interface CustomerRepository extends BasicRepository<Customer, UUID> {
+ * @RestRepository(path = "/products")
+ * @RestDTO(
+ *     exclude = {"internalNotes"},
+ *     excludeFromRequest = {"id"},
+ *     excludeFromResponse = {"supplierCost"}
+ * )
+ * public interface ProductRepository
+ *         extends CrudRepository<Product, String> {
  * }
  * }</pre>
+ *
+ * <p>The creation endpoint accepts:</p>
+ *
+ * <pre>{@code
+ * {
+ *   "name": "Pen",
+ *   "price": 10,
+ *   "supplierCost": 9
+ * }
+ * }</pre>
+ *
+ * <p>and returns a representation such as:</p>
+ *
+ * <pre>{@code
+ * {
+ *   "id": "product-123",
+ *   "name": "Pen",
+ *   "price": 10
+ * }
+ * }</pre>
+ *
+ * <p>{@code internalNotes} appears in neither representation, {@code id} appears only in the response, and
+ * {@code supplierCost} is accepted in the request but omitted from the response. The entity and its persistence
+ * mapping are unchanged.</p>
+ *
+ * <p>Names are Java attribute names, not database column names, and only direct attributes are supported. Unknown
+ * names are compilation errors. The DTO configuration is not an authorization mechanism.</p>
  *
  * @see RestRepository
  */
@@ -58,16 +81,25 @@ import java.lang.annotation.Target;
 public @interface RestDTO {
 
     /**
-     * Entity attribute names removed from the generated response DTO, and therefore from its mapping and from
-     * the OpenAPI response schema derived from it.
+     * Excludes the specified entity attributes from both generated request and response DTOs.
      *
-     * <p>Names are Java attribute names, not database column names, and only direct attributes are supported.
-     * Unknown or duplicated names are compilation errors. The exclusion applies only to a generated response DTO:
-     * if a developer-defined DTO that contains an excluded attribute exists, compilation fails. Create and update
-     * requests are not affected, so an excluded attribute can still be written; update requests never contain the
-     * identifier.</p>
-     *
-     * @return the attribute names to exclude from the response DTO
+     * @return the attribute names to exclude from request and response DTOs
      */
     String[] exclude() default {};
+
+    /**
+     * Excludes the specified entity attributes from generated request DTOs while keeping them in response DTOs
+     * unless otherwise excluded.
+     *
+     * @return the attribute names to exclude from request DTOs only
+     */
+    String[] excludeFromRequest() default {};
+
+    /**
+     * Excludes the specified entity attributes from generated response DTOs while keeping them in request DTOs
+     * unless otherwise excluded.
+     *
+     * @return the attribute names to exclude from response DTOs only
+     */
+    String[] excludeFromResponse() default {};
 }

@@ -25,7 +25,7 @@ import jakarta.data.repository.Find;
 import jakarta.data.repository.Repository;
 import jakarta.data.restrict.Restriction;
 import org.eclipse.jnosql.rest.RestDTO;
-import org.eclipse.jnosql.rest.RestExpose;
+import jakarta.ws.rs.Path;
 import org.eclipse.jnosql.rest.RestRepository;
 
 import java.util.List;
@@ -48,6 +48,6 @@ public interface BookRepository extends BasicRepository<Book, Long> {
     CursoredPage<Book> byAuthorCursor(String author, PageRequest pageRequest, Order<Book> order);
 
     @Find
-    @RestExpose(path = "/search")
+    @Path("/search")
     Page<Book> search(Restriction<Book> restriction, PageRequest pageRequest, Order<Book> order);
 }

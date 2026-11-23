@@ -23,10 +23,10 @@ import java.lang.annotation.Target;
 /**
  * Prevents a repository method from being exposed as an HTTP endpoint.
  *
- * <p>The exclusion wins over {@link RestExposure#ALL}. To exclude an inherited operation, redeclare it in the
+ * <p>The exclusion always wins: it overrides {@link RestExposure#ALL} and a Jakarta REST
+ * {@code @Path} declared on the same method. To exclude an inherited operation, redeclare it in the
  * repository interface and annotate the declaration, or exclude the whole category with
- * {@link RestRepository#exclude()}. Combining it with {@link RestExpose} on the same method is a compilation
- * error.</p>
+ * {@link RestRepository#exclude()}.</p>
  *
  * <pre>{@code
  * @RestExclude

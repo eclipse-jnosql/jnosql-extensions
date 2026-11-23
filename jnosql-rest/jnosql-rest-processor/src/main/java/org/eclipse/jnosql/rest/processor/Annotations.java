@@ -53,6 +53,20 @@ final class Annotations {
                 .filter(text -> !text.isBlank());
     }
 
+    /**
+     * Reads the {@code value} member of an annotation, keeping blank values, so an explicit empty value can be
+     * told apart from an absent annotation.
+     *
+     * @param element       the annotated element
+     * @param qualifiedName the annotation type
+     * @return the value, or empty when the annotation is absent or has no value
+     */
+    static Optional<String> rawStringValue(Element element, String qualifiedName) {
+        return find(element, qualifiedName)
+                .flatMap(Annotations::value)
+                .map(value -> value.getValue().toString());
+    }
+
     static String qualifiedName(AnnotationMirror mirror) {
         return ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName().toString();
     }

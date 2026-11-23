@@ -38,7 +38,8 @@ import java.util.Set;
  * @param exposure      the exposure policy
  * @param excluded      the excluded operation categories
  * @param dto           whether {@code @RestDTO} is present
- * @param dtoExclusions the attributes excluded from the response DTO
+ * @param dtoExclusions the attributes excluded from the response DTO ({@code exclude} and {@code excludeFromResponse})
+ * @param dtoRequestExclusions the attributes excluded from the request DTOs ({@code exclude} and {@code excludeFromRequest})
  */
 record RepositoryInfo(TypeElement element,
                       DeclaredType type,
@@ -49,7 +50,8 @@ record RepositoryInfo(TypeElement element,
                       RestExposure exposure,
                       Set<RestOperation> excluded,
                       boolean dto,
-                      List<String> dtoExclusions) {
+                      List<String> dtoExclusions,
+                      List<String> dtoRequestExclusions) {
 
     String qualifiedName() {
         return element.getQualifiedName().toString();
