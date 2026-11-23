@@ -52,12 +52,12 @@ class EdgeCaseGenerationTest {
     }
 
     @Test
-    @DisplayName("Should apply @RestExpose paths to redeclared standard operations")
+    @DisplayName("Should apply @Path paths to redeclared standard operations")
     void shouldOverrideStandardPaths(@TempDir Path directory) {
         var result = harness(directory, "@Column private String name; public String getName() { return name; }",
                 """
-                @RestExpose(path = "/lookup/{id}") Optional<Item> findById(Long id);
-                @RestExpose(path = "/remove/{id}") void deleteById(Long id);
+                @jakarta.ws.rs.Path("/lookup/{id}") Optional<Item> findById(Long id);
+                @jakarta.ws.rs.Path("/remove/{id}") void deleteById(Long id);
                 """).compile();
 
         assertThat(result.errors()).isEmpty();
@@ -68,23 +68,23 @@ class EdgeCaseGenerationTest {
     }
 
     @Test
-    @DisplayName("Should reject an override with the wrong path parameters")
+    @DisplayName("Should reject an override with the wrong number of path variables")
     void shouldRejectWrongOverride(@TempDir Path directory) {
         var result = harness(directory, "", """
-                @RestExpose(path = "/lookup/{key}") Optional<Item> findById(Long id);
+                @jakarta.ws.rs.Path("/lookup/{a}/{b}") Optional<Item> findById(Long id);
                 """).compile();
 
-        assertThat(result.errors()).anyMatch(message -> message.contains("path parameters"));
+        assertThat(result.errors()).anyMatch(message -> message.contains("exactly 1 path variable"));
     }
 
     @Test
     @DisplayName("Should reject path parameters on an operation that has none")
     void shouldRejectUnexpectedTemplate(@TempDir Path directory) {
         var result = harness(directory, "", """
-                @RestExpose(path = "/all/{x}") Item save(Item entity);
+                @jakarta.ws.rs.Path("/all/{x}") Item save(Item entity);
                 """).compile();
 
-        assertThat(result.errors()).anyMatch(message -> message.contains("must not declare path parameters"));
+        assertThat(result.errors()).anyMatch(message -> message.contains("must not declare path variables"));
     }
 
     @Test
@@ -147,25 +147,25 @@ class EdgeCaseGenerationTest {
                         + "public void setId(String id) { this.id = id; } }")
                 .source("demo.ItemRepository", HEAD + "@Repository @RestRepository(path = \"/items\") "
                         + "public interface ItemRepository extends CrudRepository<Item, String> { "
-                        + "@Find @RestExpose(path = \"/bad\") @OrderBy(\"id\") "
+                        + "@Find @jakarta.ws.rs.Path(\"/bad\") @OrderBy(\"id\") "
                         + "CursoredPage<Item> bad(PageRequest page); "
-                        + "@Find @RestExpose(path = \"/good\") @OrderBy(\"id\") @OrderBy(\"sku\") "
+                        + "@Find @jakarta.ws.rs.Path(\"/good\") @OrderBy(\"id\") @OrderBy(\"sku\") "
                         + "CursoredPage<Item> good(PageRequest page); }").compile();
 
         assertThat(result.errors()).hasSize(1).allMatch(message -> message.contains("sku"));
     }
 
     @Test
-    @DisplayName("Should find the identifier stored on a record component for cursor ordering")
+    @DisplayName("Should find the identifier and transient markers stored on record fields")
     void shouldScanRecordAnnotations(@TempDir Path directory) {
         var result = new CompilationHarness(directory)
-                .source("demo.Item", HEAD + "@Entity public record Item(@Id Long code, String name) { }")
+                .source("demo.Item", HEAD + "@Entity public record Item(@Id Long code, String name, "
+                        + "@java.beans.Transient String cache) { }")
                 .source("demo.ItemRepository", HEAD + "@Repository @RestRepository(path = \"/items\") "
                         + "public interface ItemRepository extends BasicRepository<Item, Long> { "
-                        + "@Find @OrderBy(\"code\") CursoredPage<Item> byName(String name, PageRequest page); }")
-                .compile();
+                        + "@Find @jakarta.ws.rs.Path(\"/s\") List<Item> s(String name); }").compile();
 
         assertThat(result.errors()).isEmpty();
-        assertThat(result.source("ItemRepositoryResource")).contains("byName");
+        assertThat(result.source("ItemRepositoryResource")).contains("@QueryParam(\"name\")");
     }
 }
