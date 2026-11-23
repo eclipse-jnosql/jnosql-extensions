@@ -38,16 +38,23 @@ import java.lang.annotation.Target;
  * }
  * }</pre>
  *
+ * <p>The annotation alone is enough to obtain resource-oriented endpoints: inserts are served by
+ * {@code POST /products}, a lookup by identifier by {@code GET /products/{id}}, and other finders by
+ * {@code GET /products/{methodName}}. Standard Jakarta REST annotations customize the result:
+ * {@code @Path} on a repository method selects its route and, under {@link RestExposure#EXPLICIT}, exposes it;
+ * {@code @PathParam} and {@code @QueryParam} on a parameter select how it is bound. {@link RestExclude} removes
+ * a method.</p>
+ *
  * <p>Repositories without this annotation are never exposed. The annotation must be placed on an interface
  * that extends {@code jakarta.data.repository.DataRepository}. Contradictory configuration, unsupported
- * method signatures that were explicitly requested and route collisions are reported as compilation errors.</p>
+ * method signatures that were explicitly requested, invalid parameter bindings and route collisions are
+ * reported as compilation errors.</p>
  *
  * <p>The default {@link RestExposure#ALL} policy can publish mutating operations. The generated resource does not
  * add authorization; use the security mechanisms of the hosting application.</p>
  *
  * @see RestExposure
  * @see RestOperation
- * @see RestExpose
  * @see RestExclude
  * @see RestDTO
  */
@@ -72,7 +79,8 @@ public @interface RestRepository {
 
     /**
      * Operation categories that are never exposed, including inherited operations that are not redeclared.
-     * Excluding a category that contains a method annotated with {@link RestExpose} is a compilation error.
+     * Excluding a category that contains a method annotated with a Jakarta REST {@code @Path} is a compilation
+     * error.
      *
      * @return the excluded operation categories
      */
