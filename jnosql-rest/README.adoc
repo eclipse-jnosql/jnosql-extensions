@@ -187,6 +187,29 @@ include every writable attribute; use a developer-defined request record to narr
 compile errors.
 * Record entities cannot be updated in place; no update endpoint is generated for them.
 
+=== Entity construction patterns
+
+Object construction is delegated to MapStruct (see the
+https://mapstruct.org/documentation/stable/reference/html/[MapStruct reference guide]); the extension adds no mapping
+validation of its own. Entities without setters use every readable attribute in the create request. Verified by tests
+with the real processors and compiled mappers:
+
+[cols="2,3"]
+|===
+|Pattern |Result
+
+|Mutable JavaBean (no-arg constructor, setters) |Supported, including nested `@Embeddable` records.
+|Immutable class with an accessible constructor |Supported (create and response mapping).
+|Java record |Supported through the canonical constructor; no setters or getters needed.
+|Builder (`builder()`/`build()`) |Supported; no public no-arg constructor required.
+|Builder with other names (`newBuilder()`/`create()`) |Supported; detected by MapStruct.
+|Private constructor with a static factory (`of(...)`) |Not supported: MapStruct reports that there is no accessible
+constructor. Add a builder to the entity.
+|===
+
+Immutable entities, including records, have no generated update endpoint because updates map onto an existing instance.
+`@ObjectFactory` and custom `BuilderProvider` SPI configuration were not verified.
+
 == Pagination
 
 A method with one `PageRequest` parameter and a `Page<T>` or `CursoredPage<T>` return is published as a `GET` endpoint
