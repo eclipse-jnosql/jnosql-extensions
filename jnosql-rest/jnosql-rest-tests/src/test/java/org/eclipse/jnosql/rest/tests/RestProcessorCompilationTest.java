@@ -103,7 +103,7 @@ class RestProcessorCompilationTest {
         @DisplayName("Should generate only the explicitly exposed methods under EXPLICIT")
         void shouldHonourExplicitExposure(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\", exposure = RestExposure.EXPLICIT)",
-                    "@RestExpose List<Item> findByName(String name);\nList<Item> findBySecret(String secret);")
+                    "@jakarta.ws.rs.Path(\"/by-name\") List<Item> findByName(String name);\nList<Item> findBySecret(String secret);")
                     .compile();
 
             assertThat(result.success()).isTrue();
@@ -180,23 +180,24 @@ class RestProcessorCompilationTest {
     class WhenInvalid {
 
         @Test
-        @DisplayName("Should reject @RestExpose combined with @RestExclude")
-        void shouldRejectContradictoryAnnotations(@TempDir Path directory) {
+        @DisplayName("Should let @RestExclude win over @Path")
+        void shouldLetExcludeWin(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose @RestExclude List<Item> findByName(String name);").compile();
+                    "@jakarta.ws.rs.Path(\"/by-name\") @RestExclude List<Item> findByName(String name);")
+                    .compile();
 
-            assertThat(result.success()).isFalse();
-            assertThat(result.errors()).anyMatch(message -> message.contains("@RestExpose"));
+            assertThat(result.success()).isTrue();
+            assertThat(result.source("ItemRepositoryResource")).doesNotContain("findByName");
         }
 
         @Test
-        @DisplayName("Should reject @RestExpose under NONE")
-        void shouldRejectExposeUnderNone(@TempDir Path directory) {
+        @DisplayName("Should not let @Path override RestExposure.NONE")
+        void shouldIgnorePathUnderNone(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\", exposure = RestExposure.NONE)",
-                    "@RestExpose List<Item> findByName(String name);").compile();
+                    "@jakarta.ws.rs.Path(\"/by-name\") List<Item> findByName(String name);").compile();
 
-            assertThat(result.success()).isFalse();
-            assertThat(result.errors()).anyMatch(message -> message.contains("NONE"));
+            assertThat(result.success()).isTrue();
+            assertThat(result.generated("ItemRepositoryResource")).isFalse();
         }
 
         @Test
@@ -213,8 +214,8 @@ class RestProcessorCompilationTest {
         @DisplayName("Should reject a repository path collision")
         void shouldRejectPathCollision(@TempDir Path directory) {
             var result = harness(directory, "@RestRepository(path = \"/items\")",
-                    "@RestExpose(path = \"/same\") List<Item> findByName(String name);\n"
-                            + "@RestExpose(path = \"/same\") List<Item> findBySecret(String secret);").compile();
+                    "@jakarta.ws.rs.Path(\"/same\") List<Item> findByName(String name);\n"
+                            + "@jakarta.ws.rs.Path(\"/same\") List<Item> findBySecret(String secret);").compile();
 
             assertThat(result.success()).isFalse();
             assertThat(result.errors()).isNotEmpty();
