@@ -25,24 +25,37 @@ package org.eclipse.jnosql.rest;
  * Combine it with the authorization mechanisms of the hosting application, or choose {@link #EXPLICIT}.</p>
  *
  * @see RestRepository#exposure()
- * @see RestExpose
+ * <table>
+ * <caption>Effect of the policy on a method</caption>
+ * <tr><th>Policy</th><th>Ordinary method</th><th>Method with {@code @Path}</th><th>Method with
+ * {@link RestExclude}</th></tr>
+ * <tr><td>{@link #ALL}</td><td>exposed</td><td>exposed at the given path</td><td>excluded</td></tr>
+ * <tr><td>{@link #EXPLICIT}</td><td>excluded</td><td>exposed at the given path</td><td>excluded</td></tr>
+ * <tr><td>{@link #NONE}</td><td>excluded</td><td>excluded</td><td>excluded</td></tr>
+ * </table>
+ *
+ * <p>{@code @Path} is the Jakarta REST annotation {@code jakarta.ws.rs.Path}.</p>
+ *
+ * @see RestRepository#exposure()
  */
 public enum RestExposure {
 
     /**
      * Exposes every eligible operation. Destructive query-based operations, such as {@code deleteByCategory},
-     * still require {@link RestExpose}.
+     * still require a method-level {@code @Path}.
      */
     ALL,
 
     /**
-     * Exposes only the methods annotated with {@link RestExpose}. An inherited operation is selected by
-     * redeclaring it in the repository interface and annotating the declaration.
+     * Exposes only the methods annotated with a Jakarta REST {@code @Path}; an empty path selects the collection
+     * root. An inherited operation is selected by redeclaring it in the repository interface and annotating the
+     * declaration.
      */
     EXPLICIT,
 
     /**
-     * Generates no endpoints. Useful to disable a repository temporarily without removing the annotation.
+     * Generates no endpoints, not even for methods annotated with {@code @Path}. Useful to disable a repository
+     * temporarily without removing the annotation.
      */
     NONE
 }
