@@ -198,7 +198,7 @@ class PaginationGenerationTest {
         @Test
         @DisplayName("Should fail the build when an explicitly exposed cursor method has no unique ordering")
         void shouldFailWhenExplicit(@TempDir Path directory) {
-            var result = harness(directory, "@Find @RestExpose @OrderBy(\"name\") "
+            var result = harness(directory, "@Find @jakarta.ws.rs.Path(\"/by-name\") @OrderBy(\"name\") "
                     + "CursoredPage<Item> findByName(String name, PageRequest r);").compile();
 
             assertThat(result.success()).isFalse();
