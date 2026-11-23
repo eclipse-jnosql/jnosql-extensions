@@ -105,6 +105,10 @@ final class CompilationHarness {
 
     record Result(boolean success, List<Diagnostic<? extends JavaFileObject>> diagnostics, Path generated) {
 
+        Path classes() {
+            return generated.resolveSibling("classes");
+        }
+
         List<String> errors() {
             return messages(Diagnostic.Kind.ERROR);
         }
