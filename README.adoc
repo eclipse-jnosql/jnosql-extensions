@@ -182,7 +182,7 @@ JNoSQL REST provides a small set of annotations to control how repositories are 
 * `@RestRepository` enables REST resource generation for a Jakarta Data repository.
 * Jakarta REST `@Path`, `@PathParam` and `@QueryParam` customize routes and parameter binding.
 * `@RestExclude` prevents a repository method from becoming a REST endpoint.
-* `@RestDTO` generates DTOs and integrates with MapStruct to control public data representations, including excluding sensitive attributes.
+* `@RestDTO` generates DTOs and integrates with MapStruct to control public data representations, including excluding sensitive attributes from requests, responses or both (`exclude`, `excludeFromRequest`, `excludeFromResponse`).
 
 The extension also supports optional Eclipse MicroProfile OpenAPI integration, allowing developers to document endpoints using standard annotations and customize their API documentation.
 
