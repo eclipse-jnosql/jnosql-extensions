@@ -210,6 +210,22 @@ constructor. Add a builder to the entity.
 Immutable entities, including records, have no generated update endpoint because updates map onto an existing instance.
 `@ObjectFactory` and custom `BuilderProvider` SPI configuration were not verified.
 
+==== Member visibility
+
+Java accessibility does not make a member a MapStruct property. With MapStruct's default configuration, verified by
+compiling real mappers and asserting the copied values (mapper in the entity's package and in another package, with the
+same result), only `public` members are mapped:
+
+* `public` getter: read (entity to DTO). `public` setter: written (request to entity). `public` field: both.
+* Package-private, protected or private getters, setters and fields are ignored by MapStruct, even when the mapper is in
+the same package.
+
+The REST processor discovers DTO attributes with the same rule, so a DTO is generated exactly when MapStruct can read
+the attributes. An entity without any public getter, public field or record component is rejected with
+"has no readable attributes" instead of producing an empty mapper; make the accessors public. A public getter paired
+with a non-public setter maps the response only: the create request is built, but MapStruct cannot populate the entity
+from it.
+
 == Pagination
 
 A method with one `PageRequest` parameter and a `Page<T>` or `CursoredPage<T>` return is published as a `GET` endpoint
