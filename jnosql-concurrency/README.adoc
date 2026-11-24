@@ -81,6 +81,10 @@ public class ConcurrencyConfiguration {
 }
 ----
 
+This differs from the core `jnosql.repository.async.executor=virtual` setting, which makes JNoSQL start one
+JNoSQL-owned virtual thread per operation without any container context. That setting, like `pool-size` and
+`queue-capacity`, is ignored once this extension is on the classpath.
+
 The extension neither inspects nor enforces the thread type, and has no virtual-thread property. Whether virtual
 threads are actually used depends on the Jakarta Concurrency implementation, the Java version and the server
 configuration.
