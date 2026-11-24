@@ -94,7 +94,7 @@ public final class JakartaConcurrencyAsyncExecutor implements RepositoryAsyncExe
     }
 
     private static Optional<String> readConfiguredName() {
-        return Optional.ofNullable(ConfigProvider.getConfig().getConfigValue(JNDI_NAME_PROPERTY).getRawValue());
+        return Optional.ofNullable(ConfigProvider.getConfig().getConfigValue(JNDI_NAME_PROPERTY).getValue());
     }
 
     private static Object lookupInJndi(String name) throws NamingException {
