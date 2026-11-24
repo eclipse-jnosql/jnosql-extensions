@@ -309,6 +309,24 @@ Template template;
 template.insert(new Car()); // invalid car
 ----
 
+== Jakarta Concurrency
+
+Eclipse JNoSQL runs asynchronous repository methods, those returning `CompletableFuture` or `CompletionStage`, on a Java SE executor by default.
+On Jakarta EE, this extension schedules them on a container-managed Jakarta Concurrency `ManagedExecutorService`, which can use managed virtual threads, without changing the repositories.
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.eclipse.jnosql.mapping</groupId>
+    <artifactId>jnosql-concurrency</artifactId>
+    <version>${jnosql.version}</version>
+</dependency>
+----
+
+The provider activates itself through the `RepositoryAsyncExecutor` SPI and uses `java:comp/DefaultManagedExecutorService`.
+Set `jnosql.repository.async.concurrency.jndi-name` to use another executor, for example `java:app/concurrent/JNoSQLExecutor`.
+See the link:jnosql-concurrency/README.adoc[Jakarta Concurrency documentation] for virtual threads, precedence and context propagation limits.
+
 == CriteriaQuery API
 
 This is the experimental Criteria API, largely inspired by the JPA one.
