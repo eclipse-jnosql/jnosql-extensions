@@ -1,0 +1,49 @@
+<!--
+  ~  Copyright (c) 2026 Contributors to the Eclipse Foundation
+  ~   All rights reserved. This program and the accompanying materials
+  ~   are made available under the terms of the Eclipse Public License 2.0
+  ~   and Apache License v2.0 which accompanies this distribution.
+  ~   The Eclipse Public License is available at https://www.eclipse.org/legal/epl-2.0
+  ~   and the Apache License v2.0 is available at https://www.apache.org/licenses/LICENSE-2.0.
+  ~
+  ~   You may elect to redistribute this code under either of these licenses.
+  ~
+  ~   Contributors:
+  ~
+  ~   Otavio Santana
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.eclipse.jnosql.mapping</groupId>
+        <artifactId>jnosql-mapping-extensions</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jnosql-concurrency</artifactId>
+    <name>JNoSQL Jakarta Concurrency</name>
+    <description>Runs asynchronous JNoSQL repository operations on a Jakarta Concurrency managed executor</description>
+    <packaging>jar</packaging>
+
+    <properties>
+        <jakarta.concurrent.version>3.1.1</jakarta.concurrent.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>jakarta.enterprise.concurrent</groupId>
+            <artifactId>jakarta.enterprise.concurrent-api</artifactId>
+            <version>${jakarta.concurrent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jnosql-mapping-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

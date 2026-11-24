@@ -1,0 +1,133 @@
+= Eclipse JNoSQL Jakarta Concurrency
+:toc:
+
+Optional extension that runs asynchronous JNoSQL repository methods, those returning `CompletableFuture` or
+`CompletionStage`, on a Jakarta Concurrency `ManagedExecutorService`.
+
+== Why
+
+Eclipse JNoSQL schedules asynchronous repository methods through the `RepositoryAsyncExecutor` SPI. Without a
+provider it uses a Java SE executor it owns, which is unaware of the container: tasks run without the application's
+class loader, naming or security context, and outside the server's thread management and monitoring.
+This extension delegates the scheduling to the container instead. The Jakarta Data programming model does not change.
+
+== Installation
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.eclipse.jnosql.mapping</groupId>
+    <artifactId>jnosql-concurrency</artifactId>
+    <version>${jnosql.version}</version>
+</dependency>
+----
+
+The Jakarta Concurrency API and JNoSQL Mapping Core are `provided` dependencies, and no Jakarta Concurrency
+implementation is bundled. The extension requires a runtime that provides Jakarta Concurrency 3.1, such as a
+Jakarta EE 11 server.
+
+The provider is registered with `ServiceLoader`
+(`META-INF/services/org.eclipse.jnosql.mapping.core.repository.returns.RepositoryAsyncExecutor`), so adding the
+dependency is all that is needed. Repositories do not change:
+
+[source,java]
+----
+@Repository
+public interface ProductRepository extends BasicRepository<Product, UUID> {
+
+    @Find
+    CompletableFuture<List<Product>> findByCategory(String category);
+
+    @Find
+    CompletionStage<Optional<Product>> findByName(String name);
+}
+----
+
+No `@Asynchronous`, custom return converter or executor injection is required.
+
+== Configuration
+
+|===
+| Property | Default | Description
+
+| `jnosql.repository.async.concurrency.jndi-name`
+| `java:comp/DefaultManagedExecutorService`
+| JNDI name of the container-managed executor
+|===
+
+The executor is looked up in JNDI on every asynchronous call, in the naming context of the calling component, and
+is never cached, so applications that share the extension do not share an executor. When the lookup fails, the
+resource is not a `ManagedExecutorService`, the property is blank or the task is rejected, the repository method's
+future completes exceptionally with a descriptive exception. There is no fallback to a Java SE executor, and a later
+call retries the lookup.
+
+To use a dedicated executor:
+
+[source,properties]
+----
+jnosql.repository.async.concurrency.jndi-name=java:app/concurrent/JNoSQLExecutor
+----
+
+=== Managed virtual threads
+
+Jakarta Concurrency decides between platform and virtual threads. Define the executor with `virtual = true`
+(Jakarta Concurrency 3.1, Java 21 or newer) and point the property at it:
+
+[source,java]
+----
+@ManagedExecutorDefinition(name = "java:app/concurrent/JNoSQLExecutor", virtual = true)
+@ApplicationScoped
+public class ConcurrencyConfiguration {
+}
+----
+
+This differs from the core `jnosql.repository.async.executor=virtual` setting, which makes JNoSQL start one
+JNoSQL-owned virtual thread per operation without any container context. That setting, like `pool-size` and
+`queue-capacity`, is ignored once this extension is on the classpath.
+
+The extension neither inspects nor enforces the thread type, and has no virtual-thread property. Whether virtual
+threads are actually used depends on the Jakarta Concurrency implementation, the Java version and the server
+configuration.
+
+== SPI precedence
+
+A registered `RepositoryAsyncExecutor` provider takes precedence over the Java SE executors built into JNoSQL.
+With this extension on the classpath `jnosql.repository.async.executor`, `jnosql.repository.async.pool-size` and
+`jnosql.repository.async.queue-capacity` are ignored. JNoSQL rejects several providers on the same classpath, so use
+only one.
+
+== Container responsibilities
+
+* The container owns the executor. The extension never calls `shutdown`, `shutdownNow` or `close`, creates no
+  thread or executor, and registers no shutdown hook.
+* Context propagation (security identity, class loader, naming, CDI contexts, transactions) is whatever the managed
+  executor is configured to propagate under Jakarta Concurrency. The extension adds none, and does not promise that
+  the caller's transaction or an arbitrary CDI context is available to the repository operation.
+* JNoSQL wraps the stage returned by the provider in an ordinary `CompletableFuture`, so continuations that you
+  chain, such as `thenApplyAsync`, do not run through Jakarta Concurrency. Only the repository operation does.
+
+== Java SE and Jakarta EE
+
+|===
+| | Java SE (default) | Jakarta EE with this extension
+
+| Scheduling | Executor owned by JNoSQL (platform pool or virtual threads) | Container-managed executor
+| Configuration | `jnosql.repository.async.*` | Jakarta Concurrency resource and `jnosql.repository.async.concurrency.jndi-name`
+| Lifecycle | JNoSQL | Container
+| Context | None | Per managed executor configuration
+|===
+
+== Testing
+
+The unit tests stub `ManagedExecutorService`, so they verify delegation, error handling, configuration and
+lifecycle, not container-managed context propagation or virtual threads. Those properties must be verified on a
+real Jakarta EE runtime, for example by asserting `Thread.currentThread().isVirtual()` inside a repository
+operation against an executor defined with `virtual = true`. No container-based integration test is included yet.
+
+== References
+
+* https://jakarta.ee/specifications/concurrency/3.1/[Jakarta Concurrency 3.1]
+* https://jakarta.ee/specifications/concurrency/3.1/apidocs/jakarta.concurrency/jakarta/enterprise/concurrent/ManagedExecutorService.html[ManagedExecutorService]
+* https://jakarta.ee/specifications/concurrency/3.1/apidocs/jakarta.concurrency/jakarta/enterprise/concurrent/ManagedExecutorDefinition.html[ManagedExecutorDefinition]
+* https://openjdk.org/jeps/444[JEP 444: Virtual Threads]
+* https://github.com/eclipse-jnosql/jnosql/issues/828[eclipse-jnosql/jnosql#828]
