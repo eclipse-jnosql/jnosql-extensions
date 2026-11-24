@@ -98,7 +98,12 @@ public final class JakartaConcurrencyAsyncExecutor implements RepositoryAsyncExe
     }
 
     private static Object lookupInJndi(String name) throws NamingException {
-        return new InitialContext().lookup(name);
+        var context = new InitialContext();
+        try {
+            return context.lookup(name);
+        } finally {
+            context.close();
+        }
     }
 
     @FunctionalInterface
