@@ -8,6 +8,10 @@ and this project adheres to https://semver.org/spec/v2.0.0.html[Semantic Version
 
 == [Unreleased]
 
+=== Added
+
+- Add the `jnosql-concurrency` extension that runs asynchronous repository methods on a Jakarta Concurrency managed executor.
+
 === Fixed
 
 - Fixes the Jakarta Data Query to execute the query with the correct parameters at JNoSQL Lite.
