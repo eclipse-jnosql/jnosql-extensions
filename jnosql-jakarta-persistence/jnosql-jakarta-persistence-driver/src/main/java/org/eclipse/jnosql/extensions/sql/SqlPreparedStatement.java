@@ -126,7 +126,9 @@ public final class SqlPreparedStatement implements PreparedStatement {
     private <Q> Q fresh(Q query) {
         Params current = new Params();
         Q rebuilt = (Q) rebuild.apply(current);
-        bound.forEach(current::bind);
+        bound.entrySet().stream()
+                .sorted(java.util.Comparator.comparingInt(entry -> entry.getKey().length()))
+                .forEach(entry -> current.bind(entry.getKey(), entry.getValue()));
         return rebuilt;
     }
 
