@@ -23,10 +23,13 @@ import org.eclipse.jnosql.communication.semistructured.SelectQuery;
 import org.eclipse.jnosql.communication.semistructured.UpdateQuery;
 import org.eclipse.jnosql.mapping.PreparedStatement;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
@@ -64,6 +67,10 @@ public final class SqlPreparedStatement implements PreparedStatement {
 
     private final SqlTemplate manager;
 
+    private final Function<Params, ?> rebuild;
+
+    private final Map<String, Object> bound = new HashMap<>();
+
     private UnaryOperator<SelectQuery> selectMapper = SELECT_MAPPER_DEFAULT;
 
     private SqlPreparedStatement(SelectQuery selectQuery, DeleteQuery deleteQuery,
@@ -72,7 +79,8 @@ public final class SqlPreparedStatement implements PreparedStatement {
                                  Params params,
                                  String query,
                                  List<String> paramsLeft,
-                                 SqlTemplate manager) {
+                                 SqlTemplate manager,
+                                 Function<Params, ?> rebuild) {
 
         this.selectQuery = selectQuery;
         this.deleteQuery = deleteQuery;
@@ -82,6 +90,7 @@ public final class SqlPreparedStatement implements PreparedStatement {
         this.query = query;
         this.paramsLeft = paramsLeft;
         this.manager = manager;
+        this.rebuild = rebuild;
     }
 
     @Override
@@ -89,7 +98,8 @@ public final class SqlPreparedStatement implements PreparedStatement {
         Objects.requireNonNull(name, "name is required");
         Objects.requireNonNull(value, "value is required");
 
-        paramsLeft.remove(name);
+        paramsLeft.removeIf(name::equals);
+        bound.put(name, value);
         params.bind(name, value);
         return this;
     }
@@ -102,9 +112,22 @@ public final class SqlPreparedStatement implements PreparedStatement {
         }
 
         var name = "?" + index;
-        paramsLeft.remove("?" + index);
+        paramsLeft.removeIf(name::equals);
+        bound.put(name, value);
         params.bind(name, value);
         return this;
+    }
+
+    /**
+     * Rebuilds the query for one execution with the values bound at this moment, so memoized
+     * function results are never shared between executions.
+     */
+    @SuppressWarnings("unchecked")
+    private <Q> Q fresh(Q query) {
+        Params current = new Params();
+        Q rebuilt = (Q) rebuild.apply(current);
+        bound.forEach(current::bind);
+        return rebuilt;
     }
 
     public Optional<SelectQuery> select() {
@@ -123,18 +146,18 @@ public final class SqlPreparedStatement implements PreparedStatement {
         }
         switch (type) {
             case SELECT -> {
-                return manager.select(operator().apply(selectQuery));
+                return manager.select(operator().apply(fresh(selectQuery)));
             }
             case DELETE -> {
-                manager.delete(deleteQuery);
+                manager.delete(fresh(deleteQuery));
                 return Stream.empty();
             }
             case UPDATE -> {
-                manager.update(updateQuery);
+                manager.update(fresh(updateQuery));
                 return Stream.empty();
             }
             case COUNT -> {
-                return Stream.of((T) Long.valueOf(manager.count(selectQuery)));
+                return Stream.of((T) Long.valueOf(manager.count(fresh(selectQuery))));
             }
             default -> throw new UnsupportedOperationException("there is not support to operation type: " + type);
         }
@@ -161,7 +184,7 @@ public final class SqlPreparedStatement implements PreparedStatement {
             throw new QueryException("Check all the parameters before execute the query, params left: " + paramsLeft);
         }
         if (CommunicationPreparedStatement.PreparedStatementType.COUNT.equals(type)) {
-            return manager.count(selectQuery);
+            return manager.count(fresh(selectQuery));
         }
         throw new IllegalArgumentException("The count operation is only allowed for COUNT queries");
     }
@@ -184,15 +207,16 @@ public final class SqlPreparedStatement implements PreparedStatement {
             SelectQuery selectQuery,
             Params params,
             String query,
-            SqlTemplate template) {
+            SqlTemplate template,
+            Function<Params, ?> rebuild) {
         if (selectQuery.isCount()) {
             return new SqlPreparedStatement(selectQuery,
                     null, null, CommunicationPreparedStatement.PreparedStatementType.COUNT, params, query,
-                    params.getParametersNames(), template);
+                    params.getParametersNames(), template, rebuild);
         } else {
             return new SqlPreparedStatement(selectQuery,
                     null, null, CommunicationPreparedStatement.PreparedStatementType.SELECT, params, query,
-                    params.getParametersNames(), template);
+                    params.getParametersNames(), template, rebuild);
         }
 
     }
@@ -200,24 +224,26 @@ public final class SqlPreparedStatement implements PreparedStatement {
     static SqlPreparedStatement delete(DeleteQuery deleteQuery,
                                        Params params,
                                        String query,
-                                       SqlTemplate template) {
+                                       SqlTemplate template,
+                                       Function<Params, ?> rebuild) {
 
         return new SqlPreparedStatement(null,
                 deleteQuery, null, CommunicationPreparedStatement.PreparedStatementType.DELETE, params,
                 query,
                 params.getParametersNames(),
-                template);
+                template, rebuild);
 
     }
 
     static SqlPreparedStatement update(UpdateQuery updateQuery,
                                        Params params,
                                        String query,
-                                       SqlTemplate template) {
+                                       SqlTemplate template,
+                                       Function<Params, ?> rebuild) {
         return new SqlPreparedStatement(null, null,
                 updateQuery,
                 CommunicationPreparedStatement.PreparedStatementType.UPDATE, params, query,
-                params.getParametersNames(), template);
+                params.getParametersNames(), template, rebuild);
 
     }
 }
