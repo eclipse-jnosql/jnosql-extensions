@@ -29,7 +29,7 @@ final class SqlDeleteQueryParser {
     SqlPreparedStatement prepare(String query, SqlTemplate template) {
         Params params = Params.newParams();
         DeleteQuery deleteQuery = getQuery(query, params);
-        return SqlPreparedStatement.delete(deleteQuery, params, query, template);
+        return SqlPreparedStatement.delete(deleteQuery, params, query, template, p -> getQuery(query, p));
     }
 
     private DeleteQuery getQuery(String query, Params params) {
