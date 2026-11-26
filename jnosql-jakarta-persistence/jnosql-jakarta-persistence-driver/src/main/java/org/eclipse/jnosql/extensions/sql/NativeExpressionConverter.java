@@ -111,7 +111,7 @@ final class NativeExpressionConverter {
         if (Integer.class.equals(boxed(expression.getJavaType()))) {
             return (Expression<Integer>) expression;
         }
-        return expression.as(Integer.class);
+        return expression.cast(Integer.class);
     }
 
     private Expression<?> argument(StandardFunction function, List<FunctionArgument> arguments, int index,
