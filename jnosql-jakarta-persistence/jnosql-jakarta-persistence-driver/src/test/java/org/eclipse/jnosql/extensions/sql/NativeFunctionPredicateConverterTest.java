@@ -242,6 +242,36 @@ class NativeFunctionPredicateConverterTest {
     }
 
     @Test
+    @DisplayName("Should cast and bound a non integer numeric expression used as a length")
+    void shouldCastNonIntegerLength() {
+        Expression<Long> longBalance = org.mockito.Mockito.mock(Expression.class);
+        Expression<Integer> casted = org.mockito.Mockito.mock(Expression.class);
+        Expression<Integer> one = org.mockito.Mockito.mock(Expression.class);
+        Expression<String> substring = org.mockito.Mockito.mock(Expression.class);
+        when(longBalance.getJavaType()).thenReturn((Class) Long.class);
+        when(cb.abs((Expression) balance)).thenReturn((Expression) longBalance);
+        when(longBalance.cast(Integer.class)).thenReturn(casted);
+        when(cb.literal(1)).thenReturn(one);
+        Expression<Integer> nameLength = org.mockito.Mockito.mock(Expression.class);
+        Expression<Integer> bounded = org.mockito.Mockito.mock(Expression.class);
+        CriteriaBuilder.Case<Integer> selectCase = org.mockito.Mockito.mock(CriteriaBuilder.Case.class);
+        when(cb.length(name)).thenReturn(nameLength);
+        when(cb.gt(casted, nameLength)).thenReturn(other);
+        when(cb.<Integer>selectCase()).thenReturn(selectCase);
+        when(selectCase.when(other, nameLength)).thenReturn(selectCase);
+        when(selectCase.otherwise(casted)).thenReturn(bounded);
+        when(cb.substring(name, one, bounded)).thenReturn(substring);
+        when(cb.equal(substring, "x")).thenReturn(predicate);
+        var abs = NativeFunction.of("ABS", FunctionArgument.attribute("balance"));
+
+        var result = convert(CriteriaCondition.of(function("LEFT", FunctionArgument.attribute("name"),
+                new FunctionArgument.NativeArgument(abs)), Condition.EQUALS, constant("x")));
+
+        assertThat(result).isSameAs(predicate);
+        verify(longBalance).cast(Integer.class);
+    }
+
+    @Test
     @DisplayName("Should translate nested native functions recursively")
     void shouldTranslateNestedFunctions() {
         Expression<Integer> one = org.mockito.Mockito.mock(Expression.class);
