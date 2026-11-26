@@ -74,6 +74,12 @@ final class NativeExpressionConverter {
                                     CriteriaBuilder cb, Root<?> root, EntityManager em) {
         Expression<String> text = text(function, arguments, 0, cb, root, em);
         Expression<Integer> length = length(function, arguments, 1, cb, root, em);
+        if (!isEvaluable(arguments.get(1))) {
+            // Some databases (Derby) reject a SUBSTR length computed from data that exceeds the text length
+            length = cb.<Integer>selectCase()
+                    .when(cb.gt(length, cb.length(text)), cb.length(text))
+                    .otherwise(length);
+        }
         return cb.substring(text, cb.literal(1), length);
     }
 
