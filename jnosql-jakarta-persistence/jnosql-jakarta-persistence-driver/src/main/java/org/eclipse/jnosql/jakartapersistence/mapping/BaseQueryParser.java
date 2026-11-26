@@ -115,6 +115,10 @@ abstract class BaseQueryParser {
 
     private static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx, boolean ignoreCase) {
         if (value instanceof CriteriaCondition criteria) {
+            if (criteria.isNative()) {
+                throw new UnsupportedOperationException("JNoSQL criteria with a native function operand ("
+                        + criteria + ") are not supported by this query parser");
+            }
             return switch (criteria.condition()) {
                 case NOT ->
                     ctx.builder().not(parseCriteria(criteria.element(), ctx));
