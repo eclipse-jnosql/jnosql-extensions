@@ -32,7 +32,7 @@ public final class SqlSelectQueryParser  {
     SqlPreparedStatement prepare(String query, String entity, SqlTemplate template) {
         Params params = new Params();
         var selectQuery = query(query, entity, params);
-        return SqlPreparedStatement.select(selectQuery, params, query, template);
+        return SqlPreparedStatement.select(selectQuery, params, query, template, p -> query(query, entity, p));
     }
 
     private SelectQuery query(String query, String entity, Params params) {

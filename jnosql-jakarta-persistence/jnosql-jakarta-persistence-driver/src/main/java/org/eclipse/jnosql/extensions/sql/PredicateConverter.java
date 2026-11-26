@@ -23,8 +23,11 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.eclipse.jnosql.communication.TypeReference;
+import org.eclipse.jnosql.communication.Condition;
 import org.eclipse.jnosql.communication.Value;
+import org.eclipse.jnosql.communication.function.StandardFunction;
 import org.eclipse.jnosql.communication.semistructured.CriteriaCondition;
+import org.eclipse.jnosql.communication.semistructured.CriteriaOperand;
 import org.eclipse.jnosql.communication.semistructured.Element;
 
 import java.util.List;
@@ -34,8 +37,11 @@ final class PredicateConverter {
 
     private final PathResolver pathResolver;
 
+    private final NativeExpressionConverter expressionConverter;
+
     PredicateConverter(PathResolver pathResolver) {
         this.pathResolver = pathResolver;
+        this.expressionConverter = new NativeExpressionConverter(pathResolver);
     }
 
     void applyCondition(CriteriaCondition criteriaCondition,
@@ -63,6 +69,10 @@ final class PredicateConverter {
                                   Root<?> root,
                                   boolean ignoreCase,
                                   EntityManager entityManager) {
+
+        if (condition.isNative()) {
+            return nativePredicate(condition, criteriaBuilder, root, ignoreCase, entityManager);
+        }
 
         Element element = condition.element();
         String property = element.name();
@@ -136,6 +146,121 @@ final class PredicateConverter {
                 yield toPredicate(inner, criteriaBuilder, root, true, entityManager);
             }
         };
+    }
+
+    private Predicate nativePredicate(CriteriaCondition condition, CriteriaBuilder cb, Root<?> root,
+                                      boolean ignoreCase, EntityManager entityManager) {
+        CriteriaOperand leftOperand = condition.leftOperand();
+        CriteriaOperand rightOperand = condition.rightOperand();
+        Expression<?> left = expressionConverter.operand(leftOperand, cb, root, entityManager);
+        boolean caseInsensitive = ignoreCase && isStringExpression(left);
+        if (caseInsensitive) {
+            left = upper(cb, left, leftOperand);
+        }
+        Condition type = condition.condition();
+
+        if (rightOperand instanceof CriteriaOperand.Constant constant) {
+            Object value = value(constant.value());
+            return switch (type) {
+                case EQUALS -> value == null ? cb.isNull(left)
+                        : cb.equal(left, caseInsensitive ? upper(value) : value);
+                case GREATER_THAN -> cb.greaterThan((Expression<Comparable>) left,
+                        comparable(type, caseInsensitive ? upper(value) : value));
+                case GREATER_EQUALS_THAN -> cb.greaterThanOrEqualTo((Expression<Comparable>) left,
+                        comparable(type, caseInsensitive ? upper(value) : value));
+                case LESSER_THAN -> cb.lessThan((Expression<Comparable>) left,
+                        comparable(type, caseInsensitive ? upper(value) : value));
+                case LESSER_EQUALS_THAN -> cb.lessThanOrEqualTo((Expression<Comparable>) left,
+                        comparable(type, caseInsensitive ? upper(value) : value));
+                case LIKE -> {
+                    requireString(type, left);
+                    yield cb.like((Expression<String>) left, String.valueOf(caseInsensitive ? upper(value) : value));
+                }
+                case IN -> nativeIn(cb, left, value, caseInsensitive);
+                case BETWEEN -> {
+                    List<?> bounds = (List<?>) value;
+                    yield cb.between((Expression<Comparable>) left,
+                            comparable(type, caseInsensitive ? upper(value(bounds.get(0))) : value(bounds.get(0))),
+                            comparable(type, caseInsensitive ? upper(value(bounds.get(1))) : value(bounds.get(1))));
+                }
+                default -> throw unsupported(condition);
+            };
+        }
+
+        Expression<?> right = expressionConverter.operand(rightOperand, cb, root, entityManager);
+        if (caseInsensitive && isStringExpression(right)) {
+            right = upper(cb, right, rightOperand);
+        }
+        return switch (type) {
+            case EQUALS -> cb.equal(left, right);
+            case GREATER_THAN -> cb.greaterThan((Expression<Comparable>) left, (Expression<Comparable>) right);
+            case GREATER_EQUALS_THAN ->
+                    cb.greaterThanOrEqualTo((Expression<Comparable>) left, (Expression<Comparable>) right);
+            case LESSER_THAN -> cb.lessThan((Expression<Comparable>) left, (Expression<Comparable>) right);
+            case LESSER_EQUALS_THAN ->
+                    cb.lessThanOrEqualTo((Expression<Comparable>) left, (Expression<Comparable>) right);
+            default -> throw unsupported(condition);
+        };
+    }
+
+    private Predicate nativeIn(CriteriaBuilder cb, Expression<?> left, Object value, boolean caseInsensitive) {
+        CriteriaBuilder.In<Object> in = cb.in(left);
+        for (Object item : (Iterable<?>) value) {
+            Object resolved = value(item);
+            if (resolved instanceof Iterable<?> iterable) {
+                iterable.forEach(inner -> in.value(nativeInValue(inner, caseInsensitive)));
+            } else {
+                in.value(nativeInValue(resolved, caseInsensitive));
+            }
+        }
+        return in;
+    }
+
+    private Object nativeInValue(Object item, boolean caseInsensitive) {
+        Object resolved = value(item);
+        if (resolved == null) {
+            throw new UnsupportedOperationException("A null value is not supported in an IN predicate "
+                    + "with a native function");
+        }
+        return caseInsensitive ? upper(resolved) : resolved;
+    }
+
+    // IGNORE_CASE on an UPPER function would apply the same conversion twice
+    private Expression<String> upper(CriteriaBuilder cb, Expression<?> expression, CriteriaOperand operand) {
+        if (operand instanceof CriteriaOperand.Function function
+                && StandardFunction.UPPER.name().equalsIgnoreCase(function.function().name())) {
+            return (Expression<String>) expression;
+        }
+        return cb.upper((Expression<String>) expression);
+    }
+
+    private static Object upper(Object value) {
+        return value instanceof String text ? text.toUpperCase() : value;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static Comparable comparable(Condition condition, Object value) {
+        if (value instanceof Comparable comparable) {
+            return comparable;
+        }
+        throw new UnsupportedOperationException("The condition " + condition
+                + " is not supported with a native function and the value " + value);
+    }
+
+    private static void requireString(Condition condition, Expression<?> expression) {
+        if (!isStringExpression(expression)) {
+            throw new UnsupportedOperationException("The condition " + condition
+                    + " requires a native function that returns a string");
+        }
+    }
+
+    private static boolean isStringExpression(Expression<?> expression) {
+        return String.class.equals(expression.getJavaType());
+    }
+
+    private static UnsupportedOperationException unsupported(CriteriaCondition condition) {
+        return new UnsupportedOperationException("The condition " + condition.condition()
+                + " is not supported with a native function operand: " + condition);
     }
 
     private Predicate equalsPredicate(CriteriaBuilder cb, Path<?> path, Object rawValue, boolean ignoreCase) {

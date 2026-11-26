@@ -50,3 +50,31 @@ Then you need to configure the persistence unit ("testPersistenceUnit") via stan
   </persistence-unit>
 </persistence>
 ----
+== Jakarta Query functions
+
+The driver consumes the structured function API of JNoSQL core (https://github.com/eclipse-jnosql/jnosql/pull/841[jnosql#841],
+https://github.com/eclipse-jnosql/jnosql/pull/841#discussion_r4695744777[architecture discussion],
+https://github.com/eclipse-jnosql/jnosql-databases/pull/477[jnosql-databases#477]).
+
+* *Evaluable functions* (no attribute argument, e.g. `UPPER(LEFT(:name, 19))`) are evaluated by JNoSQL core and reach the driver as ordinary values.
+* *Native functions* (an attribute is an argument, e.g. `UPPER(name)`) are translated by `NativeExpressionConverter` into Jakarta Persistence Criteria expressions. Attributes are resolved with the same `PathResolver` as ordinary predicates, so JPA attribute names (not column names) are used.
+
+[cols="1,3"]
+|===
+|Function |Criteria translation
+
+|`ABS` |`CriteriaBuilder.abs`, numeric type preserved
+|`LENGTH` |`CriteriaBuilder.length`
+|`LOWER` |`CriteriaBuilder.lower`
+|`UPPER` |`CriteriaBuilder.upper`
+|`LEFT` |`substring(text, 1, n)`
+|`RIGHT` |`substring(text, max(1, length(text) - n + 1))` using `selectCase`
+|===
+
+Native functions may be nested and used on either or both sides of `=`, `>`, `>=`, `<`, `<=`; with a value on the right they also support `LIKE` (string results), `IN` and `BETWEEN`.
+They work in `SELECT`, `COUNT`, `DELETE ... WHERE`, `UPDATE ... WHERE` (not in `UPDATE SET`), together with sorting, offset and cursor pagination, and with `AND`/`OR`/`NOT`.
+Each execution of a prepared statement rebuilds the query from the currently bound parameters, so evaluated results are never reused between executions.
+
+Anything that cannot be translated (unknown function, attribute of the wrong type, unsupported predicate such as `CONTAINS` on a function) throws `UnsupportedOperationException` before the query is executed. The `org.eclipse.jnosql.jakartapersistence` query parsers reject native functions explicitly.
+
+Verified with EclipseLink 5.0.0-B09 on Apache Derby 10.15.2.0 only; other providers and databases are not verified. Semantics depend on the database: `LENGTH`, `LEFT` and `RIGHT` follow the database's character semantics (core counts code points), and `LOWER`/`UPPER` follow its collation and locale rules, so results for accented or supplementary characters may differ from JNoSQL core. On Derby, `LENGTH` of a supplementary character (e.g. an emoji) counts two UTF-16 code units, whereas core counts one code point (verified by the integration tests).
