@@ -178,6 +178,22 @@ class NativeFunctionIntegrationTest {
         }
 
         @Test
+        @DisplayName("Should keep parameters whose names share a prefix independent")
+        void shouldBindParametersWithSharedPrefix() {
+            var statement = template.prepare("FROM Account WHERE UPPER(name) = :name AND otherName = :name_2");
+
+            statement.bind("name_2", "OTAVIO").bind("name", "OTAVIO");
+
+            assertThat(ids(statement)).containsExactly(1L);
+        }
+
+        @Test
+        @DisplayName("Should cast a non integer native expression used as a length")
+        void shouldCastNumericLength() {
+            assertThat(ids("FROM Account WHERE LEFT(name, ABS(balance)) = name")).containsExactly(1L, 2L, 3L, 4L);
+        }
+
+        @Test
         @DisplayName("Should bind positional parameters")
         void shouldBindPositionalParameters() {
             var statement = template.prepare("FROM Account WHERE UPPER(name) = UPPER(?1)");
