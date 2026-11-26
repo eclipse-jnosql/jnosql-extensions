@@ -50,3 +50,32 @@ Then you need to configure the persistence unit ("testPersistenceUnit") via stan
 </persistence>
 
 For an example configuration, with EclipseLink and DerbyDB, look into the test setup of the link:jnosql-jakarta-persistence-connector[Jakarta Persistence Connector] project.
+=== Jakarta Query functions
+
+The driver supports the standard Jakarta Query functions `ABS`, `LENGTH`, `LOWER`, `UPPER`, `LEFT` and `RIGHT`.
+JNoSQL core evaluates functions that do not depend on stored data. Functions that reference a persistent attribute
+(native functions) are translated into Jakarta Persistence Criteria expressions and executed by the provider.
+Nothing is evaluated on entities retrieved from the database.
+
+[cols="1,2,2"]
+|===
+|Function |Structured queries (Criteria) |String queries (JPQL)
+
+|`ABS` |`CriteriaBuilder.abs`, the numeric type is preserved |Executed by the provider
+|`LENGTH` |`CriteriaBuilder.length` |Executed by the provider
+|`LOWER` |`CriteriaBuilder.lower` |Executed by the provider
+|`UPPER` |`CriteriaBuilder.upper` |Executed by the provider
+|`LEFT` |`CriteriaBuilder.substring`, the length is bounded by the text length |Executed by the provider (verified with EclipseLink and Derby)
+|`RIGHT` |`CriteriaBuilder.substring` with arithmetic and a conditional start |Executed by the provider (verified with EclipseLink and Derby)
+|===
+
+Structured queries (`PersistenceDocumentTemplate.select`, `count`, `exists`, `deleteWithCount`) accept native functions
+on either side of `=`, `<`, `<=`, `>`, `>=`, nested functions and `IGNORE_CASE`. `LIKE` (string result), `IN` and
+`BETWEEN` accept a native function on the left and constants on the right. A condition or function that cannot be
+translated, such as an unknown function, causes an `UnsupportedOperationException` before any query or delete is
+executed.
+
+String queries are not changed: the provider interprets them and parameters are bound with `setParameter`.
+There is no structured update on this branch, so `UPDATE` is only available as a string query.
+`LENGTH` follows the database semantics (UTF-16 code units on Derby), whereas core evaluates `LENGTH` of constants
+in code points. Provider and database dependent behavior was verified only with EclipseLink 5.0.0-B09 and Derby.

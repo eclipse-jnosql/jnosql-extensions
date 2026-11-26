@@ -129,6 +129,9 @@ abstract class BaseQueryParser {
 
     private static <FROM> Predicate parseCriteria(Object value, QueryContext<FROM> ctx, boolean ignoreCase) {
         if (value instanceof CriteriaCondition criteria) {
+            if (criteria.isNative()) {
+                return NativePredicateParser.parse(criteria, ctx, ignoreCase);
+            }
             return switch (criteria.condition()) {
                 case NOT ->
                     ctx.builder().not(parseCriteria(criteria.element(), ctx));
