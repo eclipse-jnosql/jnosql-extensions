@@ -35,7 +35,7 @@ final class SqlUpdateQueryParser {
 
         Params params = Params.newParams();
         var updateQuery = getQuery(query, params);
-        return SqlPreparedStatement.update(updateQuery, params, query, template);
+        return SqlPreparedStatement.update(updateQuery, params, query, template, p -> getQuery(query, p));
     }
 
     private UpdateQuery getQuery(String query, Params params) {
