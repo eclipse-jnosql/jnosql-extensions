@@ -32,8 +32,10 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -364,7 +366,7 @@ final class EndpointFactory {
         int arity = method.getParameters().size();
         boolean dataAnnotated = hasDataAnnotation(method);
         if (name.equals("findAll") && (standardOwner || !dataAnnotated)) {
-            if (arity == 0) {
+            if (arity == 0 && (standardOwner || overridesStandard(method))) {
                 return Classified.unsupported("an unbounded findAll() would load the whole collection; the "
                         + "collection root is served by the paginated findAll(PageRequest, Order) instead");
             }
@@ -425,6 +427,9 @@ final class EndpointFactory {
         if (name.startsWith("deleteBy")) {
             return deletesByIdentifier(method) ? Classified.of(Kind.QUERY_DELETE, RestOperation.DELETE)
                     : Classified.explicit(Kind.QUERY_DELETE, RestOperation.DELETE);
+        }
+        if (name.equals("findAll")) {
+            return Classified.of(Kind.READ, RestOperation.FIND);
         }
         return Classified.unsupported("it is neither annotated with a Jakarta Data operation annotation nor "
                 + "named as a findBy, countBy, existsBy or deleteBy query");
@@ -501,6 +506,27 @@ final class EndpointFactory {
             case "delete/1" -> Classified.of(Kind.DELETE, RestOperation.DELETE);
             default -> null;
         };
+    }
+
+    /**
+     * Whether the method redeclares an operation of a standard Jakarta Data interface, as opposed to a custom
+     * method that only shares its name.
+     */
+    private boolean overridesStandard(ExecutableElement method) {
+        TypeElement declaring = (TypeElement) method.getEnclosingElement();
+        Deque<TypeElement> pending = new ArrayDeque<>(List.of(declaring));
+        while (!pending.isEmpty()) {
+            for (TypeMirror parent : pending.pop().getInterfaces()) {
+                TypeElement parentElement = (TypeElement) types.asElement(parent);
+                if (parentElement.getQualifiedName().toString().startsWith(DATA_PACKAGE)
+                        && ElementFilter.methodsIn(parentElement.getEnclosedElements()).stream()
+                        .anyMatch(candidate -> elements.overrides(method, candidate, declaring))) {
+                    return true;
+                }
+                pending.push(parentElement);
+            }
+        }
+        return false;
     }
 
     private boolean hasDataAnnotation(ExecutableElement method) {
