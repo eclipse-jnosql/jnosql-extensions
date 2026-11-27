@@ -144,7 +144,7 @@ final class AnnotationSource {
         public String visitArray(List<? extends AnnotationValue> values, Void unused) {
             List<String> items = new ArrayList<>();
             values.forEach(item -> items.add(write(item)));
-            return "{" + String.join(", ", items) + "}";
+            return items.size() == 1 ? items.get(0) : "{" + String.join(", ", items) + "}";
         }
 
         @Override

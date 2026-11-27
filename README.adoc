@@ -171,6 +171,7 @@ JNoSQL REST goes beyond basic CRUD operations, offering:
 * *Pagination:* Supports both offset-based and cursor-based pagination, with paginated collection endpoints by default.
 * *DTO generation:* Integrates with MapStruct to automatically generate and map DTOs, allowing developers to control exposed attributes and exclude sensitive information.
 * *OpenAPI documentation:* Optionally integrates with Eclipse MicroProfile OpenAPI, supporting standard annotations and external API documentation customization.
+* *Jakarta Security annotations:* Optionally propagates `@RolesAllowed`, `@PermitAll` and `@DenyAll` from repositories to the generated resources; authentication and enforcement stay with your Jakarta EE runtime.
 * *Flexible REST exposure:* Uses annotations such as `@RestRepository` and `@RestExclude`, plus standard Jakarta REST `@Path`, `@PathParam` and `@QueryParam`, to control which repository operations become REST endpoints and how they are routed.
 
 With JNoSQL REST, developers can expose persistence operations as REST APIs while retaining control over data representation, endpoint exposure, and API documentation.
