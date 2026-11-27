@@ -43,6 +43,7 @@ final class CompilationHarness {
 
     private final Path directory;
     private boolean openApi = true;
+    private boolean security = true;
     private boolean mapStruct = true;
     private boolean runMapStructProcessor = true;
     private boolean runRestProcessor = true;
@@ -54,6 +55,11 @@ final class CompilationHarness {
 
     CompilationHarness withoutOpenApi() {
         this.openApi = false;
+        return this;
+    }
+
+    CompilationHarness withoutSecurity() {
+        this.security = false;
         return this;
     }
 
@@ -108,6 +114,7 @@ final class CompilationHarness {
     private String classpath() {
         return Stream.of(System.getProperty("java.class.path").split(java.io.File.pathSeparator))
                 .filter(entry -> openApi || !entry.contains("microprofile-openapi-api"))
+                .filter(entry -> security || !entry.contains("jakarta.annotation-api"))
                 .filter(entry -> mapStruct || !entry.contains("mapstruct"))
                 .collect(Collectors.joining(java.io.File.pathSeparator));
     }

@@ -163,7 +163,7 @@ This approach ensures that query attribute references are both type-safe and ref
 
 == JNoSQL REST
 
-An optional annotation processor that exposes Jakarta Data repositories as Jakarta REST resources (`<Repository>Resource`) at compile time, with optional MapStruct DTOs and MicroProfile OpenAPI annotations. `@RestDTO` can exclude attributes from requests, responses or both (`exclude`, `excludeFromRequest`, `excludeFromResponse`). This `1.x.x` line targets Jakarta Data 1.0 and does not generate dynamic `Restriction<T>` searches.
+An optional annotation processor that exposes Jakarta Data repositories as Jakarta REST resources (`<Repository>Resource`) at compile time, with optional MapStruct DTOs and MicroProfile OpenAPI annotations. `@RestDTO` can exclude attributes from requests, responses or both (`exclude`, `excludeFromRequest`, `excludeFromResponse`). This `1.x.x` line targets Jakarta Data 1.0 and does not generate dynamic `Restriction<T>` searches. It optionally propagates the Jakarta Annotations `@RolesAllowed`, `@PermitAll` and `@DenyAll` from repositories to the generated resources; authentication and enforcement stay with your Jakarta EE runtime.
 
 See link:jnosql-rest/README.adoc[JNoSQL REST documentation].
 
