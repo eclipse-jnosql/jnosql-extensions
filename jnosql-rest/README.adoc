@@ -393,9 +393,14 @@ GET /products?offset=0&size=20&sort=name:asc,price:desc
 * `offset` is the zero-based page offset (default `0`), `size` defaults to `20` and is limited to `1..100`,
 `includeTotal` defaults to `false` (no count query). The response is the `PageResponse` described above; with
 `@RestDTO` the content is mapped to the DTO.
-* The unbounded `findAll()` is never exposed, so there is no second root route and nothing is paginated or sorted in
-memory. A repository without a paginated `findAll` gets no collection root; a `findAll()` declared by the developer
-on a repository stays available as `GET /findAll`, unless it declares `@Path`.
+* The inherited unbounded `findAll()`, including one redeclared with `@Override`, is never exposed, so there is no
+second root route and nothing is paginated or sorted in memory. A repository without a paginated `findAll` gets no
+collection root.
+* A custom `findAll` that does not override a standard operation follows the ordinary custom-method conventions:
+`@Find List<Product> findAll();` is served as `GET /products/findAll`, and `@Find @Path("/all")` moves it to
+`GET /products/all`. JNoSQL also resolves an unannotated `findAll()` by name, so it is exposed the same way; prefer
+`@Find`, which is the portable Jakarta Data declaration. It is the developer's own unbounded query, and it never
+replaces the collection root.
 * Invalid `offset`, `size` or `sort` values answer `400 Bad Request` before the repository is called.
 
 == Limit
@@ -478,7 +483,7 @@ limitation. CDI discovery does not by itself register resources: Jakarta REST ru
 == Known limitations
 
 * `Limit`, `Sort<T>`, `Order<T>` and the paginated root `findAll` are supported, see <<Collection root>>,
-<<Limit>> and <<Sort and Order>>. The unbounded `findAll()` is deliberately never exposed.
+<<Limit>> and <<Sort and Order>>. The inherited unbounded `findAll()` is deliberately never exposed.
 * Custom-DTO sort surface is derived only when the developer's DTO type is visible to the processor; otherwise the
 entity attributes minus `@RestDTO` exclusions apply. See <<Pagination>> for the other limits of paging.
 * Bulk operations (`saveAll`, `insertAll`, `updateAll`, `deleteAll`) are not generated.
