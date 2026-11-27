@@ -128,4 +128,34 @@ class FindAllClassificationTest {
         assertThat(result.source("ItemRepositoryResource")).contains("repository.findAll(pageRequest, order)")
                 .contains("@Path(\"/all\")");
     }
+
+    @Test
+    @DisplayName("Should serve a custom findAll with an empty @Path at the collection root")
+    void shouldServeCustomFindAllAtRoot(@TempDir Path directory) {
+        var result = compile(directory, "", "@Find @Path(\"\") List<Item> findAll();");
+
+        assertThat(result.errors()).isEmpty();
+        assertThat(result.source("ItemRepositoryResource")).contains("repository.findAll()")
+                .doesNotContain("\"/findAll\"").doesNotContain("@Path(\"\")");
+    }
+
+    @Test
+    @DisplayName("Should serve a custom findAll with an empty @Path at the root of a DataRepository")
+    void shouldServeCustomFindAllAtRootOfDataRepository(@TempDir Path directory) {
+        var result = compile(directory, "extends DataRepository<Item, Long>", "@Find @Path(\"\") List<Item> findAll();\n"
+                + "@Find @Path(\"/paged\") Page<Item> findAll(PageRequest pageRequest);");
+
+        assertThat(result.errors()).isEmpty();
+        assertThat(result.source("ItemRepositoryResource")).contains("repository.findAll()")
+                .contains("@Path(\"/paged\")");
+    }
+
+    @Test
+    @DisplayName("Should report a collision between a root findAll and the inherited paginated root")
+    void shouldReportRootCollision(@TempDir Path directory) {
+        var result = compile(directory, "extends CrudRepository<Item, Long>",
+                "@Find @Path(\"\") Stream<Item> findAll();");
+
+        assertThat(result.errors()).anyMatch(error -> error.contains("Both"));
+    }
 }
