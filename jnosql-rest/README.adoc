@@ -411,6 +411,49 @@ OpenAPI types, bounds and defaults (for example `size`: integer, 1..100, default
 any other declared `@APIResponse` takes precedence. Without MicroProfile OpenAPI on the compile classpath no OpenAPI
 annotation is generated and the endpoints behave identically. Only generator output was tested; no OpenAPI implementation ran.
 
+== Jakarta Security (optional)
+
+JNoSQL REST copies the standard Jakarta Annotations authorization annotations `@RolesAllowed`, `@PermitAll` and
+`@DenyAll` from a repository, or from one of its methods, to the generated resource. It adds no annotation of its own
+and implements no authentication or authorization.
+
+[source,java]
+----
+@Repository
+@RestRepository(path = "/products")
+@RolesAllowed("USER")
+public interface ProductRepository extends CrudRepository<Product, String> {
+
+    @Find
+    @PermitAll
+    Optional<Product> findById(String id);
+
+    @Insert
+    @RolesAllowed({"ADMIN", "MANAGER"})
+    Product insert(Product product);
+
+    @Delete
+    @DenyAll
+    void deleteById(String id);
+}
+----
+
+The generated `ProductRepositoryResource` carries `@RolesAllowed("USER")` on the class, `@PermitAll` on the
+`GET /products/{id}` endpoint, `@RolesAllowed({"ADMIN", "MANAGER"})` on `POST /products` and `@DenyAll` on the delete
+endpoint. Routing, parameters, DTOs and delegation are unchanged.
+
+* The integration is optional: annotations are matched by qualified name, so nothing is generated, imported or
+  required unless you declare them. No security dependency is added; the generated code uses the API your
+  application already provides.
+* Operations inherited from `BasicRepository` or `CrudRepository` receive the repository-level annotation only.
+  Redeclare the method (`@Override`) to give it a method-level annotation.
+* Declaring more than one of the three annotations on the same repository or method is a compilation error.
+* Method-level annotations are emitted next to the class-level one; which takes precedence is decided by the
+  runtime, as in the Jakarta Annotations specification.
+* Authentication (Basic, JWT or any other mechanism) is configured by the application. Whether the annotations are
+  enforced depends on the security capabilities and configuration of the target Jakarta EE runtime.
+* The annotations do not provide record-level or tenant-level authorization.
+
 == CDI, CDI Lite and discovery
 
 Constructor injection only. The package-private constructor exists for proxying; it is deliberately not public. A
