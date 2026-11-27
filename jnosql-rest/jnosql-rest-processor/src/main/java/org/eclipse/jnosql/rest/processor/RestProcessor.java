@@ -149,6 +149,8 @@ public class RestProcessor extends AbstractProcessor {
         annotations.add("@" + imports.name("jakarta.ws.rs.Consumes") + "(" + media + ".APPLICATION_JSON)");
         annotations.add("@" + imports.name(CDI_REQUEST_SCOPED));
         AnnotationSource source = new AnnotationSource(imports);
+        new SecurityPropagator(diagnostics).select(repository.element())
+                .forEach(mirror -> annotations.add(source.write(mirror)));
         openApi.forType(repository.element()).forEach(mirror -> annotations.add(source.write(mirror)));
         imports.name("jakarta.inject.Inject");
         String className = repository.element().getSimpleName() + "Resource";
