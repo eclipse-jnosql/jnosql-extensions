@@ -93,6 +93,7 @@ final class EndpointFactory {
     private final DtoPlanner planner;
     private final DtoPlanner.EntityPlan dto;
     private final AnnotationSource annotationSource;
+    private final SecurityPropagator security;
     private final Map<String, String> routes = new HashMap<>();
     private final List<MethodModel> methods = new ArrayList<>();
 
@@ -107,6 +108,7 @@ final class EndpointFactory {
         this.planner = planner;
         this.dto = dto;
         this.annotationSource = new AnnotationSource(imports);
+        this.security = new SecurityPropagator(diagnostics);
         this.elements = elements;
     }
 
@@ -621,6 +623,7 @@ final class EndpointFactory {
         if (!spec.path.isEmpty()) {
             annotations.add("@" + imports.name("jakarta.ws.rs.Path") + "(" + AnnotationSource.quote(spec.path) + ")");
         }
+        security.select(method).forEach(mirror -> annotations.add(annotationSource.write(mirror)));
         var completed = spec.createdType == null || !openApi.available() ? null : incompleteCreated(method);
         for (var mirror : openApi.forMethod(method)) {
             annotations.add(mirror == completed ? completedCreated(mirror, spec.createdType)
