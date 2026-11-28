@@ -161,65 +161,97 @@ List<Product> found = products.findByNameLike(searchPattern, Order.by(
 
 This approach ensures that query attribute references are both type-safe and refactor-safe, leading to more robust and maintainable code.
 
-== JNoSQL REST
+== REST Repository
 
-Building REST APIs often requires repetitive code to expose repository operations, handle HTTP requests, and map entities into public representations. Eclipse JNoSQL REST simplifies this process by transforming Jakarta Data repositories into Jakarta REST resources at compile time. With minimal configuration, developers can focus on business logic while the extension generates readable Java code, integrates with CDI, and leverages existing Jakarta EE standards without runtime reflection.
+Modern enterprise applications need to expose data through REST APIs without introducing unnecessary layers, repetitive controllers, or manual conversions. **REST Repository**, powered by Eclipse JNoSQL, transforms Jakarta Data repositories into Jakarta REST resources at compile time, combining productivity, flexibility, and the power of Jakarta EE standards.
 
-JNoSQL REST goes beyond basic CRUD operations, offering:
+With **convention over configuration**, developers can focus on business logic and data access while REST Repository automatically generates HTTP endpoints, request and response DTOs, and repository integration.
 
-* *Jakarta Data integration:* Supports `BasicRepository`, `CrudRepository`, and custom repositories, including derived queries and Jakarta Data types such as `Restriction`, `Limit`, `Sort`, and `Order`.
-* *Pagination:* Supports both offset-based and cursor-based pagination, with paginated collection endpoints by default.
-* *DTO generation:* Integrates with MapStruct to automatically generate and map DTOs, allowing developers to control exposed attributes and exclude sensitive information.
-* *OpenAPI documentation:* Optionally integrates with Eclipse MicroProfile OpenAPI, supporting standard annotations and external API documentation customization.
-* *Jakarta Security annotations:* Optionally propagates `@RolesAllowed`, `@PermitAll` and `@DenyAll` from repositories to the generated resources; authentication and enforcement stay with your Jakarta EE runtime.
-* *Flexible REST exposure:* Uses annotations such as `@RestRepository` and `@RestExclude`, plus standard Jakarta REST `@Path`, `@PathParam` and `@QueryParam`, to control which repository operations become REST endpoints and how they are routed.
+**From Jakarta Data repositories to REST APIs, with more than just CRUD:**
 
-With JNoSQL REST, developers can expose persistence operations as REST APIs while retaining control over data representation, endpoint exposure, and API documentation.
+* **Convention over configuration:** Automatically exposes supported Jakarta Data operations through predictable REST endpoints, with the flexibility to customize routes using standard Jakarta REST annotations.
+* **Powerful queries:** Supports `BasicRepository`, `CrudRepository`, and custom repositories, including derived queries, dynamic restrictions, sorting, and pagination.
+* **Automatic DTO conversion:** Generates request and response DTOs using MapStruct, with fine-grained control over which attributes are included in each direction.
+* **Jakarta Security integration:** Propagates standard `@RolesAllowed`, `@PermitAll`, and `@DenyAll` annotations to generated REST resources, without proprietary security APIs or mandatory additional dependencies.
+* **OpenAPI integration:** Supports optional MicroProfile OpenAPI annotations to enrich the generated API documentation.
+* **Compile-time generation:** Produces readable Java resources with CDI integration, avoiding runtime reflection and unnecessary infrastructure.
 
-=== REST Annotations
+=== From Repository to REST API
 
-JNoSQL REST provides a small set of annotations to control how repositories are exposed:
-
-* `@RestRepository` enables REST resource generation for a Jakarta Data repository.
-* Jakarta REST `@Path`, `@PathParam` and `@QueryParam` customize routes and parameter binding.
-* `@RestExclude` prevents a repository method from becoming a REST endpoint.
-* `@RestDTO` generates DTOs and integrates with MapStruct to control public data representations, including excluding sensitive attributes from requests, responses or both (`exclude`, `excludeFromRequest`, `excludeFromResponse`).
-
-The extension also supports optional Eclipse MicroProfile OpenAPI integration, allowing developers to document endpoints using standard annotations and customize their API documentation.
-
-=== Example
-
-A Jakarta Data repository can become a REST API with a few annotations:
+Consider a Jakarta Data repository:
 
 [source,java]
 ----
 @Repository
 @RestRepository(path = "/products")
-@RestDTO(exclude = {"internalCode"})
+@RestDTO(
+    exclude = {"internalNotes"},
+    excludeFromRequest = {"id"},
+    excludeFromResponse = {"supplierCost"}
+)
+@RolesAllowed("USER")
 public interface ProductRepository
         extends CrudRepository<Product, UUID> {
 
+    @Find
+    @PermitAll
     List<Product> findByCategory(String category);
 }
 ----
 
-JNoSQL REST automatically generates `ProductRepositoryResource`, exposing endpoints such as:
+REST Repository generates Jakarta REST endpoints based on the repository's supported operations:
 
 [source,http]
 ----
-GET /products?offset=0&size=20&sort=name:asc
-GET /products/findByCategory?category=books
-GET /products/{id}
+GET    /products?offset=0&size=20
+GET    /products/{id}
+GET    /products/findByCategory?category=books
+POST   /products
 ----
 
-The generated resource uses CDI to inject the repository and MapStruct to map entities into public DTOs, ensuring excluded attributes do not appear in the generated response representations. Collection endpoints support pagination by default, while the repository remains responsible for data access.
+The generated resource delegates to the Jakarta Data repository, uses MapStruct for DTO conversion, and propagates applicable security annotations. The class-level `@RolesAllowed("USER")` applies to generated operations, while `@PermitAll` declares the category query publicly accessible, subject to the runtime's authorization support.
 
-For configuration, supported operations, dynamic searches, pagination, and advanced customization, explore the link:jnosql-rest/README.adoc[JNoSQL REST documentation].
+The DTO configuration is equally straightforward. For a creation request:
 
+[source,json]
+----
+{
+  "name": "Pen",
+  "price": 10,
+  "supplierCost": 9
+}
+----
+
+The generated response can look like:
+
+[source,json]
+----
+{
+  "id": "0e79615d-01ba-47e1-8d4c-8c062a23ba54",
+  "name": "Pen",
+  "price": 10
+}
+----
+
+The `id` is managed by the server, `supplierCost` can be accepted and persisted without appearing in the response, and `internalNotes` is excluded from both directions.
+
+No additional DTO mapping code is required. Authentication remains the responsibility of the application's Jakarta EE security infrastructure, while REST Repository preserves authorization declarations on the generated HTTP endpoints.
+
+=== REST Repository Annotations
+
+REST Repository keeps its API deliberately small:
+
+* `@RestRepository` enables REST generation for a Jakarta Data repository.
+* `@RestExclude` prevents selected repository methods from being exposed.
+* `@RestDTO` enables automatic DTO generation and attribute exclusions through `exclude`, `excludeFromRequest`, and `excludeFromResponse`.
+
+For more control, developers can use standard Jakarta REST annotations such as `@Path`, `@PathParam`, and `@QueryParam`, along with the supported Jakarta authorization annotations.
+
+**No proprietary security model. No new REST framework to learn. Just Jakarta EE.**
 
 === Installation
 
-To enable JNoSQL REST, add the REST API dependency and configure the annotation processor in your Maven project.
+Add the REST Repository API to your Maven project:
 
 [source,xml]
 ----
@@ -230,7 +262,7 @@ To enable JNoSQL REST, add the REST API dependency and configure the annotation 
 </dependency>
 ----
 
-Configure the Maven Compiler Plugin to generate Jakarta REST resources at compile time:
+Enable compile-time generation through the Maven Compiler Plugin:
 
 [source,xml]
 ----
@@ -249,14 +281,11 @@ Configure the Maven Compiler Plugin to generate Jakarta REST resources at compil
 </plugin>
 ----
 
-For DTO generation with `@RestDTO`, also include the MapStruct API dependency and its annotation processor. JNoSQL REST generates mapper interfaces, while MapStruct generates their CDI-managed implementations.
+For `@RestDTO`, configure MapStruct and its annotation processor. The application must also provide Jakarta REST, CDI, and a Jakarta Data repository implementation. Optional integrations, including MicroProfile OpenAPI and security annotations, use APIs supplied by the application.
 
-Eclipse MicroProfile OpenAPI integration is optional. When available, JNoSQL REST propagates supported OpenAPI annotations from repository interfaces and methods to the generated REST resources.
+**Write your repository. Define your REST contract. Let Eclipse JNoSQL generate the rest.**
 
-The application must also provide a Jakarta REST runtime, a CDI implementation, and a Jakarta Data repository provider.
-
-For complete Maven configuration, including MapStruct and optional MicroProfile OpenAPI, see the link:jnosql-rest/README.adoc[JNoSQL REST documentation].
-
+Explore the link:jnosql-rest/README.adoc[REST Repository documentation] for supported operations, pagination, dynamic queries, DTO generation, security integration, and complete configuration examples.
 
 == Bean Validation
 
